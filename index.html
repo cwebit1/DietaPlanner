@@ -156,6 +156,41 @@ ul.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 
 .tabgroup{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+/* Stile omogeneo per la colazione: una riga scorrevole di pulsanti per ogni
+   categoria, con snap allo scroll. Ogni categoria permette UNA sola selezione
+   (comportamento radio). */
+.colazione-gruppo-slide{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  padding-bottom:6px;
+  scroll-snap-type:x mandatory;
+  margin-bottom:4px;
+  -webkit-overflow-scrolling:touch;
+}
+.colazione-gruppo-slide::-webkit-scrollbar{height:4px;}
+.colazione-gruppo-slide::-webkit-scrollbar-thumb{background:var(--accent-dim);border-radius:2px;}
+.colazione-gruppo-slide button{
+  flex:0 0 auto;
+  scroll-snap-align:start;
+  background:var(--panel-2);
+  border:1px solid var(--border);
+  color:var(--text-dim);
+  padding:9px 13px;
+  border-radius:8px;
+  font-size:0.8rem;
+  font-family:inherit;
+  cursor:pointer;
+  white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:background 0.15s, color 0.15s;
+}
+.colazione-gruppo-slide button.active{
+  background:var(--accent-dim);
+  color:var(--accent);
+  border-color:var(--accent);
+  font-weight:700;
+}
 .tabgroup button{
   background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);
   padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;
@@ -2676,10 +2711,10 @@ async function renderColazione(giorno, elementId){
     const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
     const selezionatoId = voce.componenti[g.chiave];
     html += `<label style="margin-top:10px;">${g.label}${g.obbligatorio?'':' (facoltativo)'}</label>
-      <select data-gruppo-colazione="${g.chiave}">
-        ${g.obbligatorio ? '' : `<option value="" ${!selezionatoId?'selected':''}>— nessuno —</option>`}
-        ${opzioni.map(o=>`<option value="${o.id}" ${o.id===selezionatoId?'selected':''}>${o.nome}</option>`).join('')}
-      </select>`;
+      <div class="colazione-gruppo-slide" data-gruppo-slide="${g.chiave}">
+        ${g.obbligatorio ? '' : `<button data-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`}
+        ${opzioni.map(o=>`<button data-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
+      </div>`;
     }
   } // fine blocco colazione a gruppi (non speciale)
   const colazionePrefSalvata = await getOne('impostazioni', 'colazionePreferita');
@@ -2691,14 +2726,20 @@ async function renderColazione(giorno, elementId){
   </div>`;
   el.innerHTML = html;
 
-  el.querySelectorAll('[data-gruppo-colazione]').forEach(sel=>{
-    sel.addEventListener('change', async (e)=>{
-      const gruppo = e.target.dataset.gruppoColazione;
-      voce.componenti[gruppo] = e.target.value || null;
-      await put('piano', voce);
-      renderColazione(giorno, elementId);
-      if(giorno===giornoSelezionato) renderNutrizioneGiorno();
-      aggiornaListaSpesaAutomatica(0); aggiornaListaSpesaAutomatica(1);
+  el.querySelectorAll('[data-gruppo-slide]').forEach(slide=>{
+    slide.querySelectorAll('[data-col-opt]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const gruppo = slide.dataset.gruppoSlide;
+        const idScelto = btn.dataset.colOpt || null;
+        // deseleziona tutti i pulsanti della stessa categoria, poi attiva quello scelto
+        slide.querySelectorAll('[data-col-opt]').forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
+        voce.componenti[gruppo] = idScelto;
+        await put('piano', voce);
+        renderColazione(giorno, elementId);
+        if(giorno===giornoSelezionato) renderNutrizioneGiorno();
+        aggiornaListaSpesaAutomatica(0); aggiornaListaSpesaAutomatica(1);
+      });
     });
   });
   el.querySelectorAll('[data-cs-opt]').forEach(b=>{
