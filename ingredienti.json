@@ -1,5 +1,5 @@
 {
-  "versione": 1,
+  "versione": 2,
   "ingredienti": {
     "Riso Arborio": {
       "kcal": 332,
@@ -800,6 +800,14 @@
       "grassi": 5.4,
       "gruppo": "proteine",
       "deperibilita": "alta"
+    },
+    "Latte parzialmente scremato": {
+      "kcal": 46,
+      "proteine": 3.3,
+      "carboidrati": 4.9,
+      "grassi": 1.5,
+      "gruppo": "grassi",
+      "deperibilita": "bassa"
     }
   }
 }
