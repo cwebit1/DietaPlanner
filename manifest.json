@@ -1,0 +1,9 @@
+{
+  "name": "Dieta Planner",
+  "short_name": "DietaPlanner",
+  "start_url": ".",
+  "display": "fullscreen",
+  "background_color": "#181c14",
+  "theme_color": "#181c14",
+  "orientation": "portrait"
+}
