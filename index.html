@@ -1374,14 +1374,17 @@ async function importaListaRicette(lista){
     // nutrizione corretta anche se i loro ingredienti non sono ancora collegati a
     // nessuna 'variante' del database interno. Se non si trova nulla, mantiene
     // l'eventuale valore già presente sulla ricetta (nessuna regressione a 0).
+    // Priorità: valore manuale nel JSON sorgente (r.nutrizioneManualeTotale, es.
+    // colazioni speciali senza ingredienti) > calcolo automatico > valore già in DB.
     const nutrizioneCalcolata = calcolaNutrizioneDaIngredientiJson(r.ingredienti);
-    const nutrizioneManualeTotale = nutrizioneCalcolata || (esistente ? esistente.nutrizioneManualeTotale : undefined);
+    const nutrizioneManualeTotale = r.nutrizioneManualeTotale || nutrizioneCalcolata || (esistente ? esistente.nutrizioneManualeTotale : undefined);
 
     await put('ricette', {
       id: esistente ? esistente.id : uid(),
       nome:r.nome, fascia:r.fascia, porzioni:r.porzioni||2, gruppoProteico:r.gruppoProteico||'',
       tipoPortata: r.tipoPortata || 'unico',
       sottotipoSpuntino: r.sottotipoSpuntino || null,
+      colazioneSpeciale: !!r.colazioneSpeciale,
       fonte:'libreria',
       ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
       ingredienti: ingredientiRisolti,
@@ -1516,18 +1519,6 @@ const FRUTTA_GIORNALIERA = {min:2, max:3};
 
 /* G: la colazione si compone a gruppi (guida Praderio), non è una "ricetta" fissa */
 const CAP_COLAZIONE_SPECIALE = 2;
-const COLAZIONI_SPECIALI = [
-  {id:'budino', nome:'Budino', kcal:150, prot:3, carb:25, grassi:5},
-  {id:'cappuccino_brioche', nome:'Cappuccino e Brioche', kcal:350, prot:11, carb:40, grassi:16},
-  {id:'panettone', nome:'Panettone (fetta)', kcal:380, prot:7, carb:52, grassi:15},
-  {id:'pandoro', nome:'Pandoro (fetta)', kcal:400, prot:7, carb:54, grassi:17},
-  {id:'colomba', nome:'Colomba (fetta)', kcal:390, prot:7, carb:53, grassi:16},
-  {id:'crostata', nome:'Crostata (fetta)', kcal:350, prot:5, carb:48, grassi:15},
-  {id:'torta_yogurt', nome:'Torta allo yogurt (fetta)', kcal:300, prot:7, carb:40, grassi:12},
-  {id:'ciambellone', nome:'Ciambellone (fetta)', kcal:320, prot:6, carb:45, grassi:13},
-  {id:'toast_prosciutto', nome:'Toast al prosciutto', kcal:350, prot:18, carb:35, grassi:15},
-  {id:'pane_uova', nome:'Pane tostato e uova strapazzate', kcal:380, prot:20, carb:30, grassi:18}
-];
 const COLAZIONE_GRUPPI = [
   {chiave:'carboidrati', label:'Carboidrati', obbligatorio:true},
   {chiave:'proteine', label:'Proteine', obbligatorio:true},
@@ -1763,10 +1754,10 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
     // colazione: composizione a gruppi (G), non più una ricetta — non scala mai l'inventario
     const pianoIdColazione = g+'_colazione';
     let esistenteColazione = await getOne('piano', pianoIdColazione);
-    if(forza && esistenteColazione && !esistenteColazione.colazioneSpeciale){
+    if(forza && esistenteColazione && !esistenteColazione.colazioneSpecialeId){
       esistenteColazione = Object.assign({}, esistenteColazione, {componenti:null});
     }
-    if(!esistenteColazione || (!esistenteColazione.componenti && !esistenteColazione.colazioneSpeciale)){
+    if(!esistenteColazione || (!esistenteColazione.componenti && !esistenteColazione.colazioneSpecialeId)){
       const colazionePref = await getOne('impostazioni', 'colazionePreferita');
       const componenti = {};
       for(const gr of COLAZIONE_GRUPPI){
@@ -2163,8 +2154,8 @@ async function calcolaConsumoGiorni(listaGiorniIso){
   const tot = {kcal:0, prot:0, carb:0, grassi:0};
   for(const g of listaGiorniIso){
     const voceColazione = await getOne('piano', g+'_colazione');
-    if(voceColazione && voceColazione.consumato && (voceColazione.componenti || voceColazione.colazioneSpeciale)){
-      const n = await nutrizioneColazione(voceColazione.componenti, null, voceColazione.colazioneSpeciale);
+    if(voceColazione && voceColazione.consumato && (voceColazione.componenti || voceColazione.colazioneSpecialeId)){
+      const n = await nutrizioneColazione(voceColazione.componenti, null, voceColazione.colazioneSpecialeId);
       tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
     }
     for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
@@ -2530,7 +2521,7 @@ async function elaboraConsumoAutomatico(){
     if(pasto==='colazione'){
       // G: composizione a gruppi, mai scala l'inventario (comportamento invariato) —
       // qui solo per completare lo storico/statistiche future
-      if(!voce.componenti && !voce.colazioneSpeciale) continue;
+      if(!voce.componenti && !voce.colazioneSpecialeId) continue;
       voce.consumato = true;
       voce.dataConsumato = todayISO();
       await put('piano', voce);
@@ -2576,24 +2567,23 @@ async function elaboraConsumoAutomatico(){
    senza il doppio passaggio proposta→conferma usato per pranzo/cena (qui
    non ci sono tetti settimanali da sforare, solo alimenti equivalenti).
    ========================================================= */
-function trovaColazioneSpeciale(id){
-  return COLAZIONI_SPECIALI.find(cs => cs.id === id) || null;
-}
-
 async function contaColazioniSpecialiSettimana(){
   const giorni = giorniSettimana();
   let conteggio = 0;
   for(const g of giorni){
     const voce = await getOne('piano', g+'_colazione');
-    if(voce && voce.colazioneSpeciale) conteggio++;
+    if(voce && voce.colazioneSpecialeId) conteggio++;
   }
   return conteggio;
 }
 
 async function nutrizioneColazione(componenti, variantiPrecaricate, colazioneSpecialeId){
   if(colazioneSpecialeId){
-    const cs = trovaColazioneSpeciale(colazioneSpecialeId);
-    if(cs) return {kcal:cs.kcal, prot:cs.prot, carb:cs.carb, grassi:cs.grassi};
+    const cs = await getOne('ricette', colazioneSpecialeId);
+    if(cs && cs.nutrizioneManualeTotale){
+      const m = cs.nutrizioneManualeTotale;
+      return {kcal:m.kcal||0, prot:m.prot||0, carb:m.carb||0, grassi:m.grassi||0};
+    }
   }
   const varianti = variantiPrecaricate || await getAll('varianti');
   let kcal=0, prot=0, carb=0, grassi=0;
@@ -2620,7 +2610,7 @@ async function renderColazione(giorno, elementId){
 
   // primo riempimento: se non esiste NESSUN record, oppure esiste ma non ha
   // né componenti né colazione speciale, genero i componenti a gruppi
-  if(!voce || (!voce.componenti && !voce.colazioneSpeciale)){
+  if(!voce || (!voce.componenti && !voce.colazioneSpecialeId)){
     const componenti = {};
     for(const g of COLAZIONE_GRUPPI){
       const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
@@ -2630,12 +2620,7 @@ async function renderColazione(giorno, elementId){
     await put('piano', voce);
   }
 
-  const nutri = await nutrizioneColazione(voce.componenti, varianti, voce.colazioneSpeciale);
-  const colazioneSpecAttiva = !!(voce.colazioneSpeciale && await trovaColazioneSpeciale(voce.colazioneSpeciale));
-  const csAttiva = colazioneSpecAttiva ? await trovaColazioneSpeciale(voce.colazioneSpeciale) : null;
-  const conteggioSpecialiSett = await contaColazioniSpecialiSettimana();
-  const tettoRaggiunto = conteggioSpecialiSett >= CAP_COLAZIONE_SPECIALE && !colazioneSpecAttiva;
-  const tutteColazioniSpeciali = COLAZIONI_SPECIALI.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
+  const nutri = await nutrizioneColazione(voce.componenti, varianti, voce.colazioneSpecialeId);
 
   let html = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
 
@@ -2644,8 +2629,9 @@ async function renderColazione(giorno, elementId){
   // nell'applicarlo") — qui mancava, corretto
   if(voce.consumato){
     let righeCons;
-    if(colazioneSpecAttiva){
-      righeCons = `<div style="font-weight:700;font-size:0.9rem;">✓ 🎂 ${csAttiva.nome}</div>`;
+    if(voce.colazioneSpecialeId){
+      const csCons = await getOne('ricette', voce.colazioneSpecialeId);
+      righeCons = csCons ? `<div style="font-weight:700;font-size:0.9rem;">✓ 🎂 ${csCons.nome}</div>` : '';
     } else {
       righeCons = COLAZIONE_GRUPPI
         .filter(g=>voce.componenti[g.chiave])
@@ -2661,18 +2647,30 @@ async function renderColazione(giorno, elementId){
     return;
   }
 
-  html += `<div class="meta" style="margin-bottom:8px;">${Math.round(nutri.kcal)} kcal totali · <span style="color:var(--text-dim);">speciali: ${conteggioSpecialiSett}/${CAP_COLAZIONE_SPECIALE} questa settimana</span></div>`;
+  html += `<div class="meta" style="margin-bottom:8px;">${Math.round(nutri.kcal)} kcal totali</div>`;
+
+  const tutteRicetteCS = await getAll('ricette');
+  const colazioniSpeciali = tutteRicetteCS.filter(r=>r.colazioneSpeciale && !r.esclusa).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const csAttiva = voce.colazioneSpecialeId ? tutteRicetteCS.find(r=>r.id===voce.colazioneSpecialeId) : null;
+  const conteggioCS = await contaColazioniSpecialiSettimana();
+  const tettoCS = conteggioCS >= CAP_COLAZIONE_SPECIALE && !csAttiva;
+
   html += `<details class="pasto-sub-panel" style="margin-bottom:10px;">
-    <summary>🎂 Colazione speciale: ${colazioneSpecAttiva ? csAttiva.nome : 'nessuna'}</summary>
-    <div class="meta" style="margin-bottom:6px;">Concesse 1-2 volte a settimana. ${tettoRaggiunto ? 'Tetto settimanale raggiunto.' : ''}</div>
+    <summary>🎂 Colazione speciale: ${csAttiva ? csAttiva.nome : 'nessuna'}</summary>
+    <div class="meta" style="margin-bottom:6px;">Concesse 1-2 volte a settimana. ${tettoCS ? 'Tetto settimanale raggiunto.' : ''}</div>
     <div class="tabgroup">
-      <button data-cs-opt="" class="${!colazioneSpecAttiva?'active':''}">— nessuna (componi a gruppi) —</button>
-      ${tutteColazioniSpeciali.map(cs=>`<button data-cs-opt="${cs.id}" class="${voce.colazioneSpeciale===cs.id?'active':''}" ${tettoRaggiunto?'disabled':''}>${cs.nome}</button>`).join('')}
+      <button data-cs-opt="" class="${!csAttiva?'active':''}">— nessuna (componi a gruppi) —</button>
+      ${colazioniSpeciali.map(cs=>{
+        const nCS = cs.nutrizioneManualeTotale || {};
+        return `<button data-cs-opt="${cs.id}" class="${voce.colazioneSpecialeId===cs.id?'active':''}" ${tettoCS?'disabled':''}>${cs.nome} (${Math.round(nCS.kcal||0)} kcal)</button>`;
+      }).join('')}
     </div>
   </details>`;
-  if(colazioneSpecAttiva){
+
+  if(csAttiva){
+    const nCS = csAttiva.nutrizioneManualeTotale || {};
     html += `<div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">🎂 ${csAttiva.nome}</div>
-    <div class="meta" style="margin-bottom:8px;">${csAttiva.kcal||0} kcal · ${csAttiva.prot||0}g prot · ${csAttiva.carb||0}g carb · ${csAttiva.grassi||0}g grassi</div>`;
+    <div class="meta" style="margin-bottom:8px;">${Math.round(nCS.kcal||0)} kcal · ${Math.round(nCS.prot||0)}g prot · ${Math.round(nCS.carb||0)}g carb · ${Math.round(nCS.grassi||0)}g grassi</div>`;
   } else {
     for(const g of COLAZIONE_GRUPPI){
     const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
@@ -2706,17 +2704,16 @@ async function renderColazione(giorno, elementId){
   el.querySelectorAll('[data-cs-opt]').forEach(b=>{
     b.addEventListener('click', async ()=>{
       const idScelto = b.dataset.csOpt;
-      if(idScelto === voce.colazioneSpeciale) return;
+      if(idScelto === voce.colazioneSpecialeId) return;
       if(idScelto){
-        const staCambiando = voce.colazioneSpeciale && await trovaColazioneSpeciale(voce.colazioneSpeciale);
-        if(!staCambiando && conteggioSpecialiSett >= CAP_COLAZIONE_SPECIALE){
+        if(!csAttiva && conteggioCS >= CAP_COLAZIONE_SPECIALE){
           await avviso('Hai già raggiunto il tetto di ' + CAP_COLAZIONE_SPECIALE + ' colazioni speciali questa settimana.');
           return;
         }
-        voce.colazioneSpeciale = idScelto;
+        voce.colazioneSpecialeId = idScelto;
         voce.componenti = null;
       } else {
-        voce.colazioneSpeciale = null;
+        voce.colazioneSpecialeId = null;
         const componenti = {};
         for(const g of COLAZIONE_GRUPPI){
           const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
@@ -2729,8 +2726,8 @@ async function renderColazione(giorno, elementId){
       if(giorno===giornoSelezionato) renderNutrizioneGiorno();
     });
   });
-  el.querySelector('[data-ricetta-colazione]').addEventListener('click', ()=> apriModalDettaglioColazione(voce.componenti, voce.colazioneSpeciale));
-  el.querySelector('[data-info-colazione]').addEventListener('click', ()=> apriModalInfoColazione(voce.componenti, voce.colazioneSpeciale));
+  el.querySelector('[data-ricetta-colazione]').addEventListener('click', ()=> apriModalDettaglioColazione(voce.componenti, voce.colazioneSpecialeId));
+  el.querySelector('[data-info-colazione]').addEventListener('click', ()=> apriModalInfoColazione(voce.componenti, voce.colazioneSpecialeId));
   el.querySelector('[data-salva-colazione-pref]')?.addEventListener('click', async ()=>{
     await put('impostazioni', {chiave:'colazionePreferita', valore: voce.componenti});
     await avviso('✅ Colazione salvata come preferita. Verrà proposta per tutti i giorni alla generazione del menù.');
@@ -2745,7 +2742,7 @@ async function renderColazione(giorno, elementId){
 
 async function apriModalDettaglioColazione(componenti, colazioneSpecialeId){
   if(colazioneSpecialeId){
-    const cs = trovaColazioneSpeciale(colazioneSpecialeId);
+    const cs = await getOne('ricette', colazioneSpecialeId);
     document.getElementById('modalDettaglioTitolo').textContent = 'Colazione';
     document.getElementById('modalDettaglioContenuto').innerHTML = cs
       ? `<div style="font-weight:700;font-size:0.95rem;">🎂 ${cs.nome}</div>
@@ -4186,8 +4183,8 @@ async function renderNutrizioneGiorno(){
     if(!voce) continue;
 
     if(pasto==='colazione'){
-      if(voce.componenti || voce.colazioneSpeciale){
-        const n = await nutrizioneColazione(voce.componenti, null, voce.colazioneSpeciale);
+      if(voce.componenti || voce.colazioneSpecialeId){
+        const n = await nutrizioneColazione(voce.componenti, null, voce.colazioneSpecialeId);
         tot.kcal += n.kcal; tot.prot += n.prot; tot.carb += n.carb; tot.grassi += n.grassi;
       }
       continue;
@@ -5958,8 +5955,8 @@ async function riepilogoTestualePasto(giorno, pasto){
   const prefisso = iconaStato + iconaOrigine;
 
   if(pasto==='colazione'){
-    if(voce.colazioneSpeciale){
-      const cs = await trovaColazioneSpeciale(voce.colazioneSpeciale);
+    if(voce.colazioneSpecialeId){
+      const cs = await getOne('ricette', voce.colazioneSpecialeId);
       return cs ? prefisso + '🎂 ' + cs.nome : testoVuoto;
     }
     if(!voce.componenti) return testoVuoto;
