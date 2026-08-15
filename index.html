@@ -423,11 +423,6 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <div id="blocCena" class="pasto-block"></div>
   <div id="blocSpuntino3" class="pasto-block"></div>
 
-  <details class="pasto-sub-panel" id="pannelloGraficiConsumo">
-    <summary>📊 Grafici di consumo</summary>
-    <div class="contenuto" id="graficiConsumoCarosello"></div>
-  </details>
-
   <div class="card" style="margin-top:14px;">
     <h3 style="margin-bottom:8px;">Nutrizione del giorno (per 1 persona)</h3>
     <div class="nutri-grid" id="nutriGiorno"></div>
@@ -439,6 +434,10 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
     <h3 style="margin-bottom:8px;">Frequenze proteiche — già mangiati questa settimana</h3>
     <div id="freqSettimana"></div>
   </div>
+  <details class="pasto-sub-panel" id="pannelloGraficiConsumo">
+    <summary>📊 Grafici di consumo</summary>
+    <div class="contenuto" id="graficiConsumoCarosello"></div>
+  </details>
 </section>
 
 <!-- ============ VIEW: MENÙ SETTIMANALE ============ -->
@@ -2784,16 +2783,21 @@ async function renderColazione(giorno, elementId){
   const pianoId = giorno+'_colazione';
   let voce = await getOne('piano', pianoId);
   const varianti = await getAll('varianti');
+  const colazioneScaduta = fasciaPastoSuperata(giorno, 'colazione');
 
   // primo riempimento: se non esiste NESSUN record, oppure esiste ma non ha
-  // né componenti né colazione speciale, genero i componenti a gruppi
-  if(!voce || (!voce.componenti && !voce.colazioneSpecialeId)){
+  // né componenti né colazione speciale, genero i componenti a gruppi —
+  // MA SOLO per oggi/futuro: sui giorni passati l'auto-riempimento
+  // impedirebbe di distinguere uno slot mai composto (che deve mostrare
+  // l'editor "cosa hai mangiato?") da uno slot già gestito
+  if(!voce) voce = {id:pianoId};
+  if(!voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta){
     const componenti = {};
     for(const g of COLAZIONE_GRUPPI){
       const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
       componenti[g.chiave] = g.obbligatorio && opzioni.length ? opzioni[0].id : null;
     }
-    voce = {id:pianoId, componenti};
+    voce.componenti = componenti;
     await put('piano', voce);
   }
 
@@ -2804,23 +2808,30 @@ async function renderColazione(giorno, elementId){
   // pasto già consumato (orario superato, fascia 6-9): immutabile, sola lettura —
   // stesso principio già applicato a pranzo/cena/spuntini ("il rigore è
   // nell'applicarlo") — qui mancava, corretto
-  if(voce.consumato){
+  if(voce.consumato || colazioneScaduta){
     let righeCons;
     if(voce.colazioneSpecialeId){
       const csCons = await getOne('ricette', voce.colazioneSpecialeId);
       righeCons = csCons ? `<div style="font-weight:700;font-size:0.9rem;">✓ 🎂 ${csCons.nome}</div>` : '';
-    } else {
+    } else if(voce.componenti){
       righeCons = COLAZIONE_GRUPPI
         .filter(g=>voce.componenti[g.chiave])
         .map(g=>{
           const v = varianti.find(x=>x.id===voce.componenti[g.chiave]);
           return v ? `<div style="font-weight:700;font-size:0.9rem;">✓ ${v.nome}</div>` : '';
         }).join('');
+    } else {
+      righeCons = '';
     }
-    el.innerHTML = html + `<div style="opacity:0.7;">
-      ${righeCons}
-      <div class="meta">${Math.round(nutri.kcal)} kcal totali</div>
+    const mostraEditorColazione = colazioneScaduta && !voce.consumato && !voce.componenti && !voce.colazioneSpecialeId;
+    const btnEditorColazione = mostraEditorColazione ? `<button class="small accent" data-editor-colazione="${giorno}" style="margin-bottom:8px;">✏️ Cosa hai mangiato a colazione?</button>` : '';
+    el.innerHTML = html + btnEditorColazione + `<div style="opacity:0.7;">
+      ${righeCons || '<div class="meta">✓ Nessuna colazione registrata</div>'}
+      ${(voce.componenti || voce.colazioneSpecialeId) ? `<div class="meta">${Math.round(nutri.kcal)} kcal totali</div>` : ''}
     </div>`;
+    el.querySelector('[data-editor-colazione]')?.addEventListener('click', async ()=>{
+      await apriModalEditorColazione(giorno);
+    });
     return;
   }
 
@@ -3198,6 +3209,73 @@ async function apriModalEditorPasto(giorno, pasto){
   renderLista('');
   document.getElementById('editorRicerca').addEventListener('input', (e)=>{
     renderLista(e.target.value);
+  });
+}
+
+async function apriModalEditorColazione(giorno){
+  const tutteRicette = await getAll('ricette');
+  const colazioniSpeciali = tutteRicette.filter(r=>r.colazioneSpeciale && !r.esclusa).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const varianti = await getAll('varianti');
+  document.getElementById('modalDettaglioTitolo').textContent = '✏️ Cosa hai mangiato a colazione?';
+  document.getElementById('modalDettaglioContenuto').innerHTML =
+    `<div class="meta" style="margin-bottom:10px;">Seleziona la colazione speciale oppure componi a gruppi:</div>
+    ${colazioniSpeciali.length ? '<div class="meta" style="margin-bottom:6px;font-weight:700;">Colazioni speciali:</div><div class="tabgroup" style="margin-bottom:12px;">' +
+      colazioniSpeciali.map(cs=>`<button data-editor-col-speciale="${cs.id}">${cs.nome}</button>`).join('') +
+      '</div>' : ''}
+    <div class="meta" style="margin-bottom:6px;font-weight:700;">Colazione a gruppi:</div>
+    <div id="editorColazioneGruppi"></div>
+    <div class="meta" style="margin-top:12px;font-style:italic;">Oppure: nessuna colazione (salta)</div>
+    <button class="small" data-editor-col-niente="1" style="margin-top:6px;">✕ Nessuna colazione</button>`;
+  const elGruppi = document.getElementById('editorColazioneGruppi');
+  let htmlGruppi = '';
+  for(const g of COLAZIONE_GRUPPI){
+    const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+    htmlGruppi += `<label style="margin-top:8px;">${g.label}${g.obbligatorio?'':' (facoltativo)'}</label>
+      <div class="colazione-gruppo-slide" data-editor-gruppo="${g.chiave}">
+        ${g.obbligatorio ? '' : `<button data-editor-col-opt="" class="active">— nessuno —</button>`}
+        ${opzioni.map(o=>`<button data-editor-col-opt="${o.id}">${o.nome}</button>`).join('')}
+      </div>`;
+  }
+  elGruppi.innerHTML = htmlGruppi;
+  document.getElementById('modalDettaglio').classList.remove('hidden');
+  document.getElementById('modalDettaglioContenuto').querySelectorAll('[data-editor-col-speciale]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const pianoId = giorno+'_colazione';
+      await put('piano', {id:pianoId, colazioneSpecialeId:b.dataset.editorColSpeciale, componenti:null, consumato:true, dataConsumato:giorno});
+      document.getElementById('modalDettaglio').classList.add('hidden');
+      renderPiano();
+    });
+  });
+  elGruppi.querySelectorAll('[data-editor-gruppo]').forEach(slide=>{
+    slide.querySelectorAll('[data-editor-col-opt]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        slide.querySelectorAll('[data-editor-col-opt]').forEach(x=>x.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+  const btnSalvaGruppi = document.createElement('button');
+  btnSalvaGruppi.className = 'primary';
+  btnSalvaGruppi.style.marginTop = '12px';
+  btnSalvaGruppi.textContent = 'Salva colazione a gruppi';
+  btnSalvaGruppi.addEventListener('click', async ()=>{
+    const componenti = {};
+    elGruppi.querySelectorAll('[data-editor-gruppo]').forEach(slide=>{
+      const gruppo = slide.dataset.editorGruppo;
+      const attivo = slide.querySelector('[data-editor-col-opt].active');
+      componenti[gruppo] = attivo ? (attivo.dataset.editorColOpt || null) : null;
+    });
+    const pianoId = giorno+'_colazione';
+    await put('piano', {id:pianoId, componenti, colazioneSpecialeId:null, consumato:true, dataConsumato:giorno});
+    document.getElementById('modalDettaglio').classList.add('hidden');
+    renderPiano();
+  });
+  document.getElementById('modalDettaglioContenuto').appendChild(btnSalvaGruppi);
+  document.getElementById('modalDettaglioContenuto').querySelector('[data-editor-col-niente]').addEventListener('click', async ()=>{
+    const pianoId = giorno+'_colazione';
+    await put('piano', {id:pianoId, componenti:null, colazioneSpecialeId:null, consumato:true, dataConsumato:giorno});
+    document.getElementById('modalDettaglio').classList.add('hidden');
+    renderPiano();
   });
 }
 
@@ -6783,7 +6861,7 @@ async function calcolaListaSpesa(scartoSettimane){
       headerSuggerimento.style.padding='10px 14px';
       headerSuggerimento.style.borderColor='var(--accent)';
       headerSuggerimento.innerHTML = `<div class="meta">💡 Hai già <b>${varianteIntegra.nome}</b> (${Math.round(disponibileIntegra)}g) in inventario: puoi usarlo e tagliarlo a dadini invece di comprare <b>${s.nome}</b>.</div>`;
-      el.insertBefore(headerSuggerimento, el.querySelector('.card'));
+      el.insertBefore(headerSuggerimento, el.firstChild);
       break;
     }
   }
