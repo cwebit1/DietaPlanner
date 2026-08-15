@@ -1906,6 +1906,16 @@ function iconaGruppoProteico(gruppoProteico){
   return icone[gruppoProteico] || '';
 }
 
+/* Glifo del lucchetto: chiuso = emoji colorata (🔒, resta com'era, ben
+   riconoscibile), aperto = icona lineare monocromatica in stile app (colore
+   --text-dim), non un'emoji — a piccole dimensioni le due emoji 🔒/🔓 sono
+   quasi indistinguibili, mentre un tratto pieno vs un tratto interrotto
+   si nota subito anche minuscolo. */
+function iconaBloccoGlifo(bloccata){
+  if(bloccata) return '🔒';
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;color:var(--text-dim);"><rect x="4" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>`;
+}
+
 /* Stella preferiti: piccolo pulsante riusabile ovunque compare il nome di una
    ricetta salvata. Bordata=non preferita, piena=preferita. */
 function stellaBtn(ricetta){
@@ -3028,7 +3038,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
       </div>
     </span>` : '';
   const iconaBlocco = `<button data-blocca-pasto="1" title="${voce.bloccata?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
-    style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;">${voce.bloccata?'🔒':'🔓'}</button>`;
+    style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;">${iconaBloccoGlifo(voce.bloccata)}</button>`;
   const corpoHtmlIniziale = elementId
     ? `<div class="row" style="margin-bottom:8px;justify-content:flex-end;">${iconaBlocco}</div>`
     : `<div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
@@ -6056,8 +6066,19 @@ async function renderMenuSettimanale(){
     // qui nel Menù settimanale mostriamo solo i pasti principali.
     for(const pasto of ['colazione','pranzo','cena']){
       const riepilogo = await riepilogoTestualePasto(g, pasto);
+      // Il lucchetto vive nel summary (sempre visibile, senza aprire il dettaglio):
+      // la logica del giudizio "mi piace/non mi piace" si fa leggendo il riepilogo,
+      // non aprendo il pasto — bloccare deve essere possibile da lì direttamente.
+      // Non si applica alla colazione (non ha un blocco F6, è composta a gruppi).
+      let iconaBloccoMenu = '';
+      if(pasto !== 'colazione'){
+        const voceBlocco = await getOne('piano', g+'_'+pasto);
+        const bloccataOra = !!(voceBlocco && voceBlocco.bloccata);
+        iconaBloccoMenu = `<button data-blocca-menu="${g}|${pasto}" title="${bloccataOra?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
+          style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;flex-shrink:0;margin-left:auto;">${iconaBloccoGlifo(bloccataOra)}</button>`;
+      }
       html += `<details class="pasto-sub-panel" data-menu-giorno="${g}" data-menu-pasto="${pasto}">
-        <summary>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}</summary>
+        <summary><span style="flex:1;">${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}</span>${iconaBloccoMenu}</summary>
         <div class="contenuto" id="menuBloc_${g}_${pasto}"></div>
       </details>`;
     }
@@ -6077,6 +6098,21 @@ async function renderMenuSettimanale(){
           if(pasto==='colazione') renderColazione(giorno, targetId);
           else renderBloccoCompleto(pasto, giorno, targetId);
         }
+      });
+    });
+    // Lucchetto nel summary: click gestito a parte, con preventDefault/stopPropagation
+    // per non far scattare anche l'apertura/chiusura della tendina sottostante.
+    giornoDiv.querySelectorAll('[data-blocca-menu]').forEach(btn=>{
+      btn.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+        const [giorno, pasto] = btn.dataset.bloccaMenu.split('|');
+        const pianoId = giorno+'_'+pasto;
+        let voce = await getOne('piano', pianoId);
+        if(!voce) voce = {id:pianoId};
+        voce.bloccata = !voce.bloccata;
+        await put('piano', voce);
+        renderMenuSettimanale();
       });
     });
   }
