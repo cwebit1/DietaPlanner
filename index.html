@@ -6613,5 +6613,35 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+<script>
+// Fullscreen immediato all'apertura: molti browser bloccano requestFullscreen()
+// senza un gesto dell'utente, quindi tentiamo subito al caricamento e, se il
+// browser lo rifiuta, ripieghiamo sul primo tocco/click come fallback garantito.
+(function(){
+  function entraFullscreen(){
+    var el = document.documentElement;
+    var richiedi = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if(!richiedi) return Promise.reject(new Error('Fullscreen API non disponibile'));
+    return richiedi.call(el);
+  }
+  function tentaSubito(){
+    entraFullscreen().catch(()=>{
+      // Il browser ha rifiutato senza gesto utente: attendiamo il primo tocco/click.
+      function alPrimoGesto(){
+        document.removeEventListener('click', alPrimoGesto);
+        document.removeEventListener('touchend', alPrimoGesto);
+        entraFullscreen().catch(()=>{});
+      }
+      document.addEventListener('click', alPrimoGesto, {once:true});
+      document.addEventListener('touchend', alPrimoGesto, {once:true});
+    });
+  }
+  if(document.readyState === 'complete'){
+    tentaSubito();
+  } else {
+    window.addEventListener('load', tentaSubito);
+  }
+})();
+</script>
 </body>
 </html>
