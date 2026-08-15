@@ -1,5 +1,5 @@
 {
-  "versione": 2,
+  "versione": 3,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -961,7 +961,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Latte intero",
+          "Latte parzialmente scremato",
           200
         ],
         [
@@ -987,7 +987,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Latte intero",
+          "Latte parzialmente scremato",
           200
         ],
         [
@@ -1013,7 +1013,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Latte intero",
+          "Latte parzialmente scremato",
           200
         ],
         [
@@ -2737,7 +2737,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Latte intero",
+          "Latte parzialmente scremato",
           200
         ],
         [
@@ -3011,7 +3011,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Latte intero",
+          "Latte parzialmente scremato",
           200
         ],
         [
