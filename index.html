@@ -518,6 +518,11 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
     <button class="secondary" id="btnResetFrigo" style="border-color:var(--warn);color:var(--warn);">Cancella tutte le giacenze</button>
   </div>
   <div class="card" style="border-color:var(--warn);">
+    <h3 style="margin-bottom:10px;color:var(--warn);">Azzera storico consumi</h3>
+    <div class="meta" style="margin-bottom:10px;">Cancella tutti i pasti consumati, azzera lo storico di rotazione delle ricette (campo "ultimo usato") e lo storico delle proposte per slot. Utile dopo una reinstallazione o per ripartire da zero con la rotazione. Ricette, inventario e lista spesa restano intatti.</div>
+    <button class="secondary" id="btnAzzeraStorico" style="border-color:var(--warn);color:var(--warn);">Azzera tutto lo storico consumi</button>
+  </div>
+  <div class="card" style="border-color:var(--warn);">
     <h3 style="margin-bottom:10px;color:var(--warn);">Reset piano settimanale</h3>
     <div class="meta" style="margin-bottom:10px;">Cancella tutti i pasti pianificati (colazione, pranzo, cena, spuntini, di ogni settimana) per ripartire da un piano vuoto — utile per fare prove sulla generazione del menù. Ricette, inventario, lista spesa e ingredienti restano intatti. Nota: lo storico "ultimo usato" delle ricette resta invariato, quindi la rotazione del motore continuerà comunque a tenere conto di quando le hai usate finora.</div>
     <button class="secondary" id="btnResetPiano" style="border-color:var(--warn);color:var(--warn);">Cancella tutti i piani settimanali</button>
@@ -6571,6 +6576,43 @@ document.getElementById('btnResetFrigo').addEventListener('click', async ()=>{
   for(const s of spesa) await delKey('spesa', s.id);
   await avviso('Giacenze e lista spesa azzerate.');
   renderPiano();
+});
+
+document.getElementById('btnAzzeraStorico').addEventListener('click', async ()=>{
+  const ok = await chiediConferma('Azzerare TUTTO lo storico consumi?\n\n- Tutti i pasti consumati verranno sbloccati\n- Lo storico di rotazione delle ricette verrà cancellato\n- Lo storico delle proposte per slot verrà cancellato\n\nRicette, inventario e lista spesa restano intatti.', 'Azzera tutto', 'Annulla');
+  if(!ok) return;
+  // 1. Cancella tutti i pasti consumati dal piano
+  const piano = await getAll('piano');
+  for(const voce of piano){
+    if(voce.consumato){
+      voce.consumato = false;
+      voce.dataConsumato = null;
+      await put('piano', voce);
+    }
+  }
+  // 2. Azzera ultimoUsato su tutte le ricette (reset rotazione F7)
+  const ricette = await getAll('ricette');
+  for(const r of ricette){
+    if(r.ultimoUsato){
+      r.ultimoUsato = null;
+      await put('ricette', r);
+    }
+  }
+  // 3. Cancella tutto lo storico slot da localStorage (reset F5)
+  const chiaviDaEliminare = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const chiave = localStorage.key(i);
+    if(chiave && chiave.startsWith('storicoSlot_')){
+      chiaviDaEliminare.push(chiave);
+    }
+  }
+  for(const chiave of chiaviDaEliminare){
+    localStorage.removeItem(chiave);
+  }
+  // 4. Azzera le impostazioni di versione (opzionale, per forzare un re-check)
+  await avviso('Storico consumi azzerato. Tutte le ricette sono ora "nuove" per il motore di rotazione.');
+  renderPiano();
+  if(document.getElementById('view-menu').classList.contains('active')) renderMenuSettimanale();
 });
 
 document.getElementById('btnResetPiano').addEventListener('click', async ()=>{
