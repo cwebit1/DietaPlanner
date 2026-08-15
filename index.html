@@ -519,8 +519,11 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
   <div class="card" style="border-color:var(--warn);">
     <h3 style="margin-bottom:10px;color:var(--warn);">Azzera storico consumi</h3>
-    <div class="meta" style="margin-bottom:10px;">Cancella tutti i pasti consumati, azzera lo storico di rotazione delle ricette (campo "ultimo usato") e lo storico delle proposte per slot. Utile dopo una reinstallazione o per ripartire da zero con la rotazione. Ricette, inventario e lista spesa restano intatti.</div>
-    <button class="secondary" id="btnAzzeraStorico" style="border-color:var(--warn);color:var(--warn);">Azzera tutto lo storico consumi</button>
+    <div class="meta" style="margin-bottom:10px;">Cancella i pasti consumati, azzera lo storico di rotazione delle ricette (campo "ultimo usato") e lo storico delle proposte per slot. Utile dopo una reinstallazione o per ripartire da zero con la rotazione. Ricette, inventario e lista spesa restano intatti.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="secondary" id="btnAzzeraStoricoSettimana" style="border-color:var(--warn);color:var(--warn);">Azzera solo settimana corrente</button>
+      <button class="secondary" id="btnAzzeraStorico" style="border-color:var(--warn);color:var(--warn);">Azzera tutto lo storico</button>
+    </div>
   </div>
   <div class="card" style="border-color:var(--warn);">
     <h3 style="margin-bottom:10px;color:var(--warn);">Reset piano settimanale</h3>
@@ -6576,6 +6579,47 @@ document.getElementById('btnResetFrigo').addEventListener('click', async ()=>{
   for(const s of spesa) await delKey('spesa', s.id);
   await avviso('Giacenze e lista spesa azzerate.');
   renderPiano();
+});
+
+document.getElementById('btnAzzeraStoricoSettimana').addEventListener('click', async ()=>{
+  const ok = await chiediConferma('Azzerare lo storico consumi della SOLA settimana corrente?\n\n- I pasti consumati di questa settimana verranno sbloccati\n- Per le ricette usate questa settimana, lo storico di rotazione verrà azzerato (le ricette usate in altre settimane NON vengono toccate)\n- Lo storico delle proposte per gli slot di questa settimana verrà cancellato\n\nRicette, inventario e lista spesa restano intatti.', 'Azzera settimana', 'Annulla');
+  if(!ok) return;
+  const giorniSett = giorniSettimana(0);
+  const inizioSett = new Date(giorniSett[0]+'T00:00:00').getTime();
+  const fineSett = new Date(giorniSett[6]+'T23:59:59.999').getTime();
+  // 1. Sblocca solo i pasti consumati della settimana corrente
+  const piano = await getAll('piano');
+  for(const voce of piano){
+    const giornoVoce = voce.id.split('_')[0];
+    if(voce.consumato && giorniSett.includes(giornoVoce)){
+      voce.consumato = false;
+      voce.dataConsumato = null;
+      await put('piano', voce);
+    }
+  }
+  // 2. Azzera ultimoUsato solo per le ricette usate DENTRO questa settimana
+  const ricette = await getAll('ricette');
+  for(const r of ricette){
+    if(r.ultimoUsato && r.ultimoUsato >= inizioSett && r.ultimoUsato <= fineSett){
+      r.ultimoUsato = null;
+      await put('ricette', r);
+    }
+  }
+  // 3. Cancella solo le chiavi storicoSlot_ della settimana corrente
+  const chiaviDaEliminare = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const chiave = localStorage.key(i);
+    if(chiave && chiave.startsWith('storicoSlot_')){
+      const giornoChiave = chiave.replace('storicoSlot_', '').split('_')[0];
+      if(giorniSett.includes(giornoChiave)) chiaviDaEliminare.push(chiave);
+    }
+  }
+  for(const chiave of chiaviDaEliminare){
+    localStorage.removeItem(chiave);
+  }
+  await avviso('Storico consumi della settimana corrente azzerato.');
+  renderPiano();
+  if(document.getElementById('view-menu').classList.contains('active')) renderMenuSettimanale();
 });
 
 document.getElementById('btnAzzeraStorico').addEventListener('click', async ()=>{
