@@ -155,9 +155,12 @@ label:first-child{margin-top:0;}
   border:1px solid var(--border);
   border-radius:8px;
   aspect-ratio:0.92;
-  display:flex;flex-direction:column;
+  display:flex;flex-direction:row;
   overflow:hidden;cursor:pointer;position:relative;
   transition:border-color 0.15s, background 0.15s;
+}
+.cal-cella.speciale{
+  background: radial-gradient(circle at center, rgba(244,208,63,0.35) 0%, var(--panel) 70%);
 }
 .cal-cella.oggi{border:2px solid #2ecc71;}
 .cal-cella.selezionato{border-color:var(--accent);background:var(--accent-dim);}
@@ -166,11 +169,26 @@ label:first-child{margin-top:0;}
   position:absolute;top:2px;right:4px;
   font-size:0.58rem;color:var(--text-dim);z-index:2;
 }
-.cal-meta{
+.cal-colonna-sx{
+  flex:1;
+  display:flex;flex-direction:column;
+  min-width:0;
+}
+.cal-riga{
   flex:1;display:flex;align-items:center;justify-content:center;
   font-size:0.85rem;min-height:0;
 }
-.cal-meta-sopra{border-bottom:1px solid var(--border);}
+.cal-riga-pranzo{border-bottom:1px solid var(--border);}
+.cal-colonna-dx{
+  width:38%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border-left:1px solid var(--border);
+  font-size:0.8rem;
+  gap:1px;
+}
+.cal-riga .icona-pizza{
+  font-size:1.35rem;
+}
 
 .slot-empty{
   border:1px dashed var(--border);border-radius:var(--radius);padding:22px 14px;
@@ -588,8 +606,8 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
     <div class="cal-grid" id="calIntestazione"></div>
     <div class="cal-grid" id="calGriglia"></div>
     <div class="meta" style="margin-top:14px;line-height:1.8;">
-      ☕ Colazione speciale &nbsp; ☀️ Colazione programmata<br>
-      🍕 Pasto speciale &nbsp; 🍝 Pasto programmato
+      ☕ Colazione speciale &nbsp; ☕🥐 Cappuccino e brioche<br>
+      🍕 Pasto speciale &nbsp; 🍗🐟🧀🥚🫘 Proteina consumata
     </div>
   </div>
 </div>
@@ -7159,42 +7177,63 @@ async function apriCalendarioVisuale(){
 /* Legge lo stato di un giorno e ritorna le icone da mostrare nelle due metà
    della cella: metà superiore = colazione, metà inferiore = pranzo/cena. */
 function leggiStatoGiornoCalendario(iso, pianoPerId, ricettePerId){
-  const voceColazione = pianoPerId[iso+'_colazione'];
-  let colazioneIcona = '';
-  if(voceColazione){
-    let colazioneSpeciale = false;
-    if(voceColazione.colazioneSpeciale || voceColazione.colazioneSpecialeId){
-      colazioneSpeciale = true;
-    } else if(voceColazione.ricettaId){
-      const ricCol = ricettePerId[voceColazione.ricettaId];
-      if(ricCol && (ricCol.colazioneSpeciale || ricCol.piattoSpeciale)) colazioneSpeciale = true;
-    }
-    if(colazioneSpeciale){
-      colazioneIcona = '☕';
-    } else if(voceColazione.componenti && Object.values(voceColazione.componenti).some(v=>v)){
-      colazioneIcona = '☀️';
-    }
-  }
-  let haPastoSpeciale = false;
-  let haPasto = false;
-  for(const pasto of ['pranzo','cena']){
-    const voce = pianoPerId[iso+'_'+pasto];
-    if(!voce) continue;
-    const idRicette = voce.modo==='multi'
-      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
-      : [voce.ricettaId].filter(Boolean);
-    for(const rid of idRicette){
+  // PRANZO: icona proteica se consumato, pizza se speciale
+  let iconaPranzo = '';
+  let pranzoSpeciale = false;
+  const vocePranzo = pianoPerId[iso+'_pranzo'];
+  if(vocePranzo){
+    const idRicettePranzo = vocePranzo.modo==='multi'
+      ? [vocePranzo.secondoId].filter(Boolean)
+      : [vocePranzo.ricettaId].filter(Boolean);
+    for(const rid of idRicettePranzo){
       const r = ricettePerId[rid];
       if(r){
-        haPasto = true;
-        if(r.piattoSpeciale) haPastoSpeciale = true;
+        if(r.piattoSpeciale){
+          pranzoSpeciale = true;
+          iconaPranzo = '<span class="icona-pizza">🍕</span>';
+        } else if(vocePranzo.consumato && r.gruppoProteico){
+          iconaPranzo = iconaGruppoProteico(r.gruppoProteico);
+        } else if(vocePranzo.consumato){
+          iconaPranzo = '🍝';
+        }
       }
     }
   }
-  let pastoIcona = '';
-  if(haPastoSpeciale) pastoIcona = '🍕';
-  else if(haPasto) pastoIcona = '🍝';
-  return {colazioneIcona, pastoIcona};
+  // CENA: stessa logica
+  let iconaCena = '';
+  let cenaSpeciale = false;
+  const voceCena = pianoPerId[iso+'_cena'];
+  if(voceCena){
+    const idRicetteCena = voceCena.modo==='multi'
+      ? [voceCena.secondoId].filter(Boolean)
+      : [voceCena.ricettaId].filter(Boolean);
+    for(const rid of idRicetteCena){
+      const r = ricettePerId[rid];
+      if(r){
+        if(r.piattoSpeciale){
+          cenaSpeciale = true;
+          iconaCena = '<span class="icona-pizza">🍕</span>';
+        } else if(voceCena.consumato && r.gruppoProteico){
+          iconaCena = iconaGruppoProteico(r.gruppoProteico);
+        } else if(voceCena.consumato){
+          iconaCena = '🍝';
+        }
+      }
+    }
+  }
+  // COLAZIONE: solo se SPECIALE (la generica a gruppi non si mostra)
+  let haColazioneSpeciale = false;
+  let colazioneAlBar = false;
+  const voceColazione = pianoPerId[iso+'_colazione'];
+  if(voceColazione && voceColazione.colazioneSpecialeId){
+    haColazioneSpeciale = true;
+    const ricCol = ricettePerId[voceColazione.colazioneSpecialeId];
+    if(ricCol && ricCol.nome.toLowerCase().includes('cappuccino')){
+      colazioneAlBar = true;
+    }
+  }
+  const hasPiattoSpeciale = pranzoSpeciale || cenaSpeciale;
+  return {iconaPranzo, iconaCena, haColazioneSpeciale, colazioneAlBar, hasPiattoSpeciale};
 }
 
 async function renderCalendarioVisuale(){
@@ -7218,11 +7257,21 @@ async function renderCalendarioVisuale(){
   for(let d=1; d<=ultimoGiorno; d++){
     const iso = `${anno}-${String(mese+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const stato = leggiStatoGiornoCalendario(iso, pianoPerId, ricettePerId);
-    const classi = [iso===giornoSelezionato?'selezionato':'', iso===todayISO()?'oggi':''].filter(Boolean).join(' ');
+    const classi = [
+      iso===giornoSelezionato?'selezionato':'',
+      iso===todayISO()?'oggi':'',
+      stato.hasPiattoSpeciale?'speciale':''
+    ].filter(Boolean).join(' ');
+    const colonnaDxHtml = stato.haColazioneSpeciale
+      ? `<div class="cal-colonna-dx">${stato.colazioneAlBar ? '☕<br>🥐' : '☕'}</div>`
+      : '';
     html += `<div class="cal-cella ${classi}" data-cal-giorno="${iso}">
       <span class="cal-numero">${d}</span>
-      <div class="cal-meta cal-meta-sopra">${stato.colazioneIcona}</div>
-      <div class="cal-meta">${stato.pastoIcona}</div>
+      <div class="cal-colonna-sx">
+        <div class="cal-riga cal-riga-pranzo">${stato.iconaPranzo}</div>
+        <div class="cal-riga">${stato.iconaCena}</div>
+      </div>
+      ${colonnaDxHtml}
     </div>`;
   }
   document.getElementById('calGriglia').innerHTML = html;
