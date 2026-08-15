@@ -138,6 +138,39 @@ label:first-child{margin-top:0;}
   font-size:1.1rem;cursor:pointer;position:relative;
 }
 .btn-calendario input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+/* Calendario visuale: griglia 7 colonne con gap tra le celle per evitare
+   l'effetto "blocco unico". Ogni cella è divisa in due metà sovrapposte. */
+.cal-grid{
+  display:grid;
+  grid-template-columns:repeat(7, 1fr);
+  gap:6px;
+}
+.cal-grid + .cal-grid{margin-top:6px;}
+.cal-intestazione{
+  text-align:center;font-size:0.6rem;color:var(--text-dim);
+  padding:4px 0;font-weight:600;
+}
+.cal-cella{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:8px;
+  aspect-ratio:0.92;
+  display:flex;flex-direction:column;
+  overflow:hidden;cursor:pointer;position:relative;
+  transition:border-color 0.15s, background 0.15s;
+}
+.cal-cella.oggi{border:2px solid #2ecc71;}
+.cal-cella.selezionato{border-color:var(--accent);background:var(--accent-dim);}
+.cal-cella.vuoto{opacity:0.15;cursor:default;}
+.cal-numero{
+  position:absolute;top:2px;right:4px;
+  font-size:0.58rem;color:var(--text-dim);z-index:2;
+}
+.cal-meta{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  font-size:0.85rem;min-height:0;
+}
+.cal-meta-sopra{border-bottom:1px solid var(--border);}
 
 .slot-empty{
   border:1px dashed var(--border);border-radius:var(--radius);padding:22px 14px;
@@ -380,9 +413,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <div id="benvenutoPrimoUtilizzo"></div>
   <div class="giorni-riga">
     <div class="giorni" id="selettoreGiorni"></div>
-    <div class="btn-calendario" id="btnCalendarioSalto">📅
-      <input type="date" id="inputCalendarioSalto">
-    </div>
+    <div class="btn-calendario" id="btnCalendarioSalto">📅</div>
   </div>
 
   <div id="blocColazione" class="pasto-block"></div>
@@ -543,6 +574,27 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <button data-view="impostazioni"><span class="ic">⚙</span>Ecco</button>
 </nav>
 
+<!-- ===== MODAL: calendario visuale ===== -->
+<div class="modal-overlay hidden" id="modalCalendario">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="calTitoloMese"></h3>
+      <button class="close-x" data-close="modalCalendario">✕</button>
+    </div>
+    <div class="row" style="margin-bottom:12px;gap:8px;">
+      <button class="small" id="calMesePrec">◀</button>
+      <span class="meta" style="flex:1;text-align:center;">Tocca un giorno per selezionarlo</span>
+      <button class="small" id="calMeseSucc">▶</button>
+    </div>
+    <div class="cal-grid" id="calIntestazione"></div>
+    <div class="cal-grid" id="calGriglia"></div>
+    <div class="meta" style="margin-top:14px;line-height:1.8;">
+      ☕ Colazione speciale &nbsp; ☀️ Colazione programmata<br>
+      🍕 Pasto speciale &nbsp; 🍝 Pasto programmato
+    </div>
+  </div>
+</div>
+
 <!-- ===== MODAL: promemoria del giovedì ===== -->
 <div class="modal-overlay hidden" id="modalGiovedi">
   <div class="modal">
@@ -605,6 +657,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 
     <label style="margin-top:14px;">Quando preferisci questi alimenti? (tocca le caselle — lasciale vuote per decidere tu dopo)</label>
     <div id="questTabellaGiorno" style="overflow-x:auto;"></div>
+    <div id="questColazionePreferita" style="margin-top:14px;"></div>
 
     <button class="primary" id="btnQuestionarioGenera" style="margin-top:16px;width:100%;">Genera menù</button>
   </div>
@@ -1319,10 +1372,16 @@ async function renderVersioneHeader(){
   if(!el) return;
   const verIng = await getOne('impostazioni', 'versioneIngredientiRemote');
   const verRic = await getOne('impostazioni', 'versioneRicetteRemote');
-  console.log('[DEBUG versione]', {verIng, verRic});
   const vIng = verIng ? verIng.valore : 0;
   const vRic = verRic ? verRic.valore : 0;
-  el.textContent = 'v.1.' + vIng + '.' + vRic;
+  console.log('[DEBUG versione]', {verIng, verRic, vIng, vRic});
+  if(vIng === 0 && vRic === 0){
+    el.textContent = 'v.1.0.0 ⚠';
+    el.title = 'Versione non aggiornata: verifica che ingredienti.json e ricette.json su GitHub abbiano il campo "versione"';
+  } else {
+    el.textContent = 'v.1.' + vIng + '.' + vRic;
+    el.title = '';
+  }
 }
 
 async function caricaIngredientiJson(){
@@ -1553,6 +1612,13 @@ const EXTRA_CAP_SOTTOTIPI = {
 const CAP_SPUNTINO_SETTIMANALE = { da_limitare: 2, grana_spuntino: 3, crackers_spuntino: 3, pane_marmellata_spuntino: 3, granita_spuntino: 3 };
 /* Cadenza GIORNALIERA (non settimanale) — solo la frutta secca ce l'ha nella guida */
 const CAP_SPUNTINO_GIORNALIERO = { frutta_secca_giornaliero: 1 };
+/* Mappatura ingredienti "a dadini" -> versione intera equivalente.
+   Usata dalla lista spesa per suggerire di usare la versione intera
+   disponibile in inventario invece di acquistare il prodotto a dadini. */
+const MAPPATURA_DADINI_INTEGRALE = {
+  'pollo a dadini': 'petto di pollo',
+  'pancetta a cubetti': 'pancetta'
+};
 /* Cadenza minima (in giorni) prima di poter riproporre la STESSA ricetta quando non
    ha un gruppoProteico assegnato (primi di soli carboidrati, contorni, molti
    spuntini): per queste — a differenza di carne/pesce/formaggi/uova/legumi — non
@@ -1807,9 +1873,13 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
     }
     if(!esistenteColazione || (!esistenteColazione.componenti && !esistenteColazione.colazioneSpecialeId)){
       const colazionePref = await getOne('impostazioni', 'colazionePreferita');
+      const colazionePrefGiorniRec = await getOne('impostazioni', 'colazionePreferitaGiorni');
+      const giorniColazionePref = colazionePrefGiorniRec ? colazionePrefGiorniRec.valore : [];
+      const indiceGiornoColazione = giorni.indexOf(g);
+      const usaColazionePref = giorniColazionePref.length === 0 || giorniColazionePref.includes(indiceGiornoColazione);
       const componenti = {};
       for(const gr of COLAZIONE_GRUPPI){
-        const idPref = colazionePref && colazionePref.valore ? colazionePref.valore[gr.chiave] : null;
+        const idPref = (usaColazionePref && colazionePref && colazionePref.valore) ? colazionePref.valore[gr.chiave] : null;
         const variantePrefValida = idPref && varianti.some(v=>v.id===idPref);
         if(variantePrefValida){
           componenti[gr.chiave] = idPref;
@@ -2233,6 +2303,32 @@ async function calcolaConsumoGiorni(listaGiorniIso){
   return tot;
 }
 
+/* Somma kcal/prot/carb/grassi di tutti i pasti PROGRAMMATI (con ricetta
+   assegnata, indipendentemente dal consumato) per un singolo giorno.
+   Usata per il confronto programmato vs consumato nei giorni passati. */
+async function calcolaProgrammatoGiorno(giornoIso){
+  const tot = {kcal:0, prot:0, carb:0, grassi:0};
+  const voceColazione = await getOne('piano', giornoIso+'_colazione');
+  if(voceColazione && (voceColazione.componenti || voceColazione.colazioneSpecialeId)){
+    const n = await nutrizioneColazione(voceColazione.componenti, null, voceColazione.colazioneSpecialeId);
+    tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+  }
+  for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
+    const voce = await getOne('piano', giornoIso+'_'+pasto);
+    if(!voce) continue;
+    const idRicette = voce.modo==='multi'
+      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
+      : [voce.ricettaId].filter(Boolean);
+    for(const rid of idRicette){
+      const r = await getOne('ricette', rid);
+      if(!r) continue;
+      const n = await nutrizionePerPersona(r);
+      tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+    }
+  }
+  return tot;
+}
+
 function giorniDelMeseCorrente(){
   const oggi = new Date();
   const anno = oggi.getFullYear(), mese = oggi.getMonth();
@@ -2288,6 +2384,23 @@ async function renderGraficiConsumo(){
   if(!el) return;
 
   const oggi = todayISO();
+  // Giorni passati: mostra il confronto programmato vs consumato del giorno
+  if(giornoSelezionato < oggi){
+    const programmato = await calcolaProgrammatoGiorno(giornoSelezionato);
+    const consumato = await calcolaConsumoGiorni([giornoSelezionato]);
+    const targetGiornoPassato = targetPeriodo('giorno');
+    const labelGiornoTesto = labelGiorno(giornoSelezionato);
+    el.innerHTML = `
+      <div style="padding:4px 0;">
+        <div class="meta" style="margin-bottom:10px;font-weight:700;">📊 ${labelGiornoTesto} — confronto programmato vs consumato</div>
+        <div class="meta" style="margin-bottom:6px;color:var(--accent);">Programmato</div>
+        ${renderQuattroBarre(programmato, targetGiornoPassato, 1)}
+        <div class="meta" style="margin-bottom:6px;margin-top:12px;color:var(--text-dim);">Realmente consumato</div>
+        ${renderQuattroBarre(consumato, targetGiornoPassato, 1)}
+      </div>`;
+    return;
+  }
+
   const consumoGiorno = await calcolaConsumoGiorni([oggi]);
   const consumoSettimana = await calcolaConsumoGiorni(giorniSettimana(0));
   const consumoMeseReale = await calcolaConsumoGiorni(giorniDelMeseCorrente());
@@ -2425,6 +2538,12 @@ async function renderPiano(){
   await renderNutrizioneGiorno();
   await renderIndicatoreIntegrale();
   await renderFrequenzeSettimana();
+  // Giorni passati: apri automaticamente il pannello grafici per mostrare il confronto
+  const pannelloGrafici = document.getElementById('pannelloGraficiConsumo');
+  if(giornoSelezionato < todayISO() && pannelloGrafici){
+    pannelloGrafici.open = true;
+    await renderGraficiConsumo();
+  }
 }
 
 /* B9 */
@@ -4910,7 +5029,7 @@ async function flussoGeneraMenuConScelte(scartoSettimane, preferenze){
    dell'algoritmo: restringono lo spazio di ricerca con informazioni che
    l'algoritmo non può sapere da solo (gusti, tempo disponibile). Il resto
    (tetti PDF, dispensa, varietà, stagione) resta gestito dal motore. */
-let statoQuestionario = {verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false, verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget:0};
+let statoQuestionario = {verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false, verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget:0, colazionePrefGiorni:[]};
 const CATEGORIE_PROTEICHE_QUESTIONARIO = [
   {chiave:'carne', label:'Carne'}, {chiave:'pesce', label:'Pesce'},
   {chiave:'formaggi', label:'Formaggi'}, {chiave:'uova', label:'Uova'}, {chiave:'legumi', label:'Legumi'}
@@ -5925,6 +6044,41 @@ async function renderQuestionarioMenu(){
     <button data-quest-tempo="nessuno" class="${(!statoQuestionario.pocoTempoPranzo && !statoQuestionario.pocoTempoCena)?'active':''}">Ho tempo</button>
   `;
 
+  // Sezione colazione ricorrente: mostra la colazione preferita e permette
+  // di scegliere quali giorni applicarla
+  const colazionePrefSalvataQuest = await getOne('impostazioni', 'colazionePreferita');
+  const colazionePrefGiorniSalvati = await getOne('impostazioni', 'colazionePreferitaGiorni');
+  statoQuestionario.colazionePrefGiorni = colazionePrefGiorniSalvati ? colazionePrefGiorniSalvati.valore : [];
+  const elColazionePref = document.getElementById('questColazionePreferita');
+  if(elColazionePref){
+    if(colazionePrefSalvataQuest && colazionePrefSalvataQuest.valore){
+      const variantiQuest = await getAll('varianti');
+      const nomiComponenti = COLAZIONE_GRUPPI.map(gr=>{
+        const id = colazionePrefSalvataQuest.valore[gr.chiave];
+        if(!id) return null;
+        const v = variantiQuest.find(x=>x.id===id);
+        return v ? v.nome : null;
+      }).filter(Boolean);
+      elColazionePref.innerHTML = `
+        <div class="meta" style="margin-bottom:6px;">Colazione preferita salvata: <b>${nomiComponenti.join(' · ')}</b></div>
+        <div class="meta" style="margin-bottom:6px;">Scegli in quali giorni applicarla (i giorni non selezionati avranno una colazione diversa):</div>
+        <div class="tabgroup">
+          ${NOMI_GIORNI_BREVI.map((g, idx)=>`<button data-quest-colpref-giorno="${idx}" class="${statoQuestionario.colazionePrefGiorni.includes(idx)?'active':''}">${g}</button>`).join('')}
+        </div>`;
+      elColazionePref.querySelectorAll('[data-quest-colpref-giorno]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const idx = parseInt(b.dataset.questColprefGiorno);
+          const pos = statoQuestionario.colazionePrefGiorni.indexOf(idx);
+          if(pos>=0) statoQuestionario.colazionePrefGiorni.splice(pos,1);
+          else statoQuestionario.colazionePrefGiorni.push(idx);
+          renderQuestionarioMenu();
+        });
+      });
+    } else {
+      elColazionePref.innerHTML = `<div class="meta">Nessuna colazione preferita salvata. Per salvarla, vai su Piano → Colazione → "Salva come preferita".</div>`;
+    }
+  }
+
   const giorniTabella = giorniSettimana(statoQuestionario.scartoTarget);
   const rigaIntestazione = giorniTabella.map(g=>{
     const d = new Date(g+'T00:00:00');
@@ -6045,6 +6199,8 @@ document.getElementById('btnQuestionarioGenera').addEventListener('click', async
     giornoCategoria: statoQuestionario.tabellaGiorno
   };
   document.getElementById('modalQuestionarioMenu').classList.add('hidden');
+  // Salva i giorni in cui applicare la colazione preferita
+  await put('impostazioni', {chiave:'colazionePreferitaGiorni', valore: statoQuestionario.colazionePrefGiorni});
   await flussoGeneraMenuConScelte(statoQuestionario.scartoTarget, preferenze);
   renderPiano();
   renderMenuSettimanale();
@@ -6066,10 +6222,6 @@ document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)
     clearInterval(intervalloCaroselloGrafici);
     intervalloCaroselloGrafici = null;
   }
-});
-
-document.getElementById('inputCalendarioSalto').addEventListener('change', (e)=>{
-  if(e.target.value){ giornoSelezionato = e.target.value; renderPiano(); }
 });
 
 async function riepilogoTestualePasto(giorno, pasto){
@@ -6279,6 +6431,29 @@ function derivaDaCategoria(categoria){
   return {consistenza:'gia_cotto', congelabile:'no', zona:'dispensa'}; // conf
 }
 
+/* Determina la categoria alimentare di una variante per l'organizzazione
+   di spesa e inventario. Usa il gruppo dell'ingrediente base + il nome della
+   variante per le proteine (suddivisione carne/pesce/formaggi/uova/legumi). */
+function categoriaAlimentare(variante, ingredienteBase){
+  const gruppo = ingredienteBase ? ingredienteBase.gruppo : '';
+  const nome = (variante.nome || '').toLowerCase();
+  if(gruppo === 'verdura'){
+    return variante.categoria === 'surgelato' ? 'Verdure surgelate' : 'Verdure fresche';
+  }
+  if(gruppo === 'frutta') return 'Frutta';
+  if(gruppo === 'carboidrati') return 'Carboidrati';
+  if(gruppo === 'grassi') return 'Grassi e condimenti';
+  if(gruppo === 'proteine'){
+    if(nome.includes('pollo') || nome.includes('tacchino') || nome.includes('maiale') || nome.includes('manzo') || nome.includes('vitello') || nome.includes('hamburger') || nome.includes('pancetta') || nome.includes('bresaola') || nome.includes('prosciutto') || nome.includes('costine') || nome.includes('nodino') || nome.includes('fettina') || nome.includes('sovracosce') || nome.includes('suino')) return 'Carne e affettati';
+    if(nome.includes('nasello') || nome.includes('salmone') || nome.includes('sgombro') || nome.includes('orata') || nome.includes('sogliola') || nome.includes('polpo') || nome.includes('gamberetti') || nome.includes('tonno') || nome.includes('branzino')) return 'Pesce e frutti di mare';
+    if(nome.includes('mozzarella') || nome.includes('parmigiano') || nome.includes('stracchino') || nome.includes('ricotta') || nome.includes('brie') || nome.includes('feta') || nome.includes('crescenza') || nome.includes('pecorino') || nome.includes('emmental') || nome.includes('taleggio') || nome.includes('tomini') || nome.includes('provola') || nome.includes('formaggio') || nome.includes('yogurt') || nome.includes('latte') || nome.includes('panna')) return 'Formaggi e latticini';
+    if(nome.includes('uova') || nome.includes('uovo')) return 'Uova';
+    if(nome.includes('ceci') || nome.includes('fagioli') || nome.includes('lenticchie') || nome.includes('tofu')) return 'Legumi e sostituti';
+    return 'Proteine';
+  }
+  return 'Altro';
+}
+
 async function apriModalModificaVariante(varianteId){
   const varianti = await getAll('varianti');
   const v = varianti.find(x=>x.id===varianteId);
@@ -6305,25 +6480,30 @@ async function renderInventario(){
   await renderAlertCongelamento();
   const inventario = await getAll('inventario');
   const varianti = await getAll('varianti');
-  const zone = ['dispensa','frigo','freezer'];
-  const labelZona = {dispensa:'Dispensa', frigo:'Frigo', freezer:'Freezer'};
+  const ingredientiBaseInv = await getAll('ingredienti');
+  const ingredientiPerIdInv = {}; for(const ing of ingredientiBaseInv) ingredientiPerIdInv[ing.id] = ing;
 
   const el = document.getElementById('zoneInventario');
   el.innerHTML = '';
-  for(const zona of zone){
-    const voci = inventario.filter(v=>v.zona===zona);
+  // Raggruppa per categoria alimentare
+  const vociPerCategoria = {};
+  for(const voce of inventario){
+    const variante = varianti.find(v=>v.id===voce.variantId);
+    if(!variante) continue;
+    const base = ingredientiPerIdInv[variante.ingredienteId];
+    const cat = categoriaAlimentare(variante, base);
+    if(!vociPerCategoria[cat]) vociPerCategoria[cat] = [];
+    vociPerCategoria[cat].push(voce);
+  }
+  const ordineCategorie = ['Carne e affettati','Pesce e frutti di mare','Formaggi e latticini','Uova','Legumi e sostituti','Verdure fresche','Verdure surgelate','Frutta','Carboidrati','Grassi e condimenti','Proteine','Altro'];
+  for(const cat of ordineCategorie){
+    const voci = vociPerCategoria[cat];
+    if(!voci || !voci.length) continue;
     const header = document.createElement('div');
     header.className='zona-header';
-    header.textContent = labelZona[zona];
+    header.textContent = cat;
     el.appendChild(header);
 
-    if(!voci.length){
-      const empty = document.createElement('div');
-      empty.className='meta';
-      empty.textContent='Vuoto.';
-      el.appendChild(empty);
-      continue;
-    }
     for(const voce of voci){
       const variante = varianti.find(v=>v.id===voce.variantId);
       if(!variante) continue;
@@ -6531,8 +6711,27 @@ async function calcolaListaSpesa(scartoSettimane){
   }
 
   const varianti = await getAll('varianti');
-  el.innerHTML = '';
+  const ingredientiBaseSpesa = await getAll('ingredienti');
+  const ingredientiPerIdSpesa = {}; for(const ing of ingredientiBaseSpesa) ingredientiPerIdSpesa[ing.id] = ing;
+  // Raggruppa per categoria alimentare
+  const vociPerCatSpesa = {};
   for(const s of voci){
+    const v = varianti.find(x=>x.id===s.variantId);
+    const base = v ? ingredientiPerIdSpesa[v.ingredienteId] : null;
+    const cat = v ? categoriaAlimentare(v, base) : 'Altro';
+    if(!vociPerCatSpesa[cat]) vociPerCatSpesa[cat] = [];
+    vociPerCatSpesa[cat].push(s);
+  }
+  el.innerHTML = '';
+  const ordineCatSpesa = ['Carne e affettati','Pesce e frutti di mare','Formaggi e latticini','Uova','Legumi e sostituti','Verdure fresche','Verdure surgelate','Frutta','Carboidrati','Grassi e condimenti','Proteine','Altro'];
+  for(const cat of ordineCatSpesa){
+    const vociCat = vociPerCatSpesa[cat];
+    if(!vociCat || !vociCat.length) continue;
+    const headerCat = document.createElement('div');
+    headerCat.className='zona-header';
+    headerCat.textContent = cat;
+    el.appendChild(headerCat);
+    for(const s of vociCat){
     const v = varianti.find(x=>x.id===s.variantId);
     const pillTesto = v && v.unitaPezzo ? formattaQuantita(v, s.totaleAcquisto) : `${s.confezioni}× ${s.formato>0?s.formato+'g':'sfuso'}`;
     const row = document.createElement('div');
@@ -6565,6 +6764,28 @@ async function calcolaListaSpesa(scartoSettimane){
       calcolaListaSpesa(scartoSettimane);
     });
     el.appendChild(row);
+    }
+  }
+  // Suggerimento per ingredienti "a dadini": verifica se esiste versione intera in inventario
+  const inventarioPerDadini = await getAll('inventario');
+  const disponibiliDadini = inventarioPerDadini.filter(i=>i.stato==='disponibile' && i.quantita>0);
+  for(const s of voci){
+    if(s.comprato) continue;
+    const nomeLower = s.nome.toLowerCase();
+    const versioneIntegra = MAPPATURA_DADINI_INTEGRALE[nomeLower];
+    if(!versioneIntegra) continue;
+    const varianteIntegra = varianti.find(v=>v.nome.toLowerCase()===versioneIntegra);
+    if(!varianteIntegra) continue;
+    const disponibileIntegra = disponibiliDadini.filter(i=>i.variantId===varianteIntegra.id).reduce((sum,i)=>sum+i.quantita,0);
+    if(disponibileIntegra > 0){
+      const headerSuggerimento = document.createElement('div');
+      headerSuggerimento.className='card';
+      headerSuggerimento.style.padding='10px 14px';
+      headerSuggerimento.style.borderColor='var(--accent)';
+      headerSuggerimento.innerHTML = `<div class="meta">💡 Hai già <b>${varianteIntegra.nome}</b> (${Math.round(disponibileIntegra)}g) in inventario: puoi usarlo e tagliarlo a dadini invece di comprare <b>${s.nome}</b>.</div>`;
+      el.insertBefore(headerSuggerimento, el.querySelector('.card'));
+      break;
+    }
   }
 }
 
@@ -6844,6 +7065,106 @@ function aggiornaLoader(percento, testo){
   if(barra) barra.style.width = percento+'%';
   if(testoEl) testoEl.textContent = testo;
 }
+
+let calMeseCorrente = new Date();
+
+document.getElementById('btnCalendarioSalto').addEventListener('click', ()=>{
+  apriCalendarioVisuale();
+});
+
+async function apriCalendarioVisuale(){
+  calMeseCorrente = new Date(giornoSelezionato + 'T00:00:00');
+  await renderCalendarioVisuale();
+  document.getElementById('modalCalendario').classList.remove('hidden');
+}
+
+/* Legge lo stato di un giorno e ritorna le icone da mostrare nelle due metà
+   della cella: metà superiore = colazione, metà inferiore = pranzo/cena. */
+function leggiStatoGiornoCalendario(iso, pianoPerId, ricettePerId){
+  const voceColazione = pianoPerId[iso+'_colazione'];
+  let colazioneIcona = '';
+  if(voceColazione){
+    let colazioneSpeciale = false;
+    if(voceColazione.colazioneSpeciale || voceColazione.colazioneSpecialeId){
+      colazioneSpeciale = true;
+    } else if(voceColazione.ricettaId){
+      const ricCol = ricettePerId[voceColazione.ricettaId];
+      if(ricCol && (ricCol.colazioneSpeciale || ricCol.piattoSpeciale)) colazioneSpeciale = true;
+    }
+    if(colazioneSpeciale){
+      colazioneIcona = '☕';
+    } else if(voceColazione.componenti && Object.values(voceColazione.componenti).some(v=>v)){
+      colazioneIcona = '☀️';
+    }
+  }
+  let haPastoSpeciale = false;
+  let haPasto = false;
+  for(const pasto of ['pranzo','cena']){
+    const voce = pianoPerId[iso+'_'+pasto];
+    if(!voce) continue;
+    const idRicette = voce.modo==='multi'
+      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
+      : [voce.ricettaId].filter(Boolean);
+    for(const rid of idRicette){
+      const r = ricettePerId[rid];
+      if(r){
+        haPasto = true;
+        if(r.piattoSpeciale) haPastoSpeciale = true;
+      }
+    }
+  }
+  let pastoIcona = '';
+  if(haPastoSpeciale) pastoIcona = '🍕';
+  else if(haPasto) pastoIcona = '🍝';
+  return {colazioneIcona, pastoIcona};
+}
+
+async function renderCalendarioVisuale(){
+  const anno = calMeseCorrente.getFullYear();
+  const mese = calMeseCorrente.getMonth();
+  document.getElementById('calTitoloMese').textContent = NOMI_MESI_ESTESI[mese] + ' ' + anno;
+  document.getElementById('calIntestazione').innerHTML = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'].map(g=>
+    `<div class="cal-intestazione">${g}</div>`
+  ).join('');
+  const tuttoIlPiano = await getAll('piano');
+  const tutteLeRicette = await getAll('ricette');
+  const pianoPerId = {}; for(const v of tuttoIlPiano) pianoPerId[v.id] = v;
+  const ricettePerId = {}; for(const r of tutteLeRicette) ricettePerId[r.id] = r;
+  const primoGiorno = new Date(anno, mese, 1);
+  const offset = (primoGiorno.getDay()+6)%7;
+  const ultimoGiorno = new Date(anno, mese+1, 0).getDate();
+  let html = '';
+  for(let i=0; i<offset; i++){
+    html += `<div class="cal-cella vuoto"></div>`;
+  }
+  for(let d=1; d<=ultimoGiorno; d++){
+    const iso = `${anno}-${String(mese+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const stato = leggiStatoGiornoCalendario(iso, pianoPerId, ricettePerId);
+    const classi = [iso===giornoSelezionato?'selezionato':'', iso===todayISO()?'oggi':''].filter(Boolean).join(' ');
+    html += `<div class="cal-cella ${classi}" data-cal-giorno="${iso}">
+      <span class="cal-numero">${d}</span>
+      <div class="cal-meta cal-meta-sopra">${stato.colazioneIcona}</div>
+      <div class="cal-meta">${stato.pastoIcona}</div>
+    </div>`;
+  }
+  document.getElementById('calGriglia').innerHTML = html;
+  document.querySelectorAll('#calGriglia [data-cal-giorno]').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      giornoSelezionato = c.dataset.calGiorno;
+      document.getElementById('modalCalendario').classList.add('hidden');
+      renderPiano();
+    });
+  });
+}
+
+document.getElementById('calMesePrec').addEventListener('click', async ()=>{
+  calMeseCorrente.setMonth(calMeseCorrente.getMonth()-1);
+  await renderCalendarioVisuale();
+});
+document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
+  calMeseCorrente.setMonth(calMeseCorrente.getMonth()+1);
+  await renderCalendarioVisuale();
+});
 
 (async ()=>{
   try{
