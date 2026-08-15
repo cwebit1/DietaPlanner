@@ -3326,10 +3326,12 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
     const inventario = await getAll('inventario');
     // Livello 1: frigo (scadenze + avanzi)
     let candidatiVariantIds = [...scadenze.map(s=>s.variantId), ...avanzi.map(a=>a.variantId)];
+    let origineSalvafrigo = 'frigo';
     // Livello 2: freezer (se frigo vuoto)
     if(!candidatiVariantIds.length){
       const freezerItems = inventario.filter(i=>i.zona==='freezer' && i.stato==='disponibile' && i.quantita>0);
       candidatiVariantIds = freezerItems.map(i=>i.variantId);
+      origineSalvafrigo = 'freezer';
     }
     // Livello 3: generazione normale (se entrambi vuoti)
     if(!candidatiVariantIds.length){
@@ -3352,7 +3354,7 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
       renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno, elementId);
       return;
     }
-    // Ordina: scadenza più urgente prima
+    // Ordina per urgenza: scadenza più urgente prima, poi avanzo, poi giacenza
     ricetteUtili.sort((a,b)=>{
       const urgenzaA = Math.min(99, ...a.ingredienti.filter(i=>i.variantId && candidatiVariantIds.includes(i.variantId)).map(i=>{
         const s = scadenze.find(x=>x.variantId===i.variantId);
@@ -3364,13 +3366,16 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
       }));
       return urgenzaA - urgenzaB;
     });
-    // Applica la migliore come candidato
-    const scelta = ricetteUtili[0];
-    const chiaveCorrente = draft.modo==='multi' ? draft.portataAttiva+'Id' : 'ricettaId';
-    draft[chiaveCorrente] = scelta.id;
-    draft.viaSalvafrigo = chiaveCorrente;
-    draft.forzatoIgnorato = false;
-    renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno, elementId);
+    // Prendi le prime 3 proposte distinte
+    const top3 = ricetteUtili.slice(0, 3);
+    // Mostra il modal con le 3 proposte
+    await mostraModalSalvafrigo(top3, origineSalvafrigo, (ricettaScelta)=>{
+      const chiaveCorrente = draft.modo==='multi' ? draft.portataAttiva+'Id' : 'ricettaId';
+      draft[chiaveCorrente] = ricettaScelta.id;
+      draft.viaSalvafrigo = chiaveCorrente;
+      draft.forzatoIgnorato = false;
+      renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno, elementId);
+    });
   });
 
   cont.querySelector('[data-alt-conferma]').addEventListener('click', async ()=>{
@@ -3932,6 +3937,42 @@ function mostraModaleAvviso(msg, pulsanti){
     });
   });
 }
+/* Modal dedicato per il salvafrigo strutturato: mostra fino a 3 proposte
+   ordinate per urgenza con icona ♻️ e indicatore di origine (frigo/freezer).
+   L'utente sceglie quale applicare; il callback viene chiamato con la ricetta
+   scelta. Se annulla, non succede nulla. */
+async function mostraModalSalvafrigo(ricette, origine, callback){
+  const labelOrigine = origine === 'frigo' ? '🧊 Dal frigo (scadenze e avanzi)' : '❄️ Dal freezer';
+  const righeProposte = await Promise.all(ricette.map(async (r, i)=>{
+    const nutri = await nutrizionePerPersona(r);
+    return `<div class="card" style="margin-bottom:10px;padding:12px;cursor:pointer;border-color:var(--accent-dim);" data-sf-scelta="${i}">
+      <div class="row" style="gap:8px;align-items:baseline;">
+        <span style="font-size:1.1rem;">♻️</span>
+        <span style="font-weight:700;font-size:0.9rem;flex:1;">${r.nome}</span>
+        <span class="meta">${Math.round(nutri.kcal)} kcal</span>
+      </div>
+      <div class="meta" style="margin-top:4px;">${fasciaBadgeColorata(r.fascia)}</div>
+    </div>`;
+  }));
+  const htmlProposte = righeProposte.join('');
+  document.getElementById('modalDettaglioTitolo').textContent = '♻️ Ricetta salvafrigo';
+  document.getElementById('modalDettaglioContenuto').innerHTML =
+    `<div class="meta" style="margin-bottom:12px;">${labelOrigine} — scegli una delle ${ricette.length} proposte per recuperare ingredienti:</div>` +
+    htmlProposte +
+    `<button class="secondary" data-sf-annulla="1" style="margin-top:8px;">Annulla</button>`;
+  document.getElementById('modalDettaglio').classList.remove('hidden');
+  document.getElementById('modalDettaglioContenuto').querySelector('[data-sf-annulla]').addEventListener('click', ()=>{
+    document.getElementById('modalDettaglio').classList.add('hidden');
+  });
+  document.getElementById('modalDettaglioContenuto').querySelectorAll('[data-sf-scelta]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const idx = parseInt(el.dataset.sfScelta);
+      document.getElementById('modalDettaglio').classList.add('hidden');
+      callback(ricette[idx]);
+    });
+  });
+}
+
 function avviso(msg){
   return mostraModaleAvviso(msg, [{testo:'OK', valore:true, classe:'primary'}]);
 }
