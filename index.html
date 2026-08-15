@@ -385,17 +385,17 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
     </div>
   </div>
 
-  <details class="pasto-sub-panel" id="pannelloGraficiConsumo">
-    <summary>📊 Grafici di consumo</summary>
-    <div class="contenuto" id="graficiConsumoCarosello"></div>
-  </details>
-
   <div id="blocColazione" class="pasto-block"></div>
   <div id="blocSpuntino1" class="pasto-block"></div>
   <div id="blocPranzo" class="pasto-block"></div>
   <div id="blocSpuntino2" class="pasto-block"></div>
   <div id="blocCena" class="pasto-block"></div>
   <div id="blocSpuntino3" class="pasto-block"></div>
+
+  <details class="pasto-sub-panel" id="pannelloGraficiConsumo">
+    <summary>📊 Grafici di consumo</summary>
+    <div class="contenuto" id="graficiConsumoCarosello"></div>
+  </details>
 
   <div class="card" style="margin-top:14px;">
     <h3 style="margin-bottom:8px;">Nutrizione del giorno (per 1 persona)</h3>
@@ -879,6 +879,9 @@ async function seedIfEmpty(){
     {nome:'Latte intero', gruppo:'grassi', varianti:[
       {nome:'Latte intero', formato:1000, consistenza:'gia_cotto', congelabile:'no', zona:'frigo', kcal:64,prot:3.2,carb:4.8,grassi:3.6, qta:200}
     ]},
+    {nome:'Latte parzialmente scremato', gruppo:'grassi', varianti:[
+      {nome:'Latte parzialmente scremato', formato:1000, consistenza:'gia_cotto', congelabile:'no', zona:'frigo', kcal:46,prot:3.3,carb:4.9,grassi:1.5, qta:0}
+    ]},
     {nome:'Burro', gruppo:'grassi', varianti:[
       {nome:'Burro', formato:250, consistenza:'gia_cotto', congelabile:'si', zona:'frigo', kcal:717,prot:0.9,carb:0.1,grassi:81, qta:125}
     ]},
@@ -1185,6 +1188,7 @@ async function seedIfEmpty(){
     'fette biscottate': {gruppo:'carboidrati', porzione:30},
     'biscotti secchi': {gruppo:'carboidrati', porzione:25},
     'latte intero': {gruppo:'proteine', porzione:200},
+    'latte parzialmente scremato': {gruppo:'proteine', porzione:200},
     'yogurt bianco': {gruppo:'proteine', porzione:125},
     'ricotta': {gruppo:'proteine', porzione:55},
     'uova': {gruppo:'proteine', porzione:120},
@@ -1225,7 +1229,7 @@ async function seedIfEmpty(){
     'limone':'fresco', 'mela':'fresco', 'melanzane':'fresco', 'melone':'fresco',
     'peperoni':'fresco', 'pera':'fresco', 'pomodoro fresco':'fresco',
     'radicchio':'fresco', 'spinaci freschi':'fresco', 'zucchine':'fresco',
-    'latte intero':'fresco', 'yogurt bianco':'fresco',
+    'latte intero':'fresco', 'latte parzialmente scremato':'fresco', 'yogurt bianco':'fresco',
     'ricotta':'fresco', 'mozzarella':'fresco', 'crescenza':'fresco', 'stracchino':'fresco',
     'panna da cucina':'fresco', 'feta':'fresco', 'brie':'fresco',
     'petto di pollo':'fresco', 'petto di tacchino':'fresco', 'fettina di manzo':'fresco',
@@ -1315,6 +1319,7 @@ async function renderVersioneHeader(){
   if(!el) return;
   const verIng = await getOne('impostazioni', 'versioneIngredientiRemote');
   const verRic = await getOne('impostazioni', 'versioneRicetteRemote');
+  console.log('[DEBUG versione]', {verIng, verRic});
   const vIng = verIng ? verIng.valore : 0;
   const vRic = verRic ? verRic.valore : 0;
   el.textContent = 'v.1.' + vIng + '.' + vRic;
@@ -1580,7 +1585,7 @@ function mostraVista(nome){
   if(nome==='menu') renderMenuSettimanale();
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
-  if(nome==='impostazioni'){ renderInventario(); renderInfoVersioniRemote(); }
+  if(nome==='impostazioni'){ renderInfoVersioniRemote(); }
 }
 document.querySelectorAll('nav.tabbar button').forEach(btn=>{
   btn.addEventListener('click', ()=> mostraVista(btn.dataset.view));
@@ -2788,6 +2793,10 @@ async function renderColazione(giorno, elementId){
   el.querySelector('[data-ricetta-colazione]').addEventListener('click', ()=> apriModalDettaglioColazione(voce.componenti, voce.colazioneSpecialeId));
   el.querySelector('[data-info-colazione]').addEventListener('click', ()=> apriModalInfoColazione(voce.componenti, voce.colazioneSpecialeId));
   el.querySelector('[data-salva-colazione-pref]')?.addEventListener('click', async ()=>{
+    if(!voce.componenti){
+      await avviso('⚠ Impossibile salvare come preferita: la colazione speciale è attiva. Torna alla colazione a gruppi per salvare una preferita.');
+      return;
+    }
     await put('impostazioni', {chiave:'colazionePreferita', valore: voce.componenti});
     await avviso('✅ Colazione salvata come preferita. Verrà proposta per tutti i giorni alla generazione del menù.');
     renderColazione(giorno, elementId);
@@ -3037,8 +3046,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
         </div>
       </div>
     </span>` : '';
-  const iconaBlocco = `<button data-blocca-pasto="1" title="${voce.bloccata?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
-    style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;">${iconaBloccoGlifo(voce.bloccata)}</button>`;
+  const iconaBlocco = '';
   const corpoHtmlIniziale = elementId
     ? `<div class="row" style="margin-bottom:8px;justify-content:flex-end;">${iconaBlocco}</div>`
     : `<div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
@@ -6002,12 +6010,6 @@ async function riepilogoTestualePasto(giorno, pasto){
   let iconaStato = '';
   if(voce.consumato) iconaStato = '✓ ';
   else if(voce.bloccata) iconaStato = '🔒 ';
-  else {
-    const haRicetta = voce.modo==='multi'
-      ? (voce.primoId || voce.secondoId || voce.contornoId)
-      : voce.ricettaId;
-    if(haRicetta) iconaStato = '📌 ';
-  }
   // G2: icona di origine — ⭐ se il pasto è stato confermato manualmente dall'utente
   let iconaOrigine = '';
   if(voce.origine === 'utente') iconaOrigine = '⭐ ';
