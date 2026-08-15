@@ -7366,6 +7366,150 @@
         "Cuoci il riso, scolalo al dente.",
         "Unisci il riso al condimento e manteca 2 minuti."
       ]
+    },
+    {
+      "nome": "Budino, Cappuccino e Brioche",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 396,
+        "prot": 12,
+        "carb": 50,
+        "grassi": 16
+      }
+    },
+    {
+      "nome": "Panettone (fetta)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 264,
+        "prot": 6,
+        "carb": 42,
+        "grassi": 8
+      }
+    },
+    {
+      "nome": "Pandoro (fetta)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 280,
+        "prot": 6,
+        "carb": 43,
+        "grassi": 10
+      }
+    },
+    {
+      "nome": "Colomba (fetta)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 272,
+        "prot": 6,
+        "carb": 42,
+        "grassi": 9
+      }
+    },
+    {
+      "nome": "Crostata (fetta)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 304,
+        "prot": 4,
+        "carb": 44,
+        "grassi": 12
+      }
+    },
+    {
+      "nome": "Torta allo yogurt (fetta)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 240,
+        "prot": 5,
+        "carb": 34,
+        "grassi": 10
+      }
+    },
+    {
+      "nome": "Ciambellone (fetta)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 264,
+        "prot": 5,
+        "carb": 38,
+        "grassi": 10
+      }
+    },
+    {
+      "nome": "Toast al prosciutto",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 268,
+        "prot": 17,
+        "carb": 29,
+        "grassi": 9
+      }
+    },
+    {
+      "nome": "Pane tostato e uova strapazzate",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 353,
+        "prot": 20,
+        "carb": 29,
+        "grassi": 17
+      }
     }
   ]
 }
