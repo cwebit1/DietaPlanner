@@ -1,5 +1,5 @@
 {
-  "versione": 1,
+  "versione": 2,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -7496,7 +7496,7 @@
       }
     },
     {
-      "nome": "Budino",
+      "nome": "Colazione con budino",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -7505,14 +7505,14 @@
       "ingredienti": [],
       "procedimento": [],
       "nutrizioneManualeTotale": {
-        "kcal": 150,
+        "kcal": 130,
         "prot": 3,
-        "carb": 25,
-        "grassi": 5
+        "carb": 20,
+        "grassi": 4
       }
     },
     {
-      "nome": "Cappuccino e Brioche",
+      "nome": "Colazione al bar (cappuccino e brioche)",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -7521,10 +7521,10 @@
       "ingredienti": [],
       "procedimento": [],
       "nutrizioneManualeTotale": {
-        "kcal": 350,
-        "prot": 11,
-        "carb": 40,
-        "grassi": 16
+        "kcal": 340,
+        "prot": 10,
+        "carb": 37,
+        "grassi": 17
       }
     }
   ]
