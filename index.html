@@ -1382,7 +1382,6 @@ async function importaListaRicette(lista){
       nome:r.nome, fascia:r.fascia, porzioni:r.porzioni||2, gruppoProteico:r.gruppoProteico||'',
       tipoPortata: r.tipoPortata || 'unico',
       sottotipoSpuntino: r.sottotipoSpuntino || null,
-      colazioneSpeciale: !!r.colazioneSpeciale,
       fonte:'libreria',
       ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
       ingredienti: ingredientiRisolti,
@@ -1517,6 +1516,17 @@ const FRUTTA_GIORNALIERA = {min:2, max:3};
 
 /* G: la colazione si compone a gruppi (guida Praderio), non è una "ricetta" fissa */
 const CAP_COLAZIONE_SPECIALE = 2;
+const COLAZIONI_SPECIALI = [
+  {id:'budino_cappuccino_brioche', nome:'Budino, cappuccino e brioche', kcal:450, prot:12, carb:55, grassi:20},
+  {id:'panettone', nome:'Panettone (fetta)', kcal:380, prot:7, carb:52, grassi:15},
+  {id:'pandoro', nome:'Pandoro (fetta)', kcal:400, prot:7, carb:54, grassi:17},
+  {id:'colomba', nome:'Colomba (fetta)', kcal:390, prot:7, carb:53, grassi:16},
+  {id:'crostata', nome:'Crostata (fetta)', kcal:350, prot:5, carb:48, grassi:15},
+  {id:'torta_yogurt', nome:'Torta allo yogurt (fetta)', kcal:300, prot:7, carb:40, grassi:12},
+  {id:'ciambellone', nome:'Ciambellone (fetta)', kcal:320, prot:6, carb:45, grassi:13},
+  {id:'toast_prosciutto', nome:'Toast al prosciutto', kcal:350, prot:18, carb:35, grassi:15},
+  {id:'pane_uova', nome:'Pane tostato e uova strapazzate', kcal:380, prot:20, carb:30, grassi:18}
+];
 const COLAZIONE_GRUPPI = [
   {chiave:'carboidrati', label:'Carboidrati', obbligatorio:true},
   {chiave:'proteine', label:'Proteine', obbligatorio:true},
@@ -2565,10 +2575,8 @@ async function elaboraConsumoAutomatico(){
    senza il doppio passaggio proposta→conferma usato per pranzo/cena (qui
    non ci sono tetti settimanali da sforare, solo alimenti equivalenti).
    ========================================================= */
-async function trovaColazioneSpeciale(id){
-  if(!id) return null;
-  const r = await getOne('ricette', id);
-  return (r && r.colazioneSpeciale) ? r : null;
+function trovaColazioneSpeciale(id){
+  return COLAZIONI_SPECIALI.find(cs => cs.id === id) || null;
 }
 
 async function contaColazioniSpecialiSettimana(){
@@ -2583,11 +2591,8 @@ async function contaColazioniSpecialiSettimana(){
 
 async function nutrizioneColazione(componenti, variantiPrecaricate, colazioneSpecialeId){
   if(colazioneSpecialeId){
-    const cs = await trovaColazioneSpeciale(colazioneSpecialeId);
-    if(cs){
-      const m = cs.nutrizioneManualeTotale || {};
-      return {kcal:m.kcal||0, prot:m.prot||0, carb:m.carb||0, grassi:m.grassi||0};
-    }
+    const cs = trovaColazioneSpeciale(colazioneSpecialeId);
+    if(cs) return {kcal:cs.kcal, prot:cs.prot, carb:cs.carb, grassi:cs.grassi};
   }
   const varianti = variantiPrecaricate || await getAll('varianti');
   let kcal=0, prot=0, carb=0, grassi=0;
@@ -2629,7 +2634,7 @@ async function renderColazione(giorno, elementId){
   const csAttiva = colazioneSpecAttiva ? await trovaColazioneSpeciale(voce.colazioneSpeciale) : null;
   const conteggioSpecialiSett = await contaColazioniSpecialiSettimana();
   const tettoRaggiunto = conteggioSpecialiSett >= CAP_COLAZIONE_SPECIALE && !colazioneSpecAttiva;
-  const tutteColazioniSpeciali = (await getAll('ricette')).filter(r=>r.colazioneSpeciale).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const tutteColazioniSpeciali = COLAZIONI_SPECIALI.slice().sort((a,b)=>a.nome.localeCompare(b.nome));
 
   let html = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
 
@@ -2666,7 +2671,7 @@ async function renderColazione(giorno, elementId){
   </details>`;
   if(colazioneSpecAttiva){
     html += `<div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">🎂 ${csAttiva.nome}</div>
-    <div class="meta" style="margin-bottom:8px;">${(csAttiva.nutrizioneManualeTotale||{}).kcal||0} kcal · ${(csAttiva.nutrizioneManualeTotale||{}).prot||0}g prot · ${(csAttiva.nutrizioneManualeTotale||{}).carb||0}g carb · ${(csAttiva.nutrizioneManualeTotale||{}).grassi||0}g grassi</div>`;
+    <div class="meta" style="margin-bottom:8px;">${csAttiva.kcal||0} kcal · ${csAttiva.prot||0}g prot · ${csAttiva.carb||0}g carb · ${csAttiva.grassi||0}g grassi</div>`;
   } else {
     for(const g of COLAZIONE_GRUPPI){
     const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
@@ -2739,7 +2744,7 @@ async function renderColazione(giorno, elementId){
 
 async function apriModalDettaglioColazione(componenti, colazioneSpecialeId){
   if(colazioneSpecialeId){
-    const cs = await trovaColazioneSpeciale(colazioneSpecialeId);
+    const cs = trovaColazioneSpeciale(colazioneSpecialeId);
     document.getElementById('modalDettaglioTitolo').textContent = 'Colazione';
     document.getElementById('modalDettaglioContenuto').innerHTML = cs
       ? `<div style="font-weight:700;font-size:0.95rem;">🎂 ${cs.nome}</div>
