@@ -7368,22 +7368,6 @@
       ]
     },
     {
-      "nome": "Budino, Cappuccino e Brioche",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "colazione",
-      "colazioneSpeciale": true,
-      "ingredienti": [],
-      "procedimento": [],
-      "nutrizioneManualeTotale": {
-        "kcal": 396,
-        "prot": 12,
-        "carb": 50,
-        "grassi": 16
-      }
-    },
-    {
       "nome": "Panettone (fetta)",
       "fascia": "facile",
       "porzioni": 1,
@@ -7509,6 +7493,38 @@
         "prot": 20,
         "carb": 29,
         "grassi": 17
+      }
+    },
+    {
+      "nome": "Budino",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 150,
+        "prot": 3,
+        "carb": 25,
+        "grassi": 5
+      }
+    },
+    {
+      "nome": "Cappuccino e Brioche",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "colazioneSpeciale": true,
+      "ingredienti": [],
+      "procedimento": [],
+      "nutrizioneManualeTotale": {
+        "kcal": 350,
+        "prot": 11,
+        "carb": 40,
+        "grassi": 16
       }
     }
   ]
