@@ -1893,7 +1893,10 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
       const colazionePrefGiorniRec = await getOne('impostazioni', 'colazionePreferitaGiorni');
       const giorniColazionePref = colazionePrefGiorniRec ? colazionePrefGiorniRec.valore : [];
       const indiceGiornoColazione = giorni.indexOf(g);
-      const usaColazionePref = giorniColazionePref.length === 0 || giorniColazionePref.includes(indiceGiornoColazione);
+      // La colazione preferita si applica SOLO se esistono giorni selezionati
+      // E il giorno corrente è tra quelli selezionati.
+      // Se nessun giorno è selezionato, la colazione preferita non viene applicata.
+      const usaColazionePref = giorniColazionePref.length > 0 && giorniColazionePref.includes(indiceGiornoColazione);
       const componenti = {};
       for(const gr of COLAZIONE_GRUPPI){
         const idPref = (usaColazionePref && colazionePref && colazionePref.valore) ? colazionePref.valore[gr.chiave] : null;
@@ -1901,8 +1904,17 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
         if(variantePrefValida){
           componenti[gr.chiave] = idPref;
         } else {
-          const opz = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
-          componenti[gr.chiave] = gr.obbligatorio && opz.length ? opz[0].id : null;
+          // Nei giorni NON selezionati: escludi la variante preferita per garantire
+          // una colazione 100% diversa da quella salvata
+          const idDaEscludere = colazionePref && colazionePref.valore ? colazionePref.valore[gr.chiave] : null;
+          let opz = varianti.filter(v=>v.colazioneGruppo===gr.chiave);
+          if(idDaEscludere && opz.length > 1){
+            opz = opz.filter(v=>v.id !== idDaEscludere);
+          }
+          opz.sort((a,b)=>a.nome.localeCompare(b.nome));
+          // Scelta random tra le opzioni disponibili per variare tra giorni diversi
+          const sceltaRandom = opz.length > 1 ? opz[Math.floor(Math.random()*opz.length)] : opz[0];
+          componenti[gr.chiave] = gr.obbligatorio && opz.length ? sceltaRandom.id : null;
         }
       }
       await put('piano', {id:pianoIdColazione, componenti});
@@ -5125,7 +5137,7 @@ async function flussoGeneraMenuConScelte(scartoSettimane, preferenze){
    dell'algoritmo: restringono lo spazio di ricerca con informazioni che
    l'algoritmo non può sapere da solo (gusti, tempo disponibile). Il resto
    (tetti PDF, dispensa, varietà, stagione) resta gestito dal motore. */
-let statoQuestionario = {verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false, verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget:0, colazionePrefGiorni:[]};
+let statoQuestionario = {verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false, verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget:0, colazionePrefGiorni:[], colazionePrefComponenti:{}};
 const CATEGORIE_PROTEICHE_QUESTIONARIO = [
   {chiave:'carne', label:'Carne'}, {chiave:'pesce', label:'Pesce'},
   {chiave:'formaggi', label:'Formaggi'}, {chiave:'uova', label:'Uova'}, {chiave:'legumi', label:'Legumi'}
@@ -6140,39 +6152,81 @@ async function renderQuestionarioMenu(){
     <button data-quest-tempo="nessuno" class="${(!statoQuestionario.pocoTempoPranzo && !statoQuestionario.pocoTempoCena)?'active':''}">Ho tempo</button>
   `;
 
-  // Sezione colazione ricorrente: mostra la colazione preferita e permette
-  // di scegliere quali giorni applicarla
+  // Sezione colazione ricorrente: composizione + griglia giorni
   const colazionePrefSalvataQuest = await getOne('impostazioni', 'colazionePreferita');
   const colazionePrefGiorniSalvati = await getOne('impostazioni', 'colazionePreferitaGiorni');
   statoQuestionario.colazionePrefGiorni = colazionePrefGiorniSalvati ? colazionePrefGiorniSalvati.valore : [];
+  // Precarica i componenti della colazione preferita esistente, oppure genera default
+  if(colazionePrefSalvataQuest && colazionePrefSalvataQuest.valore){
+    statoQuestionario.colazionePrefComponenti = Object.assign({}, colazionePrefSalvataQuest.valore);
+  } else {
+    statoQuestionario.colazionePrefComponenti = {};
+    for(const gr of COLAZIONE_GRUPPI){
+      const opz = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+      statoQuestionario.colazionePrefComponenti[gr.chiave] = gr.obbligatorio && opz.length ? opz[0].id : null;
+    }
+  }
   const elColazionePref = document.getElementById('questColazionePreferita');
   if(elColazionePref){
-    if(colazionePrefSalvataQuest && colazionePrefSalvataQuest.valore){
-      const variantiQuest = await getAll('varianti');
-      const nomiComponenti = COLAZIONE_GRUPPI.map(gr=>{
-        const id = colazionePrefSalvataQuest.valore[gr.chiave];
-        if(!id) return null;
-        const v = variantiQuest.find(x=>x.id===id);
-        return v ? v.nome : null;
-      }).filter(Boolean);
-      elColazionePref.innerHTML = `
-        <div class="meta" style="margin-bottom:6px;">Colazione preferita salvata: <b>${nomiComponenti.join(' · ')}</b></div>
-        <div class="meta" style="margin-bottom:6px;">Scegli in quali giorni applicarla (i giorni non selezionati avranno una colazione diversa):</div>
-        <div class="tabgroup">
-          ${NOMI_GIORNI_BREVI.map((g, idx)=>`<button data-quest-colpref-giorno="${idx}" class="${statoQuestionario.colazionePrefGiorni.includes(idx)?'active':''}">${g}</button>`).join('')}
+    // Griglia Lun-Dom per i giorni
+    const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th>${g}</th>`).join('');
+    const celleCol = NOMI_GIORNI_BREVI.map((g, idx)=>{
+      const attivo = statoQuestionario.colazionePrefGiorni.includes(idx);
+      return `<td class="cella"><button data-quest-colpref-giorno="${idx}" class="${attivo?'active':''}"></button></td>`;
+    }).join('');
+    // 4 gruppi componibili
+    let htmlGruppiCol = '';
+    for(const gr of COLAZIONE_GRUPPI){
+      const opzioni = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+      const selezionatoId = statoQuestionario.colazionePrefComponenti[gr.chiave];
+      htmlGruppiCol += `<label style="margin-top:8px;">${gr.label}${gr.obbligatorio?'':' (facoltativo)'}</label>
+        <div class="colazione-gruppo-slide" data-quest-gruppo="${gr.chiave}">
+          ${gr.obbligatorio ? '' : `<button data-quest-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`}
+          ${opzioni.map(o=>`<button data-quest-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
         </div>`;
-      elColazionePref.querySelectorAll('[data-quest-colpref-giorno]').forEach(b=>{
-        b.addEventListener('click', ()=>{
-          const idx = parseInt(b.dataset.questColprefGiorno);
-          const pos = statoQuestionario.colazionePrefGiorni.indexOf(idx);
-          if(pos>=0) statoQuestionario.colazionePrefGiorni.splice(pos,1);
-          else statoQuestionario.colazionePrefGiorni.push(idx);
-          renderQuestionarioMenu();
+    }
+    elColazionePref.innerHTML = `
+      <div class="meta" style="margin-bottom:6px;font-weight:700;">Colazione ripetuta settimanale</div>
+      <div class="meta" style="margin-bottom:8px;">Componi la colazione che vuoi ripetere e seleziona i giorni in cui applicarla. I giorni non selezionati avranno una colazione completamente diversa.</div>
+      ${htmlGruppiCol}
+      <label style="margin-top:12px;">Giorni in cui applicare questa colazione:</label>
+      <table class="tabella-giorno">
+        <tr><th class="col-label"></th>${rigaIntestazioneCol}</tr>
+        <tr><td class="riga-label">Colazione</td>${celleCol}</tr>
+      </table>
+      <div class="row" style="margin-top:10px;gap:8px;">
+        <button class="small" data-quest-colpref-reset="1">✕ Reset colazione preferita</button>
+      </div>`;
+    // Listener: toggle giorni
+    elColazionePref.querySelectorAll('[data-quest-colpref-giorno]').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        const idx = parseInt(b.dataset.questColprefGiorno);
+        const pos = statoQuestionario.colazionePrefGiorni.indexOf(idx);
+        if(pos>=0) statoQuestionario.colazionePrefGiorni.splice(pos,1);
+        else statoQuestionario.colazionePrefGiorni.push(idx);
+        renderQuestionarioMenu();
+      });
+    });
+    // Listener: selezione componenti gruppi
+    elColazionePref.querySelectorAll('[data-quest-gruppo]').forEach(slide=>{
+      slide.querySelectorAll('[data-quest-col-opt]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const gruppo = slide.dataset.questGruppo;
+          const idScelto = btn.dataset.questColOpt || null;
+          slide.querySelectorAll('[data-quest-col-opt]').forEach(x=>x.classList.remove('active'));
+          btn.classList.add('active');
+          statoQuestionario.colazionePrefComponenti[gruppo] = idScelto;
         });
       });
-    } else {
-      elColazionePref.innerHTML = `<div class="meta">Nessuna colazione preferita salvata. Per salvarla, vai su Piano → Colazione → "Salva come preferita".</div>`;
-    }
+    });
+    // Listener: reset
+    elColazionePref.querySelector('[data-quest-colpref-reset]')?.addEventListener('click', async ()=>{
+      statoQuestionario.colazionePrefComponenti = {};
+      statoQuestionario.colazionePrefGiorni = [];
+      await delKey('impostazioni', 'colazionePreferita');
+      await delKey('impostazioni', 'colazionePreferitaGiorni');
+      renderQuestionarioMenu();
+    });
   }
 
   const giorniTabella = giorniSettimana(statoQuestionario.scartoTarget);
@@ -6277,7 +6331,15 @@ async function renderQuestionarioMenu(){
 
 async function apriQuestionarioMenu(){
   const scartoTarget = document.getElementById('view-menu').classList.contains('active') ? menuSettimanaScarto : 0;
-  statoQuestionario = {verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false, verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget};
+  // Precarica la colazione preferita e i giorni esistenti per persistenza
+  const colazionePrefEsistente = await getOne('impostazioni', 'colazionePreferita');
+  const colazionePrefGiorniEsistenti = await getOne('impostazioni', 'colazionePreferitaGiorni');
+  statoQuestionario = {
+    verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false,
+    verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget,
+    colazionePrefGiorni: colazionePrefGiorniEsistenti ? colazionePrefGiorniEsistenti.valore : [],
+    colazionePrefComponenti: colazionePrefEsistente ? Object.assign({}, colazionePrefEsistente.valore) : {}
+  };
   await renderQuestionarioMenu();
   document.getElementById('modalQuestionarioMenu').classList.remove('hidden');
 }
@@ -6295,7 +6357,13 @@ document.getElementById('btnQuestionarioGenera').addEventListener('click', async
     giornoCategoria: statoQuestionario.tabellaGiorno
   };
   document.getElementById('modalQuestionarioMenu').classList.add('hidden');
-  // Salva i giorni in cui applicare la colazione preferita
+  // Salva la colazione preferita e i giorni in cui applicarla
+  const haComponentiColazione = statoQuestionario.colazionePrefComponenti && Object.values(statoQuestionario.colazionePrefComponenti).some(v=>v);
+  if(haComponentiColazione){
+    await put('impostazioni', {chiave:'colazionePreferita', valore: statoQuestionario.colazionePrefComponenti});
+  } else {
+    await delKey('impostazioni', 'colazionePreferita');
+  }
   await put('impostazioni', {chiave:'colazionePreferitaGiorni', valore: statoQuestionario.colazionePrefGiorni});
   await flussoGeneraMenuConScelte(statoQuestionario.scartoTarget, preferenze);
   renderPiano();
