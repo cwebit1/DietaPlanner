@@ -726,8 +726,26 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
       <option value="uova">Uova</option>
       <option value="legumi">Legumi / Tofu-Tempeh</option>
     </select>
-    <label>Ingredienti (uno per riga: nome, grammi)</label>
-    <textarea id="nrIngredienti" placeholder="pasta, 160&#10;zucchine, 200&#10;pollo, 150" rows="4"></textarea>
+    <label>Tipo di portata</label>
+    <select id="nrTipoPortata">
+      <option value="unico" selected>Piatto unico</option>
+      <option value="primo">Primo</option>
+      <option value="secondo">Secondo</option>
+      <option value="contorno">Contorno</option>
+      <option value="spuntino">Spuntino</option>
+      <option value="colazione">Colazione</option>
+    </select>
+    <div id="nrSezioneCereale" style="display:none;">
+      <label>Tipo di cereale</label>
+      <div class="tabgroup" id="nrCerealeTab" style="flex-wrap:wrap;">
+        <button data-nr-cereale="libero" class="active">🔄 Libero (il motore sceglie)</button>
+        <button data-nr-cereale="gnocchi">Gnocchi</button>
+        <button data-nr-cereale="pasta_ripiena">Pasta ripiena</button>
+      </div>
+      <div id="nrCerealeNota" class="meta" style="margin-top:4px;">Il motore sceglierà il cereale in base alla distribuzione settimanale (20% per tipo). Inserisci solo gli ingredienti del condimento.</div>
+    </div>
+    <label>Ingredienti (uno per riga: nome, grammi) — per i primi modulari, NON inserire il cereale</label>
+    <textarea id="nrIngredienti" placeholder="pomodoro fresco, 100&#10;olio extravergine oliva, 10&#10;petto di pollo, 120" rows="4"></textarea>
     <label>Procedimento (una riga per passo)</label>
     <textarea id="nrProcedimento" rows="4" placeholder="Taglia le zucchine...&#10;Cuoci la pasta..."></textarea>
     <label>Valori nutrizionali (facoltativi — per l'INTERA ricetta, alle porzioni indicate sopra)</label>
@@ -1517,6 +1535,8 @@ async function importaListaRicette(lista){
       tipoPortata: r.tipoPortata || 'unico',
       sottotipoSpuntino: r.sottotipoSpuntino || null,
       colazioneSpeciale: !!r.colazioneSpeciale,
+      cerealeLibero: !!r.cerealeLibero,
+      tipoCereale: r.tipoCereale || null,
       fonte:'libreria',
       ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
       ingredienti: ingredientiRisolti,
@@ -1666,6 +1686,232 @@ const COLAZIONE_GRUPPI = [
 ];
 
 /* =========================================================
+   E3 — ARCHIVIO PRIMI: cereali, porzioni e distribuzione
+   -------------------------------------------------------
+   Motore autonomo per la gestione dei primi piatti.
+   Distribuzione target: 20% per cereale (5 cereali modulari).
+   Porzioni al valore MASSIMO indicato dal PDF.
+   Il motore ragiona per tipo GENERICO (riso, pasta, farro...)
+   e collega la variante specifica per il calcolo nutrizionale.
+   ========================================================= */
+const CEREALI_PRIMI = {
+  pasta:     { label:'Pasta',     ingrediente:'Pasta corta',   porzione:80 },
+  riso:      { label:'Riso',      ingrediente:'Riso Arborio',  porzione:80 },
+  farro:     { label:'Farro',     ingrediente:'Farro perlato', porzione:80 },
+  orzo:      { label:'Orzo',      ingrediente:'Orzo perlato',  porzione:80 },
+  cous_cous: { label:'Cous cous', ingrediente:'Cous cous',     porzione:80 }
+};
+/* Cereali modulari: il motore sceglie tra questi. Gnocchi e pasta
+   ripiena sono categorie a sé con regole proprie, non entrano nella rotazione. */
+const CEREALI_MODULARI = ['pasta','riso','farro','orzo','cous_cous'];
+/* Gnocchi e pasta ripiena: porzioni PDF, cadenza bi-settimanale,
+   massimo 1 volta a settimana tra i due (si alternano). */
+const PRIMI_SPECIALI_CONFIG = {
+  gnocchi:       { label:'Gnocchi',       porzione:200, cadenzaSettimane:2 },
+  pasta_ripiena: { label:'Pasta ripiena', porzione:125, cadenzaSettimane:2 }
+};
+
+/* Fascia automatica per i primi modulari:
+   - facile: il condimento ha 1-2 ingredienti
+   - medio: 3-4 ingredienti
+   - difficile: più di 4 ingredienti
+   Il cereale NON conta nel conteggio (viene aggiunto dal motore). */
+function fasciaAutomaticaPrimo(ingredientiCondimento){
+  const n = (ingredientiCondimento||[]).length;
+  if(n <= 2) return 'facile';
+  if(n <= 4) return 'medio';
+  return 'difficile';
+}
+
+/* Conta quante volte ogni cereale modulare è stato usato come primo
+   questa settimana (nei pasti programmati). Legge il campo "primoCereale"
+   salvato sulla voce del piano, oppure ispeziona la ricetta del primo
+   per capire se è una ricetta composta da E3. */
+async function contaCerealiSettimana(){
+  const giorni = giorniSettimana();
+  const conteggi = {};
+  for(const c of CEREALI_MODULARI) conteggi[c] = 0;
+  const tuttoIlPiano = await getAll('piano');
+  const tutteLeRicette = await getAll('ricette');
+  const ricettePerId = {}; for(const r of tutteLeRicette) ricettePerId[r.id] = r;
+  for(const g of giorni){
+    for(const pasto of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+      if(!voce || voce.modo!=='multi' || !voce.primoId) continue;
+      // Se la voce ha il cereale salvato direttamente
+      if(voce.primoCereale && conteggi.hasOwnProperty(voce.primoCereale)){
+        conteggi[voce.primoCereale]++;
+        continue;
+      }
+      // Altrimenti cerca nella ricetta composta
+      const ricettaPrimo = ricettePerId[voce.primoId];
+      if(ricettaPrimo && ricettaPrimo.cerealeUsato && conteggi.hasOwnProperty(ricettaPrimo.cerealeUsato)){
+        conteggi[ricettaPrimo.cerealeUsato]++;
+      }
+    }
+  }
+  return conteggi;
+}
+
+/* Sceglie il cereale meno usato questa settimana. A parità di conteggio,
+   sceglie casualmente tra i pari merito (varietà tra generazioni). */
+async function scegliCerealePrimo(){
+  const conteggi = await contaCerealiSettimana();
+  const minUso = Math.min(...CEREALI_MODULARI.map(c => conteggi[c]));
+  const pariMerito = CEREALI_MODULARI.filter(c => conteggi[c] === minUso);
+  const scelto = pariMerito[Math.floor(Math.random() * pariMerito.length)];
+  return scelto;
+}
+
+/* Verifica se gnocchi e/o pasta_ripiena sono disponibili per questa
+   settimana. Regole:
+   - Max 1 primo speciale a settimana (o gnocchi O pasta_ripiena, mai entrambi)
+   - Cadenza bi-settimanale: se gnocchi usato settimana scorsa, non disponibile questa
+   - Idem per pasta_ripiena
+   Ritorna un array di tipi disponibili: [], ['gnocchi'], ['pasta_ripiena'], o entrambi. */
+async function primiSpecialiDisponibili(){
+  const giorniQuesta = giorniSettimana(0);
+  const giorniPrecedente = giorniSettimana(-1);
+  const tuttoIlPiano = await getAll('piano');
+  const tutteLeRicette = await getAll('ricette');
+  const ricettePerNome = {}; for(const r of tutteLeRicette) ricettePerNome[r.nome.toLowerCase()] = r;
+  // Controlla settimana corrente: c'è già uno dei due?
+  let usatoQuestaSettimana = null;
+  for(const g of giorniQuesta){
+    for(const pasto of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+      if(!voce) continue;
+      const idRicette = voce.modo==='multi'
+        ? [voce.primoId].filter(Boolean)
+        : [voce.ricettaId].filter(Boolean);
+      for(const rid of idRicette){
+        const r = ricettePerNome[rid] || tutteLeRicette.find(x=>x.id===rid);
+        if(r && r.tipoCereale==='gnocchi') usatoQuestaSettimana = 'gnocchi';
+        if(r && r.tipoCereale==='pasta_ripiena') usatoQuestaSettimana = 'pasta_ripiena';
+      }
+    }
+  }
+  if(usatoQuestaSettimana) return []; // già usato uno questa settimana: nessuno disponibile
+  // Controlla settimana precedente per la cadenza bi-settimanale
+  let usatoPrecedente = [];
+  for(const g of giorniPrecedente){
+    for(const pasto of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+      if(!voce) continue;
+      const idRicette = voce.modo==='multi'
+        ? [voce.primoId].filter(Boolean)
+        : [voce.ricettaId].filter(Boolean);
+      for(const rid of idRicette){
+        const r = tutteLeRicette.find(x=>x.id===rid);
+        if(r && r.tipoCereale==='gnocchi') usatoPrecedente.push('gnocchi');
+        if(r && r.tipoCereale==='pasta_ripiena') usatoPrecedente.push('pasta_ripiena');
+      }
+    }
+  }
+  const disponibili = [];
+  if(!usatoPrecedente.includes('gnocchi')) disponibili.push('gnocchi');
+  if(!usatoPrecedente.includes('pasta_ripiena')) disponibili.push('pasta_ripiena');
+  return disponibili;
+}
+
+/* Compone un primo modulare: prende il template del condimento e il
+   cereale scelto, genera/aggiorna una ricetta composta nel DB (upsert per
+   nome, mai duplica). Ritorna l'oggetto ricetta composto. */
+async function componiPrimoModulare(templateRicetta, cerealeChiave){
+  const cereale = CEREALI_PRIMI[cerealeChiave];
+  if(!cereale) return null;
+  // Trova la variante del cereale nel DB
+  const varianti = await getAll('varianti');
+  const varCereale = varianti.find(v => v.nome.toLowerCase() === cereale.ingrediente.toLowerCase());
+  if(!varCereale) return null;
+  // Nome composto: "Riso al pomodoro" / "Farro alle verdure"
+  const nomeComposto = cereale.label + ' ' + templateRicetta.nome;
+  // Controlla se esiste già
+  const ricetteEsistenti = await getAll('ricette');
+  const esistente = ricetteEsistenti.find(r => r.nome.toLowerCase() === nomeComposto.toLowerCase());
+  // Ingredienti: cereale + ingredienti del condimento
+  const ingredienteCereale = { variantId: varCereale.id, nomeLibero: null, quantita: cereale.porzione };
+  const ingredientiComposti = [ingredienteCereale, ...(templateRicetta.ingredienti||[])];
+  const ricettaComposta = {
+    id: esistente ? esistente.id : uid(),
+    nome: nomeComposto,
+    fascia: templateRicetta.fascia || fasciaAutomaticaPrimo(templateRicetta.ingredienti),
+    porzioni: 1,
+    gruppoProteico: '',
+    tipoPortata: 'primo',
+    cerealeUsato: cerealeChiave,
+    tipoCereale: null,
+    templateId: templateRicetta.id,
+    fonte: 'composta',
+    ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
+    ingredienti: ingredientiComposti,
+    procedimento: templateRicetta.procedimento || [],
+    nutrizioneManualeTotale: null
+  };
+  await put('ricette', ricettaComposta);
+  return ricettaComposta;
+}
+
+/* MOTORE E3 — punto di ingresso.
+   Dato uno slot primo da riempire:
+   1. Cerca template modulari (cerealeLibero: true) disponibili
+   2. Applica anti-ripetizione sui template
+   3. Decide se proporre un primo modulare o uno speciale (gnocchi/ripiena)
+   4. Sceglie il cereale (distribuzione 20%)
+   5. Compone la ricetta finale
+   6. Ritorna {ricetta, cereale} oppure null se non ci sono template
+   Il chiamante (E2/garantisciRicettaSlot) usa il risultato come farebbe
+   con qualsiasi altra ricetta primo. */
+async function motorePrimi(giorno, pasto, escludiTemplateId){
+  const tutteRicette = await getAll('ricette');
+  // 1. Controlla se un primo speciale è disponibile e lo proponiamo (bassa probabilità: ~20%)
+  const specialiDisponibili = await primiSpecialiDisponibili();
+  if(specialiDisponibili.length && Math.random() < 0.2){
+    const tipoSpeciale = specialiDisponibili[Math.floor(Math.random() * specialiDisponibili.length)];
+    const ricetteSpeciali = tutteRicette.filter(r =>
+      r.tipoCereale === tipoSpeciale &&
+      r.tipoPortata === 'primo' &&
+      !r.esclusa
+    );
+    if(ricetteSpeciali.length){
+      return { ricetta: mescola(ricetteSpeciali)[0], cereale: tipoSpeciale, templateId: null };
+    }
+  }
+  // 2. Cerca template modulari: ricette primo con cerealeLibero=true, non escluse
+  let templateDisponibili = tutteRicette.filter(r =>
+    r.tipoPortata === 'primo' &&
+    r.cerealeLibero === true &&
+    !r.esclusa &&
+    r.id !== escludiTemplateId
+  );
+  if(!templateDisponibili.length) return null;
+  // 3. Anti-ripetizione F4: escludi template già usati questa settimana
+  const giorni = giorniSettimana();
+  const templateUsatiSettimana = new Set();
+  const tuttoIlPiano = await getAll('piano');
+  const tutteLeRicetteE3 = await getAll('ricette');
+  for(const g of giorni){
+    for(const p of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+p);
+      if(!voce || voce.modo!=='multi' || !voce.primoId) continue;
+      const ricettaPrimo = tutteLeRicetteE3.find(r=>r.id===voce.primoId);
+      if(ricettaPrimo && ricettaPrimo.templateId) templateUsatiSettimana.add(ricettaPrimo.templateId);
+    }
+  }
+  const templateFiltrati = templateDisponibili.filter(t => !templateUsatiSettimana.has(t.id));
+  const pool = templateFiltrati.length ? templateFiltrati : templateDisponibili;
+  if(!pool.length) return null;
+  // 4. Scegli il template (casuale tra i disponibili)
+  const templateScelto = mescola(pool)[0];
+  // 5. Scegli il cereale
+  const cerealeScelto = await scegliCerealePrimo();
+  // 6. Componi
+  const ricettaComposta = await componiPrimoModulare(templateScelto, cerealeScelto);
+  if(!ricettaComposta) return null;
+  return { ricetta: ricettaComposta, cereale: cerealeScelto, templateId: templateScelto.id };
+}
+
+/* =========================================================
    NAV
    ========================================================= */
 function mostraVista(nome){
@@ -1787,7 +2033,7 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
     }
   }
   // Sviluppa la griglia con il motore E2 completo (F4+F5+F6+F7)
-  const esitoE2 = sviluppaGrigliaCrossWeek(
+  const esitoE2 = await sviluppaGrigliaCrossWeek(
     grigliaE1.celle, giorni, tutteRicetteE2, mappaVariantiE2,
     preferenze, storicoPerSlotE2, usatiSettimanaPrecedente
   );
@@ -3908,6 +4154,19 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
   if(voce.modo==='multi'){
     for(const [chiave, tipo] of [['primoId','primo'],['secondoId','secondo'],['contornoId','contorno']]){
       if(!voce[chiave]){
+        // E3: per i PRIMI, prova prima il motore primi modulari
+        if(tipo==='primo'){
+          const esitoE3 = await motorePrimi(giorno, pasto, null);
+          if(esitoE3){
+            voce[chiave] = esitoE3.ricetta.id;
+            voce.primoCereale = esitoE3.cereale;
+            await segnaRicettaUsata(esitoE3.ricetta.id);
+            aggiornaStoricoSlot(giorno+'_'+pasto+'_primo', esitoE3.ricetta.nome);
+            cambiato = true;
+            continue;
+          }
+          // Fallback: nessun template modulare disponibile, ricerca normale
+        }
         const risultato = await proponiRicettaAutomatica(giorno, pasto, null, null, voce.fascia, tipo, ignoraCopertura, preferenze);
         if(risultato){
           voce[chiave]=risultato.ricetta.id; await segnaRicettaUsata(risultato.ricetta.id);
@@ -3997,7 +4256,10 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
   const ricetteUsateSettimana = await getRicetteUsateSettimana();
   // Conta le preferite già piazzate (per il boost/cap preferiti)
   const conteggioPreferiteInSettimana = ricette.filter(r => ricetteUsateSettimana.has(r.id) && r.preferita).length;
-  let diTipo = ricette.filter(r=> r.id!==escludiId && (r.tipoPortata||'unico')===tipoPortata);
+  // Le ricette composte da E3 (fonte:'composta') NON vanno nel pool normale:
+  // vengono proposte solo dal motore primi. Altrimenti il motore le proporrebbe
+  // anche come primi "normali" bypassando la distribuzione cereali.
+  let diTipo = ricette.filter(r=> r.id!==escludiId && (r.tipoPortata||'unico')===tipoPortata && r.fonte!=='composta');
   if(!diTipo.length) return null;
 
   // H: per i contorni, applica il filtro di deperibilità per il giorno corrente.
@@ -4844,9 +5106,42 @@ document.getElementById('btnNuovaRicetta').addEventListener('click', ()=>{
   });
   document.getElementById('nrPorzioni').value='1';
   document.getElementById('nrModalita').value='cucinata';
+  document.getElementById('nrTipoPortata').value='unico';
+  document.getElementById('nrSezioneCereale').style.display='none';
+  document.getElementById('nrCerealeNota').textContent='Il motore sceglierà il cereale in base alla distribuzione settimanale (20% per tipo). Inserisci solo gli ingredienti del condimento.';
+  nrCerealeScelto = 'libero';
+  document.querySelectorAll('#nrCerealeTab button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#nrCerealeTab [data-nr-cereale="libero"]').classList.add('active');
   document.getElementById('nrConfrontoKcalProt').textContent='';
   document.getElementById('nrConfrontoCarbGrassi').textContent='';
   document.getElementById('modalNuovaRicetta').classList.remove('hidden');
+});
+// Listener: tipo portata → mostra/nascondi sezione cereale
+document.getElementById('nrTipoPortata').addEventListener('change', (e)=>{
+  const isPrimo = e.target.value === 'primo';
+  document.getElementById('nrSezioneCereale').style.display = isPrimo ? 'block' : 'none';
+  if(!isPrimo){
+    document.getElementById('nrIngredienti').placeholder = 'pomodoro fresco, 100\nolio extravergine oliva, 10\npetto di pollo, 120';
+  } else {
+    document.getElementById('nrIngredienti').placeholder = 'pomodoro fresco, 100\nolio extravergine oliva, 10\nbasilico fresco, 5';
+  }
+});
+// Listener: selezione cereale
+let nrCerealeScelto = 'libero';
+document.getElementById('nrCerealeTab').addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-nr-cereale]');
+  if(!btn) return;
+  nrCerealeScelto = btn.dataset.nrCereale;
+  document.querySelectorAll('#nrCerealeTab button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const notaEl = document.getElementById('nrCerealeNota');
+  if(nrCerealeScelto==='libero'){
+    notaEl.textContent = 'Il motore sceglierà il cereale in base alla distribuzione settimanale (20% per tipo). Inserisci solo gli ingredienti del condimento.';
+  } else if(nrCerealeScelto==='gnocchi'){
+    notaEl.textContent = 'Porzione fissa: 200g. Max 1 ogni 2 settimane, alternato con pasta ripiena. Inserisci tutti gli ingredienti (gnocchi + condimento).';
+  } else if(nrCerealeScelto==='pasta_ripiena'){
+    notaEl.textContent = 'Porzione fissa: 125g. Max 1 ogni 2 settimane, alternato con gnocchi. Inserisci tutti gli ingredienti.';
+  }
 });
 document.getElementById('cercaRicette').addEventListener('input', (e)=>{
   filtroTestoRicette = e.target.value.trim().toLowerCase();
@@ -5942,7 +6237,7 @@ function estraiUsatiSettimana(celle, giorni){
    dieta non ne ha). Ritorna anche l'elenco degli eventi di ripetizione
    forzata (per il report F7.c) e l'insieme usatiSettimanaCorrente (da passare
    come "precedente" alla prossima settimana). */
-function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, preferenze, storicoPerSlot, usatiSettimanaPrecedente){
+async function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, preferenze, storicoPerSlot, usatiSettimanaPrecedente){
   const usatiSettimana = new Set();
   const usatiPrecedente = usatiSettimanaPrecedente || new Set();
   const storico = storicoPerSlot || {};
@@ -5995,18 +6290,42 @@ function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, pr
     if(rUnico.ripetizioneForzata) ripetizioniForzate.push({sottotipo:sottotipoFine, portata:'unico', giorno:slot.giorno, pasto:slot.pasto});
 
     const storicoPerModalitaSeparato = storicoSlotPrecedente.separato || {primo:[],secondo:[]};
-    const rSeparato = cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato);
-    if(rSeparato.combo){
-      usatiSettimana.add(rSeparato.combo.primo.nome);
-      usatiSettimana.add(rSeparato.combo.secondo.nome);
+    // E3: per il primo del pasto separato, prova il motore primi
+    let rSeparato = null;
+    const esitoE3Cross = await motorePrimi(slot.giorno, slot.pasto, null);
+    if(esitoE3Cross && esitoE3Cross.ricetta){
+      // Componi il pasto separato: primo da E3, secondo e contorno da E2
+      const secondiEsattiE3 = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
+      const fallbackSecondoE3 = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
+      const rSecondoE3 = scegliConAntiRipetitivitaCrossWeek(secondiEsattiE3, fallbackSecondoE3, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato.separato || []);
+      let contorniE3 = tutteRicette.filter(r=>r.tipoPortata==='contorno');
+      if(mappaVarianti && pool) contorniE3 = contorniAmmessiPerPool(contorniE3, mappaVarianti, pool);
+      const contornoE3 = mescola(contorniE3)[0];
+      if(rSecondoE3.ricetta && contornoE3){
+        rSeparato = {
+          combo: { primo: esitoE3Cross.ricetta, secondo: rSecondoE3.ricetta, contorno: contornoE3 },
+          storicoAggiornato: { primo: [], secondo: rSecondoE3.storicoAggiornato },
+          carenza: false,
+          ripetizioneForzata: rSecondoE3.ripetizioneForzata
+        };
+        usatiSettimana.add(esitoE3Cross.ricetta.nome);
+      }
     }
-    cella.candidatoSeparato = rSeparato.combo;
-    cella.carenzaSeparato = rSeparato.carenza;
-    if(rSeparato.ripetizioneForzata) ripetizioniForzate.push({sottotipo:sottotipoFine, portata:'separato', giorno:slot.giorno, pasto:slot.pasto});
+    if(!rSeparato){
+      rSeparato = cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato);
+    }
+    if(rSeparato && rSeparato.combo){
+      // Se non già aggiunto sopra (caso E3), aggiungi ora
+      if(!usatiSettimana.has(rSeparato.combo.primo.nome)) usatiSettimana.add(rSeparato.combo.primo.nome);
+      if(!usatiSettimana.has(rSeparato.combo.secondo.nome)) usatiSettimana.add(rSeparato.combo.secondo.nome);
+    }
+    cella.candidatoSeparato = rSeparato ? rSeparato.combo : null;
+    cella.carenzaSeparato = rSeparato ? rSeparato.carenza : true;
+    if(rSeparato && rSeparato.ripetizioneForzata) ripetizioniForzate.push({sottotipo:sottotipoFine, portata:'separato', giorno:slot.giorno, pasto:slot.pasto});
 
     nuovoStorico[chiave] = {
       unico: rUnico.storicoAggiornato,
-      separato: rSeparato.combo ? rSeparato.storicoAggiornato : storicoSlotPrecedente.separato
+      separato: (rSeparato && rSeparato.combo) ? rSeparato.storicoAggiornato : storicoSlotPrecedente.separato
     };
   }
 
@@ -6023,7 +6342,7 @@ function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, pr
    passando gli "usati" di ogni settimana come "precedente" alla successiva.
    Nessuna persistenza reale: puramente in-memory, per verificare la
    capienza del DB ricette. */
-function simulaSettimane(numeroSettimane, tutteRicette, mappaVarianti, preferenze, dataIniziale){
+async function simulaSettimane(numeroSettimane, tutteRicette, mappaVarianti, preferenze, dataIniziale){
   const risultati = [];
   let usatiPrecedente = new Set();
   const base = dataIniziale ? new Date(dataIniziale) : new Date('2026-08-17');
@@ -6036,7 +6355,7 @@ function simulaSettimane(numeroSettimane, tutteRicette, mappaVarianti, preferenz
       giorni.push(dt.toISOString().slice(0,10));
     }
     const {celle} = costruisciGrigliaBase(giorni, {});
-    const esito = sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, preferenze||{}, {}, usatiPrecedente);
+    const esito = await sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, preferenze||{}, {}, usatiPrecedente);
     risultati.push({ settimana: w+1, ripetizioniForzate: esito.ripetizioniForzate });
     usatiPrecedente = esito.usatiSettimanaCorrente;
   }
@@ -6605,8 +6924,17 @@ document.getElementById('btnSalvaRicettaManuale').addEventListener('click', asyn
     return v ? {variantId:v.id, quantita:g} : {variantId:null, nomeLibero:nomeParte, quantita:g};
   });
 
+  const tipoPortataScelto = document.getElementById('nrTipoPortata').value;
+  const cerealeLibero = (tipoPortataScelto==='primo' && nrCerealeScelto==='libero');
+  const tipoCereale = (tipoPortataScelto==='primo' && nrCerealeScelto!=='libero') ? nrCerealeScelto : null;
+  const fasciaCalcolata = (tipoPortataScelto==='primo' && cerealeLibero)
+    ? fasciaAutomaticaPrimo(ingredienti)
+    : fascia;
   const nuovaRicetta = {
-    id:uid(), nome, fascia, porzioni, gruppoProteico, fonte:'libreria', ingredienti, procedimento
+    id:uid(), nome, fascia:fasciaCalcolata, porzioni, gruppoProteico,
+    tipoPortata: tipoPortataScelto,
+    cerealeLibero, tipoCereale,
+    fonte:'libreria', ingredienti, procedimento
   };
 
   // Asporto è per definizione fuori da frigo/spesa/inventario: è quindi automaticamente
