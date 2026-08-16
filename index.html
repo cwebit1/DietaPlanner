@@ -7404,8 +7404,18 @@ document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=1').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=2').catch(err=>{
       console.warn('Service worker non registrato:', err);
+    });
+    /* Quando il browser rileva un nuovo SW installato, gli dice
+       di attivarsi subito (skipWaiting è già nel sw.js). Poi,
+       quando il nuovo SW prende il controllo, ricarica la pagina
+       così l'utente vede immediatamente la versione aggiornata. */
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(!window.__swRicaricato){
+        window.__swRicaricato = true;
+        window.location.reload();
+      }
     });
   });
 }
