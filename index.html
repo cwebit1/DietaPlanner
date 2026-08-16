@@ -7560,6 +7560,19 @@ async function aggiornaListaSpesaAutomatica(scartoSettimane){
           fabbisogno[ing.variantId] = (fabbisogno[ing.variantId]||0) + ing.quantita*scala;
         }
       }
+      // Condimento: se il secondo di questo pasto è una base proteica componibile,
+      // aggiungi la quota fissa di olio EVO al fabbisogno — NON è un ingrediente
+      // della ricetta componente, è un contributo fisso dal PDF
+      if(voce.modo==='multi' && voce.secondoId){
+        const ricettaSecondoSpesa = await getOne('ricette', voce.secondoId);
+        if(ricettaSecondoSpesa && ricettaSecondoSpesa.componente === COMPONENTE_PROTEINA){
+          const varOlio = varianti.find(v=>v.nome.toLowerCase()==='olio extravergine oliva');
+          if(varOlio){
+            const olioPerPasto = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi * porzioniSel;
+            fabbisogno[varOlio.id] = (fabbisogno[varOlio.id]||0) + olioPerPasto;
+          }
+        }
+      }
     }
   }
 
