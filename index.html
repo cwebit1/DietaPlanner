@@ -2822,7 +2822,7 @@ async function contaColazioniSpecialiSettimana(){
   let conteggio = 0;
   for(const g of giorni){
     const voce = await getOne('piano', g+'_colazione');
-    if(voce && voce.colazioneSpecialeId && !voce.premioCostanza) conteggio++;
+    if(voce && voce.colazioneSpecialeId) conteggio++;
   }
   return conteggio;
 }
