@@ -1822,6 +1822,88 @@ async function findVariantByName(nome){
   return v ? v.id : null;
 }
 
+/* =========================================================
+   SCELTA COMPONENTI SECONDO + CONTORNO
+   -------------------------------------------------------
+   Sceglie una base proteica e un contorno rispettando:
+   - La categoria proteica decisa da E1/E2 (gruppoProteico)
+   - F4: mai la stessa base proteica 2 volte nella stessa settimana
+   - F7: penalità cross-week per basi usate la settimana precedente
+   - Pool H2/H3 per i contorni (deperibilità)
+   - Verdura ricorrente se giorno "sì"
+
+   Ritorna {proteinaId, contornoId} oppure null se non trova nulla.
+   ========================================================= */
+async function scegliComponentiSecondo(gruppoProteico, giorno, escludiProteinaId, escludiContornoId){
+  const tutteRicette = await getAll('ricette');
+  // --- PROTEINA: filtra per gruppoProteico e componente='proteina' ---
+  let candidateProteine = tutteRicette.filter(r =>
+    r.componente === COMPONENTE_PROTEINA &&
+    r.gruppoProteico === gruppoProteico &&
+    !r.esclusa &&
+    r.id !== escludiProteinaId
+  );
+  // Anti-ripetizione F4: escludi proteine già usate questa settimana
+  const giorniSett = giorniSettimana(0);
+  const proteineUsateSettimana = new Set();
+  const tuttoIlPiano = await getAll('piano');
+  for(const g of giorniSett){
+    for(const pasto of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+      if(!voce) continue;
+      if(voce.secondoId) proteineUsateSettimana.add(voce.secondoId);
+    }
+  }
+  const proteineNonUsate = candidateProteine.filter(p => !proteineUsateSettimana.has(p.id));
+  const poolProteine = proteineNonUsate.length ? proteineNonUsate : candidateProteine;
+  if(!poolProteine.length) return null;
+  const proteinaScelta = mescola(poolProteine)[0];
+  // --- CONTORNO: filtra per componente='contorno', non escluso ---
+  let candidateContorni = tutteRicette.filter(r =>
+    r.componente === COMPONENTE_CONTORNO &&
+    !r.esclusa &&
+    r.id !== escludiContornoId
+  );
+  // Pool H2/H3: filtra contorni ammessi per il giorno
+  const contorniAmmessi = await filtraContorniPerPool(candidateContorni, giorno);
+  const poolContorni = contorniAmmessi.length ? contorniAmmessi : candidateContorni;
+  if(!poolContorni.length) return { proteinaId: proteinaScelta.id, contornoId: null };
+  // Anti-ripetizione contorni: escludi quelli già usati questa settimana
+  const contorniUsatiSettimana = new Set();
+  for(const g of giorniSett){
+    for(const pasto of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+      if(!voce) continue;
+      if(voce.contornoId) contorniUsatiSettimana.add(voce.contornoId);
+    }
+  }
+  const contorniNonUsati = poolContorni.filter(c => !contorniUsatiSettimana.has(c.id));
+  const poolFinaleContorni = contorniNonUsati.length ? contorniNonUsati : poolContorni;
+  const contornoScelto = mescola(poolFinaleContorni)[0];
+  return { proteinaId: proteinaScelta.id, contornoId: contornoScelto.id };
+}
+
+/* Helper: filtra contorni per pool H2/H3 del giorno */
+async function filtraContorniPerPool(contorni, giorno){
+  // Se non c'è la logica del pool, ritorna tutti
+  if(typeof calcolaPoolVerdureGiornaliero !== 'function') return contorni;
+  const pool = await calcolaPoolVerdureGiornaliero(giorno);
+  if(!pool || !pool.length) return contorni;
+  const nomiPool = new Set(pool.map(p=>p.nome.toLowerCase()));
+  const varianti = await getAll('varianti');
+  return contorni.filter(c=>{
+    // Un contorno è ammesso se almeno un suo ingrediente è nel pool
+    for(const ing of (c.ingredienti||[])){
+      const nomeIng = ing.nomeLibero || '';
+      const varMatch = varianti.find(v=>v.id===ing.variantId);
+      const nomeVar = varMatch ? varMatch.nome : nomeIng;
+      if(nomeIng && nomiPool.has(nomeIng.toLowerCase())) return true;
+      if(nomeVar && nomiPool.has(nomeVar.toLowerCase())) return true;
+    }
+    return false;
+  });
+}
+
 /* Fascia automatica per i primi modulari:
    - facile: il condimento ha 1-2 ingredienti
    - medio: 3-4 ingredienti
