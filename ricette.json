@@ -1,5 +1,5 @@
 {
-  "versione": 3,
+  "versione": 4,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -1609,10 +1609,6 @@
         [
           "Petto di pollo",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1621,7 +1617,9 @@
         "Cuoci il pollo 4-5 minuti per lato, senza muoverlo troppo, finché si forma una leggera crosta dorata.",
         "Verifica che al centro non sia più rosa; sala solo a fine cottura.",
         "Lascia riposare 2 minuti prima di servire, così i succhi si ridistribuiscono."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla piastra"
     },
     {
       "nome": "Uova sode",
@@ -1640,7 +1638,9 @@
         "Porta a bollore, poi abbassa a fuoco medio e cuoci 9 minuti da quando l'acqua bolle, per un tuorlo sodo ma non gessoso.",
         "Scola e trasferisci subito le uova in acqua fredda per fermare la cottura.",
         "Sgusciale sotto un filo d'acqua corrente, così il guscio si stacca più facilmente."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "sode"
     },
     {
       "nome": "Ceci conditi",
@@ -1652,10 +1652,6 @@
         [
           "Ceci in barattolo",
           135
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1663,7 +1659,9 @@
         "Trasferiscili in una ciotola.",
         "Condisci con olio, un pizzico di sale e, a piacere, una spolverata di paprika o cumino.",
         "Lascia insaporire qualche minuto prima di servire."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "conditi"
     },
     {
       "nome": "Tonno condito",
@@ -1675,17 +1673,15 @@
         [
           "Tonno in scatola",
           100
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Scola bene il tonno dal liquido di conservazione.",
         "Sminuzzalo leggermente con una forchetta in una ciotola.",
         "Condisci con olio e, se gradito, succo di limone e prezzemolo tritato."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "condito"
     },
     {
       "nome": "Filetto di nasello al forno",
@@ -1697,10 +1693,6 @@
         [
           "Filetto di nasello surgelato",
           165
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1708,7 +1700,9 @@
         "Disponi i filetti di nasello (anche ancora surgelati) in una teglia foderata di carta forno, senza sovrapporli.",
         "Condisci con olio, sale e a piacere una spruzzata di limone.",
         "Inforna 15-18 minuti, finché il pesce è opaco e si sfalda facilmente con una forchetta."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al forno"
     },
     {
       "nome": "Sogliola al forno",
@@ -1720,10 +1714,6 @@
         [
           "Sogliola surgelata",
           165
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1731,7 +1721,9 @@
         "Disponi i filetti di sogliola in una teglia con carta forno.",
         "Condisci con olio e sale.",
         "Inforna 12-15 minuti (filetti sottili, cuociono in fretta): pronti quando la carne è opaca e si stacca facilmente."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al forno"
     },
     {
       "nome": "Gamberetti saltati",
@@ -1743,10 +1735,6 @@
         [
           "Gamberetti surgelati",
           175
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1754,7 +1742,9 @@
         "Scalda l'olio in una padella a fuoco alto.",
         "Salta i gamberetti 3-4 minuti, mescolando spesso, finché diventano rosati e opachi (non stracuocerli, diventano gommosi).",
         "Sala solo a fine cottura e servi subito."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "saltati"
     },
     {
       "nome": "Nodino di maiale alla piastra",
@@ -1766,10 +1756,6 @@
         [
           "Nodino di maiale",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1777,7 +1763,9 @@
         "Scalda una piastra o padella antiaderente ben calda con l'olio.",
         "Cuoci il nodino 5-6 minuti per lato a fuoco medio-alto, finché ben dorato e non più rosato al centro.",
         "Lascia riposare 3-4 minuti prima di servire."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla piastra"
     },
     {
       "nome": "Tofu saltato",
@@ -1789,17 +1777,15 @@
         [
           "Tofu",
           190
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Taglia il tofu a cubetti di circa 2 cm e tamponalo con carta assorbente per eliminare l'acqua in eccesso.",
         "Scalda l'olio in una padella antiaderente a fuoco medio-alto.",
         "Saltalo 6-7 minuti, girandolo di tanto in tanto, finché dorato su più lati."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "saltato"
     },
     {
       "nome": "Frittata semplice",
@@ -1811,10 +1797,6 @@
         [
           "Uova",
           120
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -1822,7 +1804,9 @@
         "Scalda l'olio in una padella antiaderente a fuoco medio-basso.",
         "Versa le uova e cuoci con un coperchio 5-6 minuti finché la base è dorata e la superficie quasi rappresa.",
         "Gira la frittata aiutandoti con un piatto e cuoci ancora 2 minuti dall'altro lato."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "semplice"
     },
     {
       "nome": "Formaggio fresco a fette",
@@ -1840,7 +1824,9 @@
         "Scola la mozzarella dal liquido di governo.",
         "Tagliala a fette regolari di circa 1 cm.",
         "Servila a temperatura ambiente, non fredda di frigo: il sapore risulta più pieno."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a fette"
     },
     {
       "nome": "Formaggio stagionato a scaglie",
@@ -1858,7 +1844,9 @@
         "Con un coltello o un pelapatate, ricava scaglie sottili dal parmigiano.",
         "Disponile su un piatto.",
         "A piacere, completa con una macinata di pepe nero."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a scaglie"
     },
     {
       "nome": "Insalata mista condita",
@@ -1880,7 +1868,8 @@
         "Lava e asciuga bene l'insalata (l'acqua residua diluisce il condimento).",
         "Trasferiscila in una ciotola.",
         "Condisci con olio e un pizzico di sale, mescolando solo al momento di servire."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Carote julienne",
@@ -1902,7 +1891,8 @@
         "Sbuccia le carote e tagliale a listarelle sottili (julienne) con un coltello o una mandolina.",
         "Trasferiscile in una ciotola.",
         "Condisci con olio e un pizzico di sale; puoi servirle crude e croccanti oppure saltarle 3-4 minuti in padella se le preferisci più morbide."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Radicchio saltato",
@@ -1924,7 +1914,8 @@
         "Taglia il radicchio a listarelle.",
         "Scalda l'olio in padella a fuoco medio-alto.",
         "Saltalo 3-4 minuti, mescolando, finché appassito e leggermente caramellato ai bordi."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Zucchine grigliate",
@@ -1947,7 +1938,8 @@
         "Scalda una griglia o piastra antiaderente a fuoco alto senza olio.",
         "Griglia le zucchine 2-3 minuti per lato, finché segnate e morbide.",
         "Condisci con olio e sale a crudo dopo la cottura."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Melanzane grigliate",
@@ -1970,7 +1962,8 @@
         "Scalda una griglia o piastra a fuoco alto.",
         "Griglia 3-4 minuti per lato, finché morbide e ben segnate (poco cotta risulta amara e gommosa).",
         "Condisci con olio e sale a crudo."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Broccoli al vapore",
@@ -1992,7 +1985,8 @@
         "Dividi i broccoli in cimette regolari.",
         "Cuocili a vapore (cestello sopra acqua bollente, coperchio chiuso) per 8-10 minuti, finché teneri ma ancora leggermente sodi.",
         "Condisci con olio e sale a crudo."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Peperoni saltati",
@@ -2014,7 +2008,8 @@
         "Taglia i peperoni a listarelle, eliminando semi e filamenti bianchi interni.",
         "Scalda l'olio in padella a fuoco medio-alto.",
         "Saltali 8-10 minuti, mescolando spesso, finché morbidi e leggermente dorati ai bordi."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Spinaci saltati",
@@ -2036,7 +2031,8 @@
         "Lava bene gli spinaci freschi se non già puliti.",
         "Scalda l'olio in padella a fuoco medio.",
         "Saltali 3-4 minuti, mescolando, finché appassiscono (si riducono molto di volume)."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Cavolfiore al vapore",
@@ -2058,7 +2054,8 @@
         "Dividi il cavolfiore in cimette regolari.",
         "Cuocilo a vapore 10-12 minuti, finché tenero quando lo trafiggi con una forchetta.",
         "Condisci con olio e sale a crudo."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Funghi trifolati",
@@ -2081,7 +2078,8 @@
         "Scalda l'olio in padella a fuoco alto.",
         "Saltali 6-7 minuti senza mescolare troppo spesso, finché rilasciano l'acqua di vegetazione e poi la riassorbono, dorandosi.",
         "Sala solo a fine cottura: anticipato fa rilasciare più acqua e li rende meno dorati."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Fagiolini lessati",
@@ -2103,7 +2101,8 @@
         "Monda i fagiolini eliminando le estremità.",
         "Lessali in acqua bollente salata 8-10 minuti, finché teneri ma ancora leggermente croccanti.",
         "Scolali e condisci con olio a crudo."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Insalata di pomodori",
@@ -2125,7 +2124,8 @@
         "Lava i pomodori e tagliali a fette o spicchi.",
         "Disponili su un piatto.",
         "Condisci con olio, sale e a piacere origano, mescolando solo al momento di servire per non far perdere troppa acqua ai pomodori."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Spiedini di pollo alle erbe",
@@ -2137,10 +2137,6 @@
         [
           "Petto di pollo",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -2148,7 +2144,9 @@
         "Infilzali su spiedini di legno (bagnati prima in acqua per non bruciarsi) o metallo.",
         "Condisci con olio ed erbe aromatiche tritate (rosmarino, timo).",
         "Cuoci su piastra calda o in padella 8-10 minuti, girando gli spiedini su più lati, finché dorati e cotti internamente."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alle erbe"
     },
     {
       "nome": "Petto di tacchino in padella",
@@ -2160,17 +2158,15 @@
         [
           "Petto di tacchino",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Taglia il petto di tacchino a fette regolari.",
         "Scalda l'olio in padella a fuoco medio-alto.",
         "Cuoci il tacchino 4-5 minuti per lato, finché dorato e cotto internamente (tende ad asciugarsi se troppo cotto, controlla con un taglio al centro)."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "in padella"
     },
     {
       "nome": "Fettina di manzo ai ferri",
@@ -2182,10 +2178,6 @@
         [
           "Fettina di manzo",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -2193,7 +2185,9 @@
         "Scalda una piastra o padella ben calda con l'olio.",
         "Cuoci la fettina 2-3 minuti per lato per una cottura media, meno se la preferisci al sangue.",
         "Sala solo a fine cottura e lascia riposare un minuto prima di servire."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "ai ferri"
     },
     {
       "nome": "Bresaola con rucola e limone",
@@ -2236,7 +2230,8 @@
       "procedimento": [
         "Disponi le fette di prosciutto cotto su un piatto.",
         "Servi a temperatura ambiente per un sapore più pieno."
-      ]
+      ],
+      "componente": "proteina"
     },
     {
       "nome": "Orata al forno",
@@ -2248,17 +2243,15 @@
         [
           "Orata surgelata",
           165
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Preriscalda il forno a 200°C.",
         "Disponi l'orata in una teglia con carta forno, condisci con olio, sale e fette di limone.",
         "Inforna 18-20 minuti, finché la carne è opaca e si stacca facilmente dalla lisca."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al forno"
     },
     {
       "nome": "Sgombro al forno",
@@ -2270,10 +2263,6 @@
         [
           "Sgombro fresco",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -2281,7 +2270,9 @@
         "Pulisci lo sgombro se necessario ed elimina eventuali lische residue.",
         "Disponilo in teglia con olio e limone.",
         "Inforna 15-18 minuti, finché la carne è opaca e si sfalda facilmente."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al forno"
     },
     {
       "nome": "Salmone al forno",
@@ -2293,17 +2284,15 @@
         [
           "Salmone",
           125
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Preriscalda il forno a 200°C.",
         "Disponi il trancio di salmone in una teglia con carta forno, condisci con olio e sale.",
         "Inforna 15 minuti: il salmone è pronto quando la superficie è opaca ma il centro resta leggermente rosato."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al forno"
     },
     {
       "nome": "Sgombro in scatola condito",
@@ -2315,17 +2304,15 @@
         [
           "Tonno in scatola",
           100
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Scola il pesce in scatola dal liquido di conservazione.",
         "Trasferiscilo in una ciotola, sminuzzandolo leggermente con una forchetta.",
         "Condisci con olio e succo di limone."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "condito"
     },
     {
       "nome": "Polpo lesso con limone",
@@ -2337,10 +2324,6 @@
         [
           "Polpo surgelato",
           250
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -2349,7 +2332,9 @@
         "Lascialo cuocere a fuoco medio-basso 35-40 minuti, finché un rebbio di forchetta lo trafigge facilmente.",
         "Lascialo intiepidire nella sua acqua di cottura 10 minuti, poi taglialo a pezzi.",
         "Condisci con olio, succo di limone e prezzemolo tritato."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "lesso"
     },
     {
       "nome": "Crescenza a fette",
@@ -2366,7 +2351,9 @@
       "procedimento": [
         "Preleva la crescenza dalla confezione con un cucchiaio o tagliala a fette: ha una consistenza morbida e spalmabile.",
         "Servila a temperatura ambiente, magari con un filo d'olio."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a fette"
     },
     {
       "nome": "Ricotta al naturale",
@@ -2384,7 +2371,9 @@
         "Scola la ricotta dall'eventuale siero in eccesso.",
         "Servila in una ciotolina.",
         "A piacere, completa con un filo d'olio, erbe fresche tritate o una macinata di pepe."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al naturale"
     },
     {
       "nome": "Pecorino a scaglie",
@@ -2401,7 +2390,9 @@
       "procedimento": [
         "Con un coltello o un pelapatate, ricava scaglie sottili dal pecorino.",
         "Disponile su un piatto, a piacere con qualche goccia di miele che ne esalta il sapore."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a scaglie"
     },
     {
       "nome": "Omelette alle erbe",
@@ -2413,10 +2404,6 @@
         [
           "Uova",
           120
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -2424,7 +2411,9 @@
         "Scalda l'olio in padella a fuoco medio-basso.",
         "Versa le uova e cuoci 2-3 minuti senza mescolare, finché i bordi si rapprendono.",
         "Piega l'omelette a metà con una spatola e cuoci ancora un minuto prima di servire."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alle erbe"
     },
     {
       "nome": "Uova in camicia",
@@ -2443,7 +2432,9 @@
         "Rompi l'uovo in una tazzina.",
         "Crea un vortice nell'acqua con un cucchiaio e versaci delicatamente l'uovo al centro.",
         "Cuoci 3 minuti, poi scola con una schiumarola: il tuorlo deve restare morbido e l'albume compatto."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "in camicia"
     },
     {
       "nome": "Hummus di ceci",
@@ -2455,10 +2446,6 @@
         [
           "Ceci in barattolo",
           135
-        ],
-        [
-          "Olio extravergine oliva",
-          10
         ]
       ],
       "procedimento": [
@@ -2466,7 +2453,8 @@
         "Frullali con l'olio, succo di limone (se disponibile) e un pizzico di sale fino a ottenere una crema liscia.",
         "Se risulta troppo densa, aggiungi un cucchiaio di acqua e frulla ancora.",
         "Trasferisci in una ciotolina e completa con un filo d'olio a crudo."
-      ]
+      ],
+      "componente": "proteina"
     },
     {
       "nome": "Lenticchie condite",
@@ -2478,17 +2466,15 @@
         [
           "Lenticchie in barattolo",
           135
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Scola e sciacqua le lenticchie sotto acqua corrente.",
         "Trasferiscile in una ciotola.",
         "Condisci con olio, sale e a piacere una spolverata di cumino."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "condite"
     },
     {
       "nome": "Fagioli conditi",
@@ -2500,17 +2486,15 @@
         [
           "Fagioli cannellini in barattolo",
           135
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Scola e sciacqua i fagioli cannellini sotto acqua corrente.",
         "Trasferiscili in una ciotola.",
         "Condisci con olio, sale e una macinata di pepe."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "conditi"
     },
     {
       "nome": "Risotto alla zucchina",
@@ -3780,7 +3764,8 @@
         "Scola i piselli dal liquido di conservazione e sciacquali sotto acqua corrente.",
         "Trasferiscili in una ciotola.",
         "Condisci con olio e un pizzico di sale."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Uova con maionese",
@@ -3922,7 +3907,8 @@
         "Scalda l'olio in un tegame a fuoco medio.",
         "Aggiungi i piselli surgelati e cuoci 6-7 minuti, mescolando di tanto in tanto, con un goccio d'acqua se tendono ad asciugarsi.",
         "Sala a fine cottura."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Cipolla saltata",
@@ -3944,7 +3930,8 @@
         "Affetta la cipolla sottile.",
         "Scalda l'olio in padella a fuoco medio-basso.",
         "Saltala 10-12 minuti, mescolando di tanto in tanto, finché appassita e dorata (per un risultato più dolce, allunga i tempi a fuoco più basso)."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Pomodorini conditi al basilico",
@@ -3970,7 +3957,8 @@
         "Taglia i pomodorini a metà.",
         "Disponili in una ciotola.",
         "Condisci con olio e foglie di basilico fresco spezzettate a mano, mescolando delicatamente."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Insalata di cetrioli",
@@ -3992,7 +3980,8 @@
         "Sbuccia il cetriolo se la buccia risulta spessa, e taglialo a rondelle sottili.",
         "Disponilo in una ciotola.",
         "Condisci con olio e un pizzico di sale; se preferisci, lascialo riposare 5 minuti prima di servire per fargli perdere un po' di acqua di vegetazione."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Zucchine crude a nastro",
@@ -4014,7 +4003,8 @@
         "Lava le zucchine e, con un pelapatate, ricava delle striscioline sottili per tutta la lunghezza (a nastro).",
         "Disponile in una ciotola.",
         "Condisci con olio, sale e a piacere qualche scaglia di parmigiano; lascia insaporire qualche minuto prima di servire."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Peperoni crudi in insalata",
@@ -4036,7 +4026,8 @@
         "Lava i peperoni, elimina semi e filamenti bianchi interni, e tagliali a listarelle sottili.",
         "Disponili in una ciotola.",
         "Condisci con olio e un pizzico di sale; lasciali riposare qualche minuto, si ammorbidiscono leggermente e si insaporiscono meglio."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Carote e finocchi in insalata",
@@ -4058,7 +4049,8 @@
         "Sbuccia le carote e tagliale a fiammifero sottile, con un coltello o una grattugia a fori larghi.",
         "Disponile in una ciotola.",
         "Condisci con olio, sale e a piacere succo di limone."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Broccoli saltati in padella",
@@ -4080,7 +4072,8 @@
         "Dividi i broccoli in cimette regolari, non troppo grandi.",
         "Scalda l'olio in padella a fuoco medio-alto.",
         "Saltali 6-7 minuti, mescolando spesso, aggiungendo un goccio d'acqua se tendono ad attaccarsi, finché teneri ma ancora leggermente croccanti."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Melanzane a fette con basilico",
@@ -4103,7 +4096,8 @@
         "Scalda una griglia o piastra a fuoco alto.",
         "Griglia le fette 3-4 minuti per lato, finché morbide e ben segnate.",
         "Condisci con olio, sale e foglie di basilico fresco spezzettate a mano, appena tolte dal fuoco."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Pancetta croccante",
@@ -4115,17 +4109,15 @@
         [
           "Pancetta a cubetti",
           60
-        ],
-        [
-          "Olio extravergine oliva",
-          3
         ]
       ],
       "procedimento": [
         "Scalda una padella antiaderente a fuoco medio, senza aggiungere olio (la pancetta rilascia già il proprio grasso).",
         "Rosola la pancetta a cubetti 5-6 minuti, mescolando spesso, finché ben croccante.",
         "Scolala su carta assorbente prima di servire, per eliminare il grasso in eccesso."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "croccante"
     },
     {
       "nome": "Stracchino a cucchiaiate",
@@ -4142,7 +4134,9 @@
       "procedimento": [
         "Preleva lo stracchino dalla confezione con un cucchiaio.",
         "Servilo a temperatura ambiente in una ciotolina: la consistenza cremosa risulta più gradevole."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a cucchiaiate"
     },
     {
       "nome": "Fagioli borlotti conditi",
@@ -4154,17 +4148,15 @@
         [
           "Fagioli borlotti in barattolo",
           135
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Scola e sciacqua i fagioli borlotti sotto acqua corrente.",
         "Trasferiscili in una ciotola.",
         "Condisci con olio, sale e una spolverata di rosmarino tritato."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "conditi"
     },
     {
       "nome": "Brie a fette",
@@ -4181,7 +4173,9 @@
       "procedimento": [
         "Estrai il brie dal frigorifero almeno 15 minuti prima di servirlo: a temperatura ambiente sprigiona meglio il sapore.",
         "Taglialo a fette o spicchi con un coltello a lama liscia."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a fette"
     },
     {
       "nome": "Feta a cubetti",
@@ -4193,17 +4187,15 @@
         [
           "Feta",
           90
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
         "Scola la feta dal liquido di conservazione.",
         "Tagliala a cubetti regolari.",
         "Condisci con un filo d'olio e, a piacere, origano secco."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a cubetti"
     },
     {
       "nome": "Prosciutto crudo a fette",
@@ -4220,7 +4212,9 @@
       "procedimento": [
         "Disponi le fette di prosciutto crudo su un piatto, senza sovrapporle.",
         "Servi a temperatura ambiente: il grasso risulta più morbido e saporito."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "a fette"
     },
     {
       "nome": "Bruschette al pomodoro",
@@ -4371,7 +4365,8 @@
         "Taglia le patate a fette sottili e lessale per pochi minuti in acqua salata, giusto per ammorbidirle.",
         "Disponile in una teglia leggermente sovrapposte, alternando con pezzetti di taleggio.",
         "Versa la panna sopra e inforna a 200°C finché la superficie è dorata e il formaggio filante."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Crostoni di pane e taleggio",
@@ -4523,7 +4518,8 @@
         "Taglia le zucchine a rondelle e cuocile in padella con un filo d'olio finché morbide.",
         "Trasferiscile in una teglia, copri con la panna e l'emmental grattugiato o a fettine sottili.",
         "Gratina in forno caldo qualche minuto finché la superficie è dorata."
-      ]
+      ],
+      "componente": "contorno"
     },
     {
       "nome": "Farro con emmental e verdure",
@@ -4570,10 +4566,6 @@
         [
           "Provola",
           75
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -4581,7 +4573,9 @@
         "Scalda una piastra o padella antiaderente ben calda, senza aggiungere altro grasso.",
         "Cuoci le fette di provola un minuto per lato, finché dorate fuori e filanti dentro.",
         "Servi immediatamente, un filo d'olio a piacere."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla piastra"
     },
     {
       "nome": "Pasta alla provola e pomodoro",
@@ -5011,10 +5005,6 @@
           150
         ],
         [
-          "Olio extravergine oliva",
-          8
-        ],
-        [
           "Limone",
           15
         ]
@@ -5023,7 +5013,9 @@
         "Scalda l'olio in una padella antiaderente.",
         "Cuoci i filetti di branzino qualche minuto per lato, finché dorati e cotti all'interno.",
         "Completa con una spruzzata di succo di limone prima di servire."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "in padella"
     },
     {
       "nome": "Riso con branzino e zucchine",
@@ -5153,10 +5145,6 @@
           200
         ],
         [
-          "Olio extravergine oliva",
-          8
-        ],
-        [
           "Limone",
           15
         ]
@@ -5164,7 +5152,9 @@
       "procedimento": [
         "Condisci le sovracosce con olio, succo di limone e un pizzico di sale.",
         "Grigliale su una piastra ben calda, girandole spesso, per circa 25-30 minuti finché cotte in profondità e dorate fuori."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla griglia"
     },
     {
       "nome": "Sovracosce di pollo con carote e zucchine",
@@ -5385,10 +5375,6 @@
           200
         ],
         [
-          "Olio extravergine oliva",
-          8
-        ],
-        [
           "Limone",
           15
         ]
@@ -5396,7 +5382,9 @@
       "procedimento": [
         "Disponi le costine in una teglia, condite con olio, succo di limone e un pizzico di sale.",
         "Inforna a 200°C per circa 40-45 minuti, girando a metà cottura, finché ben dorate e cotte in profondità."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al forno"
     },
     {
       "nome": "Costine di maiale con patate al forno",
@@ -6588,10 +6576,6 @@
           125
         ],
         [
-          "Olio extravergine oliva",
-          5
-        ],
-        [
           "Limone",
           25
         ]
@@ -6601,7 +6585,9 @@
         "Grigliala su piastra ben calda 3-4 minuti per lato.",
         "Prepara un'emulsione con olio, limone e origano.",
         "Servi il pesce con la salsa."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla piastra"
     },
     {
       "nome": "Trancio di tonno fresco alla piastra",
@@ -6615,10 +6601,6 @@
           125
         ],
         [
-          "Olio extravergine oliva",
-          5
-        ],
-        [
           "Limone",
           15
         ]
@@ -6628,7 +6610,9 @@
         "Scottalo su piastra ben calda 2 minuti per lato (deve restare rosato dentro).",
         "Completa con limone e, a piacere, semi di sesamo.",
         "Servi subito."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla piastra"
     },
     {
       "nome": "Gamberetti al vapore con limone e prezzemolo",
@@ -6644,10 +6628,6 @@
         [
           "Limone",
           25
-        ],
-        [
-          "Olio extravergine oliva",
-          5
         ]
       ],
       "procedimento": [
@@ -6655,7 +6635,9 @@
         "Disponili su un piatto.",
         "Condisci con olio, succo di limone e prezzemolo tritato.",
         "Servi subito."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "al vapore"
     },
     {
       "nome": "Gamberetti all'aglio in padella",
@@ -6669,10 +6651,6 @@
           175
         ],
         [
-          "Olio extravergine oliva",
-          8
-        ],
-        [
           "Limone",
           15
         ]
@@ -6682,7 +6660,9 @@
         "Aggiungi i gamberetti scongelati e cuoci 3-4 minuti a fuoco alto.",
         "Sfuma con succo di limone.",
         "Servi con prezzemolo tritato."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "all'aglio in padella"
     },
     {
       "nome": "Insalata tiepida di gamberi e zucchine",
@@ -6729,10 +6709,6 @@
         [
           "Limone",
           25
-        ],
-        [
-          "Olio extravergine oliva",
-          8
         ]
       ],
       "procedimento": [
@@ -6740,7 +6716,9 @@
         "Grigliali su piastra ben calda 3-4 minuti per lato, senza muoverli troppo.",
         "Condisci con olio, limone e prezzemolo.",
         "Servi subito, caldi."
-      ]
+      ],
+      "componente": "proteina",
+      "preparazione": "alla griglia"
     },
     {
       "nome": "Totani in umido con piselli",
