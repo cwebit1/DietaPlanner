@@ -2819,14 +2819,40 @@ async function calcolaProgrammatoGiorno(giornoIso){
   for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
     const voce = await getOne('piano', giornoIso+'_'+pasto);
     if(!voce) continue;
-    const idRicette = voce.modo==='multi'
-      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
-      : [voce.ricettaId].filter(Boolean);
-    for(const rid of idRicette){
-      const r = await getOne('ricette', rid);
-      if(!r) continue;
-      const n = await nutrizionePerPersona(r);
-      tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+    if(voce.modo==='multi'){
+      if(voce.primoId){
+        const rPrimo = await getOne('ricette', voce.primoId);
+        if(rPrimo){
+          const n = await nutrizionePerPersona(rPrimo);
+          tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+        }
+      }
+      const rSecondoProg = voce.secondoId ? await getOne('ricette', voce.secondoId) : null;
+      if(rSecondoProg && rSecondoProg.componente === COMPONENTE_PROTEINA){
+        const pastoCompostoProg = await componiSecondoContorno(voce.secondoId, voce.contornoId);
+        if(pastoCompostoProg){
+          tot.kcal+=pastoCompostoProg.nutrizione.kcal; tot.prot+=pastoCompostoProg.nutrizione.prot;
+          tot.carb+=pastoCompostoProg.nutrizione.carb; tot.grassi+=pastoCompostoProg.nutrizione.grassi;
+        }
+      } else {
+        if(rSecondoProg){
+          const n = await nutrizionePerPersona(rSecondoProg);
+          tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+        }
+        if(voce.contornoId){
+          const rContornoProg = await getOne('ricette', voce.contornoId);
+          if(rContornoProg){
+            const n = await nutrizionePerPersona(rContornoProg);
+            tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+          }
+        }
+      }
+    } else {
+      const r = voce.ricettaId ? await getOne('ricette', voce.ricettaId) : null;
+      if(r){
+        const n = await nutrizionePerPersona(r);
+        tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+      }
     }
   }
   return tot;
@@ -5143,11 +5169,39 @@ async function renderNutrizioneGiorno(){
       continue;
     }
 
-    const idRicette = voce.modo==='multi'
-      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
-      : [voce.ricettaId].filter(Boolean);
-    for(const rid of idRicette){
-      const ricetta = await getOne('ricette', rid);
+    if(voce.modo==='multi'){
+      // Primo: sempre nutrizione separata
+      if(voce.primoId){
+        const ricettaPrimo = await getOne('ricette', voce.primoId);
+        if(ricettaPrimo){
+          const n = await nutrizionePerPersona(ricettaPrimo);
+          tot.kcal += n.kcal; tot.prot += n.prot; tot.carb += n.carb; tot.grassi += n.grassi;
+        }
+      }
+      const ricettaSecondo = voce.secondoId ? await getOne('ricette', voce.secondoId) : null;
+      if(ricettaSecondo && ricettaSecondo.componente === COMPONENTE_PROTEINA){
+        // Secondo componibile: nutrizione composita (proteina + contorno + condimento)
+        const pastoComposto = await componiSecondoContorno(voce.secondoId, voce.contornoId);
+        if(pastoComposto){
+          tot.kcal += pastoComposto.nutrizione.kcal; tot.prot += pastoComposto.nutrizione.prot;
+          tot.carb += pastoComposto.nutrizione.carb; tot.grassi += pastoComposto.nutrizione.grassi;
+        }
+      } else {
+        // Secondo tradizionale: nutrizione separata (comportamento invariato)
+        if(ricettaSecondo){
+          const n = await nutrizionePerPersona(ricettaSecondo);
+          tot.kcal += n.kcal; tot.prot += n.prot; tot.carb += n.carb; tot.grassi += n.grassi;
+        }
+        if(voce.contornoId){
+          const ricettaContorno = await getOne('ricette', voce.contornoId);
+          if(ricettaContorno){
+            const n = await nutrizionePerPersona(ricettaContorno);
+            tot.kcal += n.kcal; tot.prot += n.prot; tot.carb += n.carb; tot.grassi += n.grassi;
+          }
+        }
+      }
+    } else {
+      const ricetta = voce.ricettaId ? await getOne('ricette', voce.ricettaId) : null;
       if(ricetta){
         const n = await nutrizionePerPersona(ricetta);
         tot.kcal += n.kcal; tot.prot += n.prot; tot.carb += n.carb; tot.grassi += n.grassi;
