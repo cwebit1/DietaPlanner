@@ -1760,10 +1760,28 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
     }
   }
 
+  // F5: leggi lo storico delle proposte per ogni slot da localStorage
+  // (salvato dalla generazione precedente) e passalo al motore E2,
+  // così le ricette già proposte vengono penalizzate nella rielaborazione
+  const storicoPerSlotE2 = {};
+  for(const g of giorni){
+    for(const pasto of ['pranzo','cena']){
+      const chiave = g+'_'+pasto;
+      storicoPerSlotE2[chiave] = {unico:[], separato:{primo:[],secondo:[]}};
+      try{
+        const rawUnico = localStorage.getItem('storicoSlot_'+chiave+'_unico');
+        if(rawUnico) storicoPerSlotE2[chiave].unico = JSON.parse(rawUnico);
+        const rawPrimo = localStorage.getItem('storicoSlot_'+chiave+'_primo');
+        if(rawPrimo) storicoPerSlotE2[chiave].separato.primo = JSON.parse(rawPrimo);
+        const rawSecondo = localStorage.getItem('storicoSlot_'+chiave+'_secondo');
+        if(rawSecondo) storicoPerSlotE2[chiave].separato.secondo = JSON.parse(rawSecondo);
+      }catch(e){}
+    }
+  }
   // Sviluppa la griglia con il motore E2 completo (F4+F5+F6+F7)
   const esitoE2 = sviluppaGrigliaCrossWeek(
     grigliaE1.celle, giorni, tutteRicetteE2, mappaVariantiE2,
-    preferenze, {}, usatiSettimanaPrecedente
+    preferenze, storicoPerSlotE2, usatiSettimanaPrecedente
   );
 
   // Log per debug se ci sono ripetizioni forzate (pool ricette troppo piccolo)
@@ -1772,11 +1790,20 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
   }
 
   // Salva lo storico E2 in localStorage per F5 tra generazioni future
+  // (unico + separato: primo e secondo separatamente)
   for(const chiave of Object.keys(esitoE2.storicoPerSlot)){
     const storicoSlot = esitoE2.storicoPerSlot[chiave];
-    if(storicoSlot.unico && storicoSlot.unico.length){
-      try{ localStorage.setItem('storicoSlot_'+chiave+'_unico', JSON.stringify(storicoSlot.unico.slice(-5))); }catch(e){}
-    }
+    try{
+      if(storicoSlot.unico && storicoSlot.unico.length){
+        localStorage.setItem('storicoSlot_'+chiave+'_unico', JSON.stringify(storicoSlot.unico.slice(-5)));
+      }
+      if(storicoSlot.separato && storicoSlot.separato.primo && storicoSlot.separato.primo.length){
+        localStorage.setItem('storicoSlot_'+chiave+'_primo', JSON.stringify(storicoSlot.separato.primo.slice(-5)));
+      }
+      if(storicoSlot.separato && storicoSlot.separato.secondo && storicoSlot.separato.secondo.length){
+        localStorage.setItem('storicoSlot_'+chiave+'_secondo', JSON.stringify(storicoSlot.separato.secondo.slice(-5)));
+      }
+    }catch(e){}
   }
 
   for(const g of giorni){
@@ -5909,14 +5936,18 @@ function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, pr
 
     const pool = poolDelGiorno(indiceGiorno);
     const storicoSlotPrecedente = storico[chiave] || {unico:[], separato:{primo:[],secondo:[]}};
-
-    const rUnico = cercaUnicoCrossWeek(tutteRicette, sottotipoFine, usatiSettimana, usatiPrecedente, storicoSlotPrecedente.unico);
+    // F5: per la modalità "unico" usa lo storico unico; per "separato" usa
+    // lo storico separato (primo/secondo). Se lo storico è vuoto, la scelta
+    // è puramente casuale (prima generazione in assoluto).
+    const storicoPerModalitaUnico = storicoSlotPrecedente.unico || [];
+    const rUnico = cercaUnicoCrossWeek(tutteRicette, sottotipoFine, usatiSettimana, usatiPrecedente, storicoPerModalitaUnico);
     if(rUnico.ricetta) usatiSettimana.add(rUnico.ricetta.nome);
     cella.candidatoUnico = rUnico.ricetta;
     cella.carenzaUnico = rUnico.carenza;
     if(rUnico.ripetizioneForzata) ripetizioniForzate.push({sottotipo:sottotipoFine, portata:'unico', giorno:slot.giorno, pasto:slot.pasto});
 
-    const rSeparato = cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoSlotPrecedente.separato);
+    const storicoPerModalitaSeparato = storicoSlotPrecedente.separato || {primo:[],secondo:[]};
+    const rSeparato = cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato);
     if(rSeparato.combo){
       usatiSettimana.add(rSeparato.combo.primo.nome);
       usatiSettimana.add(rSeparato.combo.secondo.nome);
