@@ -260,8 +260,8 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 .tabella-giorno th.col-label{width:22%;}
 .tabella-giorno td.riga-label{font-size:0.68rem;color:var(--text-dim);text-align:right;padding-right:6px;white-space:nowrap;}
 .tabella-giorno td.cella button{
-  width:100%;aspect-ratio:1;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);
-  cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent;
+  width:100%;min-height:28px;border-radius:6px;border:1px solid var(--border);background:var(--panel-2);
+  cursor:pointer;padding:4px;-webkit-tap-highlight-color:transparent;
 }
 .tabella-giorno td.cella button.active{background:var(--accent);border-color:var(--accent);}
 .tabella-giorno td.cella button.al-tetto{opacity:0.3;}
@@ -6152,14 +6152,12 @@ async function renderQuestionarioMenu(){
     <button data-quest-tempo="nessuno" class="${(!statoQuestionario.pocoTempoPranzo && !statoQuestionario.pocoTempoCena)?'active':''}">Ho tempo</button>
   `;
 
-  // Sezione colazione ricorrente: composizione + griglia giorni
-  const colazionePrefSalvataQuest = await getOne('impostazioni', 'colazionePreferita');
-  const colazionePrefGiorniSalvati = await getOne('impostazioni', 'colazionePreferitaGiorni');
-  statoQuestionario.colazionePrefGiorni = colazionePrefGiorniSalvati ? colazionePrefGiorniSalvati.valore : [];
-  // Precarica i componenti della colazione preferita esistente, oppure genera default
-  if(colazionePrefSalvataQuest && colazionePrefSalvataQuest.valore){
-    statoQuestionario.colazionePrefComponenti = Object.assign({}, colazionePrefSalvataQuest.valore);
-  } else {
+  // Sezione colazione ricorrente: composizione + griglia giorni.
+  // NOTA: colazionePrefGiorni/colazionePrefComponenti sono già stati
+  // precaricati da DB in apriQuestionarioMenu() — qui NON li si rilegge
+  // più ad ogni render, altrimenti ogni toggle veniva subito annullato
+  // dal render chiamato subito dopo dal listener stesso.
+  if(!statoQuestionario.colazionePrefComponenti || !Object.keys(statoQuestionario.colazionePrefComponenti).length){
     statoQuestionario.colazionePrefComponenti = {};
     for(const gr of COLAZIONE_GRUPPI){
       const opz = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
@@ -6197,16 +6195,6 @@ async function renderQuestionarioMenu(){
       <div class="row" style="margin-top:10px;gap:8px;">
         <button class="small" data-quest-colpref-reset="1">✕ Reset colazione preferita</button>
       </div>`;
-    // Listener: toggle giorni
-    elColazionePref.querySelectorAll('[data-quest-colpref-giorno]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        const idx = parseInt(b.dataset.questColprefGiorno);
-        const pos = statoQuestionario.colazionePrefGiorni.indexOf(idx);
-        if(pos>=0) statoQuestionario.colazionePrefGiorni.splice(pos,1);
-        else statoQuestionario.colazionePrefGiorni.push(idx);
-        renderQuestionarioMenu();
-      });
-    });
     // Listener: selezione componenti gruppi
     elColazionePref.querySelectorAll('[data-quest-gruppo]').forEach(slide=>{
       slide.querySelectorAll('[data-quest-col-opt]').forEach(btn=>{
@@ -6328,6 +6316,19 @@ async function renderQuestionarioMenu(){
     });
   });
 }
+
+/* Event delegation per le caselle colazione preferita nel questionario.
+   Aggiunto UNA SOLA VOLTA qui, fuori da renderQuestionarioMenu(), così
+   funziona anche dopo il re-render dell'HTML. */
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-quest-colpref-giorno]');
+  if(!btn) return;
+  const idx = parseInt(btn.dataset.questColprefGiorno);
+  const pos = statoQuestionario.colazionePrefGiorni.indexOf(idx);
+  if(pos>=0) statoQuestionario.colazionePrefGiorni.splice(pos,1);
+  else statoQuestionario.colazionePrefGiorni.push(idx);
+  renderQuestionarioMenu();
+});
 
 async function apriQuestionarioMenu(){
   const scartoTarget = document.getElementById('view-menu').classList.contains('active') ? menuSettimanaScarto : 0;
