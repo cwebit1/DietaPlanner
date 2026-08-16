@@ -1749,6 +1749,79 @@ const CONDIMENTO_CARB = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.carb;   // 0
 const COMPONENTE_PROTEINA = 'proteina';
 const COMPONENTE_CONTORNO = 'contorno';
 
+/* =========================================================
+   COMPONIMENTO SECONDO + CONTORNO (runtime)
+   -------------------------------------------------------
+   Data una base proteica e un contorno, compone il pasto
+   a runtime SENZA scrivere una nuova ricetta nel DB.
+   Ritorna un oggetto "pasto virtuale" con nome, nutrizione
+   e riferimenti ai componenti.
+   ========================================================= */
+async function componiSecondoContorno(proteinaId, contornoId){
+  const tutteRicette = await getAll('ricette');
+  const proteina = tutteRicette.find(r=>r.id===proteinaId);
+  const contorno = tutteRicette.find(r=>r.id===contornoId);
+  if(!proteina && !contorno) return null;
+  // Nome composto
+  const nomeProteina = proteina ? proteina.nome : '';
+  const nomeContorno = contorno ? contorno.nome : '';
+  const nomeComposto = nomeProteina + (nomeContorno ? ' con ' + nomeContorno : '');
+  // Nutrizione: proteina + contorno + allocazione condimento
+  const nutrizione = { kcal:0, prot:0, carb:0, grassi:0 };
+  if(proteina){
+    const varProteina = await getAll('varianti');
+    for(const ing of (proteina.ingredienti||[])){
+      const varId = ing.variantId || (await findVariantByName(ing.nomeLibero || ing.nome));
+      if(varId){
+        const v = varProteina.find(x=>x.id===varId);
+        if(v){
+          const mult = (ing.quantita||0) / 100;
+          nutrizione.kcal += (v.kcal100||0) * mult;
+          nutrizione.prot += (v.prot100||0) * mult;
+          nutrizione.carb += (v.carb100||0) * mult;
+          nutrizione.grassi += (v.grassi100||0) * mult;
+        }
+      }
+    }
+  }
+  if(contorno){
+    const varContorno = await getAll('varianti');
+    for(const ing of (contorno.ingredienti||[])){
+      const varId = ing.variantId || (await findVariantByName(ing.nomeLibero || ing.nome));
+      if(varId){
+        const v = varContorno.find(x=>x.id===varId);
+        if(v){
+          const mult = (ing.quantita||0) / 100;
+          nutrizione.kcal += (v.kcal100||0) * mult;
+          nutrizione.prot += (v.prot100||0) * mult;
+          nutrizione.carb += (v.carb100||0) * mult;
+          nutrizione.grassi += (v.grassi100||0) * mult;
+        }
+      }
+    }
+  }
+  // Aggiungi allocazione condimento
+  nutrizione.kcal += CONDIMENTO_KCAL;
+  nutrizione.prot += CONDIMENTO_PROT;
+  nutrizione.carb += CONDIMENTO_CARB;
+  nutrizione.grassi += CONDIMENTO_GRASSI;
+  return {
+    nome: nomeComposto,
+    proteinaId: proteinaId || null,
+    contornoId: contornoId || null,
+    nutrizione,
+    condimentoGrammi: ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi,
+    condimentoKcal: CONDIMENTO_KCAL
+  };
+}
+/* Helper: trova variante per nome (usato da componiSecondoContorno) */
+async function findVariantByName(nome){
+  if(!nome) return null;
+  const varianti = await getAll('varianti');
+  const v = varianti.find(x=>x.nome.toLowerCase()===nome.toLowerCase());
+  return v ? v.id : null;
+}
+
 /* Fascia automatica per i primi modulari:
    - facile: il condimento ha 1-2 ingredienti
    - medio: 3-4 ingredienti
