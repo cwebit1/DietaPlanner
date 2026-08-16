@@ -1241,6 +1241,16 @@ async function seedIfEmpty(){
     for(const ric of ricetteConLatteSoia) await delKey('ricette', ric.id);
   }
 
+  // patch: la ricotta e il latte intero non vengono proposti a colazione
+  for(const nomeDaRimuovereColazione of ['ricotta','latte intero']){
+    const varDaRimuovereCol = variantiEsistenti.find(v=>v.nome.toLowerCase()===nomeDaRimuovereColazione);
+    if(varDaRimuovereCol && varDaRimuovereCol.colazioneGruppo){
+      varDaRimuovereCol.colazioneGruppo = null;
+      varDaRimuovereCol.porzioneColazione = null;
+      await put('varianti', varDaRimuovereCol);
+    }
+  }
+
   // patch: chi aveva già "Uova" salvata prima dell'introduzione di unitaPezzo la corregge
   const varUova = variantiEsistenti.find(v=>v.nome.toLowerCase()==='uova');
   if(varUova && !varUova.unitaPezzo){
@@ -1257,10 +1267,8 @@ async function seedIfEmpty(){
     'pane integrale': {gruppo:'carboidrati', porzione:50},
     'fette biscottate': {gruppo:'carboidrati', porzione:30},
     'biscotti secchi': {gruppo:'carboidrati', porzione:25},
-    'latte intero': {gruppo:'proteine', porzione:200},
     'latte parzialmente scremato': {gruppo:'proteine', porzione:200},
     'yogurt bianco': {gruppo:'proteine', porzione:125},
-    'ricotta': {gruppo:'proteine', porzione:55},
     'uova': {gruppo:'proteine', porzione:120},
     'noci e mandorle': {gruppo:'grassi', porzione:8},
     'cioccolato fondente': {gruppo:'grassi', porzione:8},
@@ -2758,6 +2766,15 @@ async function elaboraConsumoAutomatico(){
       voce.consumato = true;
       voce.dataConsumato = todayISO();
       await put('piano', voce);
+      // Premio costanza: aggiorna il contatore delle colazioni morigerate
+      const recContatorePremio = await getOne('impostazioni', 'contatoreColazioniMorigerate');
+      let contatorePremio = recContatorePremio ? recContatorePremio.valore : 0;
+      if(voce.componenti && !voce.colazioneSpecialeId){
+        contatorePremio++;
+      } else if(voce.colazioneSpecialeId){
+        contatorePremio = 0;
+      }
+      await put('impostazioni', {chiave:'contatoreColazioniMorigerate', valore: contatorePremio});
       continue;
     }
 
@@ -2805,7 +2822,7 @@ async function contaColazioniSpecialiSettimana(){
   let conteggio = 0;
   for(const g of giorni){
     const voce = await getOne('piano', g+'_colazione');
-    if(voce && voce.colazioneSpecialeId) conteggio++;
+    if(voce && voce.colazioneSpecialeId && !voce.premioCostanza) conteggio++;
   }
   return conteggio;
 }
@@ -2848,6 +2865,37 @@ async function renderColazione(giorno, elementId){
   // impedirebbe di distinguere uno slot mai composto (che deve mostrare
   // l'editor "cosa hai mangiato?") da uno slot già gestito
   if(!voce) voce = {id:pianoId};
+  // PREMIO COSTANZA: se il contatore è >= 5 e la colazione non è ancora
+  // composta, mostra il selettore radio invece di comporre automaticamente
+  const recContatorePremioRender = await getOne('impostazioni', 'contatoreColazioniMorigerate');
+  const contatorePremioRender = recContatorePremioRender ? recContatorePremioRender.valore : 0;
+  const mostraPremioCostanza = contatorePremioRender >= 5 && !voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta && giorno === todayISO();
+  if(mostraPremioCostanza){
+    const tutteRicettePremio = await getAll('ricette');
+    const ricettaBudinoPremio = tutteRicettePremio.find(r=>r.nome==='Budino' && r.colazioneSpeciale);
+    let htmlPremio = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
+    htmlPremio += `<div class="card" style="border-color:var(--accent);margin-bottom:10px;">
+      <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">🎉 Complimenti! ${contatorePremioRender} colazioni regolari consecutive!</div>
+      <div class="meta" style="margin-bottom:10px;">Ti meriti una colazione speciale. Scegli cosa fare oggi:</div>
+      <div class="tabgroup">
+        <button data-premio-colazione="standard" class="active">☀️ Colazione standard</button>
+        ${ricettaBudinoPremio ? `<button data-premio-colazione="budino">🎁 Budino premio!</button>` : ''}
+      </div>
+    </div>`;
+    el.innerHTML = htmlPremio;
+    el.querySelectorAll('[data-premio-colazione]').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        const scelta = b.dataset.premioColazione;
+        if(scelta === 'budino' && ricettaBudinoPremio){
+          await put('piano', {id:pianoId, colazioneSpecialeId:ricettaBudinoPremio.id, componenti:null, premioCostanza:true});
+        }
+        await put('impostazioni', {chiave:'contatoreColazioniMorigerate', valore: 0});
+        renderColazione(giorno, elementId);
+        if(giorno===giornoSelezionato) renderNutrizioneGiorno();
+      });
+    });
+    return;
+  }
   if(!voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta){
     const componenti = {};
     for(const g of COLAZIONE_GRUPPI){
