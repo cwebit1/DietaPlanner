@@ -6499,21 +6499,45 @@ function cercaUnicoCrossWeek(tutteRicette, sottotipoFine, usatiSettimana, usatiS
   return scegliConAntiRipetitivitaCrossWeek(esatti, fallback, usatiSettimana, usatiSettimanaPrecedente, storicoSlot);
 }
 
-function cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiSettimanaPrecedente, storicoSlotSeparato){
+async function cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiSettimanaPrecedente, storicoSlotSeparato){
   const storicoSlot = storicoSlotSeparato || {primo:[], secondo:[]};
 
-  const secondiEsatti = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
-  const fallbackSecondo = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
-  const rSecondo = scegliConAntiRipetitivitaCrossWeek(secondiEsatti, fallbackSecondo, usatiSettimana, usatiSettimanaPrecedente, storicoSlot.secondo);
+  // Cerca secondo: prima prova con componenti (base proteica + contorno),
+  // poi fallback alle ricette tradizionali
+  const candidatiSecondoComponente = tutteRicette.filter(r =>
+    r.componente === COMPONENTE_PROTEINA &&
+    r.gruppoProteico === sottotipoFine &&
+    !r.esclusa
+  );
+  let rSecondo, contornoScelto, secondoUsaComponenti = false;
+  if(candidatiSecondoComponente.length){
+    // Modalità componenti: usa scegliComponentiSecondo
+    const esitoComponenti = await scegliComponentiSecondo(sottotipoFine, null, null, null);
+    if(esitoComponenti && esitoComponenti.proteinaId){
+      rSecondo = { ricetta: tutteRicette.find(r=>r.id===esitoComponenti.proteinaId), ripetizioneForzata: false, storicoAggiornato: storicoSlot.secondo };
+      contornoScelto = esitoComponenti.contornoId ? tutteRicette.find(r=>r.id===esitoComponenti.contornoId) : null;
+      secondoUsaComponenti = true;
+    }
+  }
+  if(!rSecondo || !rSecondo.ricetta){
+    // Fallback: ricette tradizionali (comportamento invariato)
+    const secondiEsatti = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
+    const fallbackSecondo = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
+    rSecondo = scegliConAntiRipetitivitaCrossWeek(secondiEsatti, fallbackSecondo, usatiSettimana, usatiSettimanaPrecedente, storicoSlot.secondo);
+  }
   if(!rSecondo.ricetta) return { combo:null, carenza:true, ripetizioneForzata:false };
 
   const primiTutti = tutteRicette.filter(r=>r.tipoPortata==='primo');
   const rPrimo = scegliConAntiRipetitivitaCrossWeek(primiTutti, [], usatiSettimana, usatiSettimanaPrecedente, storicoSlot.primo);
   if(!rPrimo.ricetta) return { combo:null, carenza:true, ripetizioneForzata:false };
 
-  let contorni = tutteRicette.filter(r=>r.tipoPortata==='contorno');
-  if(mappaVarianti && pool) contorni = contorniAmmessiPerPool(contorni, mappaVarianti, pool);
-  const contornoScelto = mescola(contorni)[0]; // AMBITO: niente F4/F5/F7 sui contorni
+  // Contorno: se la modalità componenti l'ha già scelto, usalo; altrimenti
+  // ricadi sul pool tradizionale H2/H3 (comportamento invariato)
+  if(!secondoUsaComponenti || !contornoScelto){
+    let contorni = tutteRicette.filter(r=>r.tipoPortata==='contorno');
+    if(mappaVarianti && pool) contorni = contorniAmmessiPerPool(contorni, mappaVarianti, pool);
+    contornoScelto = mescola(contorni)[0]; // AMBITO: niente F4/F5/F7 sui contorni
+  }
 
   return {
     combo: { primo: rPrimo.ricetta, secondo: rSecondo.ricetta, contorno: contornoScelto },
@@ -6619,7 +6643,7 @@ async function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarian
       }
     }
     if(!rSeparato){
-      rSeparato = cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato);
+      rSeparato = await cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato);
     }
     if(rSeparato && rSeparato.combo){
       // Se non già aggiunto sopra (caso E3), aggiungi ora
