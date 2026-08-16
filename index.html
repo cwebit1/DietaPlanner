@@ -7455,7 +7455,17 @@ if('serviceWorker' in navigator){
 // Fullscreen immediato all'apertura: molti browser bloccano requestFullscreen()
 // senza un gesto dell'utente, quindi tentiamo subito al caricamento e, se il
 // browser lo rifiuta, ripieghiamo sul primo tocco/click come fallback garantito.
+// Se l'app è già installata e aperta a schermo intero nativo (via manifest.json,
+// display:"fullscreen"), NON chiamiamo affatto l'API: è proprio questa chiamata
+// superflua a far comparire il messaggio di sistema del browser anche quando
+// non serve, dato che il sistema è già a schermo intero.
 (function(){
+  function giaFullscreenNativo(){
+    if(window.matchMedia && window.matchMedia('(display-mode: fullscreen)').matches) return true;
+    if(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    if(window.navigator.standalone === true) return true; // iOS
+    return false;
+  }
   function entraFullscreen(){
     var el = document.documentElement;
     var richiedi = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
@@ -7463,12 +7473,13 @@ if('serviceWorker' in navigator){
     return richiedi.call(el);
   }
   function tentaSubito(){
+    if(giaFullscreenNativo()) return; // già a schermo intero: nessuna chiamata, nessun messaggio di sistema
     entraFullscreen().catch(()=>{
       // Il browser ha rifiutato senza gesto utente: attendiamo il primo tocco/click.
       function alPrimoGesto(){
         document.removeEventListener('click', alPrimoGesto);
         document.removeEventListener('touchend', alPrimoGesto);
-        entraFullscreen().catch(()=>{});
+        if(!giaFullscreenNativo()) entraFullscreen().catch(()=>{});
       }
       document.addEventListener('click', alPrimoGesto, {once:true});
       document.addEventListener('touchend', alPrimoGesto, {once:true});
