@@ -1537,6 +1537,8 @@ async function importaListaRicette(lista){
       colazioneSpeciale: !!r.colazioneSpeciale,
       cerealeLibero: !!r.cerealeLibero,
       tipoCereale: r.tipoCereale || null,
+      componente: r.componente || null,
+      preparazione: r.preparazione || null,
       fonte:'libreria',
       ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
       ingredienti: ingredientiRisolti,
@@ -5288,6 +5290,8 @@ async function renderRicette(){
       ${r.fonte==='ai'?'<span class="pill dim" style="margin-left:6px;">generata AI</span>':''}
       ${r.piattoSpeciale?'<span class="pill dim" style="margin-left:6px;">🍽 piatto speciale</span>':''}
       ${r.esclusa?'<span class="pill dim" style="margin-left:6px;">🚫 esclusa</span>':''}
+      ${r.componente==='proteina'?'<span class="pill dim" style="margin-left:6px;background:#c0792a;">Base proteica</span>':r.componente==='contorno'?'<span class="pill dim" style="margin-left:6px;background:#5e9c63;">Contorno</span>':''}
+      ${r.preparazione?`<span class="pill dim" style="margin-left:6px;">${r.preparazione}</span>`:''}
       <div class="row" style="margin-top:6px;${r.esclusa?'opacity:0.55;':''}"><h3 style="flex:1;">${r.nome}</h3>${stellaBtn(r)}</div>
       <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
       ${nutrizioneInaffidabile(r) ? '<div class="warn-tag">⚠ nutrizione non compilata — conta 0 nel computo giornaliero, compilala manualmente nella modifica</div>' : ''}
@@ -6945,6 +6949,7 @@ document.getElementById('btnSalvaRicettaManuale').addEventListener('click', asyn
     id:uid(), nome, fascia:fasciaCalcolata, porzioni, gruppoProteico,
     tipoPortata: tipoPortataScelto,
     cerealeLibero, tipoCereale,
+    componente: null, preparazione: null,
     fonte:'libreria', ingredienti, procedimento
   };
 
