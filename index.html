@@ -1713,6 +1713,42 @@ const PRIMI_SPECIALI_CONFIG = {
   pasta_ripiena: { label:'Pasta ripiena', porzione:125, cadenzaSettimane:2 }
 };
 
+/* =========================================================
+   ALLOCAZIONE CONDIMENTO PER PASTO
+   -------------------------------------------------------
+   Dal PDF: "Olio extravergine d'oliva: 2-3 cucchiai al giorno"
+   (20-30g totali). Diviso tra pranzo e cena = 10-15g per pasto.
+   Usiamo 10g come valore base per il calcolo nutrizionale
+   dei pasti composti (secondo + contorno).
+   Questa quota NON è un ingrediente della ricetta: è un
+   contributo fisso che il motore aggiunge alla nutrizione
+   del pasto composto, garantendo coerenza col piano PDF.
+   ========================================================= */
+const ALLOCAZIONE_CONDIMENTO_PASTO = {
+  olio_evo: { nome:'Olio extravergine oliva', grammi:10, kcal:88, prot:0, carb:0, grassi:10 }
+  // Sale, pepe, spezie: irrilevanti nutrizionalmente, non entrano nel calcolo.
+  // Aceto/limone: trascurabili, non entrano.
+};
+/* Totale condimento per pasto composto */
+const CONDIMENTO_KCAL = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.kcal;   // 88
+const CONDIMENTO_GRASSI = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grassi; // 10
+const CONDIMENTO_PROT = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.prot;   // 0
+const CONDIMENTO_CARB = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.carb;   // 0
+
+/* =========================================================
+   SCHEMA COMPONENTI PER SECONDI E CONTORNI
+   -------------------------------------------------------
+   Le ricette possono essere "componenti" anziché piatti completi.
+   - componente: 'proteina' → base proteica (es. "Petto di pollo alla griglia")
+   - componente: 'contorno' → contorno (es. "Zucchine saltate")
+   - componente: null → ricetta completa (piatto unico, primo, colazione, ecc.)
+   Il motore di composizione (Sviluppo 3) combina una base proteica
+   con un contorno a runtime, senza salvare la combinazione nel DB.
+   Il refresh individuale esplora le combinazioni possibili.
+   ========================================================= */
+const COMPONENTE_PROTEINA = 'proteina';
+const COMPONENTE_CONTORNO = 'contorno';
+
 /* Fascia automatica per i primi modulari:
    - facile: il condimento ha 1-2 ingredienti
    - medio: 3-4 ingredienti
