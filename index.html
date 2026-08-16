@@ -3348,12 +3348,21 @@ async function renderBloccoSemplice(pasto, giorno, elementId){
     const ricettaConsumata = voce.ricettaId ? await getOne('ricette', voce.ricettaId) : null;
     const nutriCons = ricettaConsumata ? await nutrizionePerPersona(ricettaConsumata) : null;
     const etichettaCons = ricettaConsumata ? await etichettaOpzioneSpuntino(ricettaConsumata, await getAll('varianti')) : null;
-    const mostraEditorSpuntino = scaduto && !voce.consumato && !voce.ricettaId;
+    // Spuntino 1 e 2: una volta scaduti sono chiusi definitivamente, nessuna correzione.
+    // Spuntino 3: finestra di modifica di 1 giorno dopo la scadenza (es. spuntino
+    // notturno alle 01:00 aggiunto il mattino dopo). Dopo 1 giorno, chiuso anche lui.
+    const oggiSpuntino = todayISO();
+    const giorniDifferenzaSpuntino = Math.round((new Date(oggiSpuntino + 'T00:00:00') - new Date(giorno + 'T00:00:00')) / 86400000);
+    const entroFinestraSpuntino3 = pasto === 'spuntino3' && giorniDifferenzaSpuntino <= 1;
+    const mostraEditorSpuntino = entroFinestraSpuntino3 && !voce.ricettaId;
     const btnEditorSpuntino = mostraEditorSpuntino ? `<button class="small accent" data-editor-spuntino="${giorno}|${pasto}" style="margin-bottom:8px;">✏️ Cosa hai mangiato?</button>` : '';
+    // Matita (solo icona) sullo spuntino 3 consumato per aggiungere/correggere,
+    // solo entro la finestra di 1 giorno
+    const btnMatitaSpuntino3 = (entroFinestraSpuntino3 && voce.consumato) ? `<button data-editor-spuntino="${giorno}|${pasto}" title="Aggiungi o correggi questo spuntino" style="background:none;border:none;cursor:pointer;font-size:0.95rem;line-height:1;padding:2px 4px;color:var(--text-dim);vertical-align:middle;">✏️</button>` : '';
     el.innerHTML = corpoHtmlIniziale + btnEditorSpuntino + (ricettaConsumata ? `
       <div style="opacity:0.7;">
-        <div style="font-weight:700;font-size:0.9rem;">✓ ${etichettaCons}</div>
-        <div class="meta">${Math.round(nutriCons.kcal)} kcal (per 1 persona)</div>
+        <div style="font-weight:700;font-size:0.9rem;">✓ ${etichettaCons} ${btnMatitaSpuntino3}</div>
+        <div class="meta">${Math.round(nutriCons ? nutriCons.kcal : 0)} kcal (per 1 persona)</div>
       </div>` : `<div class="meta" style="opacity:0.7;">✓ Nessuno spuntino</div>`);
     el.querySelector('[data-editor-spuntino]')?.addEventListener('click', async ()=>{
       await apriModalEditorPasto(giorno, pasto);
@@ -3684,9 +3693,11 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
     // permetti all'utente di ricomporre cosa ha mangiato dal ricettario
     const mostraEditor = scaduto && !voce.consumato && !voce.ricettaId && !voce.primoId;
     const btnEditor = mostraEditor ? `<button class="small accent" data-editor-pasto="${giorno}|${pasto}" style="margin-bottom:8px;">✏️ Cosa hai mangiato?</button>` : '';
+    // Matita (solo icona) sui pasti CONSUMATI per ridefinirli in caso di errore
+    const btnMatitaConsumato = voce.consumato ? `<button data-editor-pasto="${giorno}|${pasto}" title="Correggi questo pasto" style="background:none;border:none;cursor:pointer;font-size:0.95rem;line-height:1;padding:2px 4px;color:var(--text-dim);vertical-align:middle;">✏️</button>` : '';
     el.innerHTML = corpoHtmlIniziale + btnEditor + `<div style="opacity:0.7;">
       ${righeCons || '<div class="meta">✓ Nessuna ricetta</div>'}
-      ${idRicetteCons.length ? `<div class="meta">${Math.round(kcalTot)} kcal totali (per 1 persona)</div>` : ''}
+      ${idRicetteCons.length ? `<div class="meta">${Math.round(kcalTot)} kcal totali (per 1 persona) ${btnMatitaConsumato}</div>` : ''}
     </div>`;
     el.querySelector('[data-editor-pasto]')?.addEventListener('click', async ()=>{
       await apriModalEditorPasto(giorno, pasto);
