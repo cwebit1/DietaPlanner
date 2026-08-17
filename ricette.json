@@ -1,5 +1,5 @@
 {
-  "versione": 5,
+  "versione": 6,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -7504,6 +7504,888 @@
         "carb": 37,
         "grassi": 17
       }
+    },
+    {
+      "nome": "al pomodoro",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Pomodoro fresco",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ],
+        [
+          "Basilico fresco",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia il pomodoro a pezzi e cuocilo in padella con l'olio a fuoco medio per 8-10 minuti, schiacciandolo leggermente.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Manteca il cereale nel sugo a fuoco vivace per un minuto."
+      ]
+    },
+    {
+      "nome": "alle verdure",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Carote",
+          50
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia le verdure a dadini piccoli e saltale in padella con l'olio a fuoco medio-alto per 7-8 minuti.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Unisci il cereale alle verdure e manteca a fuoco vivace un minuto."
+      ]
+    },
+    {
+      "nome": "ai funghi",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Funghi champignon",
+          125
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ],
+        [
+          "Cipolla",
+          20
+        ]
+      ],
+      "procedimento": [
+        "Affetta i funghi e saltali in padella con l'olio e la cipolla tritata a fuoco alto 6-7 minuti.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Manteca il cereale con i funghi a fuoco vivace un minuto."
+      ]
+    },
+    {
+      "nome": "al pesto di basilico",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Basilico fresco",
+          20
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ],
+        [
+          "Parmigiano grattugiato",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Frulla il basilico con l'olio e il parmigiano fino a ottenere una crema.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Condisci il cereale con il pesto a fuoco spento, mescolando bene."
+      ]
+    },
+    {
+      "nome": "al ragù di verdure",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Carote",
+          30
+        ],
+        [
+          "Cipolla",
+          20
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Trita cipolla e carote, soffriggi con l'olio a fuoco basso 5 minuti.",
+        "Aggiungi il pomodoro a pezzi e cuoci 10 minuti.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Manteca nel ragù di verdure."
+      ]
+    },
+    {
+      "nome": "al limone e prezzemolo",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Limone",
+          25
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ],
+        [
+          "Basilico fresco",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Prepara un'emulsione con succo di limone, olio e prezzemolo tritato.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Condisci il cereale con l'emulsione a fuoco spento."
+      ]
+    },
+    {
+      "nome": "alla Norma",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Melanzane",
+          100
+        ],
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ],
+        [
+          "Basilico fresco",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia le melanzane a dadini e saltale in padella con metà dell'olio 8-10 minuti.",
+        "Aggiungi il pomodoro a pezzi e cuoci altri 5 minuti.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Manteca con il sugo e basilico fresco."
+      ]
+    },
+    {
+      "nome": "con zucchine e pomodorini",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "sugo",
+      "ingredienti": [
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Pomodoro fresco",
+          50
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia le zucchine a rondelle e saltale in padella con l'olio 5 minuti.",
+        "Aggiungi i pomodorini a metà e cuoci altri 3 minuti.",
+        "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
+        "Manteca con il condimento."
+      ]
+    },
+    {
+      "nome": "Petto di pollo",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "carne_bianca",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Petto di pollo",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il petto di pollo secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Petto di tacchino",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "carne_bianca",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Petto di tacchino",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il petto di tacchino secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Filetto di nasello",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_bianco",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Filetto di nasello surgelato",
+          165
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il filetto di nasello secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Orata",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_bianco",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Orata surgelata",
+          165
+        ]
+      ],
+      "procedimento": [
+        "Cuoci l'orata secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Sogliola",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_bianco",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Sogliola surgelata",
+          165
+        ]
+      ],
+      "procedimento": [
+        "Cuoci la sogliola secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Branzino",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_bianco",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Branzino surgelato",
+          175
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il branzino secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Salmone",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_grande",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Salmone",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il salmone secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Sgombro",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_azzurro",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Sgombro fresco",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Cuoci lo sgombro secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Gamberetti",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "crostacei",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Gamberetti surgelati",
+          175
+        ]
+      ],
+      "procedimento": [
+        "Cuoci i gamberetti secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Polpo",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "molluschi",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Polpo surgelato",
+          250
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il polpo secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Uova",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "uova",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Uova",
+          120
+        ]
+      ],
+      "procedimento": [
+        "Cuoci le uova secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Ceci",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Ceci in barattolo",
+          135
+        ]
+      ],
+      "procedimento": [
+        "Scola e sciacqua i ceci. Condisci secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Lenticchie",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Lenticchie in barattolo",
+          135
+        ]
+      ],
+      "procedimento": [
+        "Scola e sciacqua le lenticchie. Condisci secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Fagioli",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Fagioli borlotti in barattolo",
+          135
+        ]
+      ],
+      "procedimento": [
+        "Scola e sciacqua i fagioli. Condisci secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Tofu",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Tofu",
+          190
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il tofu secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Mozzarella",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Mozzarella",
+          90
+        ]
+      ],
+      "procedimento": [
+        "Servi la mozzarella secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Ricotta",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Ricotta",
+          90
+        ]
+      ],
+      "procedimento": [
+        "Servi la ricotta secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Parmigiano",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_stagionato",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Parmigiano grattugiato",
+          40
+        ]
+      ],
+      "procedimento": [
+        "Servi il parmigiano a scaglie o grattugiato."
+      ]
+    },
+    {
+      "nome": "Fettina di manzo",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "carne_rossa",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Fettina di manzo",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Cuoci la fettina di manzo secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Nodino di maiale",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "carne_rossa",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Nodino di maiale",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il nodino di maiale secondo la cottura scelta dal motore."
+      ]
+    },
+    {
+      "nome": "Bresaola",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "affettati",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Bresaola",
+          70
+        ]
+      ],
+      "procedimento": [
+        "Servi la bresaola al naturale con limone e rucola."
+      ]
+    },
+    {
+      "nome": "Prosciutto crudo",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "affettati",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Prosciutto crudo",
+          60
+        ]
+      ],
+      "procedimento": [
+        "Servi il prosciutto crudo a fette."
+      ]
+    },
+    {
+      "nome": "Tonno in scatola",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_conservato",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "proteina",
+      "ingredienti": [
+        [
+          "Tonno in scatola",
+          100
+        ]
+      ],
+      "procedimento": [
+        "Scola il tonno e condiscilo secondo la preparazione scelta."
+      ]
+    },
+    {
+      "nome": "zucchine grigliate",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Zucchine",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia le zucchine a fette e grigliale 2-3 minuti per lato.",
+        "Condisci con olio e sale a crudo."
+      ]
+    },
+    {
+      "nome": "insalata mista",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Insalata mista",
+          40
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Lava e asciuga l'insalata.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "broccoli al vapore",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Broccoli",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          3
+        ]
+      ],
+      "procedimento": [
+        "Cuoci i broccoli a vapore 8-10 minuti.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "carote julienne",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Carote",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          3
+        ]
+      ],
+      "procedimento": [
+        "Taglia le carote a listarelle sottili.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "peperoni saltati",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Peperoni",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia i peperoni a listarelle e saltali in padella 8-10 minuti.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "spinaci saltati",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Spinaci freschi",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Salta gli spinaci in padella con l'olio 3-4 minuti.",
+        "Condisci con sale."
+      ]
+    },
+    {
+      "nome": "melanzane grigliate",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Melanzane",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia le melanzane a fette e grigliale 3-4 minuti per lato.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "pomodori in insalata",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Pomodoro fresco",
+          125
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia i pomodori a fette o spicchi.",
+        "Condisci con olio, sale e origano."
+      ]
+    },
+    {
+      "nome": "cavolfiore al vapore",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Cavolfiore",
+          125
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il cavolfiore a vapore 10-12 minuti.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "funghi trifolati",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Funghi champignon",
+          125
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Affetta i funghi e saltali in padella a fuoco alto 6-7 minuti.",
+        "Sala a fine cottura."
+      ]
+    },
+    {
+      "nome": "radicchio saltato",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Radicchio",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Taglia il radicchio a listarelle e saltalo in padella 3-4 minuti.",
+        "Condisci con olio e sale."
+      ]
+    },
+    {
+      "nome": "fagiolini lessati",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "modulare",
+      "sottoCategoriaModulare": "contorno",
+      "ingredienti": [
+        [
+          "Fagiolini",
+          125
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Lessi i fagiolini in acqua salata 8-10 minuti.",
+        "Condisci con olio."
+      ]
     }
   ]
 }
