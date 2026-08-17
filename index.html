@@ -696,7 +696,12 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 
   <!-- BATCH 7: qui andrà il pulsante Salva unico -->
-  <div id="setSalvaUnico" style="margin-top:20px;"></div>
+  <div id="setSalvaUnico" style="margin-top:20px;">
+    <button class="primary" id="btnSalvaSetCompleto" style="width:100%;margin-top:8px;">
+      💾 Salva tutta la configurazione
+    </button>
+    <div id="setSalvaStato" class="meta" style="margin-top:8px;text-align:center;"></div>
+  </div>
 </section>
 
 <!-- ============ VIEW: IMPOSTAZIONI ============ -->
@@ -2433,6 +2438,32 @@ async function getConfigProteine(){
   const rec = await getOne('impostazioni','configProteine');
   return (rec && rec.valore) ? rec.valore : CONFIG_PROTEINE_DEFAULT;
 }
+/* Ritorna FREQUENZE_CONSIGLIATE effettive: se l'utente ha configurato un
+   tetto in Set (Tab Set → Fonti proteiche), lo usa come nuovo "max"
+   mantenendo il "min" originale del PDF. Altrimenti ricade sulle costanti
+   fisse. NON usata dalla griglia E1 (calcolaBudgetResiduoGriglia), che
+   resta sempre sulle costanti fisse — il motore E1 non va mai toccato. */
+async function getFrequenzeConsigliateEffettive(){
+  const cfg = await getConfigProteine();
+  if(!cfg) return FREQUENZE_CONSIGLIATE;
+  const effettive = {};
+  for(const chiave of Object.keys(FREQUENZE_CONSIGLIATE)){
+    const base = FREQUENZE_CONSIGLIATE[chiave];
+    effettive[chiave] = (cfg[chiave] !== undefined) ? {min: base.min, max: cfg[chiave]} : base;
+  }
+  return effettive;
+}
+/* Ritorna EXTRA_CAP_SOTTOTIPI effettivi (i 4 tetti rigidi configurabili
+   in Set: carne rossa, affettati, pesce grande, pesce conservato). */
+async function getExtraCapSottotipiEffettivi(){
+  const cfg = await getConfigProteine();
+  if(!cfg) return EXTRA_CAP_SOTTOTIPI;
+  const effettivi = {};
+  for(const chiave of Object.keys(EXTRA_CAP_SOTTOTIPI)){
+    effettivi[chiave] = (cfg[chiave] !== undefined) ? cfg[chiave] : EXTRA_CAP_SOTTOTIPI[chiave];
+  }
+  return effettivi;
+}
 async function caricaConfigProteineUI(){
   const cfg = await getConfigProteine();
   const mappa = {
@@ -2446,6 +2477,35 @@ async function caricaConfigProteineUI(){
     if(sl){ sl.value=val; } if(lb){ lb.textContent=val+'/sett'; }
   }
 }
+
+document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async ()=>{
+  const stato = document.getElementById('setSalvaStato');
+  // 1. carboidrati: la UI reale è a caselle (statoCaselleCarb), non a slider —
+  // riuso lo stesso stato live e la stessa validazione (totale 14) della card
+  const totCarb = contaTotaleCaselleCarb();
+  if(totCarb !== CONFIG_CARB_TOTALE_OBBLIGATORIO){
+    if(stato){ stato.textContent = '⚠ Il totale carboidrati deve essere ' + CONFIG_CARB_TOTALE_OBBLIGATORIO + ' (attuale ' + totCarb + ')'; stato.style.color = 'var(--warn)'; }
+    return;
+  }
+  await put('impostazioni', {chiave: 'configCarboidrati', valore: statoCaselleCarb});
+  // 2. tetti alimenti limitati: non esiste una configurazione separata da
+  // slider — il tetto sui carboidrati limitati è già dentro statoCaselleCarb
+  // e già gestito interamente dalla card caselle (nessun salvataggio extra)
+  // 3. proteine
+  const prot = {};
+  const mappaProt = {Carne:'carne',Pesce:'pesce',Formaggi:'formaggi',Uova:'uova',
+    Legumi:'legumi',CarneRossa:'carne_rossa',Affettati:'affettati',
+    PesceGrande:'pesce_grande',PesceConservato:'pesce_conservato'};
+  for(const [k,ch] of Object.entries(mappaProt)){
+    const sl=document.getElementById('cfgProt'+k);
+    if(sl) prot[ch]=parseInt(sl.value);
+  }
+  await put('impostazioni',{chiave:'configProteine', valore:prot});
+  // verdure disattivate, verdura ricorrente, colazione preferita sono già
+  // salvate in tempo reale dai rispettivi moduli (batch 4/5/6)
+  if(stato){ stato.textContent='✅ Configurazione salvata.'; stato.style.color='var(--accent)';
+    setTimeout(()=>{ stato.textContent=''; }, 2500); }
+});
 
 async function renderSetVerdure(){
   const contenitore = document.getElementById('setVerdureLista');
@@ -5575,6 +5635,10 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
     const s = await getConsumiSpuntiniSettimana();
     consumiSpuntini = s.spuntini;
   }
+  // Tab Set → Fonti proteiche: se configurati, questi tetti sostituiscono
+  // le costanti fisse (mai per la griglia E1, solo per questa selezione)
+  const frequenzeEffettive = await getFrequenzeConsigliateEffettive();
+  const extraCapEffettivi = await getExtraCapSottotipiEffettivi();
   const vietati = isPranzoCena ? await getIngredientiUsatiSlotSibling(giorno, pasto) : new Set();
 
   // cadenza giornaliera (es. frutta secca 1/giorno) — precalcolata per il giorno
@@ -5610,10 +5674,10 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
       const sottotipo = r.gruppoProteico;
       const gruppo = sottotipo ? (SOTTOTIPO_A_GRUPPO[sottotipo] || sottotipo) : null;
       if(richiedeCategoriaGiorno && (!gruppo || !categorieGiornoRichieste.includes(gruppo))) continue;
-      if(gruppo && FREQUENZE_CONSIGLIATE[gruppo] && consumi[gruppo] >= FREQUENZE_CONSIGLIATE[gruppo].max){
+      if(gruppo && frequenzeEffettive[gruppo] && consumi[gruppo] >= frequenzeEffettive[gruppo].max){
         continue;
       }
-      if(sottotipo && EXTRA_CAP_SOTTOTIPI[sottotipo] && consumiSottotipi[sottotipo] >= EXTRA_CAP_SOTTOTIPI[sottotipo]){
+      if(sottotipo && extraCapEffettivi[sottotipo] && consumiSottotipi[sottotipo] >= extraCapEffettivi[sottotipo]){
         continue;
       }
       if(r.sottotipoSpuntino && CAP_SPUNTINO_SETTIMANALE[r.sottotipoSpuntino] && consumiSpuntini[r.sottotipoSpuntino] >= CAP_SPUNTINO_SETTIMANALE[r.sottotipoSpuntino]){
@@ -5826,6 +5890,8 @@ async function analizzaScostamenti(pasto, giorno, ricetteCandidate){
   const consumiSpuntiniSett = !isPranzoCena ? await getConsumiSpuntiniSettimana() : {spuntini:{}};
   const consumiData = {gruppi:consumiProteici.gruppi, sottotipi:consumiProteici.sottotipi, spuntini:consumiSpuntiniSett.spuntini};
   const vietati = isPranzoCena ? await getIngredientiUsatiSlotSibling(giorno, pasto) : new Set();
+  const frequenzeEffettive = await getFrequenzeConsigliateEffettive();
+  const extraCapEffettivi = await getExtraCapSottotipiEffettivi();
 
   for(const r of lista){
     if(nutrizioneInaffidabile(r)){
@@ -5834,11 +5900,11 @@ async function analizzaScostamenti(pasto, giorno, ricetteCandidate){
     const sottotipo = r.gruppoProteico;
     if(sottotipo){
       const gruppo = SOTTOTIPO_A_GRUPPO[sottotipo] || sottotipo;
-      if(FREQUENZE_CONSIGLIATE[gruppo] && (consumiData.gruppi[gruppo]||0) >= FREQUENZE_CONSIGLIATE[gruppo].max){
-        messaggi.push(`Tetto settimanale di "${gruppo}" già raggiunto: con "${r.nome}" saliresti a ${(consumiData.gruppi[gruppo]||0)+1}/${FREQUENZE_CONSIGLIATE[gruppo].max}`);
+      if(frequenzeEffettive[gruppo] && (consumiData.gruppi[gruppo]||0) >= frequenzeEffettive[gruppo].max){
+        messaggi.push(`Tetto settimanale di "${gruppo}" già raggiunto: con "${r.nome}" saliresti a ${(consumiData.gruppi[gruppo]||0)+1}/${frequenzeEffettive[gruppo].max}`);
       }
-      if(EXTRA_CAP_SOTTOTIPI[sottotipo] && (consumiData.sottotipi[sottotipo]||0) >= EXTRA_CAP_SOTTOTIPI[sottotipo]){
-        messaggi.push(`Tetto settimanale di "${sottotipo.replace('_',' ')}" già raggiunto: con "${r.nome}" saliresti a ${(consumiData.sottotipi[sottotipo]||0)+1}/${EXTRA_CAP_SOTTOTIPI[sottotipo]}`);
+      if(extraCapEffettivi[sottotipo] && (consumiData.sottotipi[sottotipo]||0) >= extraCapEffettivi[sottotipo]){
+        messaggi.push(`Tetto settimanale di "${sottotipo.replace('_',' ')}" già raggiunto: con "${r.nome}" saliresti a ${(consumiData.sottotipi[sottotipo]||0)+1}/${extraCapEffettivi[sottotipo]}`);
       }
     }
     if(r.sottotipoSpuntino && CAP_SPUNTINO_SETTIMANALE[r.sottotipoSpuntino] && (consumiData.spuntini[r.sottotipoSpuntino]||0) >= CAP_SPUNTINO_SETTIMANALE[r.sottotipoSpuntino]){
@@ -6243,8 +6309,9 @@ async function renderFrequenzeSettimana(){
     return `<div class="meta" style="margin-top:2px;">Questa settimana hai scelto ${label.toLowerCase()} ${c} volt${c===1?'a':'e'}. Il percorso suggerisce max ${max}, ma va benissimo assecondare i tuoi gusti! 🙂</div>`;
   }
 
-  let html = Object.keys(FREQUENZE_CONSIGLIATE).map(k=>{
-    const f = FREQUENZE_CONSIGLIATE[k];
+  let frequenzeMostrate = await getFrequenzeConsigliateEffettive();
+  let html = Object.keys(frequenzeMostrate).map(k=>{
+    const f = frequenzeMostrate[k];
     const c = gruppi[k]||0;
     const over = c > f.max;
     const pct = Math.min(100, (c/f.max)*100);
@@ -6256,8 +6323,9 @@ async function renderFrequenzeSettimana(){
     </div>`;
   }).join('');
 
-  html += Object.keys(EXTRA_CAP_SOTTOTIPI).map(k=>{
-    const max = EXTRA_CAP_SOTTOTIPI[k];
+  const extraCapMostrati = await getExtraCapSottotipiEffettivi();
+  html += Object.keys(extraCapMostrati).map(k=>{
+    const max = extraCapMostrati[k];
     const c = sottotipi[k]||0;
     const over = c > max;
     const pct = Math.min(100, (c/max)*100);
