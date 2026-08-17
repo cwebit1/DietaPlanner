@@ -1948,9 +1948,9 @@ function scegliCotturaStandard(gruppoProteico){
    3. Proteina del secondo (dalla categoria larga di E1)
    4. Cottura (dalle COTTURE_STANDARD)
    5. Contorno (dal pool di contorni modulari) */
-async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId){
+async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId, forzaJolly){
   // 1. Carboidrato del primo (usa la config utente, oppure distribuzione pesata)
-  const carboidratoScelto = await scegliCarboidratoModulare();
+  const carboidratoScelto = await scegliCarboidratoModulare(!!forzaJolly);
   const carboidratoConfig = CARBOIDRATI_PASTO[carboidratoScelto];
   if(!carboidratoConfig) return null;
 
@@ -2029,7 +2029,26 @@ async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, esclu
    pesata tra CARBOIDRATI_ROTAZIONE. I carboidrati limitati
    (friselle, gnocchi, ecc.) vengono proposti solo se il tetto
    settimanale non è raggiunto. */
-async function scegliCarboidratoModulare(){
+async function scegliCarboidratoModulare(forzaJolly){
+  // Se "poco tempo", forza un carboidrato jolly (pane/friselle)
+  if(forzaJolly){
+    const jollyPool = Object.keys(CARBOIDRATI_PASTO).filter(k => CARBOIDRATI_PASTO[k].jolly);
+    if(jollyPool.length){
+      // Rispetta i tetti per i jolly limitati (friselle)
+      const jollyDisponibili = [];
+      for(const k of jollyPool){
+        const carb = CARBOIDRATI_PASTO[k];
+        if(carb.limitato){
+          const usato = await contaCarboidratoSettimana(k);
+          if(usato < (carb.tettoSettimanale || 2)) jollyDisponibili.push(k);
+        } else {
+          jollyDisponibili.push(k);
+        }
+      }
+      if(jollyDisponibili.length) return mescola(jollyDisponibili)[0];
+    }
+    return 'pane'; // fallback sicuro
+  }
   const config = await getConfigCarboidratiCaselle();
   if(config){
     return scegliCarboidratoDaConfig(config);
@@ -2821,9 +2840,14 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
       const pocoTempoQuesto = (pasto==='pranzo' && preferenze.pocoTempoPranzo) || (pasto==='cena' && preferenze.pocoTempoCena);
       const pocoTempoAltro = (pasto==='pranzo' && preferenze.pocoTempoCena) || (pasto==='cena' && preferenze.pocoTempoPranzo);
       let modoScelto;
-      if(pocoTempoQuesto) modoScelto = 'unico';
+      if(pocoTempoQuesto) modoScelto = 'multi'; // poco tempo = pane/friselle + proteina + contorno (jolly)
       else if(pocoTempoAltro) modoScelto = 'multi';
       else modoScelto = Math.random() < 0.5 ? 'unico' : 'multi';
+      // Se poco tempo su questo pasto, forza il carboidrato jolly (pane/friselle).
+      // Nota: preferenzeBase non è ancora dichiarata qui sotto (arriva più avanti nel
+      // loop), quindi il flag viaggia in una variabile locale e viene fuso dentro
+      // preferenzeQuestoPasto quando quell'oggetto viene costruito.
+      const forzaCarboidratoJollyQuesto = !!pocoTempoQuesto;
       let voce = Object.assign({id:pianoId, modo: modoScelto, fascia:'facile', porzioni:1}, esistente||{});
 
       // MOTORE NUOVO E2: se la griglia E2 ha prodotto un candidato per questa
@@ -2868,7 +2892,7 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
       const preferenzeBase = categorieResidueOggi
         ? Object.assign({}, preferenze, {giornoCategoria: Object.assign({}, preferenze.giornoCategoria, {[g]: categorieResidueOggi})})
         : preferenze;
-      const preferenzeQuestoPasto = Object.assign({}, preferenzeBase, {verduraRicorrenteObbligatoria: verduraRicorrenteOggi, categoriaLargaE1: categoriaLargaE1});
+      const preferenzeQuestoPasto = Object.assign({}, preferenzeBase, {verduraRicorrenteObbligatoria: verduraRicorrenteOggi, categoriaLargaE1: categoriaLargaE1, forzaCarboidratoJolly: forzaCarboidratoJollyQuesto});
       voce = await garantisciRicettaSlot(g, pasto, voce, ignoraCopertura, preferenzeQuestoPasto);
 
       if(categorieResidueOggi && categorieResidueOggi.length){
@@ -4471,7 +4495,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
         <div style="margin-bottom:10px;">
           <div class="row" style="align-items:baseline;gap:8px;">
             <span class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;min-width:70px;flex-shrink:0;">${label}</span>
-            <span class="nome-ricetta-link" data-ricetta="${rid}" style="font-weight:700;font-size:0.9rem;flex:1;">${voce.viaSalvafrigo===chiave ? '♻️ ' : ''}${label==='Secondo' ? iconaGruppoProteico(ricetta.gruppoProteico)+' ' : ''}${ricetta.nome}</span>
+            <span class="nome-ricetta-link" data-ricetta="${rid}" style="font-weight:700;font-size:0.9rem;flex:1;">${voce.viaSalvafrigo===chiave ? '♻️ ' : ''}${label==='Secondo' ? iconaGruppoProteico(ricetta.gruppoProteico)+' ' : ''}${ricetta.nome}${label==='Secondo' && voce.cotturaSecondo ? ' ' + voce.cotturaSecondo : ''}</span>
             <button class="icon-info-btn" data-info="${rid}" title="Info nutrizionale">ⓘ</button>
             ${stellaBtn(ricetta)}
           </div>
@@ -4957,6 +4981,34 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
   preferenze = preferenze || {};
   let cambiato = false;
   if(voce.modo==='multi'){
+    // NUOVO: prova prima il motore modulare completo (5 variabili)
+    if(!voce.primoId && !voce.secondoId && !voce.contornoId){
+      const gruppoProteico = preferenze.categoriaLargaE1
+        ? risolviSottotipoFine(preferenze.categoriaLargaE1, {})
+        : null;
+      const esitoModulare = await componiPastoModulare(gruppoProteico, giorno, null, null, null, preferenze.forzaCarboidratoJolly);
+      if(esitoModulare && esitoModulare.primoSugoId && esitoModulare.proteinaId){
+        // Componi il primo modulare (carboidrato + sugo)
+        const templateSugo = await getOne('ricette', esitoModulare.primoSugoId);
+        if(templateSugo){
+          const primoComposto = await componiPrimoModulare(templateSugo, esitoModulare.primoCarboidrato);
+          if(primoComposto){
+            voce.primoId = primoComposto.id;
+            voce.primoCereale = esitoModulare.primoCarboidrato;
+            await segnaRicettaUsata(primoComposto.id);
+          }
+        }
+        voce.secondoId = esitoModulare.proteinaId;
+        voce.contornoId = esitoModulare.contornoId;
+        voce.cotturaSecondo = esitoModulare.cottura;
+        if(voce.secondoId) await segnaRicettaUsata(voce.secondoId);
+        if(voce.contornoId) await segnaRicettaUsata(voce.contornoId);
+        cambiato = true;
+        await put('piano', voce);
+        return voce;
+      }
+    }
+    // Fallback: generazione tradizionale per singola portata
     for(const [chiave, tipo] of [['primoId','primo'],['secondoId','secondo'],['contornoId','contorno']]){
       if(!voce[chiave]){
         // E3: per i PRIMI, prova prima il motore primi modulari
@@ -7706,7 +7758,13 @@ async function riepilogoTestualePasto(giorno, pasto){
     for(const chiave of ['primoId','secondoId','contornoId']){
       if(voce[chiave]){
         const r = await getOne('ricette', voce[chiave]);
-        if(r) nomi.push(r.nome);
+        if(r){
+          let nomeVisualizzato = r.nome;
+          if(chiave==='secondoId' && voce.cotturaSecondo){
+            nomeVisualizzato += ' ' + voce.cotturaSecondo;
+          }
+          nomi.push(nomeVisualizzato);
+        }
       }
     }
     return nomi.length ? prefisso + nomi.join(' · ') : testoVuoto;
