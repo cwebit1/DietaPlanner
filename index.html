@@ -569,7 +569,89 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 
   <!-- BATCH 3: qui andrà il setting fonti proteiche -->
-  <div id="setProteine"></div>
+  <div id="setProteine">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">🍗 Fonti proteiche — frequenze settimanali</h3>
+      <div class="meta" style="margin-bottom:12px;">
+        Quante volte a settimana il motore può proporre ciascuna fonte proteica.
+        I valori rispettano le frequenze del percorso alimentare.
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Carne</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtCarne" min="0" max="7" value="3" step="1" style="flex:1;">
+          <span id="cfgProtCarneVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Pesce</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtPesce" min="0" max="7" value="3" step="1" style="flex:1;">
+          <span id="cfgProtPesceVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Formaggi</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtFormaggi" min="0" max="7" value="3" step="1" style="flex:1;">
+          <span id="cfgProtFormaggiVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Uova</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtUova" min="0" max="7" value="2" step="1" style="flex:1;">
+          <span id="cfgProtUovaVal" style="min-width:52px;font-weight:700;text-align:right;">2/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Legumi</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtLegumi" min="0" max="7" value="3" step="1" style="flex:1;">
+          <span id="cfgProtLegumiVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
+        </div>
+      </div>
+
+      <div class="meta" style="margin:14px 0 8px;font-weight:700;">Da limitare (tetto rigido)</div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Carne rossa</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtCarneRossa" min="0" max="2" value="1" step="1" style="flex:1;">
+          <span id="cfgProtCarneRossaVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Affettati / insaccati</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtAffettati" min="0" max="2" value="1" step="1" style="flex:1;">
+          <span id="cfgProtAffettatiVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Pesce di grande taglia</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtPesceGrande" min="0" max="2" value="1" step="1" style="flex:1;">
+          <span id="cfgProtPesceGrandeVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-weight:700;font-size:0.88rem;">Pesce conservato</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="range" id="cfgProtPesceConservato" min="0" max="2" value="1" step="1" style="flex:1;">
+          <span id="cfgProtPesceConservatoVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- BATCH 4: qui andrà il set verdure -->
   <div id="setVerdure"></div>
@@ -2299,6 +2381,39 @@ document.getElementById('btnResetConfigCarboidrati')?.addEventListener('click', 
   aggiornaStatoConfigCarb();
 });
 
+const CONFIG_PROTEINE_DEFAULT = {
+  carne:3, pesce:3, formaggi:3, uova:2, legumi:3,
+  carne_rossa:1, affettati:1, pesce_grande:1, pesce_conservato:1
+};
+const sliderProtMap = {
+  cfgProtCarne:'cfgProtCarneVal', cfgProtPesce:'cfgProtPesceVal',
+  cfgProtFormaggi:'cfgProtFormaggiVal', cfgProtUova:'cfgProtUovaVal',
+  cfgProtLegumi:'cfgProtLegumiVal', cfgProtCarneRossa:'cfgProtCarneRossaVal',
+  cfgProtAffettati:'cfgProtAffettatiVal', cfgProtPesceGrande:'cfgProtPesceGrandeVal',
+  cfgProtPesceConservato:'cfgProtPesceConservatoVal'
+};
+Object.keys(sliderProtMap).forEach(id=>{
+  const sl=document.getElementById(id), lb=document.getElementById(sliderProtMap[id]);
+  if(sl&&lb){ sl.addEventListener('input',()=>{ lb.textContent=sl.value+'/sett'; }); }
+});
+async function getConfigProteine(){
+  const rec = await getOne('impostazioni','configProteine');
+  return (rec && rec.valore) ? rec.valore : CONFIG_PROTEINE_DEFAULT;
+}
+async function caricaConfigProteineUI(){
+  const cfg = await getConfigProteine();
+  const mappa = {
+    cfgProtCarne:cfg.carne, cfgProtPesce:cfg.pesce, cfgProtFormaggi:cfg.formaggi,
+    cfgProtUova:cfg.uova, cfgProtLegumi:cfg.legumi, cfgProtCarneRossa:cfg.carne_rossa,
+    cfgProtAffettati:cfg.affettati, cfgProtPesceGrande:cfg.pesce_grande,
+    cfgProtPesceConservato:cfg.pesce_conservato
+  };
+  for(const [id,val] of Object.entries(mappa)){
+    const sl=document.getElementById(id), lb=document.getElementById(sliderProtMap[id]);
+    if(sl){ sl.value=val; } if(lb){ lb.textContent=val+'/sett'; }
+  }
+}
+
 /* Carica la configurazione salvata all'avvio */
 async function caricaConfigCarboidrati(){
   const rec = await getOne('impostazioni', 'configCarboidrati');
@@ -2713,7 +2828,7 @@ document.querySelectorAll('nav.tabbar button').forEach(btn=>{
    ========================================================= */
 async function renderSet(){
   // BATCH 2: popolerà #setCarboidrati
-  // BATCH 3: popolerà #setProteine
+  await caricaConfigProteineUI(); // BATCH 3: popola #setProteine
   // BATCH 4: popolerà #setVerdure
   // BATCH 5: popolerà #setVerdureRicorrenti
   // BATCH 6: popolerà #setColazione
