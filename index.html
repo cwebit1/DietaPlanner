@@ -1652,9 +1652,13 @@ async function controllaAggiornamentoRicetteRemote(){
    semplicemente ignorati nel calcolo (non generano errori). */
 function calcolaNutrizioneDaIngredientiJson(ingredientiGrezzi){
   let kcal=0, prot=0, carb=0, grassi=0, trovatoAlmenoUno=false;
+  let ingredienteMancante=false;
   for(const [nome, g] of (ingredientiGrezzi||[])){
     const dati = ingredientiJsonMap[nome];
-    if(!dati) continue;
+    if(!dati){
+      ingredienteMancante=true;
+      continue;
+    }
     trovatoAlmenoUno = true;
     const fattore = (g||0)/100;
     kcal += (dati.kcal||0)*fattore;
@@ -1662,7 +1666,9 @@ function calcolaNutrizioneDaIngredientiJson(ingredientiGrezzi){
     carb += (dati.carboidrati||0)*fattore;
     grassi += (dati.grassi||0)*fattore;
   }
-  return trovatoAlmenoUno ? {kcal,prot,carb,grassi} : null;
+  // Mai salvare come totale completo una nutrizione calcolata solo su parte
+  // degli ingredienti: in quel caso il fallback resta il valore precedente/DB.
+  return (trovatoAlmenoUno && !ingredienteMancante) ? {kcal,prot,carb,grassi} : null;
 }
 
 /* Applica una lista di ricette in formato "leggibile" (nomi ingrediente in chiaro,
