@@ -679,7 +679,21 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 
   <!-- BATCH 6: qui andrà il modulo colazione preferita -->
-  <div id="setColazione"></div>
+  <div id="setColazione">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">☕ Colazione preferita</h3>
+      <div class="meta" style="margin-bottom:12px;">
+        Componi la colazione da ripetere e scegli i giorni in cui applicarla.
+        Nei giorni non selezionati il motore propone colazioni diverse.
+      </div>
+      <div id="setColazioneGruppi"></div>
+      <label style="margin-top:12px;">Giorni in cui applicarla:</label>
+      <table class="tabella-giorno"><tbody id="setColazioneGiorni"></tbody></table>
+      <div class="row" style="margin-top:10px;gap:8px;">
+        <button class="small" id="btnResetColazionePref">✕ Reset colazione preferita</button>
+      </div>
+    </div>
+  </div>
 
   <!-- BATCH 7: qui andrà il pulsante Salva unico -->
   <div id="setSalvaUnico" style="margin-top:20px;"></div>
@@ -2543,6 +2557,76 @@ async function renderSetVerduraRicorrente(){
   }
 }
 
+async function renderSetColazione(){
+  const contGruppi = document.getElementById('setColazioneGruppi');
+  const contGiorni = document.getElementById('setColazioneGiorni');
+  if(!contGruppi || !contGiorni) return;
+  const varianti = await getAll('varianti');
+  const compRec = await getOne('impostazioni', 'colazionePreferita');
+  const giorniRec = await getOne('impostazioni', 'colazionePreferitaGiorni');
+  let componenti = compRec && compRec.valore ? Object.assign({}, compRec.valore) : {};
+  const giorniAttivi = giorniRec && giorniRec.valore ? giorniRec.valore.slice() : [];
+  // Se non ci sono ancora componenti salvati, precarica i default (primo per gruppo obbligatorio)
+  if(!Object.keys(componenti).length){
+    for(const gr of COLAZIONE_GRUPPI){
+      const opz = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+      componenti[gr.chiave] = gr.obbligatorio && opz.length ? opz[0].id : null;
+    }
+  }
+  // 4 gruppi componibili
+  let htmlGruppi = '';
+  for(const gr of COLAZIONE_GRUPPI){
+    const opzioni = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+    const selezionatoId = componenti[gr.chiave];
+    htmlGruppi += `<label style="margin-top:8px;">${gr.label}${gr.obbligatorio?'':' (facoltativo)'}</label>
+      <div class="colazione-gruppo-slide" data-set-col-gruppo="${gr.chiave}">
+        ${gr.obbligatorio ? '' : `<button data-set-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`}
+        ${opzioni.map(o=>`<button data-set-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
+      </div>`;
+  }
+  contGruppi.innerHTML = htmlGruppi;
+  // Griglia giorni Lun-Dom, stessa struttura tabella-giorno del questionario
+  const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th>${g}</th>`).join('');
+  const celleCol = NOMI_GIORNI_BREVI.map((g, idx)=>{
+    const attivo = giorniAttivi.includes(idx);
+    return `<td class="cella"><button data-set-colpref-giorno="${idx}" class="${attivo?'active':''}"></button></td>`;
+  }).join('');
+  contGiorni.innerHTML = `
+    <tr><th class="col-label"></th>${rigaIntestazioneCol}</tr>
+    <tr><td class="riga-label">Colazione</td>${celleCol}</tr>`;
+  // Listener: selezione componenti gruppi (scrive direttamente in impostazioni)
+  contGruppi.querySelectorAll('[data-set-col-gruppo]').forEach(slide=>{
+    slide.querySelectorAll('[data-set-col-opt]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const gruppo = slide.dataset.setColGruppo;
+        const idScelto = btn.dataset.setColOpt || null;
+        const rec = await getOne('impostazioni', 'colazionePreferita');
+        const comp = rec && rec.valore ? Object.assign({}, rec.valore) : {};
+        comp[gruppo] = idScelto;
+        await put('impostazioni', {chiave:'colazionePreferita', valore: comp});
+        renderSetColazione();
+      });
+    });
+  });
+  // Listener: toggle giorno (scrive direttamente in impostazioni)
+  contGiorni.querySelectorAll('[data-set-colpref-giorno]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const idx = parseInt(btn.dataset.setColprefGiorno);
+      const rec = await getOne('impostazioni', 'colazionePreferitaGiorni');
+      const arr = rec && rec.valore ? rec.valore.slice() : [];
+      const pos = arr.indexOf(idx);
+      if(pos>=0) arr.splice(pos,1); else arr.push(idx);
+      await put('impostazioni', {chiave:'colazionePreferitaGiorni', valore: arr});
+      renderSetColazione();
+    });
+  });
+}
+document.getElementById('btnResetColazionePref')?.addEventListener('click', async ()=>{
+  await delKey('impostazioni', 'colazionePreferita');
+  await delKey('impostazioni', 'colazionePreferitaGiorni');
+  renderSetColazione();
+});
+
 /* Carica la configurazione salvata all'avvio */
 async function caricaConfigCarboidrati(){
   const rec = await getOne('impostazioni', 'configCarboidrati');
@@ -2962,7 +3046,7 @@ async function renderSet(){
   await caricaConfigProteineUI(); // BATCH 3: popola #setProteine
   await renderSetVerdure(); // BATCH 4: popola #setVerdure
   await renderSetVerduraRicorrente(); // BATCH 5: popola #setVerdureRicorrenti
-  // BATCH 6: popolerà #setColazione
+  await renderSetColazione(); // BATCH 6: popola #setColazione
   // BATCH 7: popolerà #setSalvaUnico
 }
 
