@@ -666,7 +666,17 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 
   <!-- BATCH 5: qui andrà il modulo verdure ricorrenti -->
-  <div id="setVerdureRicorrenti"></div>
+  <div id="setVerdureRicorrenti">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">🔁 Verdura ricorrente</h3>
+      <div class="meta" style="margin-bottom:12px;">
+        Una verdura che vuoi ritrovare spesso nel menù. Il motore la proporrà
+        come contorno principale nei giorni alterni.
+      </div>
+      <div class="tabgroup" id="setVerduraRicorrenteScelta"></div>
+      <div class="meta" id="setVerduraRicorrenteNota" style="margin-top:8px;"></div>
+    </div>
+  </div>
 
   <!-- BATCH 6: qui andrà il modulo colazione preferita -->
   <div id="setColazione"></div>
@@ -2494,6 +2504,45 @@ async function filtraContorniPerVerdureAttive(contorni){
   return filtrati.length ? filtrati : contorni; // mai bloccare
 }
 
+async function renderSetVerduraRicorrente(){
+  const el = document.getElementById('setVerduraRicorrenteScelta');
+  const nota = document.getElementById('setVerduraRicorrenteNota');
+  if(!el) return;
+  const varianti = await getAll('varianti');
+  const ingredienti = await getAll('ingredienti');
+  const ingPerId={}; for(const i of ingredienti) ingPerId[i.id]=i;
+  const verdure = varianti.filter(v=>{
+    const b=ingPerId[v.ingredienteId]; return b && b.gruppo==='verdura';
+  });
+  const cfgRec = await getOne('impostazioni','verduraRicorrente');
+  const attiva = cfgRec && cfgRec.valore ? cfgRec.valore : null;
+  const stagionali = verdureDiStagione(new Date());
+  // mostra prima le stagionali, poi il resto
+  const ordinate = [...verdure].sort((a,b)=>{
+    const as=stagionali.includes(a.nome)?0:1, bs=stagionali.includes(b.nome)?0:1;
+    return as-bs || a.nome.localeCompare(b.nome);
+  });
+  let html = `<button data-vr="" class="${!attiva?'active':''}">Nessuna</button>`;
+  html += ordinate.map(v=>
+    `<button data-vr="${v.id}" class="${attiva===v.id?'active':''}">${v.nome}</button>`
+  ).join('');
+  el.innerHTML = html;
+  el.querySelectorAll('[data-vr]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const vid = b.dataset.vr || null;
+      if(vid) await put('impostazioni',{chiave:'verduraRicorrente', valore:vid});
+      else await delKey('impostazioni','verduraRicorrente');
+      renderSetVerduraRicorrente();
+    });
+  });
+  if(nota){
+    const vScelta = attiva ? verdure.find(v=>v.id===attiva) : null;
+    nota.textContent = vScelta
+      ? '✓ '+vScelta.nome+' verrà proposta come contorno ricorrente.'
+      : 'Nessuna verdura ricorrente selezionata.';
+  }
+}
+
 /* Carica la configurazione salvata all'avvio */
 async function caricaConfigCarboidrati(){
   const rec = await getOne('impostazioni', 'configCarboidrati');
@@ -2912,7 +2961,7 @@ async function renderSet(){
   // BATCH 2: popolerà #setCarboidrati
   await caricaConfigProteineUI(); // BATCH 3: popola #setProteine
   await renderSetVerdure(); // BATCH 4: popola #setVerdure
-  // BATCH 5: popolerà #setVerdureRicorrenti
+  await renderSetVerduraRicorrente(); // BATCH 5: popola #setVerdureRicorrenti
   // BATCH 6: popolerà #setColazione
   // BATCH 7: popolerà #setSalvaUnico
 }
@@ -2935,6 +2984,14 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
   const ignoraCopertura = !!opzioni.ignoraCopertura;
   const forza = !!opzioni.forza;
   const preferenze = opzioni.preferenze || {};
+  // Set → Verdura ricorrente: se l'utente ha scelto una verdura ricorrente
+  // nella Tab Set, ha priorità e sovrascrive quanto arrivato dal questionario
+  // (che resta comunque attivo per le altre preferenze fino a un batch futuro
+  // che lo svuoterà — non toccarlo qui).
+  const recVerduraRicorrente = await getOne('impostazioni', 'verduraRicorrente');
+  if(recVerduraRicorrente && recVerduraRicorrente.valore){
+    preferenze.verdureVariantIds = [recVerduraRicorrente.valore];
+  }
   const giorni = giorniSettimana(scartoSettimane);
   const varianti = await getAll('varianti');
   // E1: costruisci la griglia base delle categorie proteiche (14 celle).
