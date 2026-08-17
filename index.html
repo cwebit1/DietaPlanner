@@ -1777,6 +1777,47 @@ const COMPONENTE_PROTEINA = 'proteina';
 const COMPONENTE_CONTORNO = 'contorno';
 
 /* =========================================================
+   SISTEMA CARBOIDRATI AMPLIATO (tabella PDF pag. 14)
+   -------------------------------------------------------
+   Costante SEPARATA da CEREALI_PRIMI: il motore E3 esistente
+   continua a usare CEREALI_PRIMI con i 5 cereali modulari.
+   Questa nuova costante è usata SOLO dal nuovo sistema modulare
+   (componiPastoModulare) che gestisce anche pane, patate,
+   polenta come carboidrati "jolly" del pasto.
+   ========================================================= */
+const CARBOIDRATI_PASTO = {
+  // --- Cereali in chicco (rotazione libera, con pool sughi) ---
+  pasta:         { label:'Pasta',         ingrediente:'Pasta corta',       porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  pasta_fresca:  { label:'Pasta fresca',  ingrediente:'Pasta corta',       porzione:90,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  riso:          { label:'Riso',          ingrediente:'Riso Arborio',      porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  farro:         { label:'Farro',         ingrediente:'Farro perlato',     porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  orzo:          { label:'Orzo',          ingrediente:'Orzo perlato',      porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  cous_cous:     { label:'Cous cous',     ingrediente:'Cous cous',         porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  // --- Pane e derivati (JOLLY: sostituiscono il primo, niente sugo) ---
+  pane:          { label:'Pane',          ingrediente:'Pane fresco',       porzione:100, gruppo:'pane',           limitato:false, haPoolSughi:false, jolly:true },
+  friselle:      { label:'Friselle',      ingrediente:'Friselle',          porzione:50,  gruppo:'pane',           limitato:true,  tettoSettimanale:1, haPoolSughi:false, jolly:true },
+  // --- Tuberi e altri ---
+  patate:        { label:'Patate',        ingrediente:'Patate',            porzione:325, gruppo:'patate',         limitato:false, haPoolSughi:false },
+  polenta:       { label:'Polenta',       ingrediente:'Farina per polenta', porzione:75, gruppo:'polenta',       limitato:false, haPoolSughi:true },
+  // --- Frequenza limitata (0-2/sett dal PDF) ---
+  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:175, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:true },
+  pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:true },
+  gallette:      { label:'Gallette',      ingrediente:'Crackers',          porzione:50,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
+  crackers:      { label:'Crackers',      ingrediente:'Crackers',          porzione:30,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
+  taralli:       { label:'Taralli/Grissini', ingrediente:'Crackers',       porzione:65,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
+  piadina:       { label:'Piadina',       ingrediente:'Pane fresco',       porzione:80,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
+  pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:65, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:true }
+};
+
+/* Rotazione principale del NUOVO sistema modulare.
+   NON tocca CEREALI_MODULARI usato dal motore E3 esistente. */
+const CARBOIDRATI_ROTAZIONE = ['pasta','pasta_fresca','riso','farro','orzo','cous_cous','pane','patate','polenta'];
+
+/* Carboidrati a frequenza limitata.
+   Vengono proposti solo se il tetto settimanale non è raggiunto. */
+const CARBOIDRATI_LIMITATI = ['friselle','gnocchi','pasta_ripiena','gallette','crackers','taralli','piadina','pasta_sfoglia'];
+
+/* =========================================================
    CATEGORIA MODULARE — i "mattoncini Lego" del pasto
    -------------------------------------------------------
    Le ricette modulari vivono nello store 'ricette' con
@@ -1899,33 +1940,43 @@ function scegliCotturaStandard(gruppoProteico){
    - secondoNome, proteinaId, cottura, contornoId
    - nutrizione (somma dei componenti + condimento)
    oppure null se mancano componenti. */
+/* Compone un pasto modulare completo (5 variabili):
+   1. Carboidrato del primo (dalla configurazione utente)
+   2. Sugo del primo (dal pool di sughi modulari) — SOLO se
+      il carboidrato ha haPoolSughi=true (pane/friselle NON hanno sugo)
+   3. Proteina del secondo (dalla categoria larga di E1)
+   4. Cottura (dalle COTTURE_STANDARD)
+   5. Contorno (dal pool di contorni modulari) */
 async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId){
-  // 1. Cereale del primo (usa il motore E3 esistente)
-  const cerealeScelto = await scegliCerealePrimo();
-  const cerealeConfig = CEREALI_PRIMI[cerealeScelto];
-  if(!cerealeConfig) return null;
-  // 2. Sugo modulare
-  const sughiDisponibili = await cercaComponentiModulari('sugo');
+  // 1. Carboidrato del primo (usa la config utente, oppure distribuzione pesata)
+  const carboidratoScelto = await scegliCarboidratoModulare();
+  const carboidratoConfig = CARBOIDRATI_PASTO[carboidratoScelto];
+  if(!carboidratoConfig) return null;
+
+  // 2. Sugo modulare — SOLO se il carboidrato ha un pool di sughi
   let sugoScelto = null;
-  if(sughiDisponibili.length){
-    // Anti-ripetizione: escludi sughi già usati questa settimana
-    const giorniSett = giorniSettimana(0);
-    const sughiUsatiSettimana = new Set();
-    const tuttoIlPiano = await getAll('piano');
-    const tutteLeRicette = await getAll('ricette');
-    for(const g of giorniSett){
-      for(const pasto of ['pranzo','cena']){
-        const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
-        if(!voce || voce.modo!=='multi') continue;
-        if(voce.primoSugoId) sughiUsatiSettimana.add(voce.primoSugoId);
+  if(carboidratoConfig.haPoolSughi){
+    const sughiDisponibili = await cercaComponentiModulari('sugo');
+    if(sughiDisponibili.length){
+      // Anti-ripetizione: escludi sughi già usati questa settimana
+      const giorniSett = giorniSettimana(0);
+      const sughiUsatiSettimana = new Set();
+      const tuttoIlPiano = await getAll('piano');
+      for(const g of giorniSett){
+        for(const pasto of ['pranzo','cena']){
+          const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+          if(!voce || voce.modo!=='multi') continue;
+          if(voce.primoSugoId) sughiUsatiSettimana.add(voce.primoSugoId);
+        }
       }
+      const sughiNonUsati = sughiDisponibili.filter(s =>
+        !sughiUsatiSettimana.has(s.id) && s.id !== escludiSugoId
+      );
+      const poolSughi = sughiNonUsati.length ? sughiNonUsati : sughiDisponibili;
+      sugoScelto = mescola(poolSughi)[0];
     }
-    const sughiNonUsati = sughiDisponibili.filter(s =>
-      !sughiUsatiSettimana.has(s.id) && s.id !== escludiSugoId
-    );
-    const poolSughi = sughiNonUsati.length ? sughiNonUsati : sughiDisponibili;
-    sugoScelto = mescola(poolSughi)[0];
   }
+
   // 3. Proteina modulare
   let proteinaScelta = null;
   if(gruppoProteico){
@@ -1936,8 +1987,10 @@ async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, esclu
       proteinaScelta = mescola(poolProteine)[0];
     }
   }
+
   // 4. Cottura
   const cottura = proteinaScelta ? scegliCotturaStandard(proteinaScelta.gruppoProteico) : null;
+
   // 5. Contorno modulare
   let contornoScelto = null;
   const contorniDisponibili = await cercaComponentiModulari('contorno');
@@ -1946,24 +1999,107 @@ async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, esclu
     const poolContorni = contorniFiltrati.length ? contorniFiltrati : contorniDisponibili;
     contornoScelto = mescola(poolContorni)[0];
   }
-  // Componi i nomi
-  const primoNome = componiNomePrimoModulare(cerealeConfig.label, sugoScelto ? sugoScelto.nome : '');
+
+  // Componi i nomi invitanti
+  const primoNome = sugoScelto
+    ? componiNomePrimoModulare(carboidratoConfig.label, sugoScelto.nome)
+    : carboidratoConfig.label;
   const secondoNome = componiNomeSecondoModulare(
     proteinaScelta ? proteinaScelta.nome : '',
     cottura,
     contornoScelto ? contornoScelto.nome : ''
   );
+
   return {
     primoNome,
-    primoCereale: cerealeScelto,
+    primoCarboidrato: carboidratoScelto,
     primoSugoId: sugoScelto ? sugoScelto.id : null,
+    primoEJolly: !!carboidratoConfig.jolly,
     secondoNome,
     proteinaId: proteinaScelta ? proteinaScelta.id : null,
     proteinaGruppo: proteinaScelta ? proteinaScelta.gruppoProteico : null,
     cottura,
-    contornoId: contornoScelto ? contornoScelto.id : null,
-    nutrizione: null // calcolata dal motore al momento della conferma
+    contornoId: contornoScelto ? contornoScelto.id : null
   };
+}
+
+/* Sceglie un carboidrato per il nuovo sistema modulare.
+   Usa la config utente se disponibile, altrimenti distribuzione
+   pesata tra CARBOIDRATI_ROTAZIONE. I carboidrati limitati
+   (friselle, gnocchi, ecc.) vengono proposti solo se il tetto
+   settimanale non è raggiunto. */
+async function scegliCarboidratoModulare(){
+  const config = await getConfigCarboidratiCaselle();
+  if(config){
+    return scegliCarboidratoDaConfig(config);
+  }
+  // Fallback: distribuzione pesata tra CARBOIDRATI_ROTAZIONE
+  const pool = CARBOIDRATI_ROTAZIONE.filter(chiave => {
+    const carb = CARBOIDRATI_PASTO[chiave];
+    if(!carb) return false;
+    if(carb.limitato){
+      return false; // i limitati entrano solo con la config esplicita
+    }
+    return true;
+  });
+  if(!pool.length) return 'riso';
+  return mescola(pool)[0];
+}
+
+/* Sceglie un carboidrato in base alla configurazione a caselle. */
+async function scegliCarboidratoDaConfig(config){
+  const candidati = [];
+  for(const chiave of Object.keys(config)){
+    if(config[chiave] > 0 && CARBOIDRATI_PASTO[chiave]){
+      candidati.push({chiave, peso: config[chiave]});
+    }
+  }
+  if(!candidati.length) return 'riso';
+
+  // Filtra i limitati che hanno raggiunto il tetto
+  const candidatiFiltrati = [];
+  for(const c of candidati){
+    const carb = CARBOIDRATI_PASTO[c.chiave];
+    if(carb.limitato){
+      const usato = await contaCarboidratoSettimana(c.chiave);
+      if(usato >= (carb.tettoSettimanale || 2)) continue;
+    }
+    candidatiFiltrati.push(c);
+  }
+  const pool = candidatiFiltrati.length ? candidatiFiltrati : candidati;
+  if(!pool.length) return 'riso';
+
+  // Scelta pesata
+  const totalePesi = pool.reduce((s, c) => s + c.peso, 0);
+  let random = Math.random() * totalePesi;
+  for(const c of pool){
+    random -= c.peso;
+    if(random <= 0) return c.chiave;
+  }
+  return pool[pool.length - 1].chiave;
+}
+
+/* Conta quante volte un carboidrato specifico è stato usato questa settimana */
+async function contaCarboidratoSettimana(chiaveCarboidrato){
+  const giorni = giorniSettimana();
+  const tuttoIlPiano = await getAll('piano');
+  let conteggio = 0;
+  for(const g of giorni){
+    for(const pasto of ['pranzo','cena']){
+      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+      if(!voce) continue;
+      if(voce.modo==='multi' && voce.primoCereale === chiaveCarboidrato){
+        conteggio++;
+      }
+    }
+  }
+  return conteggio;
+}
+
+/* Legge la configurazione dei tetti alimenti limitati. */
+async function getConfigTettiAlimenti(){
+  const rec = await getOne('impostazioni', 'configTettiAlimenti');
+  return (rec && rec.valore) ? rec.valore : null;
 }
 
 /* =========================================================
