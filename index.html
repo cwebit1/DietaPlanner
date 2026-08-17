@@ -462,10 +462,6 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <section class="view" id="view-menu">
   <div class="tabgroup" id="menuSettimanaTab"></div>
   <div class="meta" style="margin-bottom:10px;">Ciò che è programmato per la settimana selezionata: è la base su cui viene calcolata la lista della spesa.</div>
-  <div class="row" style="gap:8px;margin-bottom:12px;">
-    <button class="secondary" id="btnGeneraMenuQui" style="flex:1;">Genera menù</button>
-    <button class="primary" id="btnVaiSpesaQui" style="flex:1;">Vai alla spesa</button>
-  </div>
   <div id="menuSettimanale"></div>
 </section>
 
@@ -568,88 +564,34 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
     </div>
   </div>
 
-  <!-- BATCH 3: qui andrà il setting fonti proteiche -->
+  <!-- Fonti proteiche: programmazione persistente giorno × categoria -->
   <div id="setProteine">
     <div class="card">
-      <h3 style="margin-bottom:10px;">🍗 Fonti proteiche — frequenze settimanali</h3>
+      <h3 style="margin-bottom:10px;">🍗 Fonti proteiche — quando mangiarle</h3>
       <div class="meta" style="margin-bottom:12px;">
-        Quante volte a settimana il motore può proporre ciascuna fonte proteica.
-        I valori rispettano le frequenze del percorso alimentare.
+        Tocca le caselle per fissare la categoria proteica di ciascun giorno. Max 2 categorie diverse per giorno.
+        I tetti settimanali del percorso sono rispettati automaticamente; le caselle restano valide per tutte le settimane.
       </div>
+      <div id="setTabellaGiorno" style="overflow-x:auto;"></div>
+    </div>
+  </div>
 
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Carne</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtCarne" min="0" max="7" value="3" step="1" style="flex:1;">
-          <span id="cfgProtCarneVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
-        </div>
-      </div>
+  <div id="setPreferenzeMenu">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">⚙️ Preferenze generazione menù</h3>
+      <div class="meta" style="margin-bottom:8px;">Categorie che gradisci meno: il motore le penalizza senza eliminarle se servono per rispettare il piano.</div>
+      <div class="tabgroup" id="setProteineLimitate"></div>
+      <div class="meta" style="margin:14px 0 8px;">Tempo disponibile. Se selezioni poco tempo, quel pasto usa con priorità obbligatoria la famiglia pane / bruschette / friselle.</div>
+      <div class="tabgroup" id="setTempoMenu"></div>
+    </div>
+  </div>
 
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Pesce</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtPesce" min="0" max="7" value="3" step="1" style="flex:1;">
-          <span id="cfgProtPesceVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Formaggi</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtFormaggi" min="0" max="7" value="3" step="1" style="flex:1;">
-          <span id="cfgProtFormaggiVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Uova</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtUova" min="0" max="7" value="2" step="1" style="flex:1;">
-          <span id="cfgProtUovaVal" style="min-width:52px;font-weight:700;text-align:right;">2/sett</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Legumi</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtLegumi" min="0" max="7" value="3" step="1" style="flex:1;">
-          <span id="cfgProtLegumiVal" style="min-width:52px;font-weight:700;text-align:right;">3/sett</span>
-        </div>
-      </div>
-
-      <div class="meta" style="margin:14px 0 8px;font-weight:700;">Da limitare (tetto rigido)</div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Carne rossa</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtCarneRossa" min="0" max="2" value="1" step="1" style="flex:1;">
-          <span id="cfgProtCarneRossaVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Affettati / insaccati</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtAffettati" min="0" max="2" value="1" step="1" style="flex:1;">
-          <span id="cfgProtAffettatiVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Pesce di grande taglia</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtPesceGrande" min="0" max="2" value="1" step="1" style="flex:1;">
-          <span id="cfgProtPesceGrandeVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
-        </div>
-      </div>
-
-      <div style="margin-bottom:12px;">
-        <label style="font-weight:700;font-size:0.88rem;">Pesce conservato</label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" id="cfgProtPesceConservato" min="0" max="2" value="1" step="1" style="flex:1;">
-          <span id="cfgProtPesceConservatoVal" style="min-width:52px;font-weight:700;text-align:right;">1/sett</span>
-        </div>
-      </div>
+  <div id="setVerdurePreferite">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">🥗 Verdure da favorire</h3>
+      <div class="meta" style="margin-bottom:12px;">Seleziona una o più verdure stagionali da favorire nella generazione. È separato dalle verdure disattivate e dalla verdura ricorrente.</div>
+      <div class="tabgroup" id="setVerdurePreferiteLista"></div>
+      <div id="setVerdurePreferiteNota" class="meta" style="margin-top:8px;"></div>
     </div>
   </div>
 
@@ -816,32 +758,6 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
       <button class="close-x" data-close="modalDettaglio">✕</button>
     </div>
     <div id="modalDettaglioContenuto"></div>
-  </div>
-</div>
-
-<!-- ===== MODAL: questionario Genera menù ===== -->
-<div class="modal-overlay hidden" id="modalQuestionarioMenu">
-  <div class="modal">
-    <div class="modal-head">
-      <h3>Genera menù</h3>
-      <button class="close-x" data-close="modalQuestionarioMenu">✕</button>
-    </div>
-    <label>Vuoi una verdura ricorrente nel tuo menù questa settimana?</label>
-    <div class="tabgroup" id="questVerduraRapide"></div>
-    <div id="questVerduraManuale" class="tabgroup" style="margin-top:6px;"></div>
-    <div id="questVerduraNota"></div>
-
-    <label style="margin-top:14px;">C'è qualcosa che non gradisci o gradisci meno questa settimana?</label>
-    <div class="tabgroup" id="questProteineLimitate"></div>
-
-    <label style="margin-top:14px;">Quanto tempo hai questa settimana?</label>
-    <div class="tabgroup" id="questTempo"></div>
-
-    <label style="margin-top:14px;">Quando preferisci questi alimenti? (tocca le caselle — lasciale vuote per decidere tu dopo)</label>
-    <div id="questTabellaGiorno" style="overflow-x:auto;"></div>
-    <div id="questColazionePreferita" style="margin-top:14px;"></div>
-
-    <button class="primary" id="btnQuestionarioGenera" style="margin-top:16px;width:100%;">Genera menù</button>
   </div>
 </div>
 
@@ -1602,6 +1518,38 @@ async function renderVersioneHeader(){
   }
 }
 
+
+async function sincronizzaCatalogoIngredientiJson(){
+  const basi=await getAll('ingredienti');
+  const varianti=await getAll('varianti');
+  const baseByName=new Map(basi.map(x=>[x.nome.toLowerCase(),x]));
+  const varByName=new Map(varianti.map(x=>[x.nome.toLowerCase(),x]));
+  let aggiunte=0;
+  for(const [nome,d] of Object.entries(ingredientiJsonMap||{})){
+    if(varByName.has(nome.toLowerCase())) continue;
+    let base=baseByName.get(nome.toLowerCase());
+    if(!base){
+      base={id:uid(),nome,gruppo:d.gruppo||'altro'};
+      await put('ingredienti',base); baseByName.set(nome.toLowerCase(),base);
+    }
+    const alta=d.deperibilita==='alta';
+    const v={id:uid(),ingredienteId:base.id,nome,formato:0,consistenza:(d.gruppo==='grassi'?'gia_cotto':'da_cuocere'),congelabile:'no',
+      kcal100:d.kcal||0,prot100:d.proteine||0,carb100:d.carboidrati||0,grassi100:d.grassi||0,unitaPezzo:false,integrale:false,categoria:alta?'fresco':'conf'};
+    await put('varianti',v); varByName.set(nome.toLowerCase(),v); aggiunte++;
+  }
+  if(aggiunte){
+    const ricette=await getAll('ricette');
+    for(const r of ricette){
+      let cambiata=false;
+      for(const i of (r.ingredienti||[])){
+        if(!i.variantId && i.nomeLibero){ const v=varByName.get(i.nomeLibero.toLowerCase()); if(v){ i.variantId=v.id; i.nomeLibero=null; cambiata=true; } }
+      }
+      if(cambiata) await put('ricette',r);
+    }
+  }
+  return aggiunte;
+}
+
 async function caricaIngredientiJson(){
   try{
     const versioneLocale = await leggiVersioneRemota('versioneIngredientiRemote');
@@ -1609,6 +1557,7 @@ async function caricaIngredientiJson(){
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const dati = await resp.json();
     ingredientiJsonMap = dati.ingredienti || {};
+    await sincronizzaCatalogoIngredientiJson();
     const versioneRemota = dati.versione || 0;
     let aggiornato = false;
     if(versioneRemota > versioneLocale){
@@ -1796,7 +1745,7 @@ function renderPulsanteGiorno(iso){
 }
 
 /* Verdure di stagione per mese (1=gennaio...12=dicembre) — usata sia dal motore
-   (priorità nei contorni) sia dai pulsanti rapidi della domanda 1 del questionario
+   (priorità nei contorni) sia dai pulsanti rapidi della domanda 1 della configurazione Set
    "Genera menù". Solo le 16 verdure già presenti nel database. */
 const VERDURE_STAGIONALI = {
   1:  ['Cavolfiore','Radicchio','Spinaci freschi','Broccoli','Carote','Cipolla','Funghi champignon'],
@@ -2186,7 +2135,7 @@ async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, esclu
 async function scegliCarboidratoModulare(forzaJolly){
   // Se "poco tempo", forza un carboidrato jolly (pane/friselle)
   if(forzaJolly){
-    const jollyPool = Object.keys(CARBOIDRATI_PASTO).filter(k => CARBOIDRATI_PASTO[k].jolly);
+    const jollyPool = ['pane','friselle'].filter(k => CARBOIDRATI_PASTO[k] && CARBOIDRATI_PASTO[k].jolly);
     if(jollyPool.length){
       // Rispetta i tetti per i jolly limitati (friselle)
       const jollyDisponibili = [];
@@ -2429,59 +2378,66 @@ const CONFIG_PROTEINE_DEFAULT = {
   carne:3, pesce:3, formaggi:3, uova:2, legumi:3,
   carne_rossa:1, affettati:1, pesce_grande:1, pesce_conservato:1
 };
-const sliderProtMap = {
-  cfgProtCarne:'cfgProtCarneVal', cfgProtPesce:'cfgProtPesceVal',
-  cfgProtFormaggi:'cfgProtFormaggiVal', cfgProtUova:'cfgProtUovaVal',
-  cfgProtLegumi:'cfgProtLegumiVal', cfgProtCarneRossa:'cfgProtCarneRossaVal',
-  cfgProtAffettati:'cfgProtAffettatiVal', cfgProtPesceGrande:'cfgProtPesceGrandeVal',
-  cfgProtPesceConservato:'cfgProtPesceConservatoVal'
-};
-Object.keys(sliderProtMap).forEach(id=>{
-  const sl=document.getElementById(id), lb=document.getElementById(sliderProtMap[id]);
-  if(sl&&lb){ sl.addEventListener('input',()=>{ lb.textContent=sl.value+'/sett'; }); }
-});
-async function getConfigProteine(){
-  const rec = await getOne('impostazioni','configProteine');
-  return (rec && rec.valore) ? rec.valore : CONFIG_PROTEINE_DEFAULT;
+async function getConfigProteine(){ return CONFIG_PROTEINE_DEFAULT; }
+async function getFrequenzeConsigliateEffettive(){ return FREQUENZE_CONSIGLIATE; }
+async function getExtraCapSottotipiEffettivi(){ return EXTRA_CAP_SOTTOTIPI; }
+
+const NOMI_GIORNI_SET = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+
+async function renderSetTabellaGiorno(){
+  const el=document.getElementById('setTabellaGiorno'); if(!el) return;
+  const rec=await getOne('impostazioni','tabellaGiornoCategoria');
+  const tabella=(rec&&rec.valore)?rec.valore:{};
+  const head=NOMI_GIORNI_SET.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
+  const righe=CATEGORIE_PROTEICHE_SET.map(c=>{
+    const tetto=FREQUENZE_CONSIGLIATE[c.chiave]?.max??99;
+    const n=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(c.chiave)).length;
+    const rowMax=n>=tetto;
+    const cells=NOMI_GIORNI_SET.map((_,i)=>{
+      const key='giorno_'+i, sel=(tabella[key]||[]).includes(c.chiave), dayMax=(tabella[key]||[]).length>=2;
+      const disabled=(dayMax||rowMax)&&!sel;
+      return `<td class="cella"><button data-set-cella="${i}|${c.chiave}" class="${sel?'active':''} ${disabled?'al-tetto':''}" ${disabled?'disabled':''} style="min-height:36px;min-width:36px;"></button></td>`;
+    }).join('');
+    return `<tr><td class="riga-label">${c.label}${rowMax?` (max ${tetto})`:''}</td>${cells}</tr>`;
+  }).join('');
+  el.innerHTML=`<table class="tabella-giorno"><tr><th class="col-label"></th>${head}</tr>${righe}</table>`;
+  el.querySelectorAll('[data-set-cella]').forEach(b=>b.addEventListener('click',async()=>{
+    const [is,cat]=b.dataset.setCella.split('|'), key='giorno_'+parseInt(is); tabella[key]=tabella[key]||[]; const arr=tabella[key], pos=arr.indexOf(cat);
+    if(pos>=0) arr.splice(pos,1); else {
+      const tetto=FREQUENZE_CONSIGLIATE[cat]?.max??99;
+      const used=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(cat)).length;
+      if(used>=tetto){ await avviso('Hai già raggiunto il massimo settimanale per questa categoria.'); return; }
+      if(arr.length>=2){ await avviso('Hai già selezionato 2 fonti proteiche per questo giorno.'); return; }
+      arr.push(cat);
+    }
+    await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:tabella});
+    renderSetTabellaGiorno();
+  }));
 }
-/* Ritorna FREQUENZE_CONSIGLIATE effettive: se l'utente ha configurato un
-   tetto in Set (Tab Set → Fonti proteiche), lo usa come nuovo "max"
-   mantenendo il "min" originale del PDF. Altrimenti ricade sulle costanti
-   fisse. NON usata dalla griglia E1 (calcolaBudgetResiduoGriglia), che
-   resta sempre sulle costanti fisse — il motore E1 non va mai toccato. */
-async function getFrequenzeConsigliateEffettive(){
-  const cfg = await getConfigProteine();
-  if(!cfg) return FREQUENZE_CONSIGLIATE;
-  const effettive = {};
-  for(const chiave of Object.keys(FREQUENZE_CONSIGLIATE)){
-    const base = FREQUENZE_CONSIGLIATE[chiave];
-    effettive[chiave] = (cfg[chiave] !== undefined) ? {min: base.min, max: cfg[chiave]} : base;
+
+async function renderSetPreferenzeMenu(){
+  const recLim=await getOne('impostazioni','setProteineLimitate');
+  const limitate=new Set(recLim&&recLim.valore?recLim.valore:[]);
+  const elLim=document.getElementById('setProteineLimitate');
+  if(elLim){
+    elLim.innerHTML=CATEGORIE_PROTEICHE_SET.map(c=>`<button data-set-prot-lim="${c.chiave}" class="${limitate.has(c.chiave)?'active':''}">${c.label}</button>`).join('');
+    elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setProtLim; limitate.has(k)?limitate.delete(k):limitate.add(k); await put('impostazioni',{chiave:'setProteineLimitate',valore:[...limitate]}); renderSetPreferenzeMenu(); }));
   }
-  return effettive;
-}
-/* Ritorna EXTRA_CAP_SOTTOTIPI effettivi (i 4 tetti rigidi configurabili
-   in Set: carne rossa, affettati, pesce grande, pesce conservato). */
-async function getExtraCapSottotipiEffettivi(){
-  const cfg = await getConfigProteine();
-  if(!cfg) return EXTRA_CAP_SOTTOTIPI;
-  const effettivi = {};
-  for(const chiave of Object.keys(EXTRA_CAP_SOTTOTIPI)){
-    effettivi[chiave] = (cfg[chiave] !== undefined) ? cfg[chiave] : EXTRA_CAP_SOTTOTIPI[chiave];
+  const recTempo=await getOne('impostazioni','setPocoTempo');
+  const tempo=Object.assign({pranzo:false,cena:false},recTempo&&recTempo.valore?recTempo.valore:{});
+  const elTempo=document.getElementById('setTempoMenu');
+  if(elTempo){
+    elTempo.innerHTML=`<button data-set-tempo="pranzo" class="${tempo.pranzo?'active':''}">Poco tempo a pranzo</button><button data-set-tempo="cena" class="${tempo.cena?'active':''}">Poco tempo a cena</button><button data-set-tempo="nessuno" class="${(!tempo.pranzo&&!tempo.cena)?'active':''}">Ho tempo</button>`;
+    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setTempo; if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;} else tempo[k]=!tempo[k]; await put('impostazioni',{chiave:'setPocoTempo',valore:tempo}); renderSetPreferenzeMenu(); }));
   }
-  return effettivi;
-}
-async function caricaConfigProteineUI(){
-  const cfg = await getConfigProteine();
-  const mappa = {
-    cfgProtCarne:cfg.carne, cfgProtPesce:cfg.pesce, cfgProtFormaggi:cfg.formaggi,
-    cfgProtUova:cfg.uova, cfgProtLegumi:cfg.legumi, cfgProtCarneRossa:cfg.carne_rossa,
-    cfgProtAffettati:cfg.affettati, cfgProtPesceGrande:cfg.pesce_grande,
-    cfgProtPesceConservato:cfg.pesce_conservato
-  };
-  for(const [id,val] of Object.entries(mappa)){
-    const sl=document.getElementById(id), lb=document.getElementById(sliderProtMap[id]);
-    if(sl){ sl.value=val; } if(lb){ lb.textContent=val+'/sett'; }
+  const recV=await getOne('impostazioni','setVerdurePreferite'); const pref=new Set(recV&&recV.valore?recV.valore:[]);
+  const stag=verdureDiStagione(new Date()); const elV=document.getElementById('setVerdurePreferiteLista');
+  if(elV){
+    elV.innerHTML=stag.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
+    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{ const v=b.dataset.setVerdPref; pref.has(v)?pref.delete(v):pref.add(v); await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]}); renderSetPreferenzeMenu(); }));
+    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{ await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]}); renderSetPreferenzeMenu(); });
   }
+  const nota=document.getElementById('setVerdurePreferiteNota'); if(nota){ const alte=[...pref].filter(n=>ingredientiJsonMap[n]?.deperibilita==='alta'); nota.textContent=alte.length?'💡 Molto deperibili: '+alte.join(', ')+'; il motore può limitarle a fine settimana.':''; }
 }
 
 document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async ()=>{
@@ -2497,16 +2453,7 @@ document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async 
   // 2. tetti alimenti limitati: non esiste una configurazione separata da
   // slider — il tetto sui carboidrati limitati è già dentro statoCaselleCarb
   // e già gestito interamente dalla card caselle (nessun salvataggio extra)
-  // 3. proteine
-  const prot = {};
-  const mappaProt = {Carne:'carne',Pesce:'pesce',Formaggi:'formaggi',Uova:'uova',
-    Legumi:'legumi',CarneRossa:'carne_rossa',Affettati:'affettati',
-    PesceGrande:'pesce_grande',PesceConservato:'pesce_conservato'};
-  for(const [k,ch] of Object.entries(mappaProt)){
-    const sl=document.getElementById('cfgProt'+k);
-    if(sl) prot[ch]=parseInt(sl.value);
-  }
-  await put('impostazioni',{chiave:'configProteine', valore:prot});
+  // 3. proteine: tabella giorno×categoria e preferenze sono salvate in tempo reale.
   // verdure disattivate, verdura ricorrente, colazione preferita sono già
   // salvate in tempo reale dai rispettivi moduli (batch 4/5/6)
   if(stato){ stato.textContent='✅ Configurazione salvata.'; stato.style.color='var(--accent)';
@@ -2651,7 +2598,7 @@ async function renderSetColazione(){
       </div>`;
   }
   contGruppi.innerHTML = htmlGruppi;
-  // Griglia giorni Lun-Dom, stessa struttura tabella-giorno del questionario
+  // Griglia giorni Lun-Dom, stessa struttura tabella-giorno della configurazione Set
   const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th>${g}</th>`).join('');
   const celleCol = NOMI_GIORNI_BREVI.map((g, idx)=>{
     const attivo = giorniAttivi.includes(idx);
@@ -3092,7 +3039,7 @@ function mostraVista(nome){
   if(nome==='menu') renderMenuSettimanale();
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
-  if(nome==='set'){ renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); }
+  if(nome==='set'){ renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
   if(nome==='impostazioni'){ renderInfoVersioniRemote(); }
 }
 document.querySelectorAll('nav.tabbar button').forEach(btn=>{
@@ -3109,7 +3056,8 @@ document.querySelectorAll('nav.tabbar button').forEach(btn=>{
    ========================================================= */
 async function renderSet(){
   // BATCH 2: popolerà #setCarboidrati
-  await caricaConfigProteineUI(); // BATCH 3: popola #setProteine
+  await renderSetTabellaGiorno();
+  await renderSetPreferenzeMenu();
   await renderSetVerdure(); // BATCH 4: popola #setVerdure
   await renderSetVerduraRicorrente(); // BATCH 5: popola #setVerdureRicorrenti
   await renderSetColazione(); // BATCH 6: popola #setColazione
@@ -3135,7 +3083,7 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
   const forza = !!opzioni.forza;
   const preferenze = opzioni.preferenze || {};
   // Set → Verdura ricorrente: se l'utente ha scelto una verdura ricorrente
-  // nella Tab Set, ha priorità e sovrascrive quanto arrivato dal questionario
+  // nella Tab Set, ha priorità e sovrascrive quanto arrivato dalla configurazione Set
   // (che resta comunque attivo per le altre preferenze fino a un batch futuro
   // che lo svuoterà — non toccarlo qui).
   const recVerduraRicorrente = await getOne('impostazioni', 'verduraRicorrente');
@@ -4052,7 +4000,7 @@ async function renderPiano(){
       <button class="primary" id="btnBenvenutoGeneraMenu" style="width:100%;">Genera menù</button>
     </div>`;
     document.getElementById('btnBenvenutoGeneraMenu').addEventListener('click', ()=>{
-      apriQuestionarioMenu();
+      generaMenuDaConfigSet(0);
     });
   } else {
     benvenutoEl.innerHTML = '';
@@ -5441,6 +5389,18 @@ async function generaCandidatoDraft(pasto, escludiCorrente, giorno){
   }
 }
 
+async function scegliPrimoVelocePaneFriselle(){
+  const tutte=await getAll('ricette');
+  const pool=tutte.filter(r=>{
+    if(r.esclusa || r.piattoSpeciale || (r.tipoPortata||'unico')!=='primo') return false;
+    const nome=(r.nome||'').toLowerCase();
+    return nome.includes('bruschett') || nome.includes('frisell') || (r.ingredienti||[]).some(i=>i.nomeLibero==='Pane fresco' || i.nomeLibero==='Friselle');
+  });
+  if(!pool.length) return null;
+  pool.sort((a,b)=>(a.ultimoUsato||0)-(b.ultimoUsato||0));
+  return pool[0];
+}
+
 async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, preferenze){
   preferenze = preferenze || {};
   let cambiato = false;
@@ -5452,7 +5412,15 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
         : null;
       const esitoModulare = await componiPastoModulare(gruppoProteico, giorno, null, null, null, preferenze.forzaCarboidratoJolly);
       if(esitoModulare && esitoModulare.proteinaId && (esitoModulare.primoSugoId || esitoModulare.primoEJolly)){
-        if(esitoModulare.primoSugoId){
+        if(preferenze.forzaCarboidratoJolly){
+          const primoVeloce = await scegliPrimoVelocePaneFriselle();
+          if(primoVeloce){
+            voce.primoId = primoVeloce.id;
+            voce.primoCereale = (primoVeloce.nome||'').toLowerCase().includes('frisell') ? 'friselle' : 'pane';
+            await segnaRicettaUsata(primoVeloce.id);
+          }
+        }
+        if(!voce.primoId && esitoModulare.primoSugoId){
           // Componi il primo modulare tradizionale (carboidrato + sugo)
           const templateSugo = await getOne('ricette', esitoModulare.primoSugoId);
           if(templateSugo){
@@ -5463,7 +5431,7 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
               await segnaRicettaUsata(primoComposto.id);
             }
           }
-        } else if(esitoModulare.primoEJolly){
+        } else if(!voce.primoId && esitoModulare.primoEJolly){
           // Jolly (pane/friselle/ecc.): nessuna ricetta primo composta — il
           // carboidrato jolly sostituisce concettualmente il primo, si
           // abbina direttamente a proteina+contorno senza sugo.
@@ -5750,7 +5718,7 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
       // penalizzate. ECCEZIONE: le ricette preferite (★) sono esonerate, perché
       // la stella serve proprio a facilitare la riproposizione tra settimane.
       if(giorniDaUltimoUso < 7 && !r.preferita) punteggio -= 1500;
-      // preferenze del questionario: pesi, non filtri — non fanno mai sparire un
+      // preferenze della configurazione Set: pesi, non filtri — non fanno mai sparire un
       // candidato, spostano solo quale viene scelto quando c'è davvero una scelta
       if(preferenze.verdureVariantIds && preferenze.verdureVariantIds.length){
         if(variantiRicetta.some(vid=>preferenze.verdureVariantIds.includes(vid))) punteggio += 2000;
@@ -5758,7 +5726,7 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
       if(gruppo && preferenze.proteineLimitate && preferenze.proteineLimitate.includes(gruppo)){
         punteggio -= 3000;
       }
-      // tabella giorno/categoria del questionario: preferenza più forte e mirata
+      // tabella giorno/categoria della configurazione Set: preferenza più forte e mirata
       // di quella generica, perché è una scelta esplicita su quel giorno preciso
       if(gruppo && preferenze.giornoCategoria && preferenze.giornoCategoria[giorno] && preferenze.giornoCategoria[giorno].includes(gruppo)){
         punteggio += 3000;
@@ -5784,7 +5752,7 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
     if(conForzatoTutteFasce) return {ricetta:conForzatoTutteFasce.ricetta, copertura:conForzatoTutteFasce.copertura, fallback:true};
   }
 
-  // tabella giorno/categoria del questionario: PREVARICANTE sul resto, non un
+  // tabella giorno/categoria della configurazione Set: PREVARICANTE sul resto, non un
   // semplice peso — se hai scelto "pesce" per questo giorno, il motore prova PRIMA
   // solo tra le ricette di quel gruppo (a parità di fascia, poi qualunque fascia),
   // e solo se davvero non trova nulla scende alla ricerca normale. Indifferente se il
@@ -6862,1345 +6830,27 @@ let menuSettimanaScarto = 0;
    1) chiede se pensare a una nuova spesa (ignora cosa c'è già) o usare quella esistente
    2) genera di conseguenza, rispettando comunque sempre i criteri della dieta
    3) chiede se rielaborare ulteriormente tutta la settimana, in loop finché l'utente non dice basta */
-async function flussoGeneraMenuConScelte(scartoSettimane, preferenze){
-  preferenze = preferenze || {};
-  // se l'utente ha appena impostato preferenze esplicite nel questionario (verdura,
-  // proteine da limitare, poco tempo, tabella giorno×categoria), vanno rispettate SUBITO,
-  // non solo se poi si sceglie "rielabora ancora" — altrimenti su una settimana già
-  // completa il primo giro non tocca nulla e le preferenze sembrano ignorate
-  const haPreferenzeEsplicite = !!(
-    (preferenze.verdureVariantIds && preferenze.verdureVariantIds.length) ||
-    (preferenze.proteineLimitate && preferenze.proteineLimitate.length) ||
-    preferenze.pocoTempoPranzo || preferenze.pocoTempoCena ||
-    (preferenze.giornoCategoria && Object.values(preferenze.giornoCategoria).some(arr=>arr && arr.length))
-  );
-
-  // mostro subito la vista Menù settimanale (sulla settimana target) cosi' il risultato
-  // e' visibile dietro ai messaggi che seguono, invece di restare sulla scheda da cui
-  // si e' aperto il questionario
-  menuSettimanaScarto = scartoSettimane;
-  mostraVista('menu');
-
-  // L2: nessuna domanda sulla spesa — genera direttamente stornando l'inventario esistente
-  await generaPianoSettimana(scartoSettimane, {ignoraCopertura:false, forza:haPreferenzeEsplicite, preferenze});
-  await renderMenuSettimanale();
-  await renderPiano();
-
-  let ancora = await chiediConferma('Menù generato. Vuoi un\'ulteriore rielaborazione (nuove proposte per tutta la settimana)?', 'Sì, rielabora', 'No, va bene così');
-  while(ancora){
-    await generaPianoSettimana(scartoSettimane, {ignoraCopertura:false, forza:true, preferenze});
-    await renderMenuSettimanale();
-    await renderPiano();
-    ancora = await chiediConferma('Rielaborato. Vuoi rielaborare ancora?', 'Sì, rielabora', 'No, va bene così');
-  }
-}
-
 /* =========================================================
-   QUESTIONARIO "GENERA MENÙ"
-   -------------------------------------------------------
-   Tre domande atomiche, solo pulsanti (mai testo libero). Non decidono il
-   menù al posto dell'utente e non chiedono all'utente di farlo al posto
-   dell'algoritmo: restringono lo spazio di ricerca con informazioni che
-   l'algoritmo non può sapere da solo (gusti, tempo disponibile). Il resto
-   (tetti PDF, dispensa, varietà, stagione) resta gestito dal motore. */
-let statoQuestionario = {verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false, verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget:0, colazionePrefGiorni:[], colazionePrefComponenti:{}};
-const CATEGORIE_PROTEICHE_QUESTIONARIO = [
+   GENERAZIONE MENÙ DA CONFIGURAZIONE SET — nessun questionario
+   ========================================================= */
+const CATEGORIE_PROTEICHE_SET = [
   {chiave:'carne', label:'Carne'}, {chiave:'pesce', label:'Pesce'},
   {chiave:'formaggi', label:'Formaggi'}, {chiave:'uova', label:'Uova'}, {chiave:'legumi', label:'Legumi'}
 ];
 
-/* =========================================================
-   E1 — ALGORITMO PLANNER: griglia base (Step 1-3 del redesign)
-   -------------------------------------------------------
-   ⚠ IN COSTRUZIONE — modulo isolato, NON ancora collegato al motore attivo
-   (generaPianoSettimana/garantisciRicettaSlot). Sub-lotto 2a della roadmap
-   concordata con Enrico. Non tocca ricette: lavora SOLO sulle 5 categorie
-   proteiche larghe (carne/pesce/formaggi/uova/legumi = "cibi razionati",
-   ciascuna con un tetto settimanale — la somma dei 5 tetti fa esattamente
-   14, quante sono le celle pranzo+cena della settimana). La tabella D4 del
-   questionario lascia all'utente FISSARE dove vuole quei cibi; l'algoritmo
-   riempie tutto il resto rispettando gli stessi tetti (contando anche le
-   celle già fissate dall'utente). La scelta del sottotipo fine (es. "pesce"
-   -> pesce_azzurro) e della ricetta vera e propria è compito di E2 (sub-lotto
-   2d), non di questo modulo: qui si decide SOLO "che categoria larga va in
-   quale pasto", niente di più.
-   ========================================================= */
-
-/* Origine di ciascuna categoria larga: alternanza tra proteina ANIMALE, CASEARIA
-   (formaggi+uova) e VEGETALE (legumi) — richiesta esplicita di Enrico, non solo
-   il rispetto dei tetti settimanali per categoria. Mappatura per eliminazione:
-   animale = carne+pesce, vegetale = legumi, tutto il resto (formaggi, uova) è
-   casearia, essendo le uniche due categorie rimaste dei 3 gruppi indicati. */
-const ORIGINE_CATEGORIA = {
-  carne:'animale', pesce:'animale',
-  formaggi:'casearia', uova:'casearia',
-  legumi:'vegetale'
-};
-
-function nuovaGrigliaVuota(giorni){
-  const celle = {};
-  for(const g of giorni){
-    celle[g] = {
-      pranzo: {gruppoProteicoLargo:null, origine:null, stato:'libera'},
-      cena:   {gruppoProteicoLargo:null, origine:null, stato:'libera'}
-    };
-  }
-  return celle;
+async function generaMenuDaConfigSet(scartoSettimane){
+  scartoSettimane=scartoSettimane||0; menuSettimanaScarto=scartoSettimane; mostraVista('menu');
+  const recTab=await getOne('impostazioni','tabellaGiornoCategoria'); const tab=recTab&&recTab.valore?recTab.valore:{};
+  const giorniGen=giorniSettimana(scartoSettimane), giornoCategoria={};
+  giorniGen.forEach((g,i)=>{ const a=tab['giorno_'+i]; if(a&&a.length) giornoCategoria[g]=a.slice(); });
+  const recPrefV=await getOne('impostazioni','setVerdurePreferite'); const nomiV=recPrefV&&recPrefV.valore?recPrefV.valore:[];
+  const varianti=await getAll('varianti'); const verdureVariantIds=nomiV.map(n=>varianti.find(v=>v.nome===n)?.id).filter(Boolean);
+  const recLim=await getOne('impostazioni','setProteineLimitate');
+  const recTempo=await getOne('impostazioni','setPocoTempo'); const t=Object.assign({pranzo:false,cena:false},recTempo&&recTempo.valore?recTempo.valore:{});
+  const preferenze={giornoCategoria,verdureVariantIds,proteineLimitate:recLim&&recLim.valore?recLim.valore:[],pocoTempoPranzo:!!t.pranzo,pocoTempoCena:!!t.cena};
+  await generaPianoSettimana(scartoSettimane,{ignoraCopertura:false,forza:true,preferenze});
+  await renderMenuSettimanale(); await renderPiano();
 }
-
-function contaCategoriaInGriglia(celle, categoria){
-  let n = 0;
-  for(const g in celle){
-    for(const pasto of ['pranzo','cena']){
-      if(celle[g][pasto].gruppoProteicoLargo === categoria) n++;
-    }
-  }
-  return n;
-}
-
-/* Mescola un array sul posto (Fisher-Yates) — usata per variare l'ordine dei
-   giorni candidati ad ogni generazione, come richiesto esplicitamente dal
-   redesign ("scegliere casualmente tra le celle disponibili per garantire
-   varietà tra generazioni diverse"). */
-function mescola(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]] = [a[j],a[i]];
-  }
-  return a;
-}
-
-/* STEP 1 — applica le scelte utente dalla tabella D4 come vincoli fissi
-   (mai sovrascritti dai passi successivi). La tabella non specifica il pasto:
-   ogni categoria marcata per un giorno occupa il primo pasto ancora libero
-   di quel giorno (se l'utente ne ha marcate 2, occupano pranzo E cena). */
-function applicaScelteUtenteGriglia(celle, giorni, tabellaGiorno){
-  for(const g of giorni){
-    const categorie = tabellaGiorno[g] || [];
-    for(const categoria of categorie){
-      const pastoLibero = ['pranzo','cena'].find(p => celle[g][p].gruppoProteicoLargo === null);
-      if(!pastoLibero) continue; // entrambi i pasti del giorno già occupati da scelte utente precedenti
-      celle[g][pastoLibero].gruppoProteicoLargo = categoria;
-      celle[g][pastoLibero].origine = 'utente';
-      celle[g][pastoLibero].stato = 'definita';
-    }
-  }
-  return celle;
-}
-
-/* STEP 2 — budget residuo per categoria, dopo le scelte utente. */
-function calcolaBudgetResiduoGriglia(celle){
-  const budget = {};
-  for(const categoria in FREQUENZE_CONSIGLIATE){
-    const max = FREQUENZE_CONSIGLIATE[categoria].max;
-    const usati = contaCategoriaInGriglia(celle, categoria);
-    budget[categoria] = Math.max(0, max - usati);
-  }
-  return budget;
-}
-
-/* Sequenza cronologica dei 14 pasti della settimana (giorno1-pranzo, giorno1-cena,
-   giorno2-pranzo, ...) — l'alternanza di origine si valuta su QUESTA sequenza. */
-function sequenzaCronologica(giorni){
-  const seq = [];
-  for(const g of giorni) for(const pasto of ['pranzo','cena']) seq.push({giorno:g, pasto});
-  return seq;
-}
-
-function origineDelloSlot(celle, slot){
-  const cat = celle[slot.giorno][slot.pasto].gruppoProteicoLargo;
-  return cat ? ORIGINE_CATEGORIA[cat] : null;
-}
-
-/* STEP 3 — riempimento con ALTERNANZA di origine proteica (animale/casearia/
-   vegetale), non solo rispetto dei tetti per categoria. Scorre i 14 pasti in
-   ordine cronologico; per ogni cella ancora libera sceglie, tra le categorie
-   col budget residuo, quella la cui origine è DIVERSA sia dal pasto immediat.
-   precedente sia da quello successivo (se già assegnato, es. da scelta utente
-   Step1) — con due livelli di fallback via via meno stringenti, per garantire
-   che si riesca sempre a piazzare tutto il budget residuo:
-   1) origine diversa da precedente E successivo
-   2) origine diversa almeno dal precedente
-   3) qualunque categoria col budget rimasto (mai la griglia resta incompleta,
-      la somma dei tetti = 14 = celle totali lo garantisce matematicamente)
-   A parità di candidati dopo il filtro per alternanza, sceglie casualmente,
-   per garantire varietà tra generazioni diverse. */
-function riempimentoConstraintFirstGriglia(celle, giorni, budget){
-  const sequenza = sequenzaCronologica(giorni);
-
-  for(let i=0; i<sequenza.length; i++){
-    const slot = sequenza[i];
-    const cella = celle[slot.giorno][slot.pasto];
-    if(cella.gruppoProteicoLargo) continue; // già fissata dall'utente (Step1)
-
-    const disponibili = Object.keys(budget).filter(c => budget[c] > 0);
-    if(!disponibili.length) continue; // non dovrebbe mai succedere (somma tetti=14)
-
-    const origPrecedente = i>0 ? origineDelloSlot(celle, sequenza[i-1]) : null;
-    const origSuccessivo = i<sequenza.length-1 ? origineDelloSlot(celle, sequenza[i+1]) : null;
-
-    let candidati = disponibili.filter(c =>
-      ORIGINE_CATEGORIA[c]!==origPrecedente && ORIGINE_CATEGORIA[c]!==origSuccessivo);
-    if(!candidati.length){
-      candidati = disponibili.filter(c => ORIGINE_CATEGORIA[c]!==origPrecedente);
-    }
-    if(!candidati.length){
-      candidati = disponibili;
-    }
-
-    // a parità (dopo il filtro per alternanza), scelta casuale tra i candidati —
-    // varietà tra generazioni diverse, come richiesto dal redesign
-    const scelta = mescola(candidati)[0];
-
-    cella.gruppoProteicoLargo = scelta;
-    cella.origine = 'algoritmo';
-    cella.stato = 'libera';
-    budget[scelta]--;
-  }
-  return celle;
-}
-
-/* Punto di ingresso del modulo: costruisce la griglia base completa (Step 1-3). */
-function costruisciGrigliaBase(giorni, tabellaGiorno){
-  let celle = nuovaGrigliaVuota(giorni);
-  celle = applicaScelteUtenteGriglia(celle, giorni, tabellaGiorno||{});
-  const budget = calcolaBudgetResiduoGriglia(celle);
-  celle = riempimentoConstraintFirstGriglia(celle, giorni, budget);
-  return {celle, budgetUsatoInFase3: budget};
-}
-
-/* Validazione Step 5 (parziale — qui solo la parte "griglia completa",
-   il resto di Step 5 riguarda E2 e arriva col sub-lotto 2d). */
-function validaGrigliaBase(celle){
-  let piene = 0; const vuote = [];
-  for(const g in celle){
-    for(const pasto of ['pranzo','cena']){
-      if(celle[g][pasto].gruppoProteicoLargo) piene++;
-      else vuote.push(g+'_'+pasto);
-    }
-  }
-  const conteggiPerCategoria = {};
-  for(const categoria in FREQUENZE_CONSIGLIATE) conteggiPerCategoria[categoria] = contaCategoriaInGriglia(celle, categoria);
-  return {piene, totale: piene+vuote.length, vuote, completa: vuote.length===0, conteggiPerCategoria};
-}
-
-/* =========================================================
-   E1 — ALGORITMO PLANNER: pool verdure per deperibilità (Step 4, H2/H3/H4)
-   -------------------------------------------------------
-   ⚠ IN COSTRUZIONE — modulo isolato, sub-lotto 2b della roadmap. Si occupa
-   SOLO di: 1) determinare il pool di deperibilità ammesso per ogni giorno
-   della settimana (H2), 2) decidere in quali giorni la verdura ricorrente
-   va come contorno PRINCIPALE vs solo come alternativa (D2+H3). La ricerca
-   della ricetta contorno vera e propria resta compito di E2 (sub-lotto 2d):
-   qui non si tocca ricette.json, solo la logica di pianificazione.
-   ========================================================= */
-
-/* H2 — 3 pool per fascia settimanale (indice 0=lunedì, coerente con
-   giorniSettimana() che parte sempre di lunedì). */
-function poolDelGiorno(indiceGiorno){
-  if(indiceGiorno<=2) return 1; // Lun-Mer: tutti i tipi
-  if(indiceGiorno<=4) return 2; // Gio-Ven: media+bassa
-  return 3; // Sab-Dom: solo bassa
-}
-
-const DEPERIBILITA_AMMESSE_PER_POOL = {
-  1: ['alta','media','bassa'],
-  2: ['media','bassa'],
-  3: ['bassa']
-};
-
-/* Scoperta fatta durante H1: ingredienti.json non distingue fresco/surgelato/
-   confezionato (quello vive sulla VARIANTE in inventario, campo "categoria").
-   La regola H1 "verdure surgelate/confezionate -> sempre bassa deperibilità"
-   si applica quindi qui, combinando il dato base con la categoria della
-   variante specifica — mai assumibile dal solo ingredienti.json. */
-function deperibilitaEffettiva(deperibilitaBase, categoriaVariante){
-  if(categoriaVariante==='surgelato' || categoriaVariante==='conf') return 'bassa';
-  return deperibilitaBase;
-}
-
-/* Filtra un elenco di verdure {nome, deperibilitaEffettiva} per il pool dato. */
-function verdurePoolAmmesse(elencoVerdure, pool){
-  const ammesse = DEPERIBILITA_AMMESSE_PER_POOL[pool];
-  return elencoVerdure.filter(v => ammesse.includes(v.deperibilitaEffettiva));
-}
-
-/* D2+H3 — decide, per ogni giorno della settimana, se la verdura ricorrente
-   va come contorno PRINCIPALE (giorno sì/no, E SOLO se la sua deperibilità
-   effettiva rientra nel pool di quel giorno — H3) o resta solo ALTERNATIVA
-   (giorno "no", oppure giorno "sì" ma fuori pool). La scelta del pasto
-   (pranzo/cena) "più idoneo" richiede di sapere cosa contiene già la ricetta
-   di quel pasto: informazione che esiste solo dopo la ricerca ricetta di E2
-   — qui si decide solo IL GIORNO, non il pasto, deliberatamente.
-   Se non c'è verdura ricorrente (null), la funzione salta (D2: "se l'utente
-   NON ha indicato una verdura ricorrente, questo strato viene saltato"). */
-function pianificaVerduraRicorrente(giorni, verduraRicorrente, deperibilitaEffettivaRicorrente){
-  const piano = {};
-  giorni.forEach((g, indice) => {
-    const pool = poolDelGiorno(indice);
-    let principale = false;
-    if(verduraRicorrente){
-      const giornoSi = indice % 2 === 0; // giorno sì/no alternati, si parte da sì
-      const dentroIlPool = DEPERIBILITA_AMMESSE_PER_POOL[pool].includes(deperibilitaEffettivaRicorrente);
-      principale = giornoSi && dentroIlPool;
-    }
-    piano[g] = {pool, verduraRicorrentePrincipale: principale};
-  });
-  return piano;
-}
-
-/* H4 — scelta utente di una verdura deperibile nel weekend: SEMPRE rispettata,
-   mai bloccata, nessun avviso negativo. Questa funzione esiste solo per dare
-   un nome esplicito al principio ("non blocco mai, al massimo un suggerimento
-   leggero") — il chiamante (UI, non ancora in questo sub-lotto) userà questo
-   per decidere se mostrare la nota informativa opzionale, mai per impedire
-   la scelta. */
-function suggerimentoVerduraWeekend(deperibilitaEffettiva, pool){
-  if(pool!==3) return null; // solo nel weekend ha senso il suggerimento
-  if(deperibilitaEffettiva==='bassa') return null; // già coerente col pool, nessuna nota
-  return 'Nota: verdura piuttosto deperibile per il weekend — se la compri il giorno stesso va bene lo stesso.';
-}
-
-/* =========================================================
-   E2 — ALGORITMO SVILUPPO RICETTE (sub-lotto 2d-i: bifurcazione base)
-   -------------------------------------------------------
-   ⚠ IN COSTRUZIONE — modulo isolato, non ancora collegato al motore attivo.
-   Riceve dalla griglia di E1 (2a) SOLO la categoria LARGA per cella
-   (gruppoProteicoLargo: carne/pesce/formaggi/uova/legumi) — qui si risolve
-   nel sottotipo FINE che ricette.json usa davvero (carne_bianca, pesce_
-   azzurro, ecc., vedi SOTTOTIPO_A_GRUPPO/EXTRA_CAP_SOTTOTIPI già esistenti),
-   e si decide quale tra Unico/Separato è la proposta PRINCIPALE di default
-   (l'altra resta comunque generata per intero, D1). F4-F8 (anti-ripetitività,
-   blocco, cross-week, pesce->molluschi/crostacei) arrivano nei sub-lotti
-   2d-ii/iii/iv successivi — qui c'è solo la ricerca base per una singola
-   cella, senza ancora storico né esclusioni.
-   ========================================================= */
-
-/* Sottotipi fini disponibili per una categoria larga, nell'ordine di
-   SOTTOTIPO_A_GRUPPO (nessun ordine implicito, solo enumerazione). */
-function sottotipiDellaCategoria(categoriaLarga){
-  return Object.keys(SOTTOTIPO_A_GRUPPO).filter(s => SOTTOTIPO_A_GRUPPO[s]===categoriaLarga);
-}
-
-/* Risolve la categoria LARGA di una cella (decisa da E1/2a) nel sottotipo FINE
-   da usare per interrogare ricette.json. Rispetta EXTRA_CAP_SOTTOTIPI (i
-   sottotipi "da limitare": carne_rossa/affettati/pesce_grande/pesce_conservato,
-   max 1/settimana ciascuno) leggendo quanti ne sono già stati usati questa
-   settimana (consumiSottotipiSettimana, oggetto {sottotipo: conteggio}).
-   Se TUTTI i sottotipi della categoria sono già al loro tetto extra, ripiega
-   comunque su uno di essi (mai bloccare la generazione — coerente con la
-   filosofia "non vincolante" del redesign): meglio un'eccezione occasionale
-   al tetto "da limitare" che una cella vuota. Scelta casuale tra gli eleggibili
-   per varietà tra generazioni diverse. */
-function risolviSottotipoFine(categoriaLarga, consumiSottotipiSettimana){
-  const candidati = sottotipiDellaCategoria(categoriaLarga);
-  if(!candidati.length) return null; // categoria sconosciuta, non dovrebbe succedere
-
-  const consumi = consumiSottotipiSettimana || {};
-  const entroTetto = candidati.filter(s => {
-    const tetto = EXTRA_CAP_SOTTOTIPI[s];
-    if(tetto===undefined) return true; // nessun tetto extra per questo sottotipo
-    return (consumi[s]||0) < tetto;
-  });
-
-  const pool = entroTetto.length ? entroTetto : candidati; // fallback: mai bloccare
-  return mescola(pool)[0];
-}
-
-/* Quale modalità (Unico/Separato) è la proposta PRINCIPALE di default per un
-   pasto, in base alle due variabili REALI già esistenti nel questionario
-   (pocoTempoPranzo/pocoTempoCena — non l'enum illustrativo facile/medio/
-   difficile del testo E1, che non corrisponde a nulla di realmente
-   implementato). Replica esattamente la logica del motore attuale (riga
-   ~1505-1509, mai cambiata): poco tempo su QUESTO pasto -> unico veloce;
-   poco tempo sull'ALTRO pasto dello stesso giorno (non su questo) -> separato,
-   per bilanciare la giornata; nessun vincolo su nessuno dei due -> casuale
-   50/50, libero arbitrio. Entrambe le modalità restano comunque generate per
-   intero (D1): questa funzione decide solo quale mostrare come principale. */
-/* Poco tempo su QUESTO pasto → 'separato' (il motore modulare
-   comporrà pane/friselle + proteina + contorno, pasto jolly).
-   La vecchia regola 'unico' è stata sostituita: il piatto unico
-   richiede comunque cottura, il pane è già pronto. */
-function sceglieModalitaPrincipale(pocoTempoQuesto, pocoTempoAltro){
-  if(pocoTempoQuesto) return 'separato';
-  if(pocoTempoAltro) return 'separato';
-  return Math.random() < 0.5 ? 'unico' : 'separato';
-}
-
-/* BIFORCAZIONE PER PORTATA (E2, "cosa cercare"). Ricerca pura su un elenco di
-   ricette già fetchato (testabilità, stesso pattern di 2a/2b) — nessuna
-   esclusione/anti-ripetitività qui (arriva con 2d-ii), nessuna logica
-   salvafrigo (2d-v) né F8 pesce->molluschi/crostacei (2d-iv): solo la ricerca
-   base "trovami una ricetta di questo sottotipo fine e questa portata". */
-function cercaCandidatoUnico(tutteRicette, sottotipoFine){
-  const match = tutteRicette.filter(r => r.tipoPortata==='unico' && r.gruppoProteico===sottotipoFine);
-  return match.length ? mescola(match)[0] : null;
-}
-
-/* Ingrediente-verdura principale di un contorno (per riconoscerne la
-   deperibilità e filtrarlo per il pool H2/H3 del giorno, 2b). Un contorno è
-   quasi sempre una singola verdura: si prende il primo ingrediente della
-   lista, RISOLTO A variantId, che risulta di gruppo "verdura". CORREZIONE
-   IMPORTANTE: ricetta.ingredienti nel DB reale (dopo importaListaRicette) è
-   SEMPRE nel formato [{variantId, nomeLibero, quantita}, ...] — MAI coppie
-   [nome,grammi], quelle esistono solo nel file ricette.json grezzo prima
-   dell'import. Ingredienti non risolti (nomeLibero, variantId:null) vengono
-   ignorati: non si può sapere la loro deperibilità senza un collegamento al
-   catalogo. Se non se ne riconosce nessuno (raro, es. un contorno di soli
-   grassi, o tutti nomeLibero), il contorno non viene escluso per errore —
-   meglio includerlo che perderlo per un mancato riconoscimento. */
-function verduraPrincipaleContorno(ricettaContorno, mappaVarianti){
-  for(const ing of (ricettaContorno.ingredienti||[])){
-    if(!ing.variantId) continue; // nomeLibero: nessun collegamento al catalogo, salta
-    const info = mappaVarianti[ing.variantId];
-    if(info && info.gruppo==='verdura') return { variantId: ing.variantId, deperibilita: info.deperibilita||'media' };
-  }
-  return null;
-}
-
-/* Filtra i contorni per il pool di deperibilità del giorno (2b/H2/H3). Usa la
-   deperibilità BASE dell'ingrediente (ingredienti.json) — non quella
-   "effettiva" corretta per fresco/surgelato (quella si applica solo quando si
-   sa QUALE articolo specifico di inventario si sta usando, non a livello di
-   ricettario astratto). Se il filtro non lascia nessun contorno (pool troppo
-   stretto per le ricette disponibili), ripiega su tutti i contorni piuttosto
-   che bloccare la generazione. mappaVarianti: variantId -> {gruppo,
-   deperibilita} — join varianti+ingredienti già fatto dal chiamante (stesso
-   pattern di macronutrienteDominanteSync già esistente nell'app). */
-function contorniAmmessiPerPool(contorni, mappaVarianti, pool){
-  const ammesse = DEPERIBILITA_AMMESSE_PER_POOL[pool];
-  const filtrati = contorni.filter(c=>{
-    const v = verduraPrincipaleContorno(c, mappaVarianti);
-    if(!v) return true; // nessuna verdura riconosciuta: non escludere per errore
-    return ammesse.includes(v.deperibilita);
-  });
-  return filtrati.length ? filtrati : contorni;
-}
-
-/* Costruisce la mappa variantId -> {gruppo, deperibilita}.
-   CORREZIONE IMPORTANTE trovata verificando la pipeline reale: il campo
-   "deperibilita" (H1) vive SOLO nel file ingredienti.json, caricato a runtime
-   in una mappa JS a parte (ingredientiJsonMap, per nome) da
-   caricaIngredientiJson() — NON viene MAI scritto nello store IndexedDB
-   'ingredienti' (quello store ha solo {id,nome,gruppo}, popolato dal seed
-   interno dell'app, un catalogo indipendente e più piccolo). La chiave di
-   collegamento verificata sui dati reali: i nomi ingrediente usati in
-   ricette.json coincidono ESATTAMENTE con le chiavi di ingredienti.json E con
-   varianti.nome (tutti e 113 i nomi usati nelle 267 ricette reali sono
-   chiavi valide in ingredienti.json) — quindi il join corretto è
-   variantId -> varianti.nome -> ingredientiJsonMap[nome].deperibilita,
-   non variantId -> ingredienteId -> store 'ingredienti'. Il "gruppo" invece
-   è disponibile da entrambe le fonti (store base O ingredientiJsonMap):
-   si preferisce ingredientiJsonMap se presente, altrimenti il fallback allo
-   store base per compatibilità con ingredienti non ancora nel file. */
-function costruisciMappaVarianti(varianti, ingredientiBase, ingredientiJsonMap){
-  const ingredientiPerId = {};
-  for(const ing of (ingredientiBase||[])) ingredientiPerId[ing.id] = ing;
-  const mappa = {};
-  for(const v of varianti){
-    const datiJson = ingredientiJsonMap ? ingredientiJsonMap[v.nome] : null;
-    const base = ingredientiPerId[v.ingredienteId];
-    mappa[v.id] = {
-      gruppo: (datiJson && datiJson.gruppo) || (base && base.gruppo),
-      deperibilita: datiJson ? datiJson.deperibilita : undefined
-    };
-  }
-  return mappa;
-}
-
-function cercaCandidatoSeparato(tutteRicette, sottotipoFine, mappaVarianti, pool){
-  const secondi = tutteRicette.filter(r => r.tipoPortata==='secondo' && r.gruppoProteico===sottotipoFine);
-  const primi = tutteRicette.filter(r => r.tipoPortata==='primo');
-  let contorni = tutteRicette.filter(r => r.tipoPortata==='contorno');
-  if(!secondi.length || !primi.length || !contorni.length) return null; // combo incompleta, non proponibile
-  if(mappaVarianti && pool) contorni = contorniAmmessiPerPool(contorni, mappaVarianti, pool);
-  return {
-    primo: mescola(primi)[0],
-    secondo: mescola(secondi)[0],
-    contorno: mescola(contorni)[0]
-  };
-}
-
-/* Punto di ingresso 2d-i: applica sottotipo fine + modalità principale +
-   ricerca candidati a UNA cella. Muta consumiSottotipiSettimana (accumulo
-   progressivo, letto dalla cella successiva della stessa categoria). */
-function sviluppaCellaBase(cella, indiceGiorno, pasto, tutteRicette, mappaVarianti, consumiSottotipiSettimana, preferenze){
-  if(!cella.gruppoProteicoLargo) return cella; // cella non ancora assegnata da E1 (non dovrebbe succedere)
-
-  const sottotipoFine = risolviSottotipoFine(cella.gruppoProteicoLargo, consumiSottotipiSettimana);
-  cella.gruppoProteicoFine = sottotipoFine;
-  consumiSottotipiSettimana[sottotipoFine] = (consumiSottotipiSettimana[sottotipoFine]||0) + 1;
-
-  const pocoTempoQuesto = (pasto==='pranzo' && preferenze.pocoTempoPranzo) || (pasto==='cena' && preferenze.pocoTempoCena);
-  const pocoTempoAltro  = (pasto==='pranzo' && preferenze.pocoTempoCena) || (pasto==='cena' && preferenze.pocoTempoPranzo);
-  cella.modalitaPrincipale = sceglieModalitaPrincipale(pocoTempoQuesto, pocoTempoAltro);
-
-  const pool = poolDelGiorno(indiceGiorno);
-  cella.candidatoUnico = cercaCandidatoUnico(tutteRicette, sottotipoFine);
-  cella.candidatoSeparato = cercaCandidatoSeparato(tutteRicette, sottotipoFine, mappaVarianti, pool);
-  return cella;
-}
-
-/* Applica sviluppaCellaBase a TUTTE le 14 celle della griglia, in ordine
-   cronologico (necessario per accumulare consumiSottotipiSettimana in modo
-   coerente man mano che si procede). */
-function sviluppaGrigliaBase(celle, giorni, tutteRicette, mappaVarianti, preferenze){
-  const consumiSottotipiSettimana = {};
-  const sequenza = sequenzaCronologica(giorni);
-  for(let i=0;i<sequenza.length;i++){
-    const slot = sequenza[i];
-    const indiceGiorno = Math.floor(i/2); // 2 pasti per giorno, stesso ordine di sequenzaCronologica
-    const cella = celle[slot.giorno][slot.pasto];
-    sviluppaCellaBase(cella, indiceGiorno, slot.pasto, tutteRicette, mappaVarianti, consumiSottotipiSettimana, preferenze||{});
-  }
-  return celle;
-}
-
-const NOMI_GIORNI_BREVI = ['Lu','Ma','Me','Gi','Ve','Sa','Do'];
-
-/* =========================================================
-   E2 — ALGORITMO SVILUPPO RICETTE (sub-lotto 2d-ii: F4/F5/F6)
-   -------------------------------------------------------
-   ⚠ IN COSTRUZIONE — modulo isolato, non ancora collegato al motore attivo.
-   Aggiunge anti-ripetitività intra-settimana (F4), storico tra rigenerazioni
-   per slot (F5) e rispetto del blocco piatto (F6) SOPRA le funzioni di
-   ricerca base di 2d-i, senza modificarle (restano valide e testate così
-   come sono, usate da cercaCandidatoUnico/Separato). L'AMBITO dichiarato nel
-   testo si applica qui alla lettera: F4/F5 riguardano SOLO primi/secondi/
-   piatti unici, MAI i contorni (gestiti a parte da D2+pool H, 2b).
-   ========================================================= */
-
-/* Elenco grezzo (nessuna esclusione) di candidati per portata+sottotipo —
-   stesso criterio di cercaCandidatoUnico/Separato ma restituisce la lista
-   intera, base per applicare sopra F4/F5. */
-function candidatiUnicoGrezzi(tutteRicette, sottotipoFine){
-  return tutteRicette.filter(r => r.tipoPortata==='unico' && r.gruppoProteico===sottotipoFine);
-}
-function candidatiPortataGrezzi(tutteRicette, tipoPortata, sottotipoFine){
-  return tutteRicette.filter(r => r.tipoPortata===tipoPortata && r.gruppoProteico===sottotipoFine);
-}
-/* F4 — fallback quando la ricerca esatta (portata+sottotipo) è esaurita:
-   stesso sottotipo fine, QUALUNQUE altra portata che lo porti nel campo
-   gruppoProteico (nel DB reale: solo 'unico' e 'secondo', raramente 'primo'
-   per i legumi) — testuale dal redesign ("stesso gruppoProteico ma tipoPortata
-   diverso"), anche se semanticamente imperfetto (un 'unico' non è proprio
-   equivalente a un 'secondo'): si segue la lettera dell'istruzione. */
-function candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, portataEsclusa){
-  return tutteRicette.filter(r => r.gruppoProteico===sottotipoFine && r.tipoPortata!==portataEsclusa);
-}
-
-/* F4+F5 combinati: esclude prima le ricette già usate in QUESTA settimana
-   (F4, con fallback a portata diversa se la ricerca esatta si esaurisce),
-   poi tra le superstiti esclude quelle nello storico recente di QUESTO slot
-   (F5, con reset parziale — dimentica la più vecchia — se anche lo storico
-   esaurisce tutto). Non forza mai una scelta a caso pur di riempire: se
-   davvero non resta nulla, restituisce carenza:true (F7.c, report completo
-   nel sub-lotto 2d-iii) invece di violare silenziosamente F4. */
-function scegliConAntiRipetitivita(candidatiEsatti, candidatiFallback, usatiSettimana, storicoSlot){
-  const usati = usatiSettimana || new Set();
-  let pool = candidatiEsatti.filter(r => !usati.has(r.nome));
-  let usatoFallbackF4 = false;
-  if(!pool.length){
-    pool = (candidatiFallback||[]).filter(r => !usati.has(r.nome));
-    usatoFallbackF4 = true;
-  }
-  if(!pool.length){
-    return { ricetta:null, storicoAggiornato: storicoSlot||[], carenza:true, usatoFallbackF4 };
-  }
-
-  const storico = storicoSlot || [];
-  let disponibili = pool.filter(r => !storico.includes(r.nome));
-  let storicoBase = storico;
-  if(!disponibili.length){
-    storicoBase = storico.slice(1); // F5: reset parziale, dimentica la proposta più vecchia
-    disponibili = pool.filter(r => !storicoBase.includes(r.nome));
-    if(!disponibili.length) disponibili = pool; // ancora nulla: usa comunque il pool (mai bloccare qui)
-  }
-
-  const scelta = mescola(disponibili)[0];
-  const nuovoStorico = [...storicoBase, scelta.nome].slice(-5); // ultime 5 proposte per slot
-  return { ricetta: scelta, storicoAggiornato: nuovoStorico, carenza:false, usatoFallbackF4 };
-}
-
-/* Ricerca "unico" con F4/F5. storicoSlot: array di nomi ricetta (storico di
-   QUESTO slot per la modalità unico). */
-function cercaUnicoConAntiRipetitivita(tutteRicette, sottotipoFine, usatiSettimana, storicoSlot){
-  const esatti = candidatiUnicoGrezzi(tutteRicette, sottotipoFine);
-  const fallback = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'unico');
-  return scegliConAntiRipetitivita(esatti, fallback, usatiSettimana, storicoSlot);
-}
-
-/* Ricerca "separato" con F4/F5 su primo+secondo (i contorni restano ESCLUSI
-   dall'anti-ripetitività per esplicito AMBITO del testo — possono ripetersi
-   liberamente, gestiti solo dal pool H2/H3 di 2b). */
-function cercaSeparatoConAntiRipetitivita(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, storicoSlotSeparato){
-  const storicoSlot = storicoSlotSeparato || {primo:[], secondo:[]};
-
-  const secondiEsatti = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
-  const fallbackSecondo = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
-  const risultatoSecondo = scegliConAntiRipetitivita(secondiEsatti, fallbackSecondo, usatiSettimana, storicoSlot.secondo);
-  if(!risultatoSecondo.ricetta) return { combo:null, carenza:true };
-
-  const primiTutti = tutteRicette.filter(r=>r.tipoPortata==='primo');
-  const risultatoPrimo = scegliConAntiRipetitivita(primiTutti, [], usatiSettimana, storicoSlot.primo);
-  if(!risultatoPrimo.ricetta) return { combo:null, carenza:true };
-
-  let contorni = tutteRicette.filter(r=>r.tipoPortata==='contorno');
-  if(mappaVarianti && pool) contorni = contorniAmmessiPerPool(contorni, mappaVarianti, pool);
-  const contornoScelto = mescola(contorni)[0]; // niente F4/F5 sui contorni (AMBITO)
-
-  return {
-    combo: { primo: risultatoPrimo.ricetta, secondo: risultatoSecondo.ricetta, contorno: contornoScelto },
-    storicoAggiornato: { primo: risultatoPrimo.storicoAggiornato, secondo: risultatoSecondo.storicoAggiornato },
-    carenza: false
-  };
-}
-
-/* F6 — le celle "bloccate" (lucchetto) mantengono la ricetta fissata e non
-   vengono toccate da nessuna rigenerazione. Ritorna solo gli slot da
-   rigenerare davvero. */
-function slotDaRigenerare(celle, giorni){
-  const risultato = [];
-  for(const g of giorni){
-    for(const pasto of ['pranzo','cena']){
-      if(celle[g][pasto].stato !== 'bloccata') risultato.push({giorno:g, pasto});
-    }
-  }
-  return risultato;
-}
-
-/* Punto di ingresso 2d-ii: come sviluppaGrigliaBase (2d-i) ma con F4 (mai
-   ripetere nella stessa settimana), F5 (storico tra rigenerazioni per slot,
-   passato/restituito da chi chiama — persistenza reale in localStorage/DB è
-   compito del livello di innesto, 2e) e F6 (salta le celle bloccate). */
-function sviluppaGrigliaConAntiRipetitivita(celle, giorni, tutteRicette, mappaVarianti, preferenze, storicoPerSlot){
-  const usatiSettimana = new Set();
-  const storico = storicoPerSlot || {}; // chiave "giorno_pasto" -> {unico:[...], separato:{primo:[...],secondo:[...]}}
-  const nuovoStorico = {};
-  const consumiSottotipiSettimana = {};
-
-  const daRigenerare = slotDaRigenerare(celle, giorni);
-  const chiaviDaRigenerare = new Set(daRigenerare.map(s=>s.giorno+'_'+s.pasto));
-
-  // le celle bloccate contribuiscono comunque a usatiSettimana (F4): la loro
-  // ricetta fissata resta "occupata" e non va riproposta altrove
-  for(const g of giorni){
-    for(const pasto of ['pranzo','cena']){
-      const cella = celle[g][pasto];
-      if(cella.stato==='bloccata' && cella.ricettaFissata){
-        if(cella.ricettaFissata.nome) usatiSettimana.add(cella.ricettaFissata.nome);
-        if(cella.ricettaFissata.secondo) usatiSettimana.add(cella.ricettaFissata.secondo.nome);
-        if(cella.ricettaFissata.primo) usatiSettimana.add(cella.ricettaFissata.primo.nome);
-      }
-    }
-  }
-
-  const sequenza = sequenzaCronologica(giorni);
-  for(let i=0;i<sequenza.length;i++){
-    const slot = sequenza[i];
-    const chiave = slot.giorno+'_'+slot.pasto;
-    const cella = celle[slot.giorno][slot.pasto];
-    if(!chiaviDaRigenerare.has(chiave)) continue; // F6: bloccata, non si tocca
-
-    const indiceGiorno = Math.floor(i/2);
-    if(!cella.gruppoProteicoLargo) continue;
-
-    const sottotipoFine = risolviSottotipoFine(cella.gruppoProteicoLargo, consumiSottotipiSettimana);
-    cella.gruppoProteicoFine = sottotipoFine;
-    consumiSottotipiSettimana[sottotipoFine] = (consumiSottotipiSettimana[sottotipoFine]||0) + 1;
-
-    const pocoTempoQuesto = (slot.pasto==='pranzo' && preferenze.pocoTempoPranzo) || (slot.pasto==='cena' && preferenze.pocoTempoCena);
-    const pocoTempoAltro  = (slot.pasto==='pranzo' && preferenze.pocoTempoCena) || (slot.pasto==='cena' && preferenze.pocoTempoPranzo);
-    cella.modalitaPrincipale = sceglieModalitaPrincipale(pocoTempoQuesto, pocoTempoAltro);
-
-    const pool = poolDelGiorno(indiceGiorno);
-    const storicoSlotPrecedente = storico[chiave] || {unico:[], separato:{primo:[],secondo:[]}};
-
-    const rUnico = cercaUnicoConAntiRipetitivita(tutteRicette, sottotipoFine, usatiSettimana, storicoSlotPrecedente.unico);
-    if(rUnico.ricetta) usatiSettimana.add(rUnico.ricetta.nome);
-    cella.candidatoUnico = rUnico.ricetta;
-    cella.carenzaUnico = rUnico.carenza;
-
-    const rSeparato = cercaSeparatoConAntiRipetitivita(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, storicoSlotPrecedente.separato);
-    if(rSeparato.combo){
-      usatiSettimana.add(rSeparato.combo.primo.nome);
-      usatiSettimana.add(rSeparato.combo.secondo.nome);
-    }
-    cella.candidatoSeparato = rSeparato.combo;
-    cella.carenzaSeparato = rSeparato.carenza;
-
-    nuovoStorico[chiave] = {
-      unico: rUnico.storicoAggiornato,
-      separato: rSeparato.combo ? rSeparato.storicoAggiornato : storicoSlotPrecedente.separato
-    };
-  }
-
-  return { celle, storicoPerSlot: {...storico, ...nuovoStorico} };
-}
-
-/* =========================================================
-   E2 — ALGORITMO SVILUPPO RICETTE (sub-lotto 2d-iii: F7 cross-week)
-   -------------------------------------------------------
-   ⚠ IN COSTRUZIONE — modulo isolato, non ancora collegato al motore attivo.
-   Aggiunge l'anti-ripetitività TRA settimane consecutive sopra lo strato F4/
-   F5/F6 di 2d-ii (funzioni 2d-ii invariate, restano valide). Include anche
-   il simulatore (F7.b) e il report carenze (F7.c) richiesti dal testo.
-
-   CORREZIONE rispetto a 2d-ii: il testo F7 ("LOGICA FALLBACK") dice
-   esplicitamente che, come ultimissima risorsa, si RIPETE una ricetta già
-   usata — non si lascia la cella vuota. In 2d-ii avevo scelto carenza:true
-   con ricetta:null come terminale: corretto qui, il layer cross-week è
-   quello che introduce davvero un'ultima risorsa che ripete (mai 2d-ii da
-   solo, che resta com'era — la ripetizione entra in gioco solo a questo
-   livello, quando anche F7 non trova margine).
-   ========================================================= */
-
-/* F4+F7 (poi eventualmente F5 se richiesto dal chiamante) su un pool di
-   candidati. Ordine ESATTO dal testo: 1) mai in questa settimana E mai la
-   settimana scorsa; 2) mai in questa settimana (la settimana scorsa può
-   ripetersi); 3) ultima risorsa, si ripete anche qualcosa di già usato
-   questa settimana pur di non lasciare la cella vuota (flag ripetizioneForzata). */
-function scegliConAntiRipetitivitaCrossWeek(candidatiEsatti, candidatiFallback, usatiSettimanaCorrente, usatiSettimanaPrecedente, storicoSlot){
-  const usatiCorrente = usatiSettimanaCorrente || new Set();
-  const usatiPrecedente = usatiSettimanaPrecedente || new Set();
-  const fallback = candidatiFallback || [];
-
-  // Step 1: F4 + F7 insieme
-  const t1 = scegliConAntiRipetitivita(
-    candidatiEsatti.filter(r=>!usatiPrecedente.has(r.nome)),
-    fallback.filter(r=>!usatiPrecedente.has(r.nome)),
-    usatiCorrente, storicoSlot
-  );
-  if(t1.ricetta) return {...t1, ripetizioneForzata:false};
-
-  // Step 2: solo F4 (F7 rilassato — si accetta un ripetuto della settimana scorsa)
-  const t2 = scegliConAntiRipetitivita(candidatiEsatti, fallback, usatiCorrente, storicoSlot);
-  if(t2.ricetta) return {...t2, ripetizioneForzata:false};
-
-  // Step 3: ultima risorsa esplicita dal testo — si ripete pur di non lasciare
-  // la cella vuota (mai possibile prima d'ora: 2d-ii si fermava a carenza)
-  const tuttiCandidati = [...candidatiEsatti, ...fallback];
-  if(!tuttiCandidati.length) return { ricetta:null, storicoAggiornato:storicoSlot||[], carenza:true, ripetizioneForzata:false };
-  const scelta = mescola(tuttiCandidati)[0];
-  return { ricetta:scelta, storicoAggiornato:[...(storicoSlot||[]), scelta.nome].slice(-5), carenza:true, ripetizioneForzata:true };
-}
-
-function cercaUnicoCrossWeek(tutteRicette, sottotipoFine, usatiSettimana, usatiSettimanaPrecedente, storicoSlot){
-  const esatti = candidatiUnicoGrezzi(tutteRicette, sottotipoFine);
-  const fallback = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'unico');
-  return scegliConAntiRipetitivitaCrossWeek(esatti, fallback, usatiSettimana, usatiSettimanaPrecedente, storicoSlot);
-}
-
-async function cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiSettimanaPrecedente, storicoSlotSeparato){
-  const storicoSlot = storicoSlotSeparato || {primo:[], secondo:[]};
-
-  // Cerca secondo: prima prova con componenti (base proteica + contorno),
-  // poi fallback alle ricette tradizionali
-  const candidatiSecondoComponente = tutteRicette.filter(r =>
-    r.componente === COMPONENTE_PROTEINA &&
-    r.gruppoProteico === sottotipoFine &&
-    !r.esclusa
-  );
-  let rSecondo, contornoScelto, secondoUsaComponenti = false;
-  if(candidatiSecondoComponente.length){
-    // Modalità componenti: usa scegliComponentiSecondo
-    const esitoComponenti = await scegliComponentiSecondo(sottotipoFine, null, null, null);
-    if(esitoComponenti && esitoComponenti.proteinaId){
-      rSecondo = { ricetta: tutteRicette.find(r=>r.id===esitoComponenti.proteinaId), ripetizioneForzata: false, storicoAggiornato: storicoSlot.secondo };
-      contornoScelto = esitoComponenti.contornoId ? tutteRicette.find(r=>r.id===esitoComponenti.contornoId) : null;
-      secondoUsaComponenti = true;
-    }
-  }
-  if(!rSecondo || !rSecondo.ricetta){
-    // Fallback: ricette tradizionali (comportamento invariato)
-    const secondiEsatti = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
-    const fallbackSecondo = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
-    rSecondo = scegliConAntiRipetitivitaCrossWeek(secondiEsatti, fallbackSecondo, usatiSettimana, usatiSettimanaPrecedente, storicoSlot.secondo);
-  }
-  if(!rSecondo.ricetta) return { combo:null, carenza:true, ripetizioneForzata:false };
-
-  const primiTutti = tutteRicette.filter(r=>r.tipoPortata==='primo');
-  const rPrimo = scegliConAntiRipetitivitaCrossWeek(primiTutti, [], usatiSettimana, usatiSettimanaPrecedente, storicoSlot.primo);
-  if(!rPrimo.ricetta) return { combo:null, carenza:true, ripetizioneForzata:false };
-
-  // Contorno: se la modalità componenti l'ha già scelto, usalo; altrimenti
-  // ricadi sul pool tradizionale H2/H3 (comportamento invariato)
-  if(!secondoUsaComponenti || !contornoScelto){
-    let contorni = tutteRicette.filter(r=>r.tipoPortata==='contorno');
-    if(mappaVarianti && pool) contorni = contorniAmmessiPerPool(contorni, mappaVarianti, pool);
-    contornoScelto = mescola(contorni)[0]; // AMBITO: niente F4/F5/F7 sui contorni
-  }
-
-  return {
-    combo: { primo: rPrimo.ricetta, secondo: rSecondo.ricetta, contorno: contornoScelto },
-    storicoAggiornato: { primo: rPrimo.storicoAggiornato, secondo: rSecondo.storicoAggiornato },
-    carenza: false,
-    ripetizioneForzata: rPrimo.ripetizioneForzata || rSecondo.ripetizioneForzata
-  };
-}
-
-/* F7.a — estrae l'insieme di tutti i nomi ricetta usati in una griglia già
-   sviluppata (primi/secondi/unici — i contorni restano fuori, AMBITO). Serve
-   sia per popolare "usatiSettimana" durante lo sviluppo sia per preparare
-   "usatiSettimanaPrecedente" da passare alla settimana successiva. */
-function estraiUsatiSettimana(celle, giorni){
-  const usati = new Set();
-  for(const g of giorni){
-    for(const pasto of ['pranzo','cena']){
-      const c = celle[g][pasto];
-      if(c.candidatoUnico) usati.add(c.candidatoUnico.nome);
-      if(c.candidatoSeparato){ usati.add(c.candidatoSeparato.primo.nome); usati.add(c.candidatoSeparato.secondo.nome); }
-    }
-  }
-  return usati;
-}
-
-/* Punto di ingresso 2d-iii: come sviluppaGrigliaConAntiRipetitivita (2d-ii)
-   ma con F7 (usatiSettimanaPrecedente, opzionale — settimana 1 di una nuova
-   dieta non ne ha). Ritorna anche l'elenco degli eventi di ripetizione
-   forzata (per il report F7.c) e l'insieme usatiSettimanaCorrente (da passare
-   come "precedente" alla prossima settimana). */
-async function sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, preferenze, storicoPerSlot, usatiSettimanaPrecedente){
-  const usatiSettimana = new Set();
-  const usatiPrecedente = usatiSettimanaPrecedente || new Set();
-  const storico = storicoPerSlot || {};
-  const nuovoStorico = {};
-  const consumiSottotipiSettimana = {};
-  const ripetizioniForzate = [];
-
-  const daRigenerare = slotDaRigenerare(celle, giorni);
-  const chiaviDaRigenerare = new Set(daRigenerare.map(s=>s.giorno+'_'+s.pasto));
-
-  for(const g of giorni){
-    for(const pasto of ['pranzo','cena']){
-      const cella = celle[g][pasto];
-      if(cella.stato==='bloccata' && cella.ricettaFissata){
-        if(cella.ricettaFissata.nome) usatiSettimana.add(cella.ricettaFissata.nome);
-        if(cella.ricettaFissata.secondo) usatiSettimana.add(cella.ricettaFissata.secondo.nome);
-        if(cella.ricettaFissata.primo) usatiSettimana.add(cella.ricettaFissata.primo.nome);
-      }
-    }
-  }
-
-  const sequenza = sequenzaCronologica(giorni);
-  for(let i=0;i<sequenza.length;i++){
-    const slot = sequenza[i];
-    const chiave = slot.giorno+'_'+slot.pasto;
-    const cella = celle[slot.giorno][slot.pasto];
-    if(!chiaviDaRigenerare.has(chiave)) continue; // F6
-
-    const indiceGiorno = Math.floor(i/2);
-    if(!cella.gruppoProteicoLargo) continue;
-
-    const sottotipoFine = risolviSottotipoFine(cella.gruppoProteicoLargo, consumiSottotipiSettimana);
-    cella.gruppoProteicoFine = sottotipoFine;
-    consumiSottotipiSettimana[sottotipoFine] = (consumiSottotipiSettimana[sottotipoFine]||0) + 1;
-
-    const pocoTempoQuesto = (slot.pasto==='pranzo' && preferenze.pocoTempoPranzo) || (slot.pasto==='cena' && preferenze.pocoTempoCena);
-    const pocoTempoAltro  = (slot.pasto==='pranzo' && preferenze.pocoTempoCena) || (slot.pasto==='cena' && preferenze.pocoTempoPranzo);
-    cella.modalitaPrincipale = sceglieModalitaPrincipale(pocoTempoQuesto, pocoTempoAltro);
-
-    const pool = poolDelGiorno(indiceGiorno);
-    const storicoSlotPrecedente = storico[chiave] || {unico:[], separato:{primo:[],secondo:[]}};
-    // F5: per la modalità "unico" usa lo storico unico; per "separato" usa
-    // lo storico separato (primo/secondo). Se lo storico è vuoto, la scelta
-    // è puramente casuale (prima generazione in assoluto).
-    const storicoPerModalitaUnico = storicoSlotPrecedente.unico || [];
-    const rUnico = cercaUnicoCrossWeek(tutteRicette, sottotipoFine, usatiSettimana, usatiPrecedente, storicoPerModalitaUnico);
-    if(rUnico.ricetta) usatiSettimana.add(rUnico.ricetta.nome);
-    cella.candidatoUnico = rUnico.ricetta;
-    cella.carenzaUnico = rUnico.carenza;
-    if(rUnico.ripetizioneForzata) ripetizioniForzate.push({sottotipo:sottotipoFine, portata:'unico', giorno:slot.giorno, pasto:slot.pasto});
-
-    const storicoPerModalitaSeparato = storicoSlotPrecedente.separato || {primo:[],secondo:[]};
-    // E3: per il primo del pasto separato, prova il motore primi
-    let rSeparato = null;
-    const esitoE3Cross = await motorePrimi(slot.giorno, slot.pasto, null);
-    if(esitoE3Cross && esitoE3Cross.ricetta){
-      // Componi il pasto separato: primo da E3, secondo e contorno da E2
-      const secondiEsattiE3 = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
-      const fallbackSecondoE3 = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
-      const rSecondoE3 = scegliConAntiRipetitivitaCrossWeek(secondiEsattiE3, fallbackSecondoE3, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato.separato || []);
-      let contorniE3 = tutteRicette.filter(r=>r.tipoPortata==='contorno');
-      if(mappaVarianti && pool) contorniE3 = contorniAmmessiPerPool(contorniE3, mappaVarianti, pool);
-      const contornoE3 = mescola(contorniE3)[0];
-      if(rSecondoE3.ricetta && contornoE3){
-        rSeparato = {
-          combo: { primo: esitoE3Cross.ricetta, secondo: rSecondoE3.ricetta, contorno: contornoE3 },
-          storicoAggiornato: { primo: [], secondo: rSecondoE3.storicoAggiornato },
-          carenza: false,
-          ripetizioneForzata: rSecondoE3.ripetizioneForzata
-        };
-        usatiSettimana.add(esitoE3Cross.ricetta.nome);
-      }
-    }
-    if(!rSeparato){
-      rSeparato = await cercaSeparatoCrossWeek(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiPrecedente, storicoPerModalitaSeparato);
-    }
-    if(rSeparato && rSeparato.combo){
-      // Se non già aggiunto sopra (caso E3), aggiungi ora
-      if(!usatiSettimana.has(rSeparato.combo.primo.nome)) usatiSettimana.add(rSeparato.combo.primo.nome);
-      if(!usatiSettimana.has(rSeparato.combo.secondo.nome)) usatiSettimana.add(rSeparato.combo.secondo.nome);
-    }
-    cella.candidatoSeparato = rSeparato ? rSeparato.combo : null;
-    cella.carenzaSeparato = rSeparato ? rSeparato.carenza : true;
-    if(rSeparato && rSeparato.ripetizioneForzata) ripetizioniForzate.push({sottotipo:sottotipoFine, portata:'separato', giorno:slot.giorno, pasto:slot.pasto});
-
-    nuovoStorico[chiave] = {
-      unico: rUnico.storicoAggiornato,
-      separato: (rSeparato && rSeparato.combo) ? rSeparato.storicoAggiornato : storicoSlotPrecedente.separato
-    };
-  }
-
-  return {
-    celle,
-    storicoPerSlot: {...storico, ...nuovoStorico},
-    usatiSettimanaCorrente: usatiSettimana,
-    ripetizioniForzate
-  };
-}
-
-/* F7.b — Simulatore: genera N settimane consecutive con tutte le regole
-   (F1-F3 già garantite dalla griglia 2a, F4/F5/F6 da 2d-ii, F7 qui sopra),
-   passando gli "usati" di ogni settimana come "precedente" alla successiva.
-   Nessuna persistenza reale: puramente in-memory, per verificare la
-   capienza del DB ricette. */
-async function simulaSettimane(numeroSettimane, tutteRicette, mappaVarianti, preferenze, dataIniziale){
-  const risultati = [];
-  let usatiPrecedente = new Set();
-  const base = dataIniziale ? new Date(dataIniziale) : new Date('2026-08-17');
-
-  for(let w=0; w<numeroSettimane; w++){
-    const giorni = [];
-    for(let d=0; d<7; d++){
-      const dt = new Date(base.getTime());
-      dt.setDate(dt.getDate() + w*7 + d);
-      giorni.push(dt.toISOString().slice(0,10));
-    }
-    const {celle} = costruisciGrigliaBase(giorni, {});
-    const esito = await sviluppaGrigliaCrossWeek(celle, giorni, tutteRicette, mappaVarianti, preferenze||{}, {}, usatiPrecedente);
-    risultati.push({ settimana: w+1, ripetizioniForzate: esito.ripetizioniForzate });
-    usatiPrecedente = esito.usatiSettimanaCorrente;
-  }
-  return risultati;
-}
-
-/* F7.c — Report carenze: aggrega gli eventi di ripetizione forzata per
-   settore (sottotipo × portata), come richiesto dal testo ("pesce_azzurro ×
-   primo → solo 1 ricetta disponibile, ripetizione forzata dopo 1 settimana"). */
-function generaReportCarenze(risultatiSimulazione){
-  const conteggi = {};
-  for(const settimana of risultatiSimulazione){
-    for(const evento of settimana.ripetizioniForzate){
-      const chiave = evento.sottotipo+'|'+evento.portata;
-      conteggi[chiave] = (conteggi[chiave]||0) + 1;
-    }
-  }
-  return Object.entries(conteggi)
-    .map(([chiave, occorrenze])=>{
-      const [sottotipo, portata] = chiave.split('|');
-      return {
-        sottotipo, portata, occorrenze,
-        messaggio: `${sottotipo} × ${portata} → ripetizione forzata ${occorrenze} volt${occorrenze===1?'a':'e'} su ${risultatiSimulazione.length} settimane simulate`
-      };
-    })
-    .sort((a,b)=>b.occorrenze-a.occorrenze);
-}
-
-/* =========================================================
-   E2 — ALGORITMO SVILUPPO RICETTE (sub-lotto 2d-iv: F8 + proposte multiple)
-   -------------------------------------------------------
-   ⚠ IN COSTRUZIONE — modulo isolato, non ancora collegato al motore attivo.
-   GAP TROVATO rileggendo il testo prima di iniziare: D1 richiede SEMPRE
-   "1 proposta principale + 2 alternative" per ogni cella/modalità, ma 2d-i/
-   ii/iii hanno finora prodotto UNA sola ricetta per modalità (candidatoUnico/
-   candidatoSeparato singoli). Questo sub-lotto costruisce quindi PRIMA la
-   generazione generica di 3 proposte distinte (usando ripetutamente lo
-   stesso motore F4+F5+F7 di 2d-ii/iii, cella per cella), POI applica F8
-   sopra: per le celle di pesce, le 2 alternative (mai la principale) vengono
-   sempre dal pool molluschi+crostacei, con fallback al sottotipo normale
-   solo se quel pool non basta a riempirle entrambe.
-   ========================================================= */
-
-/* Genera fino a N ricette distinte da un pool esatto+fallback, riusando
-   scegliConAntiRipetitivitaCrossWeek in sequenza e aggiornando via via
-   l'insieme "usati" locale (così la 2a alternativa non ripete la 1a). Se il
-   pool si esaurisce prima di N, restituisce comunque quello che ha trovato
-   (mai bloccare l'intera cella per colpa delle sole alternative). */
-function generaProposteMultiple(numero, candidatiEsatti, candidatiFallback, usatiSettimana, usatiSettimanaPrecedente, storicoSlot){
-  const scelte = [];
-  const usatiLocale = new Set(usatiSettimana);
-  let storico = storicoSlot;
-  for(let i=0;i<numero;i++){
-    const esattiResidui = candidatiEsatti.filter(r => !scelte.some(s=>s.nome===r.nome));
-    const fallbackResidui = (candidatiFallback||[]).filter(r => !scelte.some(s=>s.nome===r.nome));
-    const r = scegliConAntiRipetitivitaCrossWeek(esattiResidui, fallbackResidui, usatiLocale, usatiSettimanaPrecedente, storico);
-    if(!r.ricetta) break;
-    scelte.push(r.ricetta);
-    usatiLocale.add(r.ricetta.nome);
-    storico = r.storicoAggiornato;
-  }
-  return scelte;
-}
-
-/* F8 — pool "molluschi+crostacei" per una data portata (unico o secondo),
-   usato SOLO per le alternative di una cella di pesce. */
-const GRUPPI_MOLLUSCHI_CROSTACEI = ['molluschi','crostacei'];
-function isPesce(sottotipoFine){
-  return !!sottotipoFine && sottotipoFine.indexOf('pesce_')===0;
-}
-function candidatiMolluschiCrostacei(tutteRicette, tipoPortata){
-  return tutteRicette.filter(r => r.tipoPortata===tipoPortata && GRUPPI_MOLLUSCHI_CROSTACEI.includes(r.gruppoProteico));
-}
-
-/* Modalità UNICO: 1 principale + 2 alternative. Se il sottotipo è pesce,
-   le alternative vengono dal pool molluschi+crostacei (F8); se quel pool
-   non basta per riempire le 2, il resto arriva dal fallback normale (stesso
-   sottotipo della principale) — "fallback normale" del testo F8. */
-function generaProposteUnico(tutteRicette, sottotipoFine, usatiSettimana, usatiSettimanaPrecedente, storicoSlot){
-  const esattiPrincipale = candidatiUnicoGrezzi(tutteRicette, sottotipoFine);
-  const fallbackPrincipale = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'unico');
-  const rPrincipale = scegliConAntiRipetitivitaCrossWeek(esattiPrincipale, fallbackPrincipale, usatiSettimana, usatiSettimanaPrecedente, storicoSlot);
-  if(!rPrincipale.ricetta) return { principale:null, alternative:[], carenza:true, usatoF8:false };
-
-  const usatiConPrincipale = new Set(usatiSettimana);
-  usatiConPrincipale.add(rPrincipale.ricetta.nome);
-
-  const pesce = isPesce(sottotipoFine);
-  const poolEsatte = pesce
-    ? candidatiMolluschiCrostacei(tutteRicette, 'unico')
-    : esattiPrincipale.filter(r=>r.nome!==rPrincipale.ricetta.nome);
-  const poolFallback = pesce
-    ? esattiPrincipale.filter(r=>r.nome!==rPrincipale.ricetta.nome) // F8: fallback al sottotipo normale
-    : fallbackPrincipale;
-
-  const alternative = generaProposteMultiple(2, poolEsatte, poolFallback, usatiConPrincipale, usatiSettimanaPrecedente, rPrincipale.storicoAggiornato);
-
-  return { principale: rPrincipale.ricetta, alternative, carenza:false, usatoF8:pesce };
-}
-
-/* Modalità SEPARATO: 1 principale + 2 alternative, ognuna primo+secondo+
-   contorno completi. F8 si applica SOLO al "secondo" (unico componente che
-   porta davvero il gruppoProteico) delle alternative: se pesce, i secondi
-   alternativi vengono da molluschi+crostacei. Primo e contorno delle
-   alternative restano ricerche "normali" (il contorno resta comunque fuori
-   da ogni anti-ripetitività, AMBITO F4/F5/F7). */
-function generaProposteSeparato(tutteRicette, sottotipoFine, mappaVarianti, pool, usatiSettimana, usatiSettimanaPrecedente, storicoSlotSeparato){
-  const storicoSlot = storicoSlotSeparato || {primo:[], secondo:[]};
-
-  const secondiEsatti = candidatiPortataGrezzi(tutteRicette, 'secondo', sottotipoFine);
-  const fallbackSecondo = candidatiStessoSottotipoAltraPortata(tutteRicette, sottotipoFine, 'secondo');
-  const rSecondoPrincipale = scegliConAntiRipetitivitaCrossWeek(secondiEsatti, fallbackSecondo, usatiSettimana, usatiSettimanaPrecedente, storicoSlot.secondo);
-  if(!rSecondoPrincipale.ricetta) return { principale:null, alternative:[], carenza:true, usatoF8:false };
-
-  const primiTutti = tutteRicette.filter(r=>r.tipoPortata==='primo');
-  const rPrimoPrincipale = scegliConAntiRipetitivitaCrossWeek(primiTutti, [], usatiSettimana, usatiSettimanaPrecedente, storicoSlot.primo);
-  if(!rPrimoPrincipale.ricetta) return { principale:null, alternative:[], carenza:true, usatoF8:false };
-
-  let contorniPool = tutteRicette.filter(r=>r.tipoPortata==='contorno');
-  if(mappaVarianti && pool) contorniPool = contorniAmmessiPerPool(contorniPool, mappaVarianti, pool);
-  const contornoPrincipale = mescola(contorniPool)[0];
-  const principale = { primo: rPrimoPrincipale.ricetta, secondo: rSecondoPrincipale.ricetta, contorno: contornoPrincipale };
-
-  const usatiConPrincipale = new Set(usatiSettimana);
-  usatiConPrincipale.add(rPrimoPrincipale.ricetta.nome);
-  usatiConPrincipale.add(rSecondoPrincipale.ricetta.nome);
-
-  const pesce = isPesce(sottotipoFine);
-  const poolSecondoEsatte = pesce
-    ? candidatiMolluschiCrostacei(tutteRicette, 'secondo')
-    : secondiEsatti.filter(r=>r.nome!==rSecondoPrincipale.ricetta.nome);
-  const poolSecondoFallback = pesce
-    ? secondiEsatti.filter(r=>r.nome!==rSecondoPrincipale.ricetta.nome) // F8: fallback al sottotipo normale
-    : fallbackSecondo;
-
-  const secondiAlternative = generaProposteMultiple(2, poolSecondoEsatte, poolSecondoFallback, usatiConPrincipale, usatiSettimanaPrecedente, rSecondoPrincipale.storicoAggiornato);
-
-  const primiDisponibili = primiTutti.filter(r=>r.nome!==rPrimoPrincipale.ricetta.nome);
-  const alternative = secondiAlternative.map(secondo=>{
-    const usatiTemp = new Set(usatiConPrincipale);
-    usatiTemp.add(secondo.nome);
-    const rPrimoAlt = scegliConAntiRipetitivitaCrossWeek(primiDisponibili, [], usatiTemp, usatiSettimanaPrecedente, rPrimoPrincipale.storicoAggiornato);
-    const contornoAlt = mescola(contorniPool)[0]; // AMBITO: contorni fuori da F4/F5/F7
-    return { primo: rPrimoAlt.ricetta || rPrimoPrincipale.ricetta, secondo, contorno: contornoAlt };
-  });
-
-  return { principale, alternative, carenza:false, usatoF8:pesce };
-}
-
-async function renderQuestionarioMenu(){
-  const varianti = await getAll('varianti');
-  const ingredientiBase = await getAll('ingredienti');
-  const verdureStagione = verdureDiStagione(new Date());
-  const rapide = verdureStagione.slice(0,3);
-
-  const elRapide = document.getElementById('questVerduraRapide');
-  elRapide.innerHTML = rapide.map(v=>
-    `<button data-quest-verdura="${v}" class="${statoQuestionario.verdure.includes(v)?'active':''}">${v}</button>`
-  ).join('') +
-  `<button data-quest-verdura-no="1" class="${statoQuestionario.verdure.length===0 && !statoQuestionario.verdureManualiAperto?'active':''}">No grazie</button>` +
-  `<button data-quest-verdura-manuale="1" class="${statoQuestionario.verdureManualiAperto?'active':''}">Seleziona manualmente...</button>`;
-
-  const elManuale = document.getElementById('questVerduraManuale');
-  if(statoQuestionario.verdureManualiAperto){
-    elManuale.innerHTML = verdureStagione.map(v=>
-      `<button data-quest-verdura="${v}" class="${statoQuestionario.verdure.includes(v)?'active':''}">${v}</button>`
-    ).join('');
-  } else {
-    elManuale.innerHTML = '';
-  }
-  // H4: nota informativa se la verdura scelta è molto deperibile
-  const notaVerduraEl = document.getElementById('questVerduraNota');
-  if(notaVerduraEl){
-    const verdureDeperibili = statoQuestionario.verdure.filter(nome=>{
-      const dati = ingredientiJsonMap[nome];
-      return dati && dati.deperibilita === 'alta';
-    });
-    if(verdureDeperibili.length){
-      notaVerduraEl.innerHTML = `<div class="meta" style="margin-top:6px;color:var(--text-dim);font-size:0.72rem;">💡 ${verdureDeperibili.join(', ')} ${verdureDeperibili.length===1?'è molto deperibile':'sono molto deperibili'}: nel weekend potrebbe non essere proposta come contorno principale (il motore privilegia verdure che durano di più). La scelta resta comunque valida.</div>`;
-    } else {
-      notaVerduraEl.innerHTML = '';
-    }
-  }
-
-  document.getElementById('questProteineLimitate').innerHTML = CATEGORIE_PROTEICHE_QUESTIONARIO.map(c=>
-    `<button data-quest-proteina="${c.chiave}" class="${statoQuestionario.proteineLimitate.includes(c.chiave)?'active':''}">${c.label}</button>`
-  ).join('');
-
-  document.getElementById('questTempo').innerHTML = `
-    <button data-quest-tempo="pranzo" class="${statoQuestionario.pocoTempoPranzo?'active':''}">Poco tempo a pranzo</button>
-    <button data-quest-tempo="cena" class="${statoQuestionario.pocoTempoCena?'active':''}">Poco tempo a cena</button>
-    <button data-quest-tempo="nessuno" class="${(!statoQuestionario.pocoTempoPranzo && !statoQuestionario.pocoTempoCena)?'active':''}">Ho tempo</button>
-  `;
-
-  // Sezione colazione ricorrente: composizione + griglia giorni.
-  // NOTA: colazionePrefGiorni/colazionePrefComponenti sono già stati
-  // precaricati da DB in apriQuestionarioMenu() — qui NON li si rilegge
-  // più ad ogni render, altrimenti ogni toggle veniva subito annullato
-  // dal render chiamato subito dopo dal listener stesso.
-  if(!statoQuestionario.colazionePrefComponenti || !Object.keys(statoQuestionario.colazionePrefComponenti).length){
-    statoQuestionario.colazionePrefComponenti = {};
-    for(const gr of COLAZIONE_GRUPPI){
-      const opz = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
-      statoQuestionario.colazionePrefComponenti[gr.chiave] = gr.obbligatorio && opz.length ? opz[0].id : null;
-    }
-  }
-  const elColazionePref = document.getElementById('questColazionePreferita');
-  if(elColazionePref){
-    // Griglia Lun-Dom per i giorni
-    const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th>${g}</th>`).join('');
-    const celleCol = NOMI_GIORNI_BREVI.map((g, idx)=>{
-      const attivo = statoQuestionario.colazionePrefGiorni.includes(idx);
-      return `<td class="cella"><button data-quest-colpref-giorno="${idx}" class="${attivo?'active':''}"></button></td>`;
-    }).join('');
-    // 4 gruppi componibili
-    let htmlGruppiCol = '';
-    for(const gr of COLAZIONE_GRUPPI){
-      const opzioni = varianti.filter(v=>v.colazioneGruppo===gr.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
-      const selezionatoId = statoQuestionario.colazionePrefComponenti[gr.chiave];
-      htmlGruppiCol += `<label style="margin-top:8px;">${gr.label}${gr.obbligatorio?'':' (facoltativo)'}</label>
-        <div class="colazione-gruppo-slide" data-quest-gruppo="${gr.chiave}">
-          ${gr.obbligatorio ? '' : `<button data-quest-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`}
-          ${opzioni.map(o=>`<button data-quest-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
-        </div>`;
-    }
-    elColazionePref.innerHTML = `
-      <div class="meta" style="margin-bottom:6px;font-weight:700;">Colazione ripetuta settimanale</div>
-      <div class="meta" style="margin-bottom:8px;">Componi la colazione che vuoi ripetere e seleziona i giorni in cui applicarla. I giorni non selezionati avranno una colazione completamente diversa.</div>
-      ${htmlGruppiCol}
-      <label style="margin-top:12px;">Giorni in cui applicare questa colazione:</label>
-      <table class="tabella-giorno">
-        <tr><th class="col-label"></th>${rigaIntestazioneCol}</tr>
-        <tr><td class="riga-label">Colazione</td>${celleCol}</tr>
-      </table>
-      <div class="row" style="margin-top:10px;gap:8px;">
-        <button class="small" data-quest-colpref-reset="1">✕ Reset colazione preferita</button>
-      </div>`;
-    // Listener: selezione componenti gruppi
-    elColazionePref.querySelectorAll('[data-quest-gruppo]').forEach(slide=>{
-      slide.querySelectorAll('[data-quest-col-opt]').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const gruppo = slide.dataset.questGruppo;
-          const idScelto = btn.dataset.questColOpt || null;
-          slide.querySelectorAll('[data-quest-col-opt]').forEach(x=>x.classList.remove('active'));
-          btn.classList.add('active');
-          statoQuestionario.colazionePrefComponenti[gruppo] = idScelto;
-        });
-      });
-    });
-    // Listener: reset
-    elColazionePref.querySelector('[data-quest-colpref-reset]')?.addEventListener('click', async ()=>{
-      statoQuestionario.colazionePrefComponenti = {};
-      statoQuestionario.colazionePrefGiorni = [];
-      await delKey('impostazioni', 'colazionePreferita');
-      await delKey('impostazioni', 'colazionePreferitaGiorni');
-      renderQuestionarioMenu();
-    });
-  }
-
-  const giorniTabella = giorniSettimana(statoQuestionario.scartoTarget);
-  const rigaIntestazione = giorniTabella.map(g=>{
-    const d = new Date(g+'T00:00:00');
-    return `<th>${NOMI_GIORNI_BREVI[(d.getDay()+6)%7]}<br>${d.getDate()}</th>`;
-  }).join('');
-  const righeTabella = CATEGORIE_PROTEICHE_QUESTIONARIO.map(c=>{
-    // una volta raggiunto il tetto settimanale della categoria (dallo stesso limite
-    // che il PDF già definisce altrove), le celle ancora vuote di quella riga si
-    // disattivano — non ha senso lasciar scegliere più occasioni di quante la dieta
-    // ne preveda in tutta la settimana
-    const tetto = FREQUENZE_CONSIGLIATE[c.chiave]?.max ?? 99;
-    const giaScelte = giorniTabella.filter(g=>(statoQuestionario.tabellaGiorno[g]||[]).includes(c.chiave)).length;
-    const rigaAlTetto = giaScelte >= tetto;
-    const celle = giorniTabella.map(g=>{
-      const selezionato = (statoQuestionario.tabellaGiorno[g]||[]).includes(c.chiave);
-      const alTetto = rigaAlTetto && !selezionato;
-      // F1: vincolo HARD max 2 fonti proteiche diverse per lo stesso giorno —
-      // una volta raggiunte 2 selezioni sul giorno, le celle libere restanti si disattivano
-      const giornoAlTetto = (statoQuestionario.tabellaGiorno[g]||[]).length >= 2;
-      const disattivata = giornoAlTetto && !selezionato;
-      return `<td class="cella"><button data-quest-cella="${g}|${c.chiave}" class="${selezionato?'active':''} ${(alTetto||disattivata)?'al-tetto':''}" ${disattivata?'disabled':''}></button></td>`;
-    }).join('');
-    return `<tr><td class="riga-label">${c.label}${rigaAlTetto?` (max ${tetto})`:''}</td>${celle}</tr>`;
-  }).join('');
-  document.getElementById('questTabellaGiorno').innerHTML = `
-    <table class="tabella-giorno">
-      <tr><th class="col-label"></th>${rigaIntestazione}</tr>
-      ${righeTabella}
-    </table>
-  `;
-  document.getElementById('modalQuestionarioMenu').querySelectorAll('[data-quest-cella]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const [giorno, categoria] = b.dataset.questCella.split('|');
-      statoQuestionario.tabellaGiorno[giorno] = statoQuestionario.tabellaGiorno[giorno] || [];
-      const arr = statoQuestionario.tabellaGiorno[giorno];
-      const idx = arr.indexOf(categoria);
-
-      if(idx>=0){
-        arr.splice(idx,1); // deselezione: sempre permessa, nessun vincolo la blocca
-        renderQuestionarioMenu();
-        return;
-      }
-
-      // F2 — vincolo HARD: tetto settimanale della categoria già raggiunto
-      const tetto = FREQUENZE_CONSIGLIATE[categoria]?.max ?? 99;
-      const giaScelteSettimana = giorniSettimana(statoQuestionario.scartoTarget)
-        .filter(gg => (statoQuestionario.tabellaGiorno[gg]||[]).includes(categoria)).length;
-      if(giaScelteSettimana >= tetto){
-        const label = CATEGORIE_PROTEICHE_QUESTIONARIO.find(c=>c.chiave===categoria)?.label || categoria;
-        avviso(`Hai già selezionato ${tetto} caselle per la categoria "${label}" questa settimana. Rimuovi una delle scelte precedenti per aggiungerne una nuova.`);
-        return;
-      }
-
-      // F1 — vincolo HARD: max 2 fonti proteiche diverse per lo stesso giorno
-      if(arr.length >= 2){
-        avviso('Hai già selezionato 2 fonti proteiche per questo giorno. Rimuovi una delle scelte precedenti per aggiungerne una nuova.');
-        return;
-      }
-
-      arr.push(categoria);
-      renderQuestionarioMenu();
-    });
-  });
-
-  document.getElementById('modalQuestionarioMenu').querySelectorAll('[data-quest-verdura]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const v = b.dataset.questVerdura;
-      const i = statoQuestionario.verdure.indexOf(v);
-      if(i>=0) statoQuestionario.verdure.splice(i,1); else statoQuestionario.verdure.push(v);
-      renderQuestionarioMenu();
-    });
-  });
-  document.getElementById('modalQuestionarioMenu').querySelector('[data-quest-verdura-no]')?.addEventListener('click', ()=>{
-    statoQuestionario.verdure = [];
-    statoQuestionario.verdureManualiAperto = false;
-    renderQuestionarioMenu();
-  });
-  document.getElementById('modalQuestionarioMenu').querySelector('[data-quest-verdura-manuale]')?.addEventListener('click', ()=>{
-    statoQuestionario.verdureManualiAperto = !statoQuestionario.verdureManualiAperto;
-    renderQuestionarioMenu();
-  });
-  document.getElementById('modalQuestionarioMenu').querySelectorAll('[data-quest-proteina]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const c = b.dataset.questProteina;
-      const i = statoQuestionario.proteineLimitate.indexOf(c);
-      if(i>=0) statoQuestionario.proteineLimitate.splice(i,1); else statoQuestionario.proteineLimitate.push(c);
-      renderQuestionarioMenu();
-    });
-  });
-  document.getElementById('modalQuestionarioMenu').querySelectorAll('[data-quest-tempo]').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      const t = b.dataset.questTempo;
-      if(t==='nessuno'){ statoQuestionario.pocoTempoPranzo = false; statoQuestionario.pocoTempoCena = false; }
-      else if(t==='pranzo'){ statoQuestionario.pocoTempoPranzo = !statoQuestionario.pocoTempoPranzo; }
-      else if(t==='cena'){ statoQuestionario.pocoTempoCena = !statoQuestionario.pocoTempoCena; }
-      renderQuestionarioMenu();
-    });
-  });
-}
-
-/* Event delegation per le caselle colazione preferita nel questionario.
-   Aggiunto UNA SOLA VOLTA qui, fuori da renderQuestionarioMenu(), così
-   funziona anche dopo il re-render dell'HTML. */
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest('[data-quest-colpref-giorno]');
-  if(!btn) return;
-  const idx = parseInt(btn.dataset.questColprefGiorno);
-  const pos = statoQuestionario.colazionePrefGiorni.indexOf(idx);
-  if(pos>=0) statoQuestionario.colazionePrefGiorni.splice(pos,1);
-  else statoQuestionario.colazionePrefGiorni.push(idx);
-  renderQuestionarioMenu();
-});
-
-async function apriQuestionarioMenu(){
-  const scartoTarget = document.getElementById('view-menu').classList.contains('active') ? menuSettimanaScarto : 0;
-  // Precarica la colazione preferita e i giorni esistenti per persistenza
-  const colazionePrefEsistente = await getOne('impostazioni', 'colazionePreferita');
-  const colazionePrefGiorniEsistenti = await getOne('impostazioni', 'colazionePreferitaGiorni');
-  statoQuestionario = {
-    verdure:[], proteineLimitate:[], pocoTempoPranzo:false, pocoTempoCena:false,
-    verdureManualiAperto:false, tabellaGiorno:{}, scartoTarget,
-    colazionePrefGiorni: colazionePrefGiorniEsistenti ? colazionePrefGiorniEsistenti.valore : [],
-    colazionePrefComponenti: colazionePrefEsistente ? Object.assign({}, colazionePrefEsistente.valore) : {}
-  };
-  await renderQuestionarioMenu();
-  document.getElementById('modalQuestionarioMenu').classList.remove('hidden');
-}
-
-document.getElementById('btnQuestionarioGenera').addEventListener('click', async ()=>{
-  const varianti = await getAll('varianti');
-  const preferenze = {
-    verdureVariantIds: statoQuestionario.verdure.map(nome=>{
-      const v = varianti.find(x=>x.nome===nome);
-      return v ? v.id : null;
-    }).filter(Boolean),
-    proteineLimitate: statoQuestionario.proteineLimitate.slice(),
-    pocoTempoPranzo: statoQuestionario.pocoTempoPranzo,
-    pocoTempoCena: statoQuestionario.pocoTempoCena,
-    giornoCategoria: statoQuestionario.tabellaGiorno
-  };
-  document.getElementById('modalQuestionarioMenu').classList.add('hidden');
-  // Salva la colazione preferita e i giorni in cui applicarla
-  const haComponentiColazione = statoQuestionario.colazionePrefComponenti && Object.values(statoQuestionario.colazionePrefComponenti).some(v=>v);
-  if(haComponentiColazione){
-    await put('impostazioni', {chiave:'colazionePreferita', valore: statoQuestionario.colazionePrefComponenti});
-  } else {
-    await delKey('impostazioni', 'colazionePreferita');
-  }
-  await put('impostazioni', {chiave:'colazionePreferitaGiorni', valore: statoQuestionario.colazionePrefGiorni});
-  await flussoGeneraMenuConScelte(statoQuestionario.scartoTarget, preferenze);
-  renderPiano();
-  renderMenuSettimanale();
-});
-
-
-document.getElementById('btnGeneraMenuQui').addEventListener('click', ()=>{
-  apriQuestionarioMenu();
-});
-document.getElementById('btnVaiSpesaQui').addEventListener('click', ()=>{
-  mostraVista('spesa');
-  calcolaListaSpesa(menuSettimanaScarto);
-});
 
 document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)=>{
   if(e.target.open){
@@ -8289,14 +6939,16 @@ async function renderMenuSettimanale(){
       // non aprendo il pasto — bloccare deve essere possibile da lì direttamente.
       // Non si applica alla colazione (non ha un blocco F6, è composta a gruppi).
       let iconaBloccoMenu = '';
+      let iconaStatoMenu = '';
       if(pasto !== 'colazione'){
         const voceBlocco = await getOne('piano', g+'_'+pasto);
         const bloccataOra = !!(voceBlocco && voceBlocco.bloccata);
+        if(voceBlocco && voceBlocco.consumato) iconaStatoMenu = ' <span style="color:var(--accent);font-weight:700;">✓</span>';
         iconaBloccoMenu = `<button data-blocca-menu="${g}|${pasto}" title="${bloccataOra?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
           style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;flex-shrink:0;margin-left:auto;">${iconaBloccoGlifo(bloccataOra)}</button>`;
       }
       html += `<details class="pasto-sub-panel" data-menu-giorno="${g}" data-menu-pasto="${pasto}">
-        <summary><span style="flex:1;">${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}</span>${iconaBloccoMenu}</summary>
+        <summary><span style="flex:1;">${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}${iconaStatoMenu}</span>${iconaBloccoMenu}</summary>
         <div class="contenuto" id="menuBloc_${g}_${pasto}"></div>
       </details>`;
     }
@@ -8334,6 +6986,17 @@ async function renderMenuSettimanale(){
       });
     });
   }
+  renderMenuFooter();
+}
+
+function renderMenuFooter(){
+  document.getElementById('menuFooter')?.remove();
+  const menu=document.getElementById('menuSettimanale'); if(!menu) return;
+  const f=document.createElement('div'); f.id='menuFooter'; f.style.cssText='margin-top:16px;display:flex;flex-direction:column;gap:8px;';
+  f.innerHTML='<button class="primary" id="btnGeneraMenuFooter">Genera menù da Set</button><button class="secondary" id="btnVaiSpesaFooter">🛒 Vai alla spesa</button>';
+  menu.parentNode.insertBefore(f,menu.nextSibling);
+  f.querySelector('#btnGeneraMenuFooter').addEventListener('click',()=>generaMenuDaConfigSet(menuSettimanaScarto));
+  f.querySelector('#btnVaiSpesaFooter').addEventListener('click',()=>{ mostraVista('spesa'); calcolaListaSpesa(menuSettimanaScarto); });
 }
 
 document.getElementById('btnSalvaRicettaManuale').addEventListener('click', async ()=>{
@@ -9041,7 +7704,7 @@ async function controllaPromemoriaGiovedi(){
   document.getElementById('btnGiovediSi').onclick = async ()=>{
     document.getElementById('modalGiovedi').classList.add('hidden');
     await segnaChiesto();
-    await flussoGeneraMenuConScelte(1);
+    await generaMenuDaConfigSet(1);
     await avviso('Menù della settimana prossima generato. Vai su Menù settimanale → "Settimana prossima" → "Vai alla spesa" per la lista aggiornata.');
   };
   document.getElementById('btnGiovediNo').onclick = async ()=>{

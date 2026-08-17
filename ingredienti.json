@@ -1,5 +1,5 @@
 {
-  "versione": 2,
+  "versione": 3,
   "ingredienti": {
     "Riso Arborio": {
       "kcal": 332,
@@ -808,6 +808,158 @@
       "grassi": 1.5,
       "gruppo": "grassi",
       "deperibilita": "bassa"
+    },
+    "Zucca": {
+      "kcal": 29,
+      "proteine": 1.1,
+      "carboidrati": 3.5,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "media"
+    },
+    "Asparagi": {
+      "kcal": 33,
+      "proteine": 3.6,
+      "carboidrati": 3.3,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta"
+    },
+    "Carciofi": {
+      "kcal": 33,
+      "proteine": 2.7,
+      "carboidrati": 2.5,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media"
+    },
+    "Gnocchi di patate": {
+      "kcal": 164,
+      "proteine": 3.7,
+      "carboidrati": 35.2,
+      "grassi": 0.7,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa"
+    },
+    "Merluzzo": {
+      "kcal": 71,
+      "proteine": 17.0,
+      "carboidrati": 0,
+      "grassi": 0.3,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Sardine fresche": {
+      "kcal": 225,
+      "proteine": 20.3,
+      "carboidrati": 1.5,
+      "grassi": 15.4,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Alici fresche": {
+      "kcal": 131,
+      "proteine": 20.4,
+      "carboidrati": 0,
+      "grassi": 4.8,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Pesce spada": {
+      "kcal": 144,
+      "proteine": 19.7,
+      "carboidrati": 0,
+      "grassi": 6.7,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Tonno fresco": {
+      "kcal": 159,
+      "proteine": 21.5,
+      "carboidrati": 0.1,
+      "grassi": 8.1,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Totani": {
+      "kcal": 82,
+      "proteine": 15.6,
+      "carboidrati": 1.0,
+      "grassi": 1.4,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Seppie": {
+      "kcal": 72,
+      "proteine": 14.0,
+      "carboidrati": 0.7,
+      "grassi": 1.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Cozze": {
+      "kcal": 84,
+      "proteine": 11.7,
+      "carboidrati": 3.4,
+      "grassi": 2.7,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Speck": {
+      "kcal": 299,
+      "proteine": 30.7,
+      "carboidrati": 1.2,
+      "grassi": 19.1,
+      "gruppo": "proteine",
+      "deperibilita": "alta"
+    },
+    "Cime di rapa": {
+      "kcal": 32,
+      "proteine": 3.2,
+      "carboidrati": 2.0,
+      "grassi": 0.4,
+      "gruppo": "verdura",
+      "deperibilita": "alta"
+    },
+    "Peperoncino": {
+      "kcal": 40,
+      "proteine": 1.9,
+      "carboidrati": 8.8,
+      "grassi": 0.4,
+      "gruppo": "verdura",
+      "deperibilita": "media"
+    },
+    "Aglio": {
+      "kcal": 149,
+      "proteine": 6.4,
+      "carboidrati": 33.1,
+      "grassi": 0.5,
+      "gruppo": "verdura",
+      "deperibilita": "bassa"
+    },
+    "Finocchi": {
+      "kcal": 31,
+      "proteine": 1.2,
+      "carboidrati": 7.3,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media"
+    },
+    "Sgombro in scatola": {
+      "kcal": 200,
+      "proteine": 25.0,
+      "carboidrati": 0,
+      "grassi": 11.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa"
+    },
+    "Prezzemolo": {
+      "kcal": 36,
+      "proteine": 3.0,
+      "carboidrati": 6.3,
+      "grassi": 0.8,
+      "gruppo": "verdura",
+      "deperibilita": "alta"
     }
   }
 }
