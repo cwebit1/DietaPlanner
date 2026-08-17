@@ -2859,7 +2859,11 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
       // MOTORE NUOVO E2: se la griglia E2 ha prodotto un candidato per questa
       // cella, usalo direttamente invece di chiamare proponiRicettaAutomatica
       const cellaE2 = esitoE2.celle[g] ? esitoE2.celle[g][pasto] : null;
-      if(cellaE2 && !voce.ricettaId && !voce.primoId){
+      /* Se pocoTempoQuesto è attivo, NON usare il candidato E2:
+         il pasto deve essere composto dal motore modulare con
+         carboidrato jolly (pane/friselle) in garantisciRicettaSlot.
+         E2 produrrebbe ricette tradizionali, scavalcando il jolly. */
+      if(cellaE2 && !voce.ricettaId && !voce.primoId && !pocoTempoQuesto){
         // La cella non ha ancora una ricetta assegnata: usa il candidato E2
         const modalitaPrincipale = cellaE2.modalitaPrincipale || modoScelto;
         if(modalitaPrincipale === 'unico' && cellaE2.candidatoUnico){
@@ -4996,16 +5000,24 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
         ? risolviSottotipoFine(preferenze.categoriaLargaE1, {})
         : null;
       const esitoModulare = await componiPastoModulare(gruppoProteico, giorno, null, null, null, preferenze.forzaCarboidratoJolly);
-      if(esitoModulare && esitoModulare.primoSugoId && esitoModulare.proteinaId){
-        // Componi il primo modulare (carboidrato + sugo)
-        const templateSugo = await getOne('ricette', esitoModulare.primoSugoId);
-        if(templateSugo){
-          const primoComposto = await componiPrimoModulare(templateSugo, esitoModulare.primoCarboidrato);
-          if(primoComposto){
-            voce.primoId = primoComposto.id;
-            voce.primoCereale = esitoModulare.primoCarboidrato;
-            await segnaRicettaUsata(primoComposto.id);
+      if(esitoModulare && esitoModulare.proteinaId && (esitoModulare.primoSugoId || esitoModulare.primoEJolly)){
+        if(esitoModulare.primoSugoId){
+          // Componi il primo modulare tradizionale (carboidrato + sugo)
+          const templateSugo = await getOne('ricette', esitoModulare.primoSugoId);
+          if(templateSugo){
+            const primoComposto = await componiPrimoModulare(templateSugo, esitoModulare.primoCarboidrato);
+            if(primoComposto){
+              voce.primoId = primoComposto.id;
+              voce.primoCereale = esitoModulare.primoCarboidrato;
+              await segnaRicettaUsata(primoComposto.id);
+            }
           }
+        } else if(esitoModulare.primoEJolly){
+          // Jolly (pane/friselle/ecc.): nessuna ricetta primo composta — il
+          // carboidrato jolly sostituisce concettualmente il primo, si
+          // abbina direttamente a proteina+contorno senza sugo.
+          voce.primoId = null;
+          voce.primoCereale = esitoModulare.primoCarboidrato;
         }
         voce.secondoId = esitoModulare.proteinaId;
         voce.contornoId = esitoModulare.contornoId;
@@ -6744,8 +6756,12 @@ function risolviSottotipoFine(categoriaLarga, consumiSottotipiSettimana){
    per bilanciare la giornata; nessun vincolo su nessuno dei due -> casuale
    50/50, libero arbitrio. Entrambe le modalità restano comunque generate per
    intero (D1): questa funzione decide solo quale mostrare come principale. */
+/* Poco tempo su QUESTO pasto → 'separato' (il motore modulare
+   comporrà pane/friselle + proteina + contorno, pasto jolly).
+   La vecchia regola 'unico' è stata sostituita: il piatto unico
+   richiede comunque cottura, il pane è già pronto. */
 function sceglieModalitaPrincipale(pocoTempoQuesto, pocoTempoAltro){
-  if(pocoTempoQuesto) return 'unico';
+  if(pocoTempoQuesto) return 'separato';
   if(pocoTempoAltro) return 'separato';
   return Math.random() < 0.5 ? 'unico' : 'separato';
 }
