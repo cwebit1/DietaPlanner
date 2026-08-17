@@ -751,7 +751,17 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
       <option value="contorno">Contorno</option>
       <option value="spuntino">Spuntino</option>
       <option value="colazione">Colazione</option>
+      <option value="modulare">🧩 Modulo componibile</option>
     </select>
+    <div id="nrSezioneModulare" style="display:none;">
+      <label>Sotto-categoria del modulo</label>
+      <div class="tabgroup" id="nrSottoCategoriaMod" style="flex-wrap:wrap;">
+        <button data-nr-sottocat="sugo" class="active">🍅 Sugo (primo)</button>
+        <button data-nr-sottocat="proteina">🍗 Proteina (secondo)</button>
+        <button data-nr-sottocat="contorno">🥦 Contorno (secondo)</button>
+      </div>
+      <div id="nrModulareNota" class="meta" style="margin-top:4px;">Inserisci solo gli ingredienti del condimento/sugo, senza il cereale. Il motore aggiungerà il cereale automaticamente.</div>
+    </div>
     <div id="nrSezioneCereale" style="display:none;">
       <label>Tipo di cereale</label>
       <div class="tabgroup" id="nrCerealeTab" style="flex-wrap:wrap;">
@@ -1765,6 +1775,196 @@ const CONDIMENTO_CARB = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.carb;   // 0
    ========================================================= */
 const COMPONENTE_PROTEINA = 'proteina';
 const COMPONENTE_CONTORNO = 'contorno';
+
+/* =========================================================
+   CATEGORIA MODULARE — i "mattoncini Lego" del pasto
+   -------------------------------------------------------
+   Le ricette modulari vivono nello store 'ricette' con
+   tipoPortata: 'modulare' e una sottoCategoriaModulare.
+   Non toccano le ricette esistenti: sono componenti NUOVI
+   che il motore compone a runtime per creare pasti completi.
+
+   SottoCategorie:
+   - 'sugo'       → condimento del primo (es. "al pomodoro")
+   - 'proteina'   → base proteica del secondo (es. "petto di pollo")
+   - 'contorno'   → contorno del secondo (es. "zucchine grigliate")
+
+   La cottura NON è una ricetta: è un modificatore di nome
+   generato dal motore in base al tipo di proteina.
+   ========================================================= */
+const TIPO_PORTATA_MODULARE = 'modulare';
+const SOTTOCATEGORIE_MODULARI = ['sugo', 'proteina', 'contorno'];
+
+/* Cotture standard per tipo di proteina.
+   Il motore sceglie una cottura da questa lista quando compone
+   il nome del secondo. La cottura NON cambia la nutrizione:
+   è solo un'etichetta che rende il nome invitante. */
+const COTTURE_STANDARD = {
+  carne_bianca:           ['alla piastra', 'al forno', 'al limone', 'al vapore', 'in padella'],
+  carne_rossa:            ['alla griglia', 'al forno', 'in umido', 'ai ferri'],
+  affettati:              ['al naturale', 'alla piastra'],
+  pesce_bianco:           ['al forno', 'al vapore', 'al cartoccio', 'al limone', 'alla griglia'],
+  pesce_azzurro:          ['alla griglia', 'al forno', 'in umido'],
+  pesce_grande:           ['alla griglia', 'al forno', 'in padella'],
+  pesce_conservato:       ['al naturale', 'condito'],
+  molluschi:              ['in padella', 'al vapore', 'alla griglia'],
+  crostacei:              ['alla griglia', 'in padella', 'al vapore'],
+  uova:                   ['alla coque', 'strapazzate', 'in frittata', 'sode'],
+  legumi:                 ['in umido', 'in insalata', 'conditi'],
+  formaggio_fresco:       ['al naturale', 'alla piastra', 'a fette'],
+  formaggio_stagionato:   ['a scaglie', 'alla piastra', 'grattugiato']
+};
+
+/* Compone il nome del PRIMO modulare in modo invitante.
+   Es. cereale='riso', sugo='al pomodoro' → "Riso al pomodoro"
+   Es. cereale='farro', sugo='alle verdure' → "Farro alle verdure" */
+function componiNomePrimoModulare(cerealeLabel, nomeSugo){
+  if(!cerealeLabel || !nomeSugo) return cerealeLabel || nomeSugo || '';
+  return cerealeLabel.charAt(0).toUpperCase() + cerealeLabel.slice(1) + ' ' + nomeSugo;
+}
+
+/* Compone il nome del SECONDO modulare in modo invitante.
+   Es. proteina='petto di pollo', cottura='alla piastra',
+       contorno='zucchine grigliate'
+       → "Pollo alla piastra con zucchine grigliate"
+
+   Se il nome della proteina contiene "di" o "alla", viene
+   semplificato per il nome composto (es. "Petto di pollo" → "Pollo").
+   Il contorno viene aggiunto con "con". */
+function componiNomeSecondoModulare(nomeProteina, cottura, nomeContorno){
+  if(!nomeProteina) return '';
+  // Semplifica il nome della proteina per il titolo
+  let nomeBreve = nomeProteina;
+  // Rimuovi prefissi comuni per rendere il nome più invitante
+  const prefissiDaRimuovere = ['petto di ', 'filetto di ', 'trancio di ', 'fettina di '];
+  for(const pref of prefissiDaRimuovere){
+    if(nomeBreve.toLowerCase().startsWith(pref)){
+      nomeBreve = nomeBreve.slice(pref.length);
+      break;
+    }
+  }
+  nomeBreve = nomeBreve.charAt(0).toUpperCase() + nomeBreve.slice(1);
+  let nome = nomeBreve;
+  if(cottura){
+    nome += ' ' + cottura;
+  }
+  if(nomeContorno){
+    nome += ' con ' + nomeContorno;
+  }
+  return nome;
+}
+
+/* Cerca tutti i componenti modulari di una sottoCategoria specifica.
+   Ritorna un array di ricette con tipoPortata='modulare' e la
+   sottoCategoriaModulare richiesta, escluse quelle marcate 'esclusa'. */
+async function cercaComponentiModulari(sottoCategoria){
+  const tutteRicette = await getAll('ricette');
+  return tutteRicette.filter(r =>
+    r.tipoPortata === TIPO_PORTATA_MODULARE &&
+    r.sottoCategoriaModulare === sottoCategoria &&
+    !r.esclusa
+  );
+}
+
+/* Cerca i componenti modulari proteici compatibili con un
+   gruppoProteico specifico (sottotipo fine). */
+async function cercaProteineModulari(gruppoProteico){
+  const tutteRicette = await getAll('ricette');
+  return tutteRicette.filter(r =>
+    r.tipoPortata === TIPO_PORTATA_MODULARE &&
+    r.sottoCategoriaModulare === 'proteina' &&
+    r.gruppoProteico === gruppoProteico &&
+    !r.esclusa
+  );
+}
+
+/* Scegli una cottura casuale dalla lista COTTURE_STANDARD
+   per il gruppoProteico dato. Se il gruppo non ha cotture
+   definite, ritorna null. */
+function scegliCotturaStandard(gruppoProteico){
+  const cotture = COTTURE_STANDARD[gruppoProteico];
+  if(!cotture || !cotture.length) return null;
+  return cotture[Math.floor(Math.random() * cotture.length)];
+}
+
+/* Compone un pasto modulare completo (5 variabili):
+   1. Carboidrato del primo (dal motore E3 / config utente)
+   2. Sugo del primo (dal pool di sughi modulari)
+   3. Proteina del secondo (dalla categoria larga di E1)
+   4. Cottura (dalle COTTURE_STANDARD)
+   5. Contorno (dal pool di contorni modulari)
+
+   Ritorna un oggetto con:
+   - primoNome, primoCereale, primoSugoId
+   - secondoNome, proteinaId, cottura, contornoId
+   - nutrizione (somma dei componenti + condimento)
+   oppure null se mancano componenti. */
+async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId){
+  // 1. Cereale del primo (usa il motore E3 esistente)
+  const cerealeScelto = await scegliCerealePrimo();
+  const cerealeConfig = CEREALI_PRIMI[cerealeScelto];
+  if(!cerealeConfig) return null;
+  // 2. Sugo modulare
+  const sughiDisponibili = await cercaComponentiModulari('sugo');
+  let sugoScelto = null;
+  if(sughiDisponibili.length){
+    // Anti-ripetizione: escludi sughi già usati questa settimana
+    const giorniSett = giorniSettimana(0);
+    const sughiUsatiSettimana = new Set();
+    const tuttoIlPiano = await getAll('piano');
+    const tutteLeRicette = await getAll('ricette');
+    for(const g of giorniSett){
+      for(const pasto of ['pranzo','cena']){
+        const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
+        if(!voce || voce.modo!=='multi') continue;
+        if(voce.primoSugoId) sughiUsatiSettimana.add(voce.primoSugoId);
+      }
+    }
+    const sughiNonUsati = sughiDisponibili.filter(s =>
+      !sughiUsatiSettimana.has(s.id) && s.id !== escludiSugoId
+    );
+    const poolSughi = sughiNonUsati.length ? sughiNonUsati : sughiDisponibili;
+    sugoScelto = mescola(poolSughi)[0];
+  }
+  // 3. Proteina modulare
+  let proteinaScelta = null;
+  if(gruppoProteico){
+    const proteineDisponibili = await cercaProteineModulari(gruppoProteico);
+    if(proteineDisponibili.length){
+      const proteineFiltrate = proteineDisponibili.filter(p => p.id !== escludiProteinaId);
+      const poolProteine = proteineFiltrate.length ? proteineFiltrate : proteineDisponibili;
+      proteinaScelta = mescola(poolProteine)[0];
+    }
+  }
+  // 4. Cottura
+  const cottura = proteinaScelta ? scegliCotturaStandard(proteinaScelta.gruppoProteico) : null;
+  // 5. Contorno modulare
+  let contornoScelto = null;
+  const contorniDisponibili = await cercaComponentiModulari('contorno');
+  if(contorniDisponibili.length){
+    const contorniFiltrati = contorniDisponibili.filter(c => c.id !== escludiContornoId);
+    const poolContorni = contorniFiltrati.length ? contorniFiltrati : contorniDisponibili;
+    contornoScelto = mescola(poolContorni)[0];
+  }
+  // Componi i nomi
+  const primoNome = componiNomePrimoModulare(cerealeConfig.label, sugoScelto ? sugoScelto.nome : '');
+  const secondoNome = componiNomeSecondoModulare(
+    proteinaScelta ? proteinaScelta.nome : '',
+    cottura,
+    contornoScelto ? contornoScelto.nome : ''
+  );
+  return {
+    primoNome,
+    primoCereale: cerealeScelto,
+    primoSugoId: sugoScelto ? sugoScelto.id : null,
+    secondoNome,
+    proteinaId: proteinaScelta ? proteinaScelta.id : null,
+    proteinaGruppo: proteinaScelta ? proteinaScelta.gruppoProteico : null,
+    cottura,
+    contornoId: contornoScelto ? contornoScelto.id : null,
+    nutrizione: null // calcolata dal motore al momento della conferma
+  };
+}
 
 /* =========================================================
    CONFIGURAZIONE CARBOIDRATI — CASELLE
@@ -5622,6 +5822,31 @@ document.getElementById('nrTipoPortata').addEventListener('change', (e)=>{
     document.getElementById('nrIngredienti').placeholder = 'pomodoro fresco, 100\nolio extravergine oliva, 10\nbasilico fresco, 5';
   }
 });
+// Listener: tipo portata modulare → mostra/nascondi sezione modulare
+document.getElementById('nrTipoPortata').addEventListener('change', (e)=>{
+  const isModulare = e.target.value === 'modulare';
+  document.getElementById('nrSezioneModulare').style.display = isModulare ? 'block' : 'none';
+  if(!isModulare){
+    document.getElementById('nrSezioneCereale').style.display = 'none';
+  }
+});
+// Listener: selezione sotto-categoria modulare
+let nrSottoCategoriaScelta = 'sugo';
+document.getElementById('nrSottoCategoriaMod')?.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-nr-sottocat]');
+  if(!btn) return;
+  nrSottoCategoriaScelta = btn.dataset.nrSottocat;
+  document.querySelectorAll('#nrSottoCategoriaMod button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const notaEl = document.getElementById('nrModulareNota');
+  if(nrSottoCategoriaScelta === 'sugo'){
+    notaEl.textContent = 'Inserisci solo gli ingredienti del condimento/sugo, senza il cereale. Il motore aggiungerà il cereale automaticamente.';
+  } else if(nrSottoCategoriaScelta === 'proteina'){
+    notaEl.textContent = 'Inserisci solo l\'ingrediente proteico principale. Il motore aggiungerà la cottura e il contorno automaticamente.';
+  } else if(nrSottoCategoriaScelta === 'contorno'){
+    notaEl.textContent = 'Inserisci solo l\'ingrediente vegetale principale. Il motore lo abbinerà alla proteina automaticamente.';
+  }
+});
 // Listener: selezione cereale
 let nrCerealeScelto = 'libero';
 document.getElementById('nrCerealeTab').addEventListener('click', (e)=>{
@@ -5692,8 +5917,8 @@ async function renderRicette(){
   // il riepilogo di questo filtro deve rispondere solo "quante ricette ha questo tipo",
   // non "quante ne restano incrociando gli altri filtri attivi"
   const tutteLeRicette = await getAll('ricette');
-  const tipi = [['tutte','Tutte'],['unico','Unico'],['primo','Primo'],['secondo','Secondo'],['contorno','Contorno'],['colazione','Colazione'],['spuntino','Spuntino']];
-  const nomeTipoDescrittivo = {tutte:'', unico:'Piatto Unico', primo:'Primo', secondo:'Secondo', contorno:'Contorno', colazione:'Colazione', spuntino:'Spuntino'};
+  const tipi = [['tutte','Tutte'],['unico','Unico'],['primo','Primo'],['secondo','Secondo'],['contorno','Contorno'],['colazione','Colazione'],['spuntino','Spuntino'],['modulare','🧩 Modulari']];
+  const nomeTipoDescrittivo = {tutte:'', unico:'Piatto Unico', primo:'Primo', secondo:'Secondo', contorno:'Contorno', colazione:'Colazione', spuntino:'Spuntino', modulare:'Modulo componibile'};
   document.getElementById('filtroTipoRicette').innerHTML = tipi.map(([v,l])=>
     `<button data-t="${v}" class="${filtroTipoRicette===v?'active':''}">${l}</button>`
   ).join('');
@@ -5774,6 +5999,7 @@ async function renderRicette(){
       ${r.piattoSpeciale?'<span class="pill dim" style="margin-left:6px;">🍽 piatto speciale</span>':''}
       ${r.esclusa?'<span class="pill dim" style="margin-left:6px;">🚫 esclusa</span>':''}
       ${r.componente==='proteina'?'<span class="pill dim" style="margin-left:6px;background:#c0792a;">Base proteica</span>':r.componente==='contorno'?'<span class="pill dim" style="margin-left:6px;background:#5e9c63;">Contorno</span>':''}
+      ${r.tipoPortata==='modulare' ? '<span class="pill dim" style="margin-left:6px;background:#6a4ac2;">🧩 ' + (r.sottoCategoriaModulare||'') + '</span>' : ''}
       ${r.preparazione?`<span class="pill dim" style="margin-left:6px;">${r.preparazione}</span>`:''}
       <div class="row" style="margin-top:6px;${r.esclusa?'opacity:0.55;':''}"><h3 style="flex:1;">${r.nome}</h3>${stellaBtn(r)}</div>
       <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
@@ -7449,6 +7675,7 @@ document.getElementById('btnSalvaRicettaManuale').addEventListener('click', asyn
   const tipoPortataScelto = document.getElementById('nrTipoPortata').value;
   const cerealeLibero = (tipoPortataScelto==='primo' && nrCerealeScelto==='libero');
   const tipoCereale = (tipoPortataScelto==='primo' && nrCerealeScelto!=='libero') ? nrCerealeScelto : null;
+  const sottoCategoriaModulare = (tipoPortataScelto === 'modulare') ? nrSottoCategoriaScelta : null;
   const fasciaCalcolata = (tipoPortataScelto==='primo' && cerealeLibero)
     ? fasciaAutomaticaPrimo(ingredienti)
     : fascia;
@@ -7457,6 +7684,7 @@ document.getElementById('btnSalvaRicettaManuale').addEventListener('click', asyn
     tipoPortata: tipoPortataScelto,
     cerealeLibero, tipoCereale,
     componente: null, preparazione: null,
+    sottoCategoriaModulare: sottoCategoriaModulare,
     fonte:'libreria', ingredienti, procedimento
   };
 
@@ -7483,6 +7711,10 @@ document.getElementById('btnSalvaRicettaManuale').addEventListener('click', asyn
 
   await put('ricette', nuovaRicetta);
 
+  document.getElementById('nrSezioneModulare').style.display = 'none';
+  nrSottoCategoriaScelta = 'sugo';
+  document.querySelectorAll('#nrSottoCategoriaMod button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#nrSottoCategoriaMod [data-nr-sottocat="sugo"]')?.classList.add('active');
   document.getElementById('nrNome').value='';
   document.getElementById('nrIngredienti').value='';
   document.getElementById('nrProcedimento').value='';
