@@ -540,6 +540,33 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <div id="zoneInventario"></div>
 </section>
 
+<!-- ============ VIEW: SET ============ -->
+<section class="view" id="view-set">
+  <div class="meta" style="margin-bottom:12px;">
+    Qui configuri il piano dieta settimanale: carboidrati, proteine,
+    verdure, verdure ricorrenti e colazione preferita.
+    Tutto viene salvato con un unico pulsante in fondo alla pagina.
+  </div>
+
+  <!-- BATCH 2: qui andrà il setting carboidrati -->
+  <div id="setCarboidrati"></div>
+
+  <!-- BATCH 3: qui andrà il setting fonti proteiche -->
+  <div id="setProteine"></div>
+
+  <!-- BATCH 4: qui andrà il set verdure -->
+  <div id="setVerdure"></div>
+
+  <!-- BATCH 5: qui andrà il modulo verdure ricorrenti -->
+  <div id="setVerdureRicorrenti"></div>
+
+  <!-- BATCH 6: qui andrà il modulo colazione preferita -->
+  <div id="setColazione"></div>
+
+  <!-- BATCH 7: qui andrà il pulsante Salva unico -->
+  <div id="setSalvaUnico" style="margin-top:20px;"></div>
+</section>
+
 <!-- ============ VIEW: IMPOSTAZIONI ============ -->
 <section class="view" id="view-impostazioni">
   <div class="card">
@@ -605,6 +632,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <button data-view="ricette"><span class="ic">📖</span>Ricette</button>
   <button data-view="spesa"><span class="ic">🛒</span>Spesa</button>
   <button data-view="inventario"><span class="ic">🧊</span>Inventario</button>
+  <button data-view="set"><span class="ic">🎛</span>Set</button>
   <button data-view="impostazioni"><span class="ic">⚙</span>Ecco</button>
 </nav>
 
@@ -2668,11 +2696,30 @@ function mostraVista(nome){
   if(nome==='menu') renderMenuSettimanale();
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
+  if(nome==='set') renderSet();
   if(nome==='impostazioni'){ renderInfoVersioniRemote(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); }
 }
 document.querySelectorAll('nav.tabbar button').forEach(btn=>{
   btn.addEventListener('click', ()=> mostraVista(btn.dataset.view));
 });
+
+/* =========================================================
+   VIEW: SET — configurazione piano dieta settimanale
+   -------------------------------------------------------
+   Questa view conterrà tutti i moduli di configurazione:
+   carboidrati, proteine, verdure, verdure ricorrenti, colazione.
+   Ogni modulo viene popolato nei batch successivi.
+   Per ora renderSet è un placeholder che verrà espanso.
+   ========================================================= */
+async function renderSet(){
+  // BATCH 2: popolerà #setCarboidrati
+  // BATCH 3: popolerà #setProteine
+  // BATCH 4: popolerà #setVerdure
+  // BATCH 5: popolerà #setVerdureRicorrenti
+  // BATCH 6: popolerà #setColazione
+  // BATCH 7: popolerà #setSalvaUnico
+}
+
 document.querySelectorAll('[data-close]').forEach(btn=>{
   btn.addEventListener('click', async ()=>{
     document.getElementById(btn.dataset.close).classList.add('hidden');
