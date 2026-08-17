@@ -549,7 +549,24 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 
   <!-- BATCH 2: qui andrà il setting carboidrati -->
-  <div id="setCarboidrati"></div>
+  <div id="setCarboidrati">
+    <div class="card">
+      <h3 style="margin-bottom:10px;">🍝 Configurazione carboidrati settimanali</h3>
+      <div class="meta" style="margin-bottom:12px;">
+        Clicca le caselle per indicare quanti pasti a settimana vuoi dedicare a ciascun tipo di carboidrato.
+        Ogni carboidrato ha 6 caselle disponibili. Il totale deve essere esattamente 14 (7 giorni × 2 pasti).
+        Per gli alimenti a frequenza limitata, puoi cliccare al massimo 3 caselle in totale tra tutti.
+      </div>
+
+      <div id="cfgCarboidratiContenuto"></div>
+
+      <div class="row" style="margin-top:12px;gap:8px;align-items:center;">
+        <div id="cfgCarboidratiTotale" style="font-weight:700;font-size:0.9rem;">Totale: 0 / 14</div>
+        <button class="primary" id="btnSalvaConfigCarboidrati" style="width:auto;flex:1;" disabled>💾 Salva configurazione</button>
+        <button class="secondary" id="btnResetConfigCarboidrati" style="width:auto;">🗑 Azzera</button>
+      </div>
+    </div>
+  </div>
 
   <!-- BATCH 3: qui andrà il setting fonti proteiche -->
   <div id="setProteine"></div>
@@ -569,23 +586,6 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 
 <!-- ============ VIEW: IMPOSTAZIONI ============ -->
 <section class="view" id="view-impostazioni">
-  <div class="card">
-    <h3 style="margin-bottom:10px;">🍝 Configurazione carboidrati settimanali</h3>
-    <div class="meta" style="margin-bottom:12px;">
-      Clicca le caselle per indicare quanti pasti a settimana vuoi dedicare a ciascun tipo di carboidrato.
-      Ogni carboidrato ha 6 caselle disponibili. Il totale deve essere esattamente 14 (7 giorni × 2 pasti).
-      Per gli alimenti a frequenza limitata, puoi cliccare al massimo 3 caselle in totale tra tutti.
-    </div>
-
-    <div id="cfgCarboidratiContenuto"></div>
-
-    <div class="row" style="margin-top:12px;gap:8px;align-items:center;">
-      <div id="cfgCarboidratiTotale" style="font-weight:700;font-size:0.9rem;">Totale: 0 / 14</div>
-      <button class="primary" id="btnSalvaConfigCarboidrati" style="width:auto;flex:1;" disabled>💾 Salva configurazione</button>
-      <button class="secondary" id="btnResetConfigCarboidrati" style="width:auto;">🗑 Azzera</button>
-    </div>
-  </div>
-
   <div class="card">
     <h3 style="margin-bottom:10px;">Libreria ricette</h3>
     <div class="meta" style="margin-bottom:10px;">Le ricette non sono più incluse nel file dell'app: vivono in un file separato (ricette.json) da importare qui. Puoi reimportarlo quante volte vuoi: aggiorna quelle già presenti (per nome) senza mai duplicarle, e non tocca ricette generate con l'AI o modificate a mano.</div>
@@ -2696,8 +2696,8 @@ function mostraVista(nome){
   if(nome==='menu') renderMenuSettimanale();
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
-  if(nome==='set') renderSet();
-  if(nome==='impostazioni'){ renderInfoVersioniRemote(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); }
+  if(nome==='set'){ renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); }
+  if(nome==='impostazioni'){ renderInfoVersioniRemote(); }
 }
 document.querySelectorAll('nav.tabbar button').forEach(btn=>{
   btn.addEventListener('click', ()=> mostraVista(btn.dataset.view));
