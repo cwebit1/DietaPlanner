@@ -1,5 +1,5 @@
 {
-  "versione": 6,
+  "versione": 7,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -2302,7 +2302,7 @@
       "tipoPortata": "secondo",
       "ingredienti": [
         [
-          "Tonno in scatola",
+          "Sgombro in scatola",
           100
         ]
       ],
@@ -4041,13 +4041,17 @@
           75
         ],
         [
+          "Finocchi",
+          75
+        ],
+        [
           "Olio extravergine oliva",
           5
         ]
       ],
       "procedimento": [
-        "Sbuccia le carote e tagliale a fiammifero sottile, con un coltello o una grattugia a fori larghi.",
-        "Disponile in una ciotola.",
+        "Sbuccia le carote e tagliale a fiammifero sottile; affetta finemente i finocchi.",
+        "Disponi carote e finocchi in una ciotola.",
         "Condisci con olio, sale e a piacere succo di limone."
       ],
       "componente": "contorno"
@@ -4252,7 +4256,7 @@
       "ingredienti": [
         [
           "Riso Arborio",
-          150
+          75
         ],
         [
           "Radicchio",
@@ -4288,10 +4292,10 @@
       "ingredienti": [
         [
           "Pasta corta",
-          150
+          75
         ],
         [
-          "Prosciutto crudo",
+          "Speck",
           40
         ],
         [
@@ -4305,7 +4309,7 @@
       ],
       "procedimento": [
         "Cuoci la pasta in acqua salata.",
-        "Nel frattempo scalda in padella il prosciutto crudo tagliato a striscioline finché leggermente croccante.",
+        "Nel frattempo scalda in padella il speck tagliato a striscioline finché leggermente croccante.",
         "Aggiungi la panna e il taleggio a pezzetti, mescolando finché il formaggio si scioglie in una crema.",
         "Scola la pasta al dente e mantecala nella padella con il condimento."
       ]
@@ -4530,7 +4534,7 @@
       "ingredienti": [
         [
           "Farro perlato",
-          125
+          62.5
         ],
         [
           "Emmental",
@@ -4586,7 +4590,7 @@
       "ingredienti": [
         [
           "Pasta corta",
-          150
+          75
         ],
         [
           "Provola",
@@ -4682,7 +4686,7 @@
       "ingredienti": [
         [
           "Riso Arborio",
-          150
+          75
         ],
         [
           "Provola",
@@ -5026,7 +5030,7 @@
       "ingredienti": [
         [
           "Riso Arborio",
-          150
+          75
         ],
         [
           "Branzino surgelato",
@@ -5195,7 +5199,7 @@
       "ingredienti": [
         [
           "Cous cous",
-          125
+          62.5
         ],
         [
           "Sovracosce di pollo",
@@ -5255,7 +5259,7 @@
       "ingredienti": [
         [
           "Pasta corta",
-          150
+          75
         ],
         [
           "Pollo a dadini",
@@ -5312,7 +5316,7 @@
       "ingredienti": [
         [
           "Riso Arborio",
-          150
+          75
         ],
         [
           "Pollo a dadini",
@@ -5855,7 +5859,7 @@
           75
         ],
         [
-          "Broccoli",
+          "Cime di rapa",
           150
         ],
         [
@@ -5863,8 +5867,8 @@
           10
         ],
         [
-          "Peperoni",
-          30
+          "Peperoncino",
+          2
         ]
       ],
       "procedimento": [
@@ -5987,14 +5991,18 @@
           10
         ],
         [
-          "Peperoni",
-          20
+          "Peperoncino",
+          2
+        ],
+        [
+          "Aglio",
+          5
         ]
       ],
       "procedimento": [
         "Dividi i broccoli in cimette e lessali 6 minuti in acqua salata.",
         "Nella stessa acqua cuoci la pasta.",
-        "Scalda l'olio con un pezzetto di peperoncino, aggiungi i broccoli e saltali 3 minuti.",
+        "Scalda l'olio con uno spicchio d'aglio e un pezzetto di peperoncino, aggiungi i broccoli e saltali 3 minuti.",
         "Scola la pasta e mantecala con i broccoli."
       ]
     },
@@ -7662,7 +7670,7 @@
           10
         ],
         [
-          "Basilico fresco",
+          "Prezzemolo",
           5
         ]
       ],
