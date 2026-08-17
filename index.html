@@ -2304,15 +2304,15 @@ async function getConfigCarboidratiCaselle(){
    Ritorna un oggetto "pasto virtuale" con nome, nutrizione
    e riferimenti ai componenti.
    ========================================================= */
-async function componiSecondoContorno(proteinaId, contornoId){
+async function componiSecondoContorno(proteinaId, contornoId, cottura){
   const tutteRicette = await getAll('ricette');
   const proteina = tutteRicette.find(r=>r.id===proteinaId);
   const contorno = tutteRicette.find(r=>r.id===contornoId);
   if(!proteina && !contorno) return null;
-  // Nome composto
+  // Nome composto invitante
   const nomeProteina = proteina ? proteina.nome : '';
   const nomeContorno = contorno ? contorno.nome : '';
-  const nomeComposto = nomeProteina + (nomeContorno ? ' con ' + nomeContorno : '');
+  const nomeComposto = componiNomeSecondoModulare(nomeProteina, cottura || null, nomeContorno);
   // Nutrizione: proteina + contorno + allocazione condimento
   const nutrizione = { kcal:0, prot:0, carb:0, grassi:0 };
   if(proteina){
@@ -2427,7 +2427,13 @@ async function scegliComponentiSecondo(gruppoProteico, giorno, escludiProteinaId
   const contorniNonUsati = poolContorni.filter(c => !contorniUsatiSettimana.has(c.id));
   const poolFinaleContorni = contorniNonUsati.length ? contorniNonUsati : poolContorni;
   const contornoScelto = mescola(poolFinaleContorni)[0];
-  return { proteinaId: proteinaScelta.id, contornoId: contornoScelto.id };
+  // Scegli una cottura compatibile col gruppo proteico della proteina.
+  // Se la ricetta proteica ha già una preparazione propria, il motore
+  // la rispetta (usandola come nome); altrimenti ne sceglie una nuova.
+  const cotturaScelta = proteinaScelta.preparazione
+    ? proteinaScelta.preparazione
+    : scegliCotturaStandard(proteinaScelta.gruppoProteico);
+  return { proteinaId: proteinaScelta.id, contornoId: contornoScelto.id, cottura: cotturaScelta };
 }
 
 /* Helper: filtra contorni per pool H2/H3 del giorno */
@@ -3381,7 +3387,7 @@ async function calcolaProgrammatoGiorno(giornoIso){
       }
       const rSecondoProg = voce.secondoId ? await getOne('ricette', voce.secondoId) : null;
       if(rSecondoProg && rSecondoProg.componente === COMPONENTE_PROTEINA){
-        const pastoCompostoProg = await componiSecondoContorno(voce.secondoId, voce.contornoId);
+        const pastoCompostoProg = await componiSecondoContorno(voce.secondoId, voce.contornoId, voce.cottura || null);
         if(pastoCompostoProg){
           tot.kcal+=pastoCompostoProg.nutrizione.kcal; tot.prot+=pastoCompostoProg.nutrizione.prot;
           tot.carb+=pastoCompostoProg.nutrizione.carb; tot.grassi+=pastoCompostoProg.nutrizione.grassi;
@@ -4658,14 +4664,14 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
       // Secondo: mostra la base proteica + contorno con refresh individuale
       const proteinaRicetta = draft.secondoId ? await getOne('ricette', draft.secondoId) : null;
       const contornoRicetta = draft.contornoId ? await getOne('ricette', draft.contornoId) : null;
-      const pastoComposto = await componiSecondoContorno(draft.secondoId, draft.contornoId);
+      const pastoComposto = await componiSecondoContorno(draft.secondoId, draft.contornoId, draft.cottura || null);
       if(!proteinaRicetta && !contornoRicetta){
         html += `<div class="meta">Nessuna ricetta compatibile per questa portata/fascia.</div>`;
       } else {
         html += `<div class="candidato-box">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
             <span style="font-size:0.9rem;">🍗</span>
-            <span style="font-weight:700;font-size:0.9rem;">${proteinaRicetta ? proteinaRicetta.nome : 'Nessuna proteina'}</span>
+            <span style="font-weight:700;font-size:0.9rem;">${proteinaRicetta ? proteinaRicetta.nome : 'Nessuna proteina'}${draft.cottura ? ' ' + draft.cottura : ''}</span>
             <button data-refresh-proteina style="background:none;border:none;cursor:pointer;font-size:0.85rem;padding:2px 4px;" title="Cambia proteina">🔄</button>
           </div>
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -4823,6 +4829,7 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
     if(nuoviComponenti && nuoviComponenti.proteinaId){
       draft.secondoId = nuoviComponenti.proteinaId;
       if(nuoviComponenti.contornoId) draft.contornoId = nuoviComponenti.contornoId;
+      draft.cottura = nuoviComponenti.cottura || null;
       renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno, elementId);
     }
   });
@@ -4834,6 +4841,7 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
     const nuoviComponenti = await scegliComponentiSecondo(gruppoProt, giorno, draft.secondoId, draft.contornoId);
     if(nuoviComponenti && nuoviComponenti.contornoId){
       draft.contornoId = nuoviComponenti.contornoId;
+      if(nuoviComponenti.cottura) draft.cottura = nuoviComponenti.cottura;
       renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno, elementId);
     }
   });
@@ -4926,6 +4934,7 @@ async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno,
       }
       if(draft.secondoId){
         voceCommittata.secondoId = draft.secondoId; await segnaRicettaUsata(draft.secondoId);
+        voceCommittata.cottura = draft.cottura || null;
       }
       if(draft.contornoId){
         voceCommittata.contornoId = draft.contornoId; await segnaRicettaUsata(draft.contornoId);
@@ -5761,7 +5770,7 @@ async function renderNutrizioneGiorno(){
       const ricettaSecondo = voce.secondoId ? await getOne('ricette', voce.secondoId) : null;
       if(ricettaSecondo && ricettaSecondo.componente === COMPONENTE_PROTEINA){
         // Secondo componibile: nutrizione composita (proteina + contorno + condimento)
-        const pastoComposto = await componiSecondoContorno(voce.secondoId, voce.contornoId);
+        const pastoComposto = await componiSecondoContorno(voce.secondoId, voce.contornoId, voce.cottura || null);
         if(pastoComposto){
           tot.kcal += pastoComposto.nutrizione.kcal; tot.prot += pastoComposto.nutrizione.prot;
           tot.carb += pastoComposto.nutrizione.carb; tot.grassi += pastoComposto.nutrizione.grassi;
