@@ -1,0 +1,35 @@
+name: Apply Batch 2 temp
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-batch2-temp.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply exact Batch 2 replacement
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('motor-v10.js')
+          s=p.read_text()
+          old="score+=(await motoreV10ScoreFrigoRicetta(r))*2;"
+          new="score+=Math.min(await motoreV10ScoreFrigoRicetta(r), 15);"
+          if old not in s:
+              raise SystemExit('Target text not found; aborting')
+          if s.count(old)!=1:
+              raise SystemExit(f'Expected exactly one target, found {s.count(old)}; aborting')
+          p.write_text(s.replace(old,new,1))
+          PY
+      - name: Remove temporary workflow and commit only intended final state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-batch2-temp.yml
+          git add motor-v10.js
+          git commit -m "Apply Batch 2 salvafrigo score cap"
+          git push
