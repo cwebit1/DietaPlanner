@@ -21,14 +21,26 @@ Con gli slot non definiti completati secondo minimi/target del percorso, i segue
 
 ### Esplorazione combinatoria dei conteggi del Set
 
-Sono stati enumerati i profili di conteggio possibili entro i tetti attuali del Set, considerando 14 slot pranzo/cena.
+La tabella Set permette una stessa categoria al massimo una volta per giorno; quindi i massimi realmente raggiungibili sono carne 3, pesce 3, formaggi 3, uova 2 e legumi 7.
 
-- Profili matematicamente compatibili con i minimi del percorso: **1424**.
-- Profili entro i soli tetti individuali ma incompatibili con i minimi delle altre categorie: **400**.
+Sono stati enumerati tutti i profili di conteggio raggiungibili entro questi tetti e con non più di 14 slot pranzo/cena:
 
-Esempio minimo del problema trovato: **9 legumi + 0 in tutte le altre categorie**. Restano 5 slot liberi, ma servono ancora almeno 6 slot per soddisfare carne 1 + pesce 2 + formaggi 2 + uova 1. Prima della correzione il Set poteva quindi accettare una configurazione impossibile pur rispettando i singoli tetti.
+- Profili matematicamente compatibili con i minimi del percorso: **1388**.
+- Profili entro i tetti della UI ma incompatibili con i minimi delle altre categorie: **93**.
 
-**Correzione applicata:** il salvataggio della tabella proteica del Set ora verifica anche la fattibilità globale: `somma deficit dei minimi <= slot ancora liberi`. Se la nuova selezione renderebbe impossibile completare il percorso, non viene salvata e viene mostrato un avviso.
+Esempio realmente ottenibile: **7 legumi + 3 formaggi + 2 uova** = 12 slot già fissati. Restano soltanto 2 slot, mentre per rispettare i minimi mancano ancora carne 1 + pesce 2 = 3 slot. Prima della correzione questa configurazione poteva essere salvata pur rendendo impossibile il completamento della settimana.
+
+**Correzione applicata:** il salvataggio della tabella proteica del Set verifica ora anche la fattibilità globale: `somma deficit dei minimi <= slot ancora liberi`. Se una nuova selezione renderebbe impossibile completare il percorso, non viene persistita e viene mostrato un avviso.
+
+### Quote carboidrati Set
+
+Il Set carboidrati è stato sottoposto a uno stress test astratto con **50.000 configurazioni valide casuali**, da configurazione vuota fino a 14 quote, rispettando i tetti della UI:
+
+- normali: pasta, pasta fresca, riso, farro, orzo, cous cous, pane, patate, polenta;
+- limitati: friselle max 1; gnocchi, pasta ripiena, gallette, crackers, taralli/grissini/crostini, piadina e pasta sfoglia max 2;
+- gruppo dei limitati: massimo 3 quote complessive nel Set.
+
+Esito del passaggio attuale: **nessuna quota esplicita è rimasta inutilizzata nei 14 slot ordinari e nessun tetto individuale è stato superato**. Questo test riguarda la distribuzione pura; restano da incrociare quote carboidrati con pasti speciali, “poco tempo” e componenti HARD impostate dal Ricettario.
 
 ## HARD granulari — scelta diretta dal Ricettario
 
@@ -40,14 +52,16 @@ Esempio minimo del problema trovato: **9 legumi + 0 in tutte le altre categorie*
 - piatto unico/speciale confermato dall'utente → pasto interamente HARD;
 - conferma manuale della colazione → colazione HARD.
 
-Quando `Genera menu` viene rilanciato, per un pasto a portate con marker granulari vengono eliminati solo i componenti non HARD e il motore li ricostruisce. La componente scelta dall'utente resta invariata.
+Quando `Genera menu` viene rilanciato, per un pasto a portate con marker granulari vengono eliminate solo le componenti non HARD e il motore le ricostruisce. La componente scelta dall'utente resta invariata.
+
+Test locale eseguito: fissando soltanto il secondo, il secondo resta invariato mentre primo e contorno vengono ricostruiti; con un pasto interamente HARD non viene sostituita alcuna componente.
 
 ## Casi da proseguire
 
-- Tutte le combinazioni di quote carboidrati da 0 a 14, incluse famiglie limitate e friselle.
+- Quote carboidrati + 1 o 2 pasti speciali: le quote eventualmente non realizzabili non devono provocare compensazioni sui pasti speciali.
+- Quote carboidrati + “poco tempo” a pranzo, cena e entrambi: verificare la precedenza della famiglia pane/friselle rispetto alla quota settimanale e il tetto friselle.
 - Combinazioni proteine Set + carboidrati Set + verdura ricorrente HARD.
 - Esclusioni verdure 0–7 insieme a verdure preferite.
-- “Poco tempo” a pranzo, cena e entrambi.
 - Uno e due pasti speciali posizionati in giorni diversi, con Set parziale e completo.
 - Pasto da Ricettario fissato come solo primo, solo secondo, solo contorno, due componenti e pasto completo.
 - Colazione: nessuna preferenza, preferenza su alcuni giorni, ingredienti esclusi, colazione speciale, Budino premio dopo 5 colazioni regolari.
