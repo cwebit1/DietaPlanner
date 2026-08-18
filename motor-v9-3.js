@@ -175,18 +175,16 @@ generaPianoSettimana = async function(scartoSettimane, opzioni){
         const gg=await getOne('impostazioni','colazionePreferitaGiorni');
         const giorniPref=gg&&gg.valore?gg.valore:[];
         const idx=giorni.indexOf(g);
-        const usa=giorniPref.includes(idx);
-        const componenti={};
-        for(const gr of COLAZIONE_GRUPPI){
-          const prefId=usa&&pref&&pref.valore?pref.valore[gr.chiave]:null;
-          let opz=opzioniColazioneGruppo(gr,varianti);
-          if(prefId&&opzioneColazioneValida(gr,prefId,varianti)) componenti[gr.chiave]=prefId;
-          else{
-            if(pref&&pref.valore&&pref.valore[gr.chiave]&&opz.length>1) opz=opz.filter(v=>v.id!==pref.valore[gr.chiave]);
-            componenti[gr.chiave]=gr.obbligatorio&&opz.length?motoreMescola(opz)[0].id:null;
-          }
+        const giorniPrefNormalizzati=(giorniPref||[]).map(Number);
+        const usa=!!(pref&&pref.valore) && (giorniPrefNormalizzati.length>=7 || giorniPrefNormalizzati.includes(idx));
+        let componenti;
+        if(usa){
+          componenti=componentiColazioneDaSet(pref.valore,varianti);
+        }else{
+          const firmaPref=pref&&pref.valore?firmaComponentiColazione(componentiColazioneDaSet(pref.valore,varianti)):null;
+          componenti=scegliColazioneAutomaticaCoerente(varianti,[firmaPref]);
         }
-        await put('piano',{id:idCol,componenti});
+        if(componenti) await put('piano',{id:idCol,componenti});
       }
     }
   }
