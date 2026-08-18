@@ -5566,7 +5566,7 @@ async function confermaPastoDaTab(pasto, voceCommittata, giorno, elementId){
   if(draft.tabAttiva==='portate') candidate=await Promise.all([draft.primoId,draft.proteinaId,draft.contornoId].map(id=>id?getOne('ricette',id):null));
   else candidate=[await getOne('ricette',draft.ricettaId)];
   const ok=await confermaConAllarme(pasto,giorno,candidate); if(!ok)return;
-  voceCommittata.fascia=draft.fascia;voceCommittata.origine='utente';voceCommittata.viaSalvafrigo=draft.viaSalvafrigo||null;
+  voceCommittata.fascia=draft.fascia;voceCommittata.origine='utente';voceCommittata.hardPasto=true;voceCommittata.hardPrimo=voceCommittata.hardSecondo=voceCommittata.hardContorno=false;voceCommittata.viaSalvafrigo=draft.viaSalvafrigo||null;
   if(draft.tabAttiva==='portate'){
     voceCommittata.modo='multi';voceCommittata.primoId=draft.primoId||null;voceCommittata.primoCereale=draft.primoCereale||null;voceCommittata.primoSugoId=draft.primoSugoId||null;
     voceCommittata.secondoId=draft.proteinaId||null;voceCommittata.contornoId=draft.contornoId||null;voceCommittata.cotturaSecondo=draft.cottura||null;voceCommittata.ricettaId=null;
@@ -7374,20 +7374,33 @@ document.getElementById('btnConfermaAssegnazione').addEventListener('click', asy
 
   if(tipo==='colazione' || tipo==='spuntino'){
     voce.ricettaId = ricetta.id;
+    if(tipo==='colazione') voce.hardColazione = true;
   } else if(tipo==='primo' || tipo==='secondo' || tipo==='contorno'){
+    // La scelta dal Ricettario è HARD solo sulla portata selezionata.
+    // Se prima lo slot conteneva un piatto unico HARD, la nuova azione deliberata
+    // dell'utente lo trasforma in portate e libera le componenti non scelte.
     voce.modo = 'multi';
+    voce.hardPasto = false;
+    voce.ricettaId = null;
+    voce.colazioneSpecialeId = null;
     voce.fascia = voce.fascia || ricetta.fascia;
     voce.porzioni = voce.porzioni||1;
     voce[tipo+'Id'] = ricetta.id;
-  } else { // unico
+    if(tipo==='primo') voce.hardPrimo = true;
+    if(tipo==='secondo') voce.hardSecondo = true;
+    if(tipo==='contorno') voce.hardContorno = true;
+  } else { // unico / speciale
     voce.modo = 'unico';
     voce.fascia = ricetta.fascia;
     voce.porzioni = voce.porzioni||1;
     voce.ricettaId = ricetta.id;
     voce.primoId = voce.secondoId = voce.contornoId = null;
+    voce.primoCereale = null;
+    voce.primoSugoId = null;
+    voce.hardPasto = true;
+    voce.hardPrimo = voce.hardSecondo = voce.hardContorno = false;
   }
 
-  voce.origine = 'utente';
   voce.origine = 'utente';
   await put('piano', voce);
   await segnaRicettaUsata(ricetta.id);

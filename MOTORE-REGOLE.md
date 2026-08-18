@@ -181,3 +181,12 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - Negli slot automatici il filtro stagionale è un vero filtro: le verdure fresche/fresche durature fuori dalla lista del mese non vengono proposte; confezionati e surgelati restano disponibili tutto l'anno.
 - Una verdura ricorrente impostata esplicitamente dall'utente è HARD e può derogare alla stagionalità, perché la scelta user precede il filtro automatico.
 - `Disponibilità verdure` e `Verdura ricorrente` non possono contraddirsi: non si può disattivare una verdura già programmata come ricorrente e non si può rendere ricorrente una verdura dichiarata non disponibile.
+
+### Marker HARD scritti alla fonte dal Ricettario (v39)
+
+- L'assegnazione dal Ricettario scrive direttamente il marker HARD nel record `piano`, senza dipendere da inferenze successive dell'interfaccia.
+- `primo`, `secondo`, `contorno` impostano rispettivamente `hardPrimo`, `hardSecondo`, `hardContorno`; le altre componenti restano completabili dal motore.
+- Assegnare una portata a uno slot che prima era un piatto unico HARD è una nuova scelta deliberata dell'utente: lo slot passa a `multi`, `hardPasto` viene rimosso e il vecchio `ricettaId` non resta come stato fantasma.
+- Assegnare un piatto unico/speciale imposta `hardPasto` e azzera i marker granulari.
+- Una colazione assegnata dal Ricettario imposta `hardColazione`.
+- Il wrapper v34 resta solo come compatibilità con record/percorsi precedenti, non è più l'unica fonte dei marker.
