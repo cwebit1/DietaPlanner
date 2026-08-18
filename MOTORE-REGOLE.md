@@ -148,3 +148,11 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 12. Refresh di una componente non cambia le altre macrocategorie/vincoli dello slot.
 13. Piatto unico/sfiziosa non alterano la struttura funzionale della griglia; se manca match, registrazione Review.
 14. Rigenerare la settimana cambia solo gli elementi generati dal motore, non quelli scelti/programmati dall'utente.
+
+## Piatto unico per composizione funzionale (v35)
+
+- Una ricetta con proteina + verdura che manca soltanto della quota carboidrati non è una lacuna: il motore aggiunge **pane** come jolly assoluto nella dose prevista.
+- Se non esiste un record `unico` adatto ma i layer hanno già definito **carboidrato + secondo + contorno**, il motore può comporli in un unico piatto. Se manca il carboidrato concreto prova prima **cous cous**, poi **pane** come fallback universale.
+- La composizione non modifica i vincoli HARD già definiti.
+- Le composizioni sono create solo quando servono e deduplicate (`fonte=composta_runtime`, `chiaveComposta`): non si pre-genera un database combinatorio.
+- Si registra una lacuna in Review solo quando non esiste né ricetta compatibile, né completamento con pane, né composizione funzionale valida.

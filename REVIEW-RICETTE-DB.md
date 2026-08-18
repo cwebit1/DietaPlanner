@@ -42,3 +42,9 @@ Il test automatico `test_set_matrix.py` mantiene l'elenco macchina in `review-ri
 ## Storico risoluzioni
 
 _Nessuna._
+
+## Riclassificazione v35 — carboidrato mancante
+
+Non sono più considerate lacune DB le ricette che hanno già **proteina + verdura** e mancano soltanto del carboidrato: vengono completate con il jolly pane. Se non esiste un `unico` adatto ma esistono secondo e contorno coerenti, il motore prova la composizione funzionale con il carboidrato già deciso; in assenza di uno specifico usa cous cous e infine pane.
+
+Casi precedentemente sospetti come *Uova strapazzate con zucchine e parmigiano*, *Insalata di tonno, pomodoro e mozzarella*, *Petto di pollo con zucchine e insalata* e *Melanzane alla parmigiana leggera* sono quindi **COPERTI PER COMPOSIZIONE/JOLLY** e non richiedono una nuova ricetta solo per aggiungere il carboidrato.

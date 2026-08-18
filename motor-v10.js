@@ -473,6 +473,74 @@ async function motoreV10VerduraHardSlot(giorno,pasto,varianti){
   const v=varianti.find(x=>x.id===rec.valore); return v?(v.nome||'').toLowerCase():null;
 }
 
+
+/* v35 — Unico per funzione, senza esplodere il DB.
+   1) Se una ricetta unica ha proteina+verdura ma manca solo il carboidrato,
+      la completa con il jolly pane.
+   2) Se manca una ricetta unica idonea, compone a richiesta carboidrato +
+      secondo + contorno già determinati dai layer precedenti.
+   Le ricette composte sono lazy e deduplicate tramite chiaveComposta: non si
+   pre-generano migliaia di combinazioni. */
+function motoreV10MergeIngredienti(liste){
+  const m=new Map(), liberi=[];
+  for(const lista of liste){
+    for(const ing of (lista||[])){
+      if(ing.variantId){
+        const k=ing.variantId, q=Number(ing.quantita)||0;
+        if(!m.has(k))m.set(k,{variantId:k,nomeLibero:null,quantita:0});
+        m.get(k).quantita+=q;
+      }else if(ing.nomeLibero){
+        const k=(ing.nomeLibero||'').trim().toLowerCase(), q=Number(ing.quantita)||0;
+        let x=liberi.find(z=>(z.nomeLibero||'').trim().toLowerCase()===k);
+        if(!x){x={variantId:null,nomeLibero:ing.nomeLibero,quantita:0};liberi.push(x);}
+        x.quantita+=q;
+      }
+    }
+  }
+  return [...m.values(),...liberi].filter(x=>x.quantita>0);
+}
+async function motoreV10UpsertComposta(chiave,nome,gruppo,ingredienti,procedimento,fonteIds){
+  const tutte=await getAll('ricette');
+  let r=tutte.find(x=>x.fonte==='composta_runtime'&&x.chiaveComposta===chiave);
+  if(!r)r={id:uid()};
+  Object.assign(r,{nome,fascia:'facile',porzioni:1,gruppoProteico:gruppo||'',tipoPortata:'unico',fonte:'composta_runtime',chiaveComposta:chiave,fonteIds:fonteIds||[],ingredienti,procedimento:procedimento||[],nutrizioneManualeTotale:null,esclusa:false,piattoSpeciale:false});
+  await put('ricette',r);return r;
+}
+async function motoreV10CompletaUnicoConPane(r,varianti){
+  if(!r)return null;
+  const cfg=CARBOIDRATI_PASTO.pane;if(!cfg)return null;
+  const v=varianti.find(x=>(x.nome||'').toLowerCase()===(cfg.ingrediente||'').toLowerCase());
+  if(!v)return null;
+  const key='pane|'+r.id;
+  const nome=/\bpane\b/i.test(r.nome||'')?r.nome:(r.nome+' con pane');
+  const ingredienti=motoreV10MergeIngredienti([r.ingredienti,[{variantId:v.id,nomeLibero:null,quantita:cfg.porzione}]]);
+  const procedimento=[...(r.procedimento||[]),'Servi il pane nella dose prevista insieme al piatto.'];
+  return motoreV10UpsertComposta(key,nome,r.gruppoProteico,ingredienti,procedimento,[r.id]);
+}
+async function motoreV10ComponiUnicoDaDraft(draft,varianti){
+  if(!draft||!draft.proteinaId||!draft.contornoId)return null;
+  const [prot,cont]=await Promise.all([getOne('ricette',draft.proteinaId),getOne('ricette',draft.contornoId)]);
+  if(!prot||!cont)return null;
+  let carb=draft.primoCereale&&CARBOIDRATI_PASTO[draft.primoCereale]?draft.primoCereale:null;
+  if(!carb){
+    const cous=CARBOIDRATI_PASTO.cous_cous;
+    const vc=cous&&varianti.find(x=>(x.nome||'').toLowerCase()===(cous.ingrediente||'').toLowerCase());
+    carb=vc?'cous_cous':'pane';
+  }
+  let cfg=CARBOIDRATI_PASTO[carb];
+  let v=cfg&&varianti.find(x=>(x.nome||'').toLowerCase()===(cfg.ingrediente||'').toLowerCase());
+  if(!v&&carb!=='pane'){
+    carb='pane';cfg=CARBOIDRATI_PASTO.pane;
+    v=cfg&&varianti.find(x=>(x.nome||'').toLowerCase()===(cfg.ingrediente||'').toLowerCase());
+  }
+  if(!cfg||!v)return null;
+  const ingredienti=motoreV10MergeIngredienti([[{variantId:v.id,nomeLibero:null,quantita:cfg.porzione}],prot.ingredienti,cont.ingredienti]);
+  const nome=(cfg.label||carb)+' con '+(prot.nome||'proteina').toLowerCase()+' e '+(cont.nome||'verdura').toLowerCase();
+  const key=['draft',carb,prot.id,cont.id].join('|');
+  const procedimento=[`Prepara ${cfg.label||carb} nella dose prevista.`,...(prot.procedimento||[]),...(cont.procedimento||[]),'Riunisci le componenti nello stesso piatto e servi come piatto unico.'];
+  return motoreV10UpsertComposta(key,nome,prot.gruppoProteico||draft.sottotipoProposto||'',ingredienti,procedimento,[prot.id,cont.id]);
+}
+
 trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   const info=await infoCombinazioneDraft(draft);
   const [tutte,varianti,ingredienti,storico]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),costruisciStoricoConsumatiMotore()]);
@@ -485,10 +553,10 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     if(r.id===escludiId||r.esclusa||r.piattoSpeciale||(r.tipoPortata||'unico')!=='unico')continue;
     const a=await motoreV10AnalizzaUnico(r,varianti,ingredienti);
     if(info.categoriaProteica&&a.categoria!==info.categoriaProteica)continue;
-    if(!a.carbKeys.length)continue; // ogni pasto ordinario deve avere fonte di carboidrati
-    if(!a.verdure.length)continue;  // e verdura
+    if(!a.verdure.length)continue;  // la verdura non ha un jolly equivalente
     if(hardVerdura&&!a.verdure.includes(hardVerdura))continue;
-    let score=0;
+    const mancaSoloCarb=!a.carbKeys.length;
+    let score=mancaSoloCarb?-25:0;
     if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
     else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
     else score+=30; // stessa funzione: fonte di carboidrati presente
@@ -500,17 +568,28 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     if(score>best){best=score;compatibili=[r];}
     else if(score===best)compatibili.push(r);
   }
-  if(!compatibili.length){
-    if(typeof registraRichiestaRicettaReview==='function')await registraRichiestaRicettaReview({
-      tipo:draft&&draft.tabAttiva==='sfiziosa'?'ricetta_sfiziosa_mancante':'piatto_unico_mancante',
-      carboidrato:info.carboidrato,categoriaProteica:info.categoriaProteica,sottotipoProteico:info.sottotipoProteico,
-      verdura:(info.verdure||[]).join(' + '),pasto,giorno
-    });
-    return null;
+  if(compatibili.length){
+    const nonCorrente=compatibili.filter(r=>r.id!==draft.ricettaId),pool=nonCorrente.length?nonCorrente:compatibili;
+    let scelta=scegliMenoRecenteMotore(pool,r=>storico.ultimoRicetta[r.id]||0,()=>0);
+    if(scelta){
+      const a=await motoreV10AnalizzaUnico(scelta,varianti,ingredienti);
+      if(!a.carbKeys.length){
+        const conPane=await motoreV10CompletaUnicoConPane(scelta,varianti);
+        if(conPane)return conPane;
+      }
+      return scelta;
+    }
   }
-  const nonCorrente=compatibili.filter(r=>r.id!==draft.ricettaId),pool=nonCorrente.length?nonCorrente:compatibili;
-  return scegliMenoRecenteMotore(pool,r=>storico.ultimoRicetta[r.id]||0,()=>0);
+  // Nessun record unico utile: prova la composizione funzionale già definita dai layer.
+  const composta=await motoreV10ComponiUnicoDaDraft(draft,varianti);
+  if(composta)return composta;
+  if(typeof registraRichiestaRicettaReview==='function')await registraRichiestaRicettaReview({
+    tipo:draft&&draft.tabAttiva==='sfiziosa'?'ricetta_sfiziosa_mancante':'piatto_unico_mancante',
+    carboidrato:info.carboidrato,categoriaProteica:info.categoriaProteica,sottotipoProteico:info.sottotipoProteico,
+    verdura:(info.verdure||[]).join(' + '),pasto,giorno
+  });
+  return null;
 };
 
-window.MOTORE_V10_REGOLE={versione:'1.0',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
+window.MOTORE_V10_REGOLE={versione:'1.1',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
 })();
