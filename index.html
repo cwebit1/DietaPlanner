@@ -206,6 +206,16 @@ label:first-child{margin-top:0;}
 ul.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 
+.setting-swipe{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;}
+.setting-swipe button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap;}
+.set-carb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:8px;}
+.set-carb-item{min-width:0;}
+.set-carb-celle{display:flex;gap:3px;flex-wrap:nowrap;}
+.set-carb-celle button{width:24px!important;height:24px!important;min-width:24px;padding:0!important;}
+#setTabellaGiorno .riga-label{text-align:left;padding-right:4px;}
+#setTabellaGiorno td.cella button{min-height:28px!important;min-width:28px!important;padding:4px;}
+#setTempoMenu{display:flex;flex-wrap:nowrap;gap:4px;}
+#setTempoMenu button{flex:1 1 0;min-width:0;padding:6px 4px;white-space:nowrap;}
 .tabgroup{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
 /* Stile omogeneo per la colazione: una riga scorrevole di pulsanti per ogni
    categoria, con snap allo scroll. Ogni categoria permette UNA sola selezione
@@ -562,114 +572,14 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <!-- ============ VIEW: SET ============ -->
 <section class="view" id="view-set">
   <div class="meta" style="margin-bottom:12px;">
-    Qui configuri il piano dieta settimanale: carboidrati, proteine,
-    verdure, verdure ricorrenti e colazione preferita.
+    Qui configuri il piano dieta settimanale: carboidrati, proteine, verdure e colazione.
     Tutto viene salvato con un unico pulsante in fondo alla pagina.
   </div>
-
-  <!-- BATCH 2: qui andrà il setting carboidrati -->
-  <div id="setCarboidrati">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">🍝 Configurazione carboidrati settimanali</h3>
-      <div class="meta" style="margin-bottom:12px;">
-        Clicca le caselle per indicare quanti pasti a settimana vuoi dedicare a ciascun tipo di carboidrato.
-        Ogni carboidrato ha 6 caselle disponibili. Il totale deve essere esattamente 14 (7 giorni × 2 pasti).
-        Per gli alimenti a frequenza limitata, puoi cliccare al massimo 3 caselle in totale tra tutti.
-      </div>
-
-      <div id="cfgCarboidratiContenuto"></div>
-
-      <div class="row" style="margin-top:12px;gap:8px;align-items:center;">
-        <div id="cfgCarboidratiTotale" style="font-weight:700;font-size:0.9rem;">Totale: 0 / 14</div>
-        <button class="primary" id="btnSalvaConfigCarboidrati" style="width:auto;flex:1;" disabled>💾 Salva configurazione</button>
-        <button class="secondary" id="btnResetConfigCarboidrati" style="width:auto;">🗑 Azzera</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Fonti proteiche: programmazione persistente giorno × categoria -->
-  <div id="setProteine">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">🍗 Fonti proteiche — quando mangiarle</h3>
-      <div class="meta" style="margin-bottom:12px;">
-        Tocca le caselle per fissare la categoria proteica di ciascun giorno. Max 2 categorie diverse per giorno.
-        I tetti settimanali del percorso sono rispettati automaticamente; le caselle restano valide per tutte le settimane.
-      </div>
-      <div id="setTabellaGiorno" style="overflow-x:auto;"></div>
-    </div>
-  </div>
-
-  <div id="setPreferenzeMenu">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">⚙️ Preferenze generazione menù</h3>
-      <div class="meta" style="margin-bottom:8px;">Categorie che gradisci meno: il motore le penalizza senza eliminarle se servono per rispettare il piano.</div>
-      <div class="tabgroup" id="setProteineLimitate"></div>
-      <div class="meta" style="margin:14px 0 8px;">Tempo disponibile. Se selezioni poco tempo, quel pasto usa con priorità obbligatoria la famiglia pane / bruschette / friselle.</div>
-      <div class="tabgroup" id="setTempoMenu"></div>
-    </div>
-  </div>
-
-  <div id="setVerdurePreferite">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">🥗 Verdure da favorire</h3>
-      <div class="meta" style="margin-bottom:12px;">Seleziona una o più verdure stagionali da favorire nella generazione. È separato dalle verdure disattivate e dalla verdura ricorrente.</div>
-      <div class="tabgroup" id="setVerdurePreferiteLista"></div>
-      <div id="setVerdurePreferiteNota" class="meta" style="margin-top:8px;"></div>
-    </div>
-  </div>
-
-  <!-- BATCH 4: qui andrà il set verdure -->
-  <div id="setVerdure">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">🥬 Le tue verdure</h3>
-      <div class="meta" style="margin-bottom:12px;">
-        Verdure disponibili per il motore, raggruppate per conservazione.
-        Tocca per attivare/disattivare. Le verdure disattivate non vengono proposte.
-      </div>
-      <div id="setVerdureLista"></div>
-    </div>
-  </div>
-
-  <!-- BATCH 5: qui andrà il modulo verdure ricorrenti -->
-  <div id="setVerdureRicorrenti">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">🔁 Verdura ricorrente</h3>
-      <div class="meta" style="margin-bottom:12px;">
-        Una verdura che vuoi ritrovare spesso nel menù. Il motore la proporrà
-        come contorno principale nei giorni alterni.
-      </div>
-      <div class="tabgroup" id="setVerduraRicorrenteScelta"></div>
-      <div class="meta" id="setVerduraRicorrenteNota" style="margin-top:8px;"></div>
-    </div>
-  </div>
-
-  <!-- BATCH 6: qui andrà il modulo colazione preferita -->
-  <div id="setColazione">
-    <div class="card">
-      <h3 style="margin-bottom:10px;">☕ Colazione preferita</h3>
-      <div class="meta" style="margin-bottom:12px;">
-        Componi la colazione da ripetere e scegli i giorni in cui applicarla.
-        Nei giorni non selezionati il motore propone colazioni diverse.
-      </div>
-      <div id="setColazioneGruppi"></div>
-      <label style="margin-top:12px;">Giorni in cui applicarla:</label>
-      <table class="tabella-giorno"><tbody id="setColazioneGiorni"></tbody></table>
-      <label style="margin-top:16px;">Ingredienti da escludere:</label>
-      <div class="meta" style="margin-bottom:8px;">Gli ingredienti selezionati non verranno mai usati nelle colazioni generate automaticamente. Le scelte impostate manualmente sopra restano prioritarie.</div>
-      <div id="setColazioneEsclusi" class="tabgroup"></div>
-      <div class="row" style="margin-top:10px;gap:8px;">
-        <button class="small" id="btnResetColazionePref">✕ Reset colazione preferita</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BATCH 7: qui andrà il pulsante Salva unico -->
-  <div id="setSalvaUnico" style="margin-top:20px;">
-    <button class="primary" id="btnSalvaSetCompleto" style="width:100%;margin-top:8px;">
-      💾 Salva tutta la configurazione
-    </button>
-    <div id="setSalvaStato" class="meta" style="margin-top:8px;text-align:center;"></div>
-  </div>
+  <div id="setCarboidrati"><div class="card"><h3 style="margin-bottom:10px;">🍝 Impostazioni Carboidrati</h3><div class="meta" style="margin-bottom:12px;">Clicca le caselle per indicare quanti pasti a settimana vuoi dedicare a ciascun tipo di carboidrato. Il totale deve essere esattamente 14 (7 giorni × 2 pasti).</div><div id="cfgCarboidratiContenuto"></div><div id="cfgCarboidratiTotale" style="font-weight:700;font-size:0.9rem;margin-top:12px;">Totale: 0 / 14</div><div class="row" style="margin-top:8px;gap:10px;align-items:center;"><div class="meta" style="flex:1;">Le caselle vuote saranno completate dal sistema in rotazione casuale</div><button class="secondary" id="btnResetConfigCarboidrati" style="width:auto;flex:0 0 auto;">🗑 Azzera</button></div></div></div>
+  <div id="setProteine"><div class="card"><h3 style="margin-bottom:10px;">🍗 Impostazioni Proteine</h3><div class="meta" style="margin-bottom:12px;">Tocca le caselle per fissare la categoria proteica di ciascun giorno. Max 2 categorie diverse per giorno. I tetti settimanali del percorso sono rispettati automaticamente; le caselle restano valide per tutte le settimane.</div><div id="setTabellaGiorno" style="overflow-x:auto;"></div><div id="setPreferenzeMenu" style="margin-top:16px;"><h3 style="margin-bottom:10px;">⚙️ Preferenze generazione menù</h3><div class="meta" style="margin-bottom:8px;">Categorie che gradisci meno: il motore le penalizza senza eliminarle se servono per rispettare il piano.</div><div class="tabgroup" id="setProteineLimitate"></div><div class="meta" style="margin:14px 0 8px;">Tempo disponibile. Se selezioni poco tempo, quel pasto usa con priorità obbligatoria la famiglia pane / bruschette / friselle.</div><div class="tabgroup" id="setTempoMenu"></div></div></div></div>
+  <div id="setVerdure"><div class="card"><h3 style="margin-bottom:10px;">🥬 Impostazioni Verdure</h3><div id="setVerdurePreferite" style="margin-bottom:16px;"><div class="zona-header">Verdure da favorire</div><div class="meta" style="margin-bottom:8px;">Seleziona una o più verdure stagionali da favorire nella generazione.</div><div class="setting-swipe" id="setVerdurePreferiteLista"></div><div id="setVerdurePreferiteNota" class="meta" style="margin-top:8px;"></div></div><div class="zona-header">Disponibilità verdure</div><div class="meta" style="margin-bottom:10px;">Tocca per attivare/disattivare. Le verdure disattivate non vengono proposte.</div><div id="setVerdureLista"></div><div id="setVerdureRicorrenti" style="margin-top:16px;"><div class="zona-header">Verdure ricorrenti</div><div class="meta" style="margin-bottom:8px;">Una verdura che vuoi ritrovare spesso nel menù.</div><div class="setting-swipe" id="setVerduraRicorrenteScelta"></div><div class="meta" id="setVerduraRicorrenteNota" style="margin-top:8px;"></div></div></div></div>
+  <div id="setColazione"><div class="card"><h3 style="margin-bottom:10px;">☕ Impostazioni Colazione</h3><div class="meta" style="margin-bottom:12px;">Componi la colazione da ripetere e scegli i giorni in cui applicarla. Nei giorni non selezionati il motore propone colazioni diverse.</div><div id="setColazioneGruppi"></div><label style="margin-top:12px;">Giorni in cui applicarla:</label><table class="tabella-giorno"><tbody id="setColazioneGiorni"></tbody></table><label style="margin-top:16px;">Ingredienti da escludere:</label><div class="meta" style="margin-bottom:8px;">Gli ingredienti selezionati non verranno mai usati nelle colazioni generate automaticamente. Le scelte impostate manualmente sopra restano prioritarie.</div><div id="setColazioneEsclusi" class="setting-swipe"></div><div class="row" style="margin-top:10px;gap:8px;"><button class="small" id="btnResetColazionePref">✕ Reset colazione preferita</button></div></div></div>
+  <div id="setSalvaUnico" style="margin-top:20px;"><button class="primary" id="btnSalvaSetCompleto" style="width:100%;margin-top:8px;">💾 Salva tutta la configurazione</button><div id="setSalvaStato" class="meta" style="margin-top:8px;text-align:center;"></div></div>
 </section>
 
 <!-- ============ VIEW: IMPOSTAZIONI ============ -->
@@ -1465,6 +1375,7 @@ async function seedIfEmpty(){
     'fagioli cannellini in barattolo':'conf', 'lenticchie in barattolo':'conf',
     'tonno in scatola':'conf', 'parmigiano grattugiato':'conf', 'pecorino':'conf',
     'piselli in barattolo':'conf',
+    'zucca':'fresco', 'verza':'fresco', 'crauti in barattolo':'conf', 'mais in scatola':'conf',
     // ---- nuovi ingredienti ----
     'emmental':'fresco', 'formaggio spalmabile':'fresco', 'taleggio':'fresco',
     'tomini':'fresco', 'provola':'fresco', 'sovracosce di pollo':'fresco',
@@ -2396,86 +2307,21 @@ function contaCaselleLimitateCarb(){
 }
 
 function renderCaselleCarboidrati(){
-  const contenitore = document.getElementById('cfgCarboidratiContenuto');
-  if(!contenitore) return;
-  const totaleAttuale = contaTotaleCaselleCarb();
-  const limiteRaggiunto = totaleAttuale >= CONFIG_CARB_TOTALE_OBBLIGATORIO;
-  const limitateUsate = contaCaselleLimitateCarb();
-  const limitateRimaste = CONFIG_CARB_TETTO_LIMITATI - limitateUsate;
-
-  let html = '';
-  for(const tipo of CONFIG_CARB_TIPI){
-    const cliccate = statoCaselleCarb[tipo.chiave] || 0;
-    const disabilitatoGlobale = limiteRaggiunto;
-    const disabilitatoLimitato = tipo.limitato && (cliccate >= tipo.maxIndividuale || (cliccate === 0 && limitateRimaste <= 0) || (cliccate > 0 && cliccate < tipo.maxIndividuale && limitateRimaste <= 0));
-    const badgeLimitato = tipo.limitato ? `<span style="font-size:0.65rem;color:var(--warn);margin-left:4px;">⚠ max ${tipo.maxIndividuale}</span>` : '';
-    html += `<div style="margin-bottom:10px;">
-      <div style="font-weight:600;font-size:0.85rem;margin-bottom:4px;">${tipo.label}${badgeLimitato}</div>
-      <div style="display:flex;gap:4px;">`;
-    for(let i = 0; i < CONFIG_CARB_MAX_CASELLE; i++){
-      const attiva = i < cliccate;
-      const cliccabile = !disabilitatoGlobale && !disabilitatoLimitato && !limiteRaggiunto;
-      html += `<button data-casella-carb="${tipo.chiave}" data-casella-idx="${i}"
-        style="width:28px;height:28px;border-radius:6px;border:1px solid ${attiva ? 'var(--accent)' : 'var(--border)'};
-        background:${attiva ? 'var(--accent)' : 'var(--panel-2)'};
-        cursor:${cliccabile ? 'pointer' : 'not-allowed'};
-        opacity:${cliccabile || attiva ? '1' : '0.35'};
-        transition:background 0.15s, border-color 0.15s;"
-        ${(!cliccabile && !attiva) ? 'disabled' : ''}></button>`;
-    }
-    html += `</div></div>`;
-  }
-  contenitore.innerHTML = html;
-
-  // Listener su ogni casella
-  contenitore.querySelectorAll('[data-casella-carb]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const chiave = btn.dataset.casellaCarb;
-      const idx = parseInt(btn.dataset.casellaIdx);
-      const tipo = CONFIG_CARB_TIPI.find(t=>t.chiave===chiave);
-      const cliccateAttuali = statoCaselleCarb[chiave] || 0;
-      const totale = contaTotaleCaselleCarb();
-      // Se clicco su una casella già attiva -> la disattivo (toggle off)
-      if(idx < cliccateAttuali){
-        statoCaselleCarb[chiave] = cliccateAttuali - 1;
-      } else if(totale < CONFIG_CARB_TOTALE_OBBLIGATORIO){
-        // Attivo solo se non ho raggiunto il limite globale
-        if(tipo.limitato){
-          const limitateUsateOra = contaCaselleLimitateCarb();
-          if(limitateUsateOra >= CONFIG_CARB_TETTO_LIMITATI) return;
-          if(cliccateAttuali >= tipo.maxIndividuale) return;
-        }
-        statoCaselleCarb[chiave] = cliccateAttuali + 1;
-      }
-      renderCaselleCarboidrati();
-      aggiornaStatoConfigCarb();
-    });
-  });
+  const contenitore=document.getElementById('cfgCarboidratiContenuto');if(!contenitore)return;
+  const totaleAttuale=contaTotaleCaselleCarb(),limiteRaggiunto=totaleAttuale>=CONFIG_CARB_TOTALE_OBBLIGATORIO,limitateUsate=contaCaselleLimitateCarb(),limitateRimaste=CONFIG_CARB_TETTO_LIMITATI-limitateUsate;
+  const renderGruppo=(tipi,titolo)=>{let html=`<div class="zona-header" style="margin-top:12px;">${titolo}</div><div class="set-carb-grid">`;for(const tipo of tipi){const cliccate=statoCaselleCarb[tipo.chiave]||0;const disabilitatoGlobale=limiteRaggiunto;const disabilitatoLimitato=tipo.limitato&&(cliccate>=tipo.maxIndividuale||(cliccate===0&&limitateRimaste<=0)||(cliccate>0&&cliccate<tipo.maxIndividuale&&limitateRimaste<=0));const badgeLimitato=tipo.limitato?`<span style="font-size:0.62rem;color:var(--warn);margin-left:3px;">⚠ max ${tipo.maxIndividuale}</span>`:'';html+=`<div class="set-carb-item"><div style="font-weight:600;font-size:0.78rem;margin-bottom:4px;white-space:normal;">${tipo.label}${badgeLimitato}</div><div class="set-carb-celle">`;for(let i=0;i<CONFIG_CARB_MAX_CASELLE;i++){const attiva=i<cliccate;const cliccabile=!disabilitatoGlobale&&!disabilitatoLimitato&&!limiteRaggiunto;html+=`<button data-casella-carb="${tipo.chiave}" data-casella-idx="${i}" style="border-radius:5px;border:1px solid ${attiva?'var(--accent)':'var(--border)'};background:${attiva?'var(--accent)':'var(--panel-2)'};cursor:${cliccabile?'pointer':'not-allowed'};opacity:${cliccabile||attiva?'1':'0.35'};transition:background .15s,border-color .15s;" ${(!cliccabile&&!attiva)?'disabled':''}></button>`;}html+='</div></div>';}return html+'</div>';};
+  const normali=CONFIG_CARB_TIPI.filter(t=>!t.limitato),limitati=CONFIG_CARB_TIPI.filter(t=>t.limitato);contenitore.innerHTML=renderGruppo(normali,'Carboidrati complessi')+renderGruppo(limitati,'Carboidrati complessi razionati');
+  contenitore.querySelectorAll('[data-casella-carb]').forEach(btn=>{btn.addEventListener('click',()=>{const chiave=btn.dataset.casellaCarb,idx=parseInt(btn.dataset.casellaIdx),tipo=CONFIG_CARB_TIPI.find(t=>t.chiave===chiave),cliccateAttuali=statoCaselleCarb[chiave]||0,totale=contaTotaleCaselleCarb();if(idx<cliccateAttuali)statoCaselleCarb[chiave]=cliccateAttuali-1;else if(totale<CONFIG_CARB_TOTALE_OBBLIGATORIO){if(tipo.limitato){const limitateUsateOra=contaCaselleLimitateCarb();if(limitateUsateOra>=CONFIG_CARB_TETTO_LIMITATI||cliccateAttuali>=tipo.maxIndividuale)return;}statoCaselleCarb[chiave]=cliccateAttuali+1;}renderCaselleCarboidrati();aggiornaStatoConfigCarb();});});
 }
 
 function aggiornaStatoConfigCarb(){
   const totale = contaTotaleCaselleCarb();
   const elTotale = document.getElementById('cfgCarboidratiTotale');
-  const btnSave = document.getElementById('btnSalvaConfigCarboidrati');
   if(elTotale){
     elTotale.textContent = 'Totale: ' + totale + ' / ' + CONFIG_CARB_TOTALE_OBBLIGATORIO;
     elTotale.style.color = totale === CONFIG_CARB_TOTALE_OBBLIGATORIO ? 'var(--accent)' : 'var(--warn)';
   }
-  if(btnSave){
-    btnSave.disabled = totale !== CONFIG_CARB_TOTALE_OBBLIGATORIO;
-  }
 }
-
-/* Salva in IndexedDB e aggiorna il motore */
-document.getElementById('btnSalvaConfigCarboidrati')?.addEventListener('click', async ()=>{
-  const totale = contaTotaleCaselleCarb();
-  if(totale !== CONFIG_CARB_TOTALE_OBBLIGATORIO){
-    await avviso('Il totale deve essere ' + CONFIG_CARB_TOTALE_OBBLIGATORIO + '. Attuale: ' + totale);
-    return;
-  }
-  await put('impostazioni', {chiave: 'configCarboidrati', valore: statoCaselleCarb});
-  await avviso('✅ Configurazione carboidrati salvata (' + totale + ' pasti). Il motore la userà alla prossima generazione.');
-});
 
 /* Reset */
 document.getElementById('btnResetConfigCarboidrati')?.addEventListener('click', async ()=>{
@@ -2507,9 +2353,9 @@ async function renderSetTabellaGiorno(){
     const cells=NOMI_GIORNI_SET.map((_,i)=>{
       const key='giorno_'+i, sel=(tabella[key]||[]).includes(c.chiave), dayMax=(tabella[key]||[]).length>=2;
       const disabled=(dayMax||rowMax)&&!sel;
-      return `<td class="cella"><button data-set-cella="${i}|${c.chiave}" class="${sel?'active':''} ${disabled?'al-tetto':''}" ${disabled?'disabled':''} style="min-height:36px;min-width:36px;"></button></td>`;
+      return `<td class="cella"><button data-set-cella="${i}|${c.chiave}" class="${sel?'active':''} ${disabled?'al-tetto':''}" ${disabled?'disabled':''}></button></td>`;
     }).join('');
-    return `<tr><td class="riga-label">${c.label}${rowMax?` (max ${tetto})`:''}</td>${cells}</tr>`;
+    return `<tr><td class="riga-label">${c.label}</td>${cells}</tr>`;
   }).join('');
   el.innerHTML=`<table class="tabella-giorno"><tr><th class="col-label"></th>${head}</tr>${righe}</table>`;
   el.querySelectorAll('[data-set-cella]').forEach(b=>b.addEventListener('click',async()=>{
@@ -2544,7 +2390,7 @@ async function renderSetPreferenzeMenu(){
   const recV=await getOne('impostazioni','setVerdurePreferite'); const pref=new Set(recV&&recV.valore?recV.valore:[]);
   const stag=verdureDiStagione(new Date()); const elV=document.getElementById('setVerdurePreferiteLista');
   if(elV){
-    elV.innerHTML=stag.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
+    const stagOrd=[...stag].sort((a,b)=>a.localeCompare(b,'it')); elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
     elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{ const v=b.dataset.setVerdPref; pref.has(v)?pref.delete(v):pref.add(v); await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]}); renderSetPreferenzeMenu(); }));
     elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{ await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]}); renderSetPreferenzeMenu(); });
   }
@@ -2571,50 +2417,8 @@ document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async 
     setTimeout(()=>{ stato.textContent=''; }, 2500); }
 });
 
-async function renderSetVerdure(){
-  const contenitore = document.getElementById('setVerdureLista');
-  if(!contenitore) return;
-  const varianti = await getAll('varianti');
-  const ingredienti = await getAll('ingredienti');
-  const ingPerId = {}; for(const i of ingredienti) ingPerId[i.id]=i;
-  const cfgRec = await getOne('impostazioni','setVerdureDisattivate');
-  const disattivate = new Set(cfgRec && cfgRec.valore ? cfgRec.valore : []);
-  // raccoglie verdure uniche per nome base
-  const verdure = varianti.filter(v=>{
-    const base = ingPerId[v.ingredienteId];
-    return base && base.gruppo==='verdura';
-  });
-  const gruppi = {fresco:'🥗 Fresche (da usare subito)',
-    surgelato:'❄️ Surgelate (media conservazione)',
-    conf:'🥫 Confezionate (lunga conservazione)'};
-  let html='';
-  for(const [cat,label] of Object.entries(gruppi)){
-    const items = verdure.filter(v=>v.categoria===cat);
-    if(!items.length) continue;
-    html += `<div class="zona-header" style="margin-top:14px;">${label}</div>`;
-    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;">`;
-    for(const v of items){
-      const off = disattivate.has(v.id);
-      html += `<button data-verdura-toggle="${v.id}"
-        style="background:${off?'var(--panel-2)':'var(--accent-dim)'};
-        color:${off?'var(--text-dim)':'var(--accent)'};
-        border:1px solid var(--border);border-radius:20px;
-        padding:6px 12px;font-size:0.8rem;cursor:pointer;">${v.nome}</button>`;
-    }
-    html += `</div>`;
-  }
-  contenitore.innerHTML = html || '<div class="meta">Nessuna verdura trovata.</div>';
-  contenitore.querySelectorAll('[data-verdura-toggle]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      const vid = b.dataset.verduraToggle;
-      const rec = await getOne('impostazioni','setVerdureDisattivate');
-      const lista = new Set(rec && rec.valore ? rec.valore : []);
-      if(lista.has(vid)) lista.delete(vid); else lista.add(vid);
-      await put('impostazioni',{chiave:'setVerdureDisattivate', valore:[...lista]});
-      renderSetVerdure();
-    });
-  });
-}
+function tierDisponibilitaVerdura(v){const n=(v&&v.nome||'').toLowerCase();if(v&&v.categoria==='surgelato')return 'surgelato';if(/barattolo|scatola|craut/.test(n)||(v&&v.categoria==='conf'&&!['patate'].includes(n)))return 'confezionato';const freschi=new Set(['basilico fresco','cetriolo','fagiolini','funghi champignon','insalata mista','pomodoro fresco','radicchio','spinaci freschi','zucchine']);if(freschi.has(n))return 'fresco';return 'fresco_duraturo';}
+async function renderSetVerdure(){const contenitore=document.getElementById('setVerdureLista');if(!contenitore)return;const varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const ingPerId={};for(const i of ingredienti)ingPerId[i.id]=i;const cfgRec=await getOne('impostazioni','setVerdureDisattivate');const disattivate=new Set(cfgRec&&cfgRec.valore?cfgRec.valore:[]);const verdure=varianti.filter(v=>{const base=ingPerId[v.ingredienteId];return base&&(base.gruppo==='verdura'||v.nome.toLowerCase()==='patate');});const gruppi=[['fresco','Freschi'],['fresco_duraturo','Freschi duraturi'],['confezionato','Confezionati'],['surgelato','Surgelati']];let html='';for(const [cat,label] of gruppi){const items=verdure.filter(v=>tierDisponibilitaVerdura(v)===cat).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;html+=`<div class="zona-header" style="margin-top:14px;">${label}</div><div class="setting-swipe">`;for(const v of items){const off=disattivate.has(v.id);html+=`<button data-verdura-toggle="${v.id}" style="background:${off?'var(--panel-2)':'var(--accent-dim)'};color:${off?'var(--text-dim)':'var(--accent)'};border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.8rem;cursor:pointer;">${v.nome}</button>`;}html+='</div>';}contenitore.innerHTML=html||'<div class="meta">Nessuna verdura trovata.</div>';contenitore.querySelectorAll('[data-verdura-toggle]').forEach(b=>b.addEventListener('click',async()=>{const vid=b.dataset.verduraToggle;const rec=await getOne('impostazioni','setVerdureDisattivate');const lista=new Set(rec&&rec.valore?rec.valore:[]);lista.has(vid)?lista.delete(vid):lista.add(vid);await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[...lista]});renderSetVerdure();}));}
 
 /* Verifica quali contorni hanno la verdura principale disattivata in Set
    (#setVerdure), e li esclude dal pool. Se il filtro svuota tutto,
@@ -2654,12 +2458,7 @@ async function renderSetVerduraRicorrente(){
   });
   const cfgRec = await getOne('impostazioni','verduraRicorrente');
   const attiva = cfgRec && cfgRec.valore ? cfgRec.valore : null;
-  const stagionali = verdureDiStagione(new Date());
-  // mostra prima le stagionali, poi il resto
-  const ordinate = [...verdure].sort((a,b)=>{
-    const as=stagionali.includes(a.nome)?0:1, bs=stagionali.includes(b.nome)?0:1;
-    return as-bs || a.nome.localeCompare(b.nome);
-  });
+  const ordinate = [...verdure].sort((a,b)=>a.nome.localeCompare(b.nome,'it'));
   let html = `<button data-vr="" class="${!attiva?'active':''}">Nessuna</button>`;
   html += ordinate.map(v=>
     `<button data-vr="${v.id}" class="${attiva===v.id?'active':''}">${v.nome}</button>`
@@ -6044,8 +5843,8 @@ async function getAvanziScomodi(){
   }
   return Object.entries(mappa).map(([variantId, quantita])=>{
     const v = varianti.find(x=>x.id===variantId);
-    return {variantId, nome:v.nome, quantita};
-  }).sort((a,b)=> a.nome.localeCompare(b.nome));
+    return {variantId, nome:v.nome, quantita, prioritaVerdura:v&&v.categoria==='fresco'?0:3};
+  }).sort((a,b)=> a.prioritaVerdura-b.prioritaVerdura || a.nome.localeCompare(b.nome,'it'));
 }
 
 /* Cerca tutte le ricette (di qualsiasi tipoPortata, o filtrate) che contengono un dato
@@ -8520,6 +8319,14 @@ if('serviceWorker' in navigator){
 <script src="motor-v9-2.js?v=11"></script>
 <script src="motor-v9-3.js?v=11"></script>
 <script src="motor-v9-4.js?v=11"></script>
+<script>
+function tierVerduraMotoreV17(v){return tierDisponibilitaVerdura(v);}
+function ordineVerdureGiornoV17(indice){if(indice<=2)return ['fresco','fresco_duraturo','confezionato','surgelato'];if(indice<=4)return ['fresco_duraturo','fresco','confezionato','surgelato'];return ['confezionato','surgelato','fresco_duraturo','fresco'];}
+poolDelGiorno=function(i){return ordineVerdureGiornoV17(i);};
+contorniAmmessiPerPool=function(contorni,mappaVarianti,pool){for(const tier of (Array.isArray(pool)?pool:[])){const out=(contorni||[]).filter(r=>(r.ingredienti||[]).some(i=>{const v=mappaVarianti[i.variantId];return v&&v.gruppoBase==='verdura'&&tierVerduraMotoreV17(v)===tier;}));if(out.length)return out;}return [];};
+motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredienti||[])){const v=cache.vById.get(ing.variantId);if(!v)continue;const b=cache.bById.get(v.ingredienteId);if(b&&b.gruppo==='verdura')return {variantId:v.id,nome:v.nome,tier:tierVerduraMotoreV17(v)};}return null;};
+scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
+</script>
 
 </body>
 </html>
