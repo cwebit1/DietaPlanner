@@ -213,7 +213,7 @@ async function motoreV10CostruisciGriglia(giorni,preferenze,stato){
       const speciale=await motoreV10VoceSpeciale(voce,rById);
       const protetta=motoreV10Protetta(voce);
       const completa=motoreV10VoceCompleta(voce);
-      const categoria=speciale?null:await motoreV10CategoriaVoce(voce,rById);
+      const categoria=(speciale||!protetta)?null:await motoreV10CategoriaVoce(voce,rById);
       celle[g][p]={gruppoProteicoLargo:categoria,origine:categoria&&protetta?'utente_pasto':null,stato:categoria?'definita':'libera',voce,protetta,speciale,completa};
     }
   }
@@ -408,7 +408,7 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
     const premioMaturo=(premio&&Number(premio.valore)>=5&&g===todayISO());
     if(premioMaturo){
       // Lo slot deve restare libero per mostrare la scelta Budino/standard nel Piano.
-      if(col&&col.origine==='motore')await delKey('piano',idCol);
+      if(col&&(col.origine==='motore'||col.origine==='motore_set'))await delKey('piano',idCol);
       continue;
     }
     const [pref,gg,recEsclusi,varianti]=await Promise.all([

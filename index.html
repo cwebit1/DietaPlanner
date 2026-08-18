@@ -4675,6 +4675,7 @@ async function renderColazione(giorno, elementId){
     if(!modificata) return;
     voce.componenti=draft.componenti ? {...draft.componenti} : null;
     voce.colazioneSpecialeId=draft.colazioneSpecialeId||null;
+    voce.origine='utente';
     await put('piano',voce);
     delete draftColazione[pianoId];
     await renderColazione(giorno,elementId);
@@ -7357,6 +7358,7 @@ document.getElementById('btnConfermaAssegnazione').addEventListener('click', asy
     voce.primoId = voce.secondoId = voce.contornoId = null;
   }
 
+  voce.origine = 'utente';
   await put('piano', voce);
   await segnaRicettaUsata(ricetta.id);
 
@@ -8537,6 +8539,8 @@ contorniAmmessiPerPool=function(contorni,mappaVarianti,pool){for(const tier of (
 motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredienti||[])){const v=cache.vById.get(ing.variantId);if(!v)continue;const b=cache.bById.get(v.ingredienteId);if(b&&b.gruppo==='verdura')return {variantId:v.id,nome:v.nome,tier:tierVerduraMotoreV17(v)};}return null;};
 scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
 </script>
+
+<script src="motor-v10.js?v=1"></script>
 
 </body>
 </html>
