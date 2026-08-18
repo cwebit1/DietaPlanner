@@ -1,0 +1,27 @@
+name: Apply DietaPlanner v33
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/scripts/apply_v33.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply layered engine patch
+        run: python .github/scripts/apply_v33.py
+      - name: Syntax check
+        run: |
+          node --check motor-v9-1.js
+          node --check motor-v9-2.js
+          node --check motor-v9-3.js
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add motor-v9-1.js motor-v9-3.js
+          git diff --cached --quiet || git commit -m "Layer user choices before guideline completion v33 [skip ci]"
+          git push
