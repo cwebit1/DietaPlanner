@@ -644,6 +644,7 @@ async function motoreV10ScoreFrigoRicetta(r){
 trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   const info=await infoCombinazioneDraft(draft);
   const [tutte,varianti,ingredienti,storico]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),costruisciStoricoConsumatiMotore()]);
+  const macroTarget=(draft&&draft.soggettoProteico)||info.categoriaProteica||null;
   const targetCarbKey=info.carboidrato||null;
   const targetCarbNome=(info.ingredienteCarboidrato||'').toLowerCase();
   const targetVerdure=new Set((info.verdure||[]).map(x=>(x||'').toLowerCase()));
@@ -652,7 +653,7 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   for(const r of tutte){
     if(r.id===escludiId||r.esclusa||r.piattoSpeciale||(r.tipoPortata||'unico')!=='unico')continue;
     const a=await motoreV10AnalizzaUnico(r,varianti,ingredienti);
-    if(info.categoriaProteica&&a.categoria!==info.categoriaProteica)continue;
+    if(macroTarget&&a.categoria!==macroTarget)continue;
     if(!a.verdure.length)continue;  // la verdura non ha un jolly equivalente
     if(hardVerdura&&!a.verdure.includes(hardVerdura))continue;
     const mancaSoloCarb=!a.carbKeys.length;
@@ -665,7 +666,7 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
     else score+=30;
     if(info.sottotipoProteico&&a.sottotipo===info.sottotipoProteico)score+=35;
-    else if(info.categoriaProteica&&a.categoria===info.categoriaProteica)score+=20;
+    else if(macroTarget&&a.categoria===macroTarget)score+=20;
     if(hardVerdura)score+=100;
     else if(targetVerdure.size&&a.verdure.some(v=>targetVerdure.has(v)))score+=60;
     else score+=20; // verdura diversa ma stessa funzione, se non era hard
@@ -695,11 +696,11 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   if(composta)return composta;
   if(typeof registraRichiestaRicettaReview==='function')await registraRichiestaRicettaReview({
     tipo:draft&&draft.tabAttiva==='sfiziosa'?'ricetta_sfiziosa_mancante':'piatto_unico_mancante',
-    carboidrato:info.carboidrato,categoriaProteica:info.categoriaProteica,sottotipoProteico:info.sottotipoProteico,
+    carboidrato:info.carboidrato,categoriaProteica:macroTarget,sottotipoProteico:info.sottotipoProteico,
     verdura:(info.verdure||[]).join(' + '),pasto,giorno
   });
   return null;
 };
 
-window.MOTORE_V10_REGOLE={versione:'1.5',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
+window.MOTORE_V10_REGOLE={versione:'1.6',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
 })();

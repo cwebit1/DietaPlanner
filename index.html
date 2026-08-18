@@ -5182,12 +5182,14 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
       contornoId: voce.contornoId || null,
       viaSalvafrigo: null,
       categoriaLarga: voce.categoriaLargaE1 || motoreCategoriaDiSottotipo(voce.sottotipoProteicoMotore) || null,
+      soggettoProteico: voce.categoriaLargaE1 || motoreCategoriaDiSottotipo(voce.sottotipoProteicoMotore) || null,
       sottotipoProposto: voce.sottotipoProteicoMotore || null,
       origineCategoria: voce.origineCategoriaMotore || null
     };
     await generaCandidatoDraftModulare(pasto, giorno);
   }
   const draft = draftPasto[chiaveStato];
+  await sincronizzaSoggettoProteicoDraft(pasto,giorno,draft);
 
   const swapHtml = `<button data-swap-pasto style="background:none;border:none;cursor:pointer;font-size:1.05rem;" title="Scambia pranzo/cena">🔄</button>`;
   let html = `
@@ -5356,11 +5358,24 @@ async function trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,escludiId){
   return (typeof motoreMescola==='function'?motoreMescola(pool):pool)[0];
 }
 
+async function sincronizzaSoggettoProteicoDraft(pasto,giorno,draft){
+  if(!draft)return null;
+  // La portata proteica visibile e' la fonte piu' specifica del soggetto.
+  const macro=await macroProteicaDraftRefresh(draft);
+  if(macro)return macro;
+  // Se il secondo non e' ancora materializzato, usa il soggetto assegnato allo slot.
+  const voce=await getOne('piano',(giorno||giornoSelezionato)+'_'+pasto);
+  const daSlot=(voce&&voce.categoriaLargaE1)||draft.soggettoProteico||draft.categoriaLarga||null;
+  if(daSlot){draft.soggettoProteico=daSlot;draft.categoriaLarga=daSlot;}
+  return daSlot;
+}
+
 async function preparaCandidatoPerTabDraft(pasto,giorno,tab){
   const draft=draftPasto[giorno+'_'+pasto]; if(!draft) return;
   if(tab==='portate'){
     if(!draft.primoCereale||!draft.proteinaId||!draft.contornoId) await generaCandidatoDraftModulare(pasto,giorno);
   }else if(tab==='unico'||tab==='sfiziosa'){
+    await sincronizzaSoggettoProteicoDraft(pasto,giorno,draft);
     let r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,null);
     if(!r && typeof motoreV10CompletaDraftPerRealizzazione==='function'){
       await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
@@ -5414,11 +5429,11 @@ async function renderPastoTabContenuto(pasto, giorno, elementId){
       <div class="row" style="align-items:baseline;gap:8px;">
         <span style="font-weight:700;font-size:0.9rem;flex:1;">${secondoNome || 'Nessun secondo'}</span>
         ${protRicetta ? `<button class="icon-info-btn" data-pasto-info="${protRicetta.id}">ⓘ</button>` : ''}
-        <button data-pasto-refresh="secondo" title="Rigenera secondo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
+        <button data-pasto-refresh="secondo" title="Cambia ricetta" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
         <button data-pasto-salvafrigo="secondo" title="Salvafrigo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">♻️</button>
       </div>
       ${protNutri ? `<div class="meta">${Math.round(protNutri.kcal)} kcal</div>` : ''}
-      <div class="row" style="margin-top:6px;gap:6px;"><button class="small" data-pasto-cambia="proteina">Cambia proteina</button>${cottureAmmesse.length>1?'<button class="small" data-pasto-cambia="cottura">Cambia cottura</button>':''}</div>
+      ${cottureAmmesse.length>1?'<div class="row" style="margin-top:6px;gap:6px;justify-content:flex-end;"><button class="small" data-pasto-cambia="cottura">Cambia cottura</button></div>':''}
     </div>`;
 
     let contNome=''; let contRicetta=null;
@@ -5521,6 +5536,7 @@ async function rigeneraPortataDraft(pasto, giorno, tipo){
   }else if(tipo==='contorno'){
     await cambiaCellaDraft(pasto,giorno,'contorno');
   }else if(tipo==='unico'||tipo==='sfiziosa'){
+    await sincronizzaSoggettoProteicoDraft(pasto,giorno,draft);
     let r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,draft.ricettaId);
     if(!r && typeof motoreV10CompletaDraftPerRealizzazione==='function'){
       await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
@@ -5549,15 +5565,20 @@ function punteggioRicettaFrigoRefresh(r,score){
   return n;
 }
 async function macroProteicaDraftRefresh(draft){
-  if(draft.categoriaLarga)return draft.categoriaLarga;
-  const id=draft.proteinaId||draft.ricettaId;
-  if(!id)return null;
-  const r=await getOne('ricette',id);
-  if(!r||!r.gruppoProteico)return null;
-  const macro=motoreCategoriaDiSottotipo(r.gruppoProteico)||r.gruppoProteico;
-  draft.categoriaLarga=macro;
-  if(!draft.sottotipoProposto)draft.sottotipoProposto=r.gruppoProteico;
-  return macro;
+  if(!draft)return null;
+  if(draft.proteinaId){
+    const r=await getOne('ricette',draft.proteinaId);
+    if(r&&r.gruppoProteico){
+      const macro=motoreCategoriaDiSottotipo(r.gruppoProteico)||r.gruppoProteico;
+      draft.soggettoProteico=macro;
+      draft.categoriaLarga=macro;
+      draft.sottotipoProposto=r.gruppoProteico;
+      return macro;
+    }
+  }
+  if(draft.soggettoProteico)return draft.soggettoProteico;
+  if(draft.categoriaLarga){draft.soggettoProteico=draft.categoriaLarga;return draft.categoriaLarga;}
+  return null;
 }
 
 async function cambiaCellaDraft(pasto, giorno, cella){
@@ -5586,7 +5607,7 @@ async function cambiaCellaDraft(pasto, giorno, cella){
       draft.primoId=pr?pr.id:null;
     }
   }else if(cella==='proteina'){
-    const macro=await macroProteicaDraftRefresh(draft);
+    const macro=(await sincronizzaSoggettoProteicoDraft(pasto,giorno,draft))||await macroProteicaDraftRefresh(draft);
     if(!macro){
       await avviso('Non riesco a determinare la macrocategoria proteica di questo secondo.');
       return;
@@ -8697,7 +8718,7 @@ motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredient
 scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
 </script>
 
-<script src="motor-v10.js?v=9"></script>
+<script src="motor-v10.js?v=10"></script>
 
 </body>
 </html>

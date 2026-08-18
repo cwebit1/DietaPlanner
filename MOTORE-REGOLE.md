@@ -217,3 +217,13 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - Esempio UOVA: uova sode, alla coque, strapazzate, frittate, omelette e altre preparazioni restano nella stessa macro. Le varianti di frittata/omelette devono essere guidate anche da ciò che c'è nel frigo.
 - Se una famiglia non dispone di alternative culinarie sufficienti, **non si salta a un'altra macro**: si registra la lacuna nel Review ricette e si rinforza il DB/template.
 - Un piatto unico può rappresentare la stessa macro con una preparazione più completa; il cambio di forma culinaria non autorizza il cambio di funzione nutrizionale.
+
+
+## Soggetto proteico unico tra Portate / Piatto unico / Sfiziosa (v43)
+
+- Ogni pranzo/cena possiede un **soggetto proteico** comune alle diverse forme culinarie.
+- Se Portate mostra UOVA, Piatto unico e Ricetta sfiziosa devono cercare esclusivamente ricette UOVA; lo stesso vale per PESCE, CARNE, FORMAGGI e LEGUMI.
+- Il soggetto viene ricavato prima dalla proteina concreta gia' visibile; i marker di categoria salvati in precedenza non possono prevalere se sono incoerenti.
+- Passare da Portate a Piatto unico/Sfiziosa cambia la forma culinaria, non la macrocategoria del pasto.
+- Il refresh specifico del secondo significa **Cambia ricetta nella stessa macrocategoria**. Non esiste un comando manuale `Cambia proteina` che consenta di saltare ad altra macro.
+- Se non esiste una realizzazione idonea nella stessa macro, si compone usando i moduli disponibili o si registra una lacuna da rinforzare; non si usa una macro diversa per tappare il buco.
