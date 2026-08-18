@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/scripts/apply_v12.py'
+      - '.github/workflows/apply-v12.yml'
 jobs:
   apply:
     runs-on: ubuntu-latest
