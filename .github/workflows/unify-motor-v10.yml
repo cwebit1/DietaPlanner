@@ -1,0 +1,73 @@
+name: Unify motor v10
+on:
+  push:
+    paths:
+      - '.github/unify_motor_trigger.txt'
+
+jobs:
+  unify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build single motor file
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp motor-v10.js motor-v10-layer.js
+          cat > motor-v10.new.js <<'EOF'
+          /* =========================================================
+             MOTORE UNIFICATO v10
+             File unico: base storica v9-1/v9-2/v9-3/v9-4 + bridge v17 + layer v10.
+             Consolidamento meccanico: nessuna logica viene modificata in questo passaggio.
+             ========================================================= */
+          EOF
+          cat motor-v9-1.js >> motor-v10.new.js
+          printf '\n\n' >> motor-v10.new.js
+          cat motor-v9-2.js >> motor-v10.new.js
+          printf '\n\n' >> motor-v10.new.js
+          cat motor-v9-3.js >> motor-v10.new.js
+          printf '\n\n' >> motor-v10.new.js
+          cat motor-v9-4.js >> motor-v10.new.js
+          printf '\n\n' >> motor-v10.new.js
+          cat >> motor-v10.new.js <<'EOF'
+          function tierVerduraMotoreV17(v){return tierDisponibilitaVerdura(v);}
+          function ordineVerdureGiornoV17(indice){if(indice<=2)return ['fresco','fresco_duraturo','confezionato','surgelato'];if(indice<=4)return ['fresco_duraturo','fresco','confezionato','surgelato'];return ['confezionato','surgelato','fresco_duraturo','fresco'];}
+          poolDelGiorno=function(i){return ordineVerdureGiornoV17(i);};
+          contorniAmmessiPerPool=function(contorni,mappaVarianti,pool){for(const tier of (Array.isArray(pool)?pool:[])){const out=(contorni||[]).filter(r=>(r.ingredienti||[]).some(i=>{const v=mappaVarianti[i.variantId];return v&&v.gruppoBase==='verdura'&&tierVerduraMotoreV17(v)===tier;}));if(out.length)return out;}return [];};
+          motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredienti||[])){const v=cache.vById.get(ing.variantId);if(!v)continue;const b=cache.bById.get(v.ingredienteId);if(b&&b.gruppo==='verdura')return {variantId:v.id,nome:v.nome,tier:tierVerduraMotoreV17(v)};}return null;};
+          scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
+          EOF
+          printf '\n\n' >> motor-v10.new.js
+          cat motor-v10-layer.js >> motor-v10.new.js
+          mv motor-v10.new.js motor-v10.js
+          rm motor-v10-layer.js
+
+      - name: Replace five script chain with one script
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          start=s.index('<script src="motor-v9-1.js?v=11"></script>')
+          end=s.index('<script src="motor-v10.js?v=10"></script>')+len('<script src="motor-v10.js?v=10"></script>')
+          replacement='<script src="motor-v10.js?v=11"></script>'
+          s=s[:start]+replacement+s[end:]
+          p.write_text(s,encoding='utf-8')
+
+      - name: Verify single engine include
+        shell: bash
+        run: |
+          test "$(grep -c 'script src=\"motor-v10.js?v=11\"' index.html)" -eq 1
+          test "$(grep -c 'script src=\"motor-v9-' index.html || true)" -eq 0
+          grep -q 'MOTORE v10 — pipeline a layer' motor-v10.js
+          grep -q 'MOTORE MENU DEFINITIVO v9' motor-v10.js
+
+      - name: Commit unified motor
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add motor-v10.js index.html
+          git diff --cached --quiet || git commit -m "Unify motor into single v10 file [skip ci]"
+          git push
