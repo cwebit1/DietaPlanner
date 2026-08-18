@@ -1,0 +1,1 @@
+2026-08-18 v34 granular HARD + Set matrix + recipe DB coverage
