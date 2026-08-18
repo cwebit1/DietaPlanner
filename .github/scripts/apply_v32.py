@@ -19,3 +19,4 @@ if old not in s:
 s=s.replace(old,new,1)
 p.write_text(s,encoding='utf-8')
 print('v32: fixed breakfast settings render stop caused by undefined NOMI_GIORNI_BREVI')
+# trigger
