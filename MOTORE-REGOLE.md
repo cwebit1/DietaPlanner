@@ -1,6 +1,6 @@
 # DietaPlanner — Regole normative del motore
 
-Versione regole: 1.0 — 18/08/2026
+Versione regole: 1.1 — 18/08/2026
 
 Questo file è il riferimento stabile per ogni modifica futura al motore di generazione. Prima di correggere o aggiungere logica al motore, verificare che la modifica rispetti queste regole. Il motore considerato qui riguarda SOLO colazione, pranzo e cena.
 
@@ -89,15 +89,15 @@ Le frequenze riguardano i pasti ordinari e vengono completate dal motore soltant
 ## 9. Colazione
 
 - Il motore gestisce la colazione separatamente da pranzo/cena.
-- Il Set può definire componenti della colazione e i giorni in cui applicarli.
-- Nei giorni selezionati, le scelte esplicite del Set sono HARD; eventuali componenti lasciati liberi possono essere completati soltanto con combinazioni coerenti già previste nella matrice dell'app.
+- Il Set definisce i componenti della colazione e i giorni in cui applicarli.
+- Nei giorni selezionati la composizione salvata nel Set viene applicata esattamente: anche `nessuno` su un gruppo è una scelta esplicita e non viene riempita dal motore.
 - Nei giorni non selezionati il motore sceglie una combinazione coerente dalla matrice automatica, con rotazione e senza usare gli ingredienti esclusi dalla sola colazione.
 - Le esclusioni colazione non devono influire su pranzo/cena.
 - Bibita è descrittiva e non entra nel calcolo nutrizionale.
 - Le combinazioni automatiche devono essere culinarmente sensate: non pescare ingredienti indipendenti senza una combinazione validata.
 - Il PDF considera grassi e carboidrati semplici facoltativi e contempla colazioni occasionalmente diverse dal solito 1-2 volte/settimana.
 - Regola applicativa confermata: dopo 5 colazioni morigerate consecutive deve essere proposta all'utente la possibilità del Budino premio. Il premio è una scelta, non una sostituzione forzata. Dopo la decisione il contatore riparte da zero.
-- La generazione settimanale non deve precompilare lo slot odierno quando il premio Budino è maturato, altrimenti il popup premio non può apparire.
+- Una colazione ordinaria già programmata non deve nascondere il premio maturato: scegliendo `standard` resta la colazione prevista; scegliendo `Budino` viene sostituita deliberatamente dall'utente.
 
 ## 10. Rotazione e storico
 
@@ -116,10 +116,12 @@ La domanda del motore è prima: "cosa deve esserci in questo slot?" e solo dopo 
 Modalità automatica predefinita. Deve realizzare carboidrato + proteina + verdura mantenendo i vincoli dello slot.
 
 ### Piatto unico
-- Deve rappresentare la stessa combinazione/macrocategorie già determinate.
+- Deve rappresentare la stessa struttura funzionale già determinata.
 - Match in ordine: ingredienti esatti -> sottocategorie -> macrocategorie compatibili.
-- Non cambiare gli alimenti/vincoli dello slot per far entrare una ricetta.
-- Se non esiste ricetta compatibile, non proporre nulla e registrare la combinazione in reviewRicetteMancanti.
+- Il match esatto ha priorità, ma una variante funzionalmente equivalente può essere proposta quando il vincolo non è HARD (es. altro carboidrato o altra verdura della stessa funzione).
+- Una verdura ricorrente programmata è HARD e non può essere sostituita da una verdura diversa nel fallback macro.
+- La macrocategoria proteica determinata dallo slot deve restare invariata.
+- Se non esiste ricetta compatibile, non proporre nulla e registrare la combinazione in `reviewRicetteMancanti`.
 
 ### Ricetta sfiziosa
 Stessa logica del piatto unico: compatibilità per macro/sottocategorie, non enumerazione di ogni combinazione possibile.
@@ -142,7 +144,7 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 8. Verdura ricorrente rispettata negli slot programmati.
 9. Preferenze verdure e deperibilità influenzano la priorità senza violare i vincoli HARD.
 10. Ingredienti esclusi dalla colazione non compaiono nelle colazioni automatiche e restano disponibili a pranzo/cena.
-11. Budino premio disponibile dopo 5 colazioni morigerate consecutive.
+11. Budino premio disponibile dopo 5 colazioni morigerate consecutive anche se esiste già una colazione ordinaria programmata per quel giorno.
 12. Refresh di una componente non cambia le altre macrocategorie/vincoli dello slot.
-13. Piatto unico/sfiziosa non alterano la griglia alimentare; se manca match, registrazione Review.
+13. Piatto unico/sfiziosa non alterano la struttura funzionale della griglia; se manca match, registrazione Review.
 14. Rigenerare la settimana cambia solo gli elementi generati dal motore, non quelli scelti/programmati dall'utente.
