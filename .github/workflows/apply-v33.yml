@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - '.github/scripts/apply_v33.py'
+      - '.github/scripts/apply_v33_hard_components.py'
+      - '.github/scripts/test_set_matrix.py'
+      - '.github/scripts/motor-v10-validation-trigger.txt'
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -13,6 +16,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Apply layered engine integration
         run: python .github/scripts/apply_v33.py
+      - name: Apply granular HARD component semantics
+        run: python .github/scripts/apply_v33_hard_components.py
       - name: Syntax check motor files
         run: |
           node --check motor-v9-1.js
@@ -31,10 +36,12 @@ jobs:
               p.write_text(code,encoding='utf-8')
               subprocess.run(['node','--check',str(p)],check=True)
           PY
+      - name: Test Set matrix and scan recipe DB coverage
+        run: python .github/scripts/test_set_matrix.py
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html motor-v10.js
-          git diff --cached --quiet || git commit -m "Enable layered menu engine v10 v33 [skip ci]"
+          git add index.html motor-v10.js TEST-MATRICE-SET.md REVIEW-RICETTE-DB.md review-ricette-db.json
+          git diff --cached --quiet || git commit -m "Validate granular HARD engine and record DB recipe gaps v34 [skip ci]"
           git push
