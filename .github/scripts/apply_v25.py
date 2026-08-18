@@ -42,3 +42,4 @@ s=s.replace(old_note,new_note,1)
 
 p.write_text(s,encoding='utf-8')
 print('v25 vegetable section titles and recurring selection note styling applied')
+# trigger v25
