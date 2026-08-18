@@ -216,8 +216,8 @@ async function preparaBudgetCarboidratiMotore(){
 async function scegliCarboidratoMotore(stato, forzaJolly){
   if(forzaJolly){
     let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
-    // Friselle: percorso 0-2/settimana.
-    pool=pool.filter(k=>k!=='friselle'||(stato.carboidratiUsati[k]||0)<2);
+    // Rispetta il tetto reale definito in CARBOIDRATI_PASTO (friselle = 1/settimana).
+    pool=pool.filter(k=>{ const c=CARBOIDRATI_PASTO[k]; return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2); });
     if(!pool.length) pool=['pane'];
     const nonUsati=pool.filter(k=>(stato.carboidratiUsati[k]||0)===0);
     if(nonUsati.length) pool=nonUsati;
@@ -236,7 +236,7 @@ async function scegliCarboidratoMotore(stato, forzaJolly){
   pool=pool.filter(k=>{
     const c=CARBOIDRATI_PASTO[k];
     if(!c.limitato) return true;
-    const cap=(k==='friselle'?2:(c.tettoSettimanale||2));
+    const cap=(c.tettoSettimanale||2);
     return (stato.carboidratiUsati[k]||0)<cap;
   });
   if(!pool.length) pool=['pane'];

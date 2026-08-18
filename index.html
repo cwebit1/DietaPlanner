@@ -3378,7 +3378,8 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
    - segnaRicettaUsata (che conta ai fini di varietà/rotazione) viene
      chiamata SOLO alla conferma, mai mentre si sta solo guardando.
    ========================================================= */
-let draftPasto = {}; // pasto -> {fascia, modo, ricettaId, primoId, secondoId, contornoId, portataAttiva}
+/* Draft temporaneo del pasto in editing (non ancora confermato). Chiave: giorno_pasto. */
+let draftPasto = {};
 /* I1: stato centralizzato dei pannelli. Un unico oggetto traccia lo stato
    aperto/chiuso di tutti i tipi di pannello, invece di tre oggetti separati
    sparsi nel codice. Gli alias sotto mantengono la compatibilità con tutto
@@ -4823,38 +4824,12 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
   giorno = giorno || giornoSelezionato;
   const chiaveStato = giorno+'_'+pasto;
   const el = document.getElementById(elementId || (pasto==='pranzo'?'blocPranzo':'blocCena'));
+  if(!el) return;
   const pianoId = giorno+'_'+pasto;
   let voce = await getOne('piano', pianoId);
   voce = Object.assign({id:pianoId, modo:'multi', fascia:'facile', porzioni:1}, voce||{});
 
-  // lo scambio pranzo/cena non ha senso (e violerebbe l'immutabilità) se uno dei due
-  // è già consumato — mostro l'icona solo quando entrambi sono ancora modificabili
-  let swapDisponibile = false;
-  if(!elementId){
-    const altroPasto = pasto==='pranzo' ? 'cena' : 'pranzo';
-    const voceAltro = await getOne('piano', giorno+'_'+altroPasto);
-    swapDisponibile = !voce.consumato && !(voceAltro && voceAltro.consumato);
-  }
-  const iconaSwap = swapDisponibile ? `
-    <span style="position:relative;">
-      <button data-swap-apri="1" title="Scambia pranzo e cena" style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;">🔄</button>
-      <div data-swap-fumetto="1" style="display:none;position:absolute;right:0;top:120%;z-index:20;background:var(--bg-card,#fff);border:1px solid var(--border);border-radius:10px;padding:10px;width:200px;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-        <div class="meta" style="margin-bottom:8px;">Vuoi invertire il pranzo con la cena?</div>
-        <div class="row" style="gap:6px;">
-          <button class="small" data-swap-no="1">No</button>
-          <button class="small accent" data-swap-si="1">Sì</button>
-        </div>
-      </div>
-    </span>` : '';
-  const iconaBlocco = '';
-  const corpoHtmlIniziale = elementId
-    ? `<div class="row" style="margin-bottom:8px;justify-content:flex-end;">${iconaBlocco}</div>`
-    : `<div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
-    <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
-    <span style="display:flex;align-items:center;gap:4px;">${iconaBlocco}${iconaSwap}</span>
-  </div>`;
-
-  // pasto già consumato OPPURE giorno nel passato: immutabile, sola lettura
+  // I pasti già consumati o ormai trascorsi restano immutabili.
   const scaduto = fasciaPastoSuperata(giorno, pasto);
   if(voce.consumato || scaduto){
     const idRicetteCons = voce.modo==='multi'
@@ -4867,146 +4842,467 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
       if(!r) continue;
       const n = await nutrizionePerPersona(r);
       kcalTot += n.kcal;
-      righeCons += `<div style="font-weight:700;font-size:0.9rem;">✓ ${r.nome}</div>`;
+      const nomeMostrato=(rid===voce.secondoId && voce.cotturaSecondo) ? r.nome+' '+voce.cotturaSecondo : r.nome;
+      righeCons += `<div style="font-weight:700;font-size:0.9rem;">✓ ${nomeMostrato}</div>`;
     }
-    // Editor ✏️: se il pasto è nel passato ma non ha ricette assegnate,
-    // permetti all'utente di ricomporre cosa ha mangiato dal ricettario
     const mostraEditor = scaduto && !voce.consumato && !voce.ricettaId && !voce.primoId;
     const btnEditor = mostraEditor ? `<button class="small accent" data-editor-pasto="${giorno}|${pasto}" style="margin-bottom:8px;">✏️ Cosa hai mangiato?</button>` : '';
-    // Matita (solo icona) sui pasti CONSUMATI per ridefinirli in caso di errore
     const btnMatitaConsumato = voce.consumato ? `<button data-editor-pasto="${giorno}|${pasto}" title="Correggi questo pasto" style="background:none;border:none;cursor:pointer;font-size:0.95rem;line-height:1;padding:2px 4px;color:var(--text-dim);vertical-align:middle;">✏️</button>` : '';
-    el.innerHTML = corpoHtmlIniziale + btnEditor + `<div style="opacity:0.7;">
-      ${righeCons || '<div class="meta">✓ Nessuna ricetta</div>'}
-      ${idRicetteCons.length ? `<div class="meta">${Math.round(kcalTot)} kcal totali (per 1 persona) ${btnMatitaConsumato}</div>` : ''}
-    </div>`;
+    el.innerHTML = `
+      <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
+      </div>
+      ${btnEditor}
+      <div style="opacity:0.7;">
+        ${righeCons || '<div class="meta">✓ Nessun pasto registrato</div>'}
+        ${idRicetteCons.length ? `<div class="meta">${Math.round(kcalTot)} kcal totali ${btnMatitaConsumato}</div>` : ''}
+      </div>`;
     el.querySelector('[data-editor-pasto]')?.addEventListener('click', async ()=>{
       await apriModalEditorPasto(giorno, pasto);
     });
     return;
   }
 
-  // primo riempimento: si può auto-programmare
+  // Il motore garantisce un pasto programmato iniziale; il draft non scrive sul DB
+  // finché l'utente non preme la conferma.
   voce = await garantisciRicettaSlot(giorno, pasto, voce);
 
-  let corpoHtml = corpoHtmlIniziale;
-  const porzioniSel = voce.porzioni||1;
-
-  if(voce.modo==='multi'){
-    const portate = [['primoId','Primo'],['secondoId','Secondo'],['contornoId','Contorno']];
-    for(const [chiave, label] of portate){
-      const rid = voce[chiave];
-      if(!rid){ corpoHtml += `<div class="meta">${label}: nessuna ricetta compatibile in archivio.</div>`; continue; }
-      const ricetta = await getOne('ricette', rid);
-      if(!ricetta) continue;
-      const nutri = await nutrizionePerPersona(ricetta);
-      const coperturaPortata = await calcolaCoperturaRicetta(ricetta);
-      corpoHtml += `
-        <div style="margin-bottom:10px;">
-          <div class="row" style="align-items:baseline;gap:8px;">
-            <span class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;min-width:70px;flex-shrink:0;">${label}</span>
-            <span class="nome-ricetta-link" data-ricetta="${rid}" style="font-weight:700;font-size:0.9rem;flex:1;">${voce.viaSalvafrigo===chiave ? '♻️ ' : ''}${label==='Secondo' ? iconaGruppoProteico(ricetta.gruppoProteico)+' ' : ''}${ricetta.nome}${label==='Secondo' && voce.cotturaSecondo ? ' ' + voce.cotturaSecondo : ''}</span>
-            <button class="icon-info-btn" data-info="${rid}" title="Info nutrizionale">ⓘ</button>
-            ${stellaBtn(ricetta)}
-          </div>
-          <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
-          ${coperturaPortata<1 ? `<div class="warn-tag">⚠ per completarlo servirebbe un acquisto</div>` : ''}
-          ${nutrizioneInaffidabile(ricetta) ? `<div class="warn-tag">⚠ nutrizione non compilata — conta 0 kcal nel computo</div>` : ''}
-        </div>`;
-    }
-  } else {
-    if(!voce.ricettaId){
-      corpoHtml += `<div class="meta">Nessuna ricetta in archivio compatibile con questa fascia/varietà.</div>`;
-    } else {
-      const ricetta = await getOne('ricette', voce.ricettaId);
-      if(ricetta){
-        const nutri = await nutrizionePerPersona(ricetta);
-        const coperturaUnico = await calcolaCoperturaRicetta(ricetta);
-        corpoHtml += `
-          <div class="row" style="align-items:baseline;gap:8px;">
-            <span class="nome-ricetta-link" data-ricetta="${ricetta.id}" style="font-size:0.95rem;font-weight:700;flex:1;">${voce.viaSalvafrigo==='ricettaId' ? '♻️ ' : ''}${iconaGruppoProteico(ricetta.gruppoProteico)} ${ricetta.nome}</span>
-            <button class="icon-info-btn" data-info="${ricetta.id}" title="Info nutrizionale">ⓘ</button>
-            ${stellaBtn(ricetta)}
-          </div>
-          <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
-          ${coperturaUnico<1 ? `<div class="warn-tag">⚠ per completarlo servirebbe un acquisto</div>` : ''}
-          ${nutrizioneInaffidabile(ricetta) ? `<div class="warn-tag">⚠ nutrizione non compilata — conta 0 kcal nel computo</div>` : ''}`;
-      }
-    }
+  if(!draftPasto[chiaveStato]){
+    draftPasto[chiaveStato] = {
+      tabAttiva: 'portate',
+      fascia: voce.fascia || 'facile',
+      modo: voce.modo || 'multi',
+      ricettaId: voce.ricettaId || null,
+      primoCereale: voce.primoCereale || null,
+      primoSugoId: voce.primoSugoId || null,
+      primoId: voce.primoId || null,
+      proteinaId: voce.secondoId || null,
+      cottura: voce.cotturaSecondo || null,
+      contornoId: voce.contornoId || null,
+      viaSalvafrigo: null,
+      categoriaLarga: voce.categoriaLargaE1 || motoreCategoriaDiSottotipo(voce.sottotipoProteicoMotore) || null,
+      sottotipoProposto: voce.sottotipoProteicoMotore || null,
+      origineCategoria: voce.origineCategoriaMotore || null
+    };
+    await generaCandidatoDraftModulare(pasto, giorno);
   }
+  const draft = draftPasto[chiaveStato];
 
-  corpoHtml += `
-    <details class="pasto-sub-panel" data-panel="${chiaveStato}" ${pannelloApertoAlt[chiaveStato]?'open':''}>
-      <summary>Proposte alternative</summary>
-      <div class="contenuto" id="altContenuto_${elementId?'menu_':''}${chiaveStato}"></div>
-    </details>
-  `;
-  el.innerHTML = corpoHtml;
+  const swapHtml = `<button data-swap-pasto style="background:none;border:none;cursor:pointer;font-size:1.05rem;" title="Scambia pranzo/cena">🔄</button>`;
+  let html = `
+    <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
+      <span>${swapHtml}</span>
+    </div>
+    <div style="margin-bottom:8px;">${fasciaBadgeColorata(draft.fascia)}</div>`;
 
-  el.querySelectorAll('[data-star]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      await toggleFavorito(b.dataset.star);
+  const isMenuContext = !!elementId;
+  const tabs = isMenuContext
+    ? [['portate','Portate'],['unico','Piatto unico'],['sfiziosa','Ricetta sfiziosa']]
+    : [['portate','Portate'],['unico','Piatto unico'],['sfiziosa','Ricetta sfiziosa'],['speciale','Speciale']];
+
+  html += `<div class="tabgroup" style="margin-bottom:12px;">`;
+  for(const [key,label] of tabs){
+    html += `<button data-pasto-tab="${key}" class="${draft.tabAttiva===key?'active':''}">${label}</button>`;
+  }
+  html += `</div>`;
+  html += `<div id="pastoTabContenuto_${elementId?'m_':''}${chiaveStato}"></div>`;
+  html += `<button class="small accent" data-pasto-conferma style="width:100%;margin-top:12px;">Usa questi come pasto programmato</button>`;
+  el.innerHTML = html;
+
+  await renderPastoTabContenuto(pasto, giorno, elementId);
+
+  el.querySelectorAll('[data-pasto-tab]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      draft.tabAttiva = btn.dataset.pastoTab;
+      await preparaCandidatoPerTabDraft(pasto,giorno,draft.tabAttiva);
       renderBloccoCompleto(pasto, giorno, elementId);
     });
   });
-  el.querySelectorAll('[data-ricetta]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      const r = await getOne('ricette', b.dataset.ricetta);
-      apriModalDettaglioRicetta(r, voce);
-    });
+  el.querySelector('[data-pasto-conferma]')?.addEventListener('click', async ()=>{
+    await confermaPastoDaTab(pasto, voce, giorno, elementId);
   });
-  el.querySelectorAll('[data-info]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      const r = await getOne('ricette', b.dataset.info);
-      apriModalInfoNutrizionale(r);
-    });
-  });
-  const dettagli = el.querySelector('[data-panel]');
-  dettagli.addEventListener('toggle', ()=>{
-    pannelloApertoAlt[chiaveStato] = dettagli.open;
-    if(dettagli.open){
-      // I6: chiusura reciproca — chiudi gli altri pannelli "Proposte alternative"
-      // aperti nella stessa sezione (Piano o Menù), evitando loop grazie al
-      // controllo if(dettagli.open) che ignora gli eventi toggle con open=false
-      const sezione = el.closest('section');
-      if(sezione){
-        sezione.querySelectorAll('details[data-panel][open]').forEach(d=>{
-          if(d !== dettagli) d.open = false;
-        });
-      }
-      renderContenutoAlternativaCompleta(pasto, voce, giorno, elementId);
-    }
-  });
-  if(dettagli.open) renderContenutoAlternativaCompleta(pasto, voce, giorno, elementId);
-
-  // F6: toggle blocco piatto
-  el.querySelector('[data-blocca-pasto]')?.addEventListener('click', async ()=>{
-    voce.bloccata = !voce.bloccata;
-    await put('piano', voce);
-    renderBloccoCompleto(pasto, giorno, elementId);
-  });
-
-  const btnSwapApri = el.querySelector('[data-swap-apri]');
-  if(btnSwapApri){
-    const fumetto = el.querySelector('[data-swap-fumetto]');
-    btnSwapApri.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      fumetto.style.display = fumetto.style.display==='none' ? 'block' : 'none';
-    });
-    el.querySelector('[data-swap-no]').addEventListener('click', (e)=>{
-      e.stopPropagation();
-      fumetto.style.display = 'none';
-    });
-    el.querySelector('[data-swap-si]').addEventListener('click', async (e)=>{
-      e.stopPropagation();
-      fumetto.style.display = 'none';
-      await scambiaPranzoCena(giorno);
+  el.querySelector('[data-swap-pasto]')?.addEventListener('click', async ()=>{
+    const altro = pasto==='pranzo'?'cena':'pranzo';
+    const altroVoce=await getOne('piano',giorno+'_'+altro);
+    if(altroVoce&&altroVoce.consumato){ await avviso('Non posso scambiare un pasto già consumato.'); return; }
+    await scambiaPranzoCena(giorno);
+    draftPasto[giorno+'_pranzo']=null;
+    draftPasto[giorno+'_cena']=null;
+    if(elementId) await renderMenuSettimanale();
+    else{
       renderBloccoCompleto('pranzo', giorno);
       renderBloccoCompleto('cena', giorno);
-      if(giorno===giornoSelezionato){ renderNutrizioneGiorno(); renderFrequenzeSettimana(); }
-      aggiornaListaSpesaAutomatica(0); aggiornaListaSpesaAutomatica(1);
-    });
+    }
+    if(giorno===giornoSelezionato){ renderNutrizioneGiorno(); renderFrequenzeSettimana(); }
+    aggiornaListaSpesaAutomatica(0); aggiornaListaSpesaAutomatica(1);
+  });
+}
+
+function cottureAmmesseProteina(nomeProteina, gruppoProteico){
+  const chiave=(nomeProteina||'').trim().toLowerCase();
+  if(typeof COTTURE_PER_PROTEINA!=='undefined' && Object.prototype.hasOwnProperty.call(COTTURE_PER_PROTEINA,chiave)){
+    return (COTTURE_PER_PROTEINA[chiave]||[]).slice();
+  }
+  return (COTTURE_STANDARD[gruppoProteico]||[]).slice();
+}
+
+function giorniSettimanaDiDataMotore(giorno){
+  const d=new Date(giorno+'T12:00:00');
+  const dow=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-dow);
+  const out=[];
+  for(let i=0;i<7;i++){
+    const x=new Date(d); x.setDate(d.getDate()+i);
+    out.push(x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'));
+  }
+  return out;
+}
+
+async function contaCarboidratiSettimanaDraft(giorno, escludiPianoId){
+  const giorni=giorniSettimanaDiDataMotore(giorno);
+  const out={};
+  for(const g of giorni){
+    for(const p of ['pranzo','cena']){
+      const id=g+'_'+p;
+      if(id===escludiPianoId) continue;
+      const v=await getOne('piano',id);
+      if(v&&v.primoCereale) out[v.primoCereale]=(out[v.primoCereale]||0)+1;
+    }
+  }
+  return out;
+}
+
+async function carboidratiAmmessiCambioDraft(giorno,pasto,draft){
+  const conteggi=await contaCarboidratiSettimanaDraft(giorno,giorno+'_'+pasto);
+  const rec=await getOne('impostazioni','configCarboidrati');
+  const cfg=rec&&rec.valore?rec.valore:{};
+  const totaleEsplicito=Object.entries(cfg).reduce((n,[k,v])=>n+(CARBOIDRATI_PASTO[k]?Math.max(0,parseInt(v)||0):0),0);
+  return Object.keys(CARBOIDRATI_PASTO).filter(k=>{
+    if(k===draft.primoCereale) return false;
+    const c=CARBOIDRATI_PASTO[k];
+    if(c.limitato && (conteggi[k]||0)>=(c.tettoSettimanale||2)) return false;
+    const quota=Math.max(0,parseInt(cfg[k])||0);
+    if(totaleEsplicito>=14 && quota===0) return false;
+    if(quota>0 && (conteggi[k]||0)>=quota) return false;
+    return true;
+  });
+}
+
+async function validaCarboidratoDraft(giorno,pasto,draft){
+  if(!draft.primoCereale || !CARBOIDRATI_PASTO[draft.primoCereale]) return false;
+  const conteggi=await contaCarboidratiSettimanaDraft(giorno,giorno+'_'+pasto);
+  const c=CARBOIDRATI_PASTO[draft.primoCereale];
+  if(c.limitato && (conteggi[draft.primoCereale]||0)>=(c.tettoSettimanale||2)) return false;
+  const rec=await getOne('impostazioni','configCarboidrati');
+  const cfg=rec&&rec.valore?rec.valore:{};
+  const totaleEsplicito=Object.entries(cfg).reduce((n,[k,v])=>n+(CARBOIDRATI_PASTO[k]?Math.max(0,parseInt(v)||0):0),0);
+  const quota=Math.max(0,parseInt(cfg[draft.primoCereale])||0);
+  if(totaleEsplicito>=14 && quota===0) return false;
+  if(quota>0 && (conteggi[draft.primoCereale]||0)>=quota) return false;
+  return true;
+}
+
+async function infoCombinazioneDraft(draft){
+  const varianti=await getAll('varianti');
+  const ingredienti=await getAll('ingredienti');
+  const vById=new Map(varianti.map(v=>[v.id,v]));
+  const bById=new Map(ingredienti.map(b=>[b.id,b]));
+  const contorno=draft.contornoId?await getOne('ricette',draft.contornoId):null;
+  const verdure=[];
+  for(const i of (contorno&&contorno.ingredienti||[])){
+    const v=i.variantId?vById.get(i.variantId):null;
+    const b=v?bById.get(v.ingredienteId):null;
+    if(v&&b&&b.gruppo==='verdura') verdure.push(v.nome);
+  }
+  return {
+    carboidrato:draft.primoCereale||null,
+    ingredienteCarboidrato:draft.primoCereale&&CARBOIDRATI_PASTO[draft.primoCereale]?CARBOIDRATI_PASTO[draft.primoCereale].ingrediente:null,
+    categoriaProteica:draft.categoriaLarga||null,
+    sottotipoProteico:draft.sottotipoProposto||null,
+    verdure
+  };
+}
+
+async function trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,escludiId){
+  const info=await infoCombinazioneDraft(draft);
+  const tutte=await getAll('ricette');
+  const varianti=await getAll('varianti');
+  const ingredienti=await getAll('ingredienti');
+  const vById=new Map(varianti.map(v=>[v.id,v]));
+  const bById=new Map(ingredienti.map(b=>[b.id,b]));
+  const targetCarb=(info.ingredienteCarboidrato||'').toLowerCase();
+  const targetVerdure=new Set((info.verdure||[]).map(x=>x.toLowerCase()));
+
+  const compatibili=[];
+  for(const r of tutte){
+    if(r.id===escludiId || r.esclusa || r.piattoSpeciale || (r.tipoPortata||'unico')!=='unico') continue;
+    const cat=motoreCategoriaDiSottotipo(r.gruppoProteico);
+    if(info.categoriaProteica && cat!==info.categoriaProteica) continue;
+    const nomi=[]; let haVerdura=false;
+    for(const ing of (r.ingredienti||[])){
+      if(ing.variantId){
+        const v=vById.get(ing.variantId); if(!v) continue;
+        nomi.push(v.nome.toLowerCase());
+        const b=bById.get(v.ingredienteId);
+        if(b&&b.gruppo==='verdura'&&targetVerdure.has(v.nome.toLowerCase())) haVerdura=true;
+      }else if(ing.nomeLibero){ nomi.push(ing.nomeLibero.toLowerCase()); }
+    }
+    if(targetCarb && !nomi.includes(targetCarb)) continue;
+    if(targetVerdure.size && !haVerdura) continue;
+    compatibili.push(r);
+  }
+
+  if(!compatibili.length){
+    if(typeof registraRichiestaRicettaReview==='function'){
+      await registraRichiestaRicettaReview({
+        tipo:'piatto_unico_mancante',
+        carboidrato:info.carboidrato,
+        categoriaProteica:info.categoriaProteica,
+        sottotipoProteico:info.sottotipoProteico,
+        verdura:(info.verdure||[]).join(' + '),
+        pasto,
+        giorno
+      });
+    }
+    return null;
+  }
+  const nonCorrente=compatibili.filter(r=>r.id!==draft.ricettaId);
+  const pool=nonCorrente.length?nonCorrente:compatibili;
+  return (typeof motoreMescola==='function'?motoreMescola(pool):pool)[0];
+}
+
+async function preparaCandidatoPerTabDraft(pasto,giorno,tab){
+  const draft=draftPasto[giorno+'_'+pasto]; if(!draft) return;
+  if(tab==='portate'){
+    if(!draft.primoCereale||!draft.proteinaId||!draft.contornoId) await generaCandidatoDraftModulare(pasto,giorno);
+  }else if(tab==='unico'||tab==='sfiziosa'){
+    const r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,null);
+    draft.ricettaId=r?r.id:null;
+  }else if(tab==='speciale'){
+    const tutte=await getAll('ricette');
+    const speciali=tutte.filter(r=>r.piattoSpeciale&&!r.esclusa&&(r.tipoPortata||'unico')==='unico');
+    if(speciali.length && !speciali.some(r=>r.id===draft.ricettaId)) draft.ricettaId=(typeof motoreMescola==='function'?motoreMescola(speciali):speciali)[0].id;
   }
 }
+
+async function renderPastoTabContenuto(pasto, giorno, elementId){
+  giorno = giorno || giornoSelezionato;
+  const chiaveStato = giorno+'_'+pasto;
+  const contId = 'pastoTabContenuto_'+(elementId?'m_':'')+chiaveStato;
+  const cont = document.getElementById(contId);
+  if(!cont) return;
+  const draft = draftPasto[chiaveStato];
+  if(!draft) return;
+  let html = '';
+
+  if(draft.tabAttiva === 'portate'){
+    const carbLabel = draft.primoCereale && CARBOIDRATI_PASTO[draft.primoCereale] ? CARBOIDRATI_PASTO[draft.primoCereale].label : '';
+    let sugoNome = '';
+    if(draft.primoSugoId){ const sugoR=await getOne('ricette',draft.primoSugoId); if(sugoR) sugoNome=sugoR.nome; }
+    const primoNome = carbLabel + (sugoNome ? ' ' + sugoNome : '');
+    const primoRicetta = draft.primoId ? await getOne('ricette', draft.primoId) : null;
+    const primoNutri = primoRicetta ? await nutrizionePerPersona(primoRicetta) : null;
+    html += `<div style="margin-bottom:14px;">
+      <div class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;margin-bottom:4px;">Primo</div>
+      <div class="row" style="align-items:baseline;gap:8px;">
+        <span style="font-weight:700;font-size:0.9rem;flex:1;">${primoNome || 'Nessun primo'}</span>
+        ${primoRicetta ? `<button class="icon-info-btn" data-pasto-info="${primoRicetta.id}">ⓘ</button>` : ''}
+        <button data-pasto-refresh="primo" title="Rigenera primo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
+        <button data-pasto-salvafrigo="primo" title="Salvafrigo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">♻️</button>
+      </div>
+      ${primoNutri ? `<div class="meta">${Math.round(primoNutri.kcal)} kcal</div>` : ''}
+      <div class="row" style="margin-top:6px;gap:6px;"><button class="small" data-pasto-cambia="carb">Cambia carb</button><button class="small" data-pasto-cambia="sugo">Cambia sugo</button></div>
+    </div>`;
+
+    let protNome=''; let protRicetta=null;
+    if(draft.proteinaId){ protRicetta=await getOne('ricette',draft.proteinaId); if(protRicetta) protNome=protRicetta.nome; }
+    const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
+    if(draft.cottura && !cottureAmmesse.includes(draft.cottura)) draft.cottura=cottureAmmesse.length?cottureAmmesse[0]:null;
+    const secondoNome=protNome+(draft.cottura?' '+draft.cottura:'');
+    const protNutri=protRicetta?await nutrizionePerPersona(protRicetta):null;
+    html += `<div style="margin-bottom:14px;">
+      <div class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;margin-bottom:4px;">Secondo</div>
+      <div class="row" style="align-items:baseline;gap:8px;">
+        <span style="font-weight:700;font-size:0.9rem;flex:1;">${secondoNome || 'Nessun secondo'}</span>
+        ${protRicetta ? `<button class="icon-info-btn" data-pasto-info="${protRicetta.id}">ⓘ</button>` : ''}
+        <button data-pasto-refresh="secondo" title="Rigenera secondo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
+        <button data-pasto-salvafrigo="secondo" title="Salvafrigo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">♻️</button>
+      </div>
+      ${protNutri ? `<div class="meta">${Math.round(protNutri.kcal)} kcal</div>` : ''}
+      <div class="row" style="margin-top:6px;gap:6px;"><button class="small" data-pasto-cambia="proteina">Cambia proteina</button>${cottureAmmesse.length>1?'<button class="small" data-pasto-cambia="cottura">Cambia cottura</button>':''}</div>
+    </div>`;
+
+    let contNome=''; let contRicetta=null;
+    if(draft.contornoId){ contRicetta=await getOne('ricette',draft.contornoId); if(contRicetta) contNome=contRicetta.nome; }
+    const contNutri=contRicetta?await nutrizionePerPersona(contRicetta):null;
+    html += `<div style="margin-bottom:14px;">
+      <div class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;margin-bottom:4px;">Contorno</div>
+      <div class="row" style="align-items:baseline;gap:8px;">
+        <span style="font-weight:700;font-size:0.9rem;flex:1;">${contNome || 'Nessun contorno'}</span>
+        ${contRicetta ? `<button class="icon-info-btn" data-pasto-info="${contRicetta.id}">ⓘ</button>` : ''}
+        <button data-pasto-refresh="contorno" title="Rigenera contorno" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
+        <button data-pasto-salvafrigo="contorno" title="Salvafrigo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">♻️</button>
+      </div>
+      ${contNutri ? `<div class="meta">${Math.round(contNutri.kcal)} kcal</div>` : ''}
+      <div class="row" style="margin-top:6px;gap:6px;"><button class="small" data-pasto-cambia="contorno">Cambia contorno</button></div>
+    </div>`;
+  } else if(draft.tabAttiva === 'unico' || draft.tabAttiva === 'sfiziosa'){
+    const ricetta=draft.ricettaId?await getOne('ricette',draft.ricettaId):null;
+    const nutri=ricetta?await nutrizionePerPersona(ricetta):null;
+    html += `<div style="margin-bottom:14px;"><div class="row" style="align-items:baseline;gap:8px;">
+      <span style="font-weight:700;font-size:0.9rem;flex:1;">${ricetta ? (draft.tabAttiva==='sfiziosa'?'🍝 ':'')+ricetta.nome : 'Nessuna ricetta compatibile per questa combinazione'}</span>
+      ${ricetta?`<button class="icon-info-btn" data-pasto-info="${ricetta.id}">ⓘ</button>`:''}
+      <button data-pasto-refresh="${draft.tabAttiva}" title="Rigenera" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
+      ${draft.tabAttiva==='unico'?`<button data-pasto-salvafrigo="unico" title="Salvafrigo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">♻️</button>`:''}
+      </div>${nutri?`<div class="meta">${Math.round(nutri.kcal)} kcal</div>`:''}</div>`;
+  } else if(draft.tabAttiva === 'speciale'){
+    const ricetta=draft.ricettaId?await getOne('ricette',draft.ricettaId):null;
+    const nutri=ricetta?await nutrizionePerPersona(ricetta):null;
+    html += `<div style="margin-bottom:14px;"><div class="row" style="align-items:baseline;gap:8px;">
+      <span style="font-weight:700;font-size:0.9rem;flex:1;">${ricetta?'🍽️ '+ricetta.nome:'Nessun piatto speciale'}</span>
+      ${ricetta?`<button class="icon-info-btn" data-pasto-info="${ricetta.id}">ⓘ</button>`:''}
+      <button data-pasto-refresh="speciale" title="Cambia piatto" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>
+      </div>${nutri?`<div class="meta">${Math.round(nutri.kcal)} kcal</div>`:''}${ricetta&&ricetta.piattoSpeciale?'<div class="meta" style="margin-top:4px;">🍽️ Pasto speciale: non genera compensazioni automatiche</div>':''}</div>`;
+  }
+
+  cont.innerHTML=html;
+  cont.querySelectorAll('[data-pasto-info]').forEach(btn=>btn.addEventListener('click',async()=>{const r=await getOne('ricette',btn.dataset.pastoInfo);if(r)apriModalInfoNutrizionale(r);}));
+  cont.querySelectorAll('[data-pasto-refresh]').forEach(btn=>btn.addEventListener('click',async()=>{await rigeneraPortataDraft(pasto,giorno,btn.dataset.pastoRefresh);renderPastoTabContenuto(pasto,giorno,elementId);}));
+  cont.querySelectorAll('[data-pasto-salvafrigo]').forEach(btn=>btn.addEventListener('click',async()=>{await applicaSalvafrigoAPortata(pasto,giorno,btn.dataset.pastoSalvafrigo,btn,elementId);}));
+  cont.querySelectorAll('[data-pasto-cambia]').forEach(btn=>btn.addEventListener('click',async()=>{await cambiaCellaDraft(pasto,giorno,btn.dataset.pastoCambia);renderPastoTabContenuto(pasto,giorno,elementId);}));
+}
+
+async function generaCandidatoDraftModulare(pasto, giorno){
+  giorno=giorno||giornoSelezionato;
+  const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
+  const voce=await getOne('piano',giorno+'_'+pasto);
+  const categoriaLarga=voce&&voce.categoriaLargaE1?voce.categoriaLargaE1:draft.categoriaLarga;
+  draft.categoriaLarga=categoriaLarga||draft.categoriaLarga||null;
+  const gruppoProteico=(voce&&voce.sottotipoProteicoMotore)||draft.sottotipoProposto||(categoriaLarga?risolviSottotipoFine(categoriaLarga,{}):null);
+  draft.sottotipoProposto=gruppoProteico||null;
+  const esito=await componiPastoModulare(gruppoProteico,giorno,null,null,null,false,{},null);
+  if(esito){
+    draft.primoCereale=esito.primoCarboidrato; draft.primoSugoId=esito.primoSugoId;
+    draft.proteinaId=esito.proteinaId; draft.cottura=esito.cottura; draft.contornoId=esito.contornoId;
+    draft.primoId=null;
+    if(esito.primoSugoId){const t=await getOne('ricette',esito.primoSugoId);if(t){const pr=await componiPrimoModulare(t,esito.primoCarboidrato);if(pr)draft.primoId=pr.id;}}
+  }
+}
+
+async function rigeneraPortataDraft(pasto, giorno, tipo){
+  giorno=giorno||giornoSelezionato;
+  const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
+  if(tipo==='primo'){
+    await cambiaCellaDraft(pasto,giorno,'carb');
+    const carb=CARBOIDRATI_PASTO[draft.primoCereale];
+    if(carb&&carb.haPoolSughi) await cambiaCellaDraft(pasto,giorno,'sugo');
+  }else if(tipo==='secondo'){
+    await cambiaCellaDraft(pasto,giorno,'proteina');
+  }else if(tipo==='contorno'){
+    await cambiaCellaDraft(pasto,giorno,'contorno');
+  }else if(tipo==='unico'||tipo==='sfiziosa'){
+    const r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,draft.ricettaId); draft.ricettaId=r?r.id:null;
+  }else if(tipo==='speciale'){
+    const tutte=await getAll('ricette'); const speciali=tutte.filter(r=>r.piattoSpeciale&&!r.esclusa&&(r.tipoPortata||'unico')==='unico');
+    const pool=speciali.filter(r=>r.id!==draft.ricettaId); if(speciali.length)draft.ricettaId=(typeof motoreMescola==='function'?motoreMescola(pool.length?pool:speciali):(pool.length?pool:speciali))[0].id;
+  }
+}
+
+async function cambiaCellaDraft(pasto, giorno, cella){
+  giorno=giorno||giornoSelezionato;
+  const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
+  if(cella==='carb'){
+    const disponibili=await carboidratiAmmessiCambioDraft(giorno,pasto,draft);
+    if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile senza superare i limiti del Set/percorso.');return;}
+    draft.primoCereale=(typeof motoreMescola==='function'?motoreMescola(disponibili):disponibili)[0];
+    const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
+    if(!cfg.haPoolSughi){draft.primoSugoId=null;draft.primoId=null;}
+    else if(draft.primoSugoId){const t=await getOne('ricette',draft.primoSugoId);if(t){const pr=await componiPrimoModulare(t,draft.primoCereale);draft.primoId=pr?pr.id:null;}}
+  }else if(cella==='sugo'){
+    const cfg=CARBOIDRATI_PASTO[draft.primoCereale]; if(!cfg||!cfg.haPoolSughi)return;
+    const sughi=await cercaComponentiModulari('sugo'); const pool=sughi.filter(x=>x.id!==draft.primoSugoId);
+    if(pool.length){const x=(typeof motoreMescola==='function'?motoreMescola(pool):pool)[0];draft.primoSugoId=x.id;const pr=await componiPrimoModulare(x,draft.primoCereale);draft.primoId=pr?pr.id:null;}
+  }else if(cella==='proteina'){
+    const tutte=await getAll('ricette');
+    let pool=tutte.filter(r=>r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina'&&!r.esclusa&&r.id!==draft.proteinaId);
+    if(draft.categoriaLarga) pool=pool.filter(r=>motoreCategoriaDiSottotipo(r.gruppoProteico)===draft.categoriaLarga);
+    if(pool.length){const p=(typeof motoreMescola==='function'?motoreMescola(pool):pool)[0];draft.proteinaId=p.id;draft.sottotipoProposto=p.gruppoProteico;draft.cottura=scegliCotturaStandard(p.gruppoProteico,p.nome);}
+  }else if(cella==='cottura'){
+    const r=draft.proteinaId?await getOne('ricette',draft.proteinaId):null; if(!r)return;
+    const cotture=cottureAmmesseProteina(r.nome,r.gruppoProteico); const pool=cotture.filter(c=>c!==draft.cottura);
+    if(pool.length)draft.cottura=(typeof motoreMescola==='function'?motoreMescola(pool):pool)[0]; else if(!cotture.length)draft.cottura=null;
+  }else if(cella==='contorno'){
+    const preferenze=typeof caricaPreferenzeMotoreDaSet==='function'?await caricaPreferenzeMotoreDaSet(0):{};
+    const stato=typeof creaStatoMotoreSettimana==='function'?await creaStatoMotoreSettimana():{storico:{ultimoVerdura:{}},preferiteVerdureUsate:new Set()};
+    const nuovo=typeof scegliContornoMotore==='function'?await scegliContornoMotore(giorno,stato,preferenze,draft.contornoId):null;
+    if(nuovo)draft.contornoId=nuovo.id;
+  }
+  if(draft.tabAttiva==='unico'||draft.tabAttiva==='sfiziosa'){
+    const r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,null);draft.ricettaId=r?r.id:null;
+  }
+}
+
+async function applicaSalvafrigoAPortata(pasto, giorno, tipo, btn, elementId){
+  giorno=giorno||giornoSelezionato;
+  const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
+  const scadenze=await getScadenzeImminenti(); const avanzi=await getAvanziScomodi();
+  let ids=[...scadenze.map(s=>s.variantId),...avanzi.map(a=>a.variantId)];
+  if(!ids.length){const inv=await getAll('inventario');ids=inv.filter(i=>i.zona==='freezer'&&i.stato==='disponibile'&&i.quantita>0).map(i=>i.variantId);}
+  if(!ids.length){mostraIconaDivieto(btn);return;}
+  const tutte=await getAll('ricette');
+  let utili=tutte.filter(r=>!r.esclusa&&!r.piattoSpeciale&&(r.ingredienti||[]).some(i=>i.variantId&&ids.includes(i.variantId)));
+  if(tipo==='primo') utili=utili.filter(r=>(r.tipoPortata||'unico')==='primo');
+  else if(tipo==='secondo'||tipo==='proteina') utili=utili.filter(r=>((r.tipoPortata||'unico')==='secondo')||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina'));
+  else if(tipo==='contorno') utili=utili.filter(r=>((r.tipoPortata||'unico')==='contorno')||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno'));
+  else utili=utili.filter(r=>(r.tipoPortata||'unico')==='unico');
+  if((tipo==='secondo'||tipo==='proteina')&&draft.categoriaLarga) utili=utili.filter(r=>motoreCategoriaDiSottotipo(r.gruppoProteico)===draft.categoriaLarga);
+  if(!utili.length){mostraIconaDivieto(btn);return;}
+  const top3=utili.slice(0,3);
+  await mostraModalSalvafrigo(top3,'frigo',(r)=>{
+    if(tipo==='primo'){draft.primoId=r.id;draft.viaSalvafrigo='primoId';}
+    else if(tipo==='secondo'||tipo==='proteina'){draft.proteinaId=r.id;draft.viaSalvafrigo='secondoId';draft.cottura=scegliCotturaStandard(r.gruppoProteico,r.nome);}
+    else if(tipo==='contorno'){draft.contornoId=r.id;draft.viaSalvafrigo='contornoId';}
+    else{draft.ricettaId=r.id;draft.viaSalvafrigo='ricettaId';}
+    renderPastoTabContenuto(pasto,giorno,elementId);
+  });
+}
+
+function mostraIconaDivieto(btn){
+  if(!btn)return; const originale=btn.innerHTML;btn.innerHTML='🚫';btn.style.opacity='0.5';btn.disabled=true;
+  setTimeout(()=>{btn.innerHTML=originale;btn.style.opacity='1';btn.disabled=false;},2000);
+}
+
+async function confermaPastoDaTab(pasto, voceCommittata, giorno, elementId){
+  giorno=giorno||giornoSelezionato;
+  const chiaveStato=giorno+'_'+pasto; const draft=draftPasto[chiaveStato]; if(!draft)return;
+  if(draft.tabAttiva==='portate'){
+    if(!await validaCarboidratoDraft(giorno,pasto,draft)){await avviso('Il carboidrato scelto supererebbe un limite del Set o del percorso.');return;}
+    if(!draft.proteinaId||!draft.contornoId){await avviso('Il pasto a portate deve contenere proteina e verdura.');return;}
+  }else if(!draft.ricettaId){
+    await avviso('Nessuna ricetta compatibile da confermare.'); return;
+  }
+  let candidate=[];
+  if(draft.tabAttiva==='portate') candidate=await Promise.all([draft.primoId,draft.proteinaId,draft.contornoId].map(id=>id?getOne('ricette',id):null));
+  else candidate=[await getOne('ricette',draft.ricettaId)];
+  const ok=await confermaConAllarme(pasto,giorno,candidate); if(!ok)return;
+  voceCommittata.fascia=draft.fascia;voceCommittata.origine='utente';voceCommittata.viaSalvafrigo=draft.viaSalvafrigo||null;
+  if(draft.tabAttiva==='portate'){
+    voceCommittata.modo='multi';voceCommittata.primoId=draft.primoId||null;voceCommittata.primoCereale=draft.primoCereale||null;voceCommittata.primoSugoId=draft.primoSugoId||null;
+    voceCommittata.secondoId=draft.proteinaId||null;voceCommittata.contornoId=draft.contornoId||null;voceCommittata.cotturaSecondo=draft.cottura||null;voceCommittata.ricettaId=null;
+  }else{
+    voceCommittata.modo='unico';voceCommittata.ricettaId=draft.ricettaId||null;voceCommittata.primoId=voceCommittata.secondoId=voceCommittata.contornoId=null;voceCommittata.primoCereale=null;voceCommittata.primoSugoId=null;voceCommittata.cotturaSecondo=null;
+    if(draft.tabAttiva==='speciale'){const r=await getOne('ricette',draft.ricettaId);voceCommittata.modalitaSpeciale=r&&r.piattoSpeciale?'cucinata':null;}else voceCommittata.modalitaSpeciale=null;
+  }
+  await put('piano',voceCommittata);
+  draftPasto[chiaveStato]=null;
+  renderBloccoCompleto(pasto,giorno,elementId);
+  if(giorno===giornoSelezionato){renderNutrizioneGiorno();renderFrequenzeSettimana();renderIndicatoreFrutta();}
+  aggiornaListaSpesaAutomatica(0);aggiornaListaSpesaAutomatica(1);
+}
+
+
+
 
 async function renderContenutoAlternativaCompleta(pasto, voceCommittata, giorno, elementId){
   giorno = giorno || giornoSelezionato;
@@ -7984,10 +8280,10 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="motor-v9-1.js?v=9"></script>
-<script src="motor-v9-2.js?v=9"></script>
-<script src="motor-v9-3.js?v=9"></script>
-<script src="motor-v9-4.js?v=9"></script>
+<script src="motor-v9-1.js?v=11"></script>
+<script src="motor-v9-2.js?v=11"></script>
+<script src="motor-v9-3.js?v=11"></script>
+<script src="motor-v9-4.js?v=11"></script>
 
 </body>
 </html>
