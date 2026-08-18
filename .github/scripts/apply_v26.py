@@ -26,3 +26,4 @@ s=s.replace(old2,new2,1)
 
 p.write_text(s,encoding='utf-8')
 print('v26: restored active-state rendering for carbohydrate and vegetable availability selectors')
+# trigger v26
