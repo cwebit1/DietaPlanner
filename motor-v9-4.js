@@ -13,6 +13,20 @@ COTTURE_STANDARD.carne_bianca=['alla piastra','al forno','al limone','a dadini',
     const generaRaw=generaPianoSettimana;
 
     const putWrap=async function(store,valore){
+      /* Il Set non deve consentire una combinazione che occupi così tanti slot
+         da rendere matematicamente impossibili i minimi delle altre categorie. */
+      if(store==='impostazioni'&&valore&&valore.chiave==='tabellaGiornoCategoria'&&valore.valore){
+        const tab=valore.valore, counts={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
+        for(let i=0;i<7;i++)for(const cat of (tab['giorno_'+i]||[]))if(Object.prototype.hasOwnProperty.call(counts,cat))counts[cat]++;
+        const usati=Object.values(counts).reduce((a,b)=>a+b,0), rimasti=14-usati;
+        const minimi={carne:1,pesce:2,formaggi:2,uova:1,legumi:2};
+        const deficit=Object.keys(minimi).reduce((n,k)=>n+Math.max(0,minimi[k]-counts[k]),0);
+        if(deficit>rimasti){
+          if(typeof avviso==='function')await avviso('Questa combinazione occuperebbe troppi pasti e non lascerebbe spazio ai minimi delle altre categorie del percorso. Riduci una delle selezioni già numerose.');
+          return valore;
+        }
+      }
+
       if(store==='piano'&&valore&&valore.origine==='utente'){
         const id=valore.id||'';
         let assegnazione=false;
