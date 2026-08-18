@@ -5274,34 +5274,17 @@ async function contaCarboidratiSettimanaDraft(giorno, escludiPianoId){
   return out;
 }
 
+/* v41 — libertà manuale per macrocategoria.
+   Le quote del Set e i tetti di rotazione sono vincoli DEL MOTORE durante la
+   generazione automatica, non dell'utente durante la modifica di un pasto.
+   Quindi riso/farro/pasta/cous cous/pane ecc. sono tutti sostituibili fra loro:
+   la funzione nutrizionale resta 'carboidrato'. */
 async function carboidratiAmmessiCambioDraft(giorno,pasto,draft){
-  const conteggi=await contaCarboidratiSettimanaDraft(giorno,giorno+'_'+pasto);
-  const rec=await getOne('impostazioni','configCarboidrati');
-  const cfg=rec&&rec.valore?rec.valore:{};
-  const totaleEsplicito=Object.entries(cfg).reduce((n,[k,v])=>n+(CARBOIDRATI_PASTO[k]?Math.max(0,parseInt(v)||0):0),0);
-  return Object.keys(CARBOIDRATI_PASTO).filter(k=>{
-    if(k===draft.primoCereale) return false;
-    const c=CARBOIDRATI_PASTO[k];
-    if(c.limitato && (conteggi[k]||0)>=(c.tettoSettimanale||2)) return false;
-    const quota=Math.max(0,parseInt(cfg[k])||0);
-    if(totaleEsplicito>=14 && quota===0) return false;
-    if(quota>0 && (conteggi[k]||0)>=quota) return false;
-    return true;
-  });
+  return Object.keys(CARBOIDRATI_PASTO).filter(k=>k!==draft.primoCereale);
 }
 
 async function validaCarboidratoDraft(giorno,pasto,draft){
-  if(!draft.primoCereale || !CARBOIDRATI_PASTO[draft.primoCereale]) return false;
-  const conteggi=await contaCarboidratiSettimanaDraft(giorno,giorno+'_'+pasto);
-  const c=CARBOIDRATI_PASTO[draft.primoCereale];
-  if(c.limitato && (conteggi[draft.primoCereale]||0)>=(c.tettoSettimanale||2)) return false;
-  const rec=await getOne('impostazioni','configCarboidrati');
-  const cfg=rec&&rec.valore?rec.valore:{};
-  const totaleEsplicito=Object.entries(cfg).reduce((n,[k,v])=>n+(CARBOIDRATI_PASTO[k]?Math.max(0,parseInt(v)||0):0),0);
-  const quota=Math.max(0,parseInt(cfg[draft.primoCereale])||0);
-  if(totaleEsplicito>=14 && quota===0) return false;
-  if(quota>0 && (conteggi[draft.primoCereale]||0)>=quota) return false;
-  return true;
+  return !!(draft && draft.primoCereale && CARBOIDRATI_PASTO[draft.primoCereale]);
 }
 
 async function infoCombinazioneDraft(draft){
@@ -5378,7 +5361,11 @@ async function preparaCandidatoPerTabDraft(pasto,giorno,tab){
   if(tab==='portate'){
     if(!draft.primoCereale||!draft.proteinaId||!draft.contornoId) await generaCandidatoDraftModulare(pasto,giorno);
   }else if(tab==='unico'||tab==='sfiziosa'){
-    const r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,null);
+    let r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,null);
+    if(!r && typeof motoreV10CompletaDraftPerRealizzazione==='function'){
+      await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
+      r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,null);
+    }
     draft.ricettaId=r?r.id:null;
   }else if(tab==='speciale'){
     const tutte=await getAll('ricette');
@@ -5503,7 +5490,12 @@ async function rigeneraPortataDraft(pasto, giorno, tipo){
   }else if(tipo==='contorno'){
     await cambiaCellaDraft(pasto,giorno,'contorno');
   }else if(tipo==='unico'||tipo==='sfiziosa'){
-    const r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,draft.ricettaId); draft.ricettaId=r?r.id:null;
+    let r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,draft.ricettaId);
+    if(!r && typeof motoreV10CompletaDraftPerRealizzazione==='function'){
+      await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
+      r=await trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,draft.ricettaId);
+    }
+    draft.ricettaId=r?r.id:null;
   }else if(tipo==='speciale'){
     const tutte=await getAll('ricette'); const speciali=tutte.filter(r=>r.piattoSpeciale&&!r.esclusa&&(r.tipoPortata||'unico')==='unico');
     const pool=speciali.filter(r=>r.id!==draft.ricettaId); if(speciali.length)draft.ricettaId=(typeof motoreMescola==='function'?motoreMescola(pool.length?pool:speciali):(pool.length?pool:speciali))[0].id;
@@ -5515,7 +5507,7 @@ async function cambiaCellaDraft(pasto, giorno, cella){
   const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
   if(cella==='carb'){
     const disponibili=await carboidratiAmmessiCambioDraft(giorno,pasto,draft);
-    if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile senza superare i limiti del Set/percorso.');return;}
+    if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile.');return;}
     draft.primoCereale=(typeof motoreMescola==='function'?motoreMescola(disponibili):disponibili)[0];
     const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
     if(!cfg.haPoolSughi){draft.primoSugoId=null;draft.primoId=null;}
@@ -8604,7 +8596,7 @@ motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredient
 scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
 </script>
 
-<script src="motor-v10.js?v=7"></script>
+<script src="motor-v10.js?v=8"></script>
 
 </body>
 </html>

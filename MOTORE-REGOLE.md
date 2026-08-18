@@ -197,3 +197,12 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - Il Set non può contenere contemporaneamente lo stesso ingrediente come componente della colazione predefinita e come ingrediente escluso.
 - Se l'ingrediente è già nella colazione predefinita, l'utente deve prima cambiare quella componente per poterlo escludere; se è già escluso, deve prima riattivarlo per poterlo selezionare nella colazione predefinita.
 - Le colazioni speciali deliberate dall'utente restano un ramo volontario distinto e non vengono bloccate da questa coerenza del generatore ordinario.
+
+
+## Libertà manuale dentro la macrocategoria (v41)
+
+- Il rigore di quote, tetti, rotazione e distribuzione appartiene alla **generazione automatica del motore**.
+- L'utente non è vincolato alle quote specifiche quando modifica manualmente un pasto già proposto.
+- Dentro la stessa funzione nutrizionale il cambio è libero: riso/farro/pasta/cous cous/pane ecc. restano **carboidrati**; un pesce può essere sostituito con un altro pesce; una carne con un'altra carne.
+- Il motore non può invece usare questa libertà per aggirare Set, Bibbia, HARD, esclusioni o rotazione durante la generazione automatica.
+- Per `unico` e `sfiziosa`, prima di dichiarare una lacuna il sistema deve: cercare record compatibili, provare la compatibilità per macro, completare le sole componenti libere e costruire una composizione runtime. Se anche questa catena fallisce, la combinazione va registrata per Review e il DB va rinforzato.

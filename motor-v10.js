@@ -573,6 +573,38 @@ async function motoreV10CarboidratoDaDraft(draft,varianti){
   for(const [k,t] of eur)if(CARBOIDRATI_PASTO[k]&&testo.includes(t))return k;
   return null;
 }
+/* v41 — prima della realizzazione culinaria completa SOLO le componenti
+   ancora libere. Non tocca mai una scelta già presente nel draft. Serve a evitare
+   il falso esito "nessun piatto compatibile" quando il DB possiede i moduli ma
+   non una ricetta unica nominale. */
+async function motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft){
+  if(!draft)return draft;
+  const preferenze=typeof caricaPreferenzeMotoreDaSet==='function'?await caricaPreferenzeMotoreDaSet(0):{};
+  const stato=typeof creaStatoMotoreSettimana==='function'?await creaStatoMotoreSettimana():null;
+  if(!draft.primoCereale && stato && typeof scegliCarboidratoMotore==='function'){
+    draft.primoCereale=await scegliCarboidratoMotore(stato,false);
+  }
+  if(!draft.proteinaId && stato && typeof scegliProteinaModulareMotore==='function'){
+    const categoria=draft.categoriaLarga||null;
+    const sottotipo=draft.sottotipoProposto||(categoria&&typeof risolviSottotipoFine==='function'?risolviSottotipoFine(categoria,{}):null);
+    if(sottotipo){
+      const prot=await scegliProteinaModulareMotore(sottotipo,stato,null);
+      if(prot){
+        draft.proteinaId=prot.id;
+        draft.sottotipoProposto=prot.gruppoProteico||sottotipo;
+        if(!draft.cottura)draft.cottura=scegliCotturaStandard(prot.gruppoProteico,prot.nome);
+      }
+    }
+  }
+  if(!draft.contornoId && stato && typeof scegliContornoMotore==='function'){
+    const prefSlot=Object.assign({},preferenze,{_pastoCorrente:pasto});
+    const cont=await scegliContornoMotore(giorno,stato,prefSlot,null);
+    if(cont)draft.contornoId=cont.id;
+  }
+  return draft;
+}
+window.motoreV10CompletaDraftPerRealizzazione=motoreV10CompletaDraftPerRealizzazione;
+
 async function motoreV10ComponiUnicoDaDraft(draft,varianti){
   if(!draft||!draft.proteinaId||!draft.contornoId)return null;
   const [prot,cont]=await Promise.all([getOne('ricette',draft.proteinaId),getOne('ricette',draft.contornoId)]);
@@ -640,7 +672,13 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     }
   }
   // Nessun record unico utile: prova la composizione funzionale già definita dai layer.
-  const composta=await motoreV10ComponiUnicoDaDraft(draft,varianti);
+  let composta=await motoreV10ComponiUnicoDaDraft(draft,varianti);
+  if(composta)return composta;
+  // Se mancava soltanto una componente libera, completala senza toccare quelle già
+  // scelte dall'utente e riprova. motoreV10UpsertComposta aggiunge la nuova
+  // realizzazione allo store ricette, evitando un vicolo cieco nella UI.
+  await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
+  composta=await motoreV10ComponiUnicoDaDraft(draft,varianti);
   if(composta)return composta;
   if(typeof registraRichiestaRicettaReview==='function')await registraRichiestaRicettaReview({
     tipo:draft&&draft.tabAttiva==='sfiziosa'?'ricetta_sfiziosa_mancante':'piatto_unico_mancante',
