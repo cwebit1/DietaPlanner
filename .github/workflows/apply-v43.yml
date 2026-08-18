@@ -1,0 +1,36 @@
+name: Apply DietaPlanner v43 and validate
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/scripts/apply_v43.py'
+      - '.github/scripts/stress_v43.py'
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v43
+        run: python .github/scripts/apply_v43.py
+      - name: JavaScript syntax
+        run: |
+          node --check motor-v10.js
+          python - <<'PY'
+          import re,subprocess,pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          for i,code in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)):
+              if not code.strip(): continue
+              p=pathlib.Path(f'/tmp/v43_{i}.js'); p.write_text(code,encoding='utf-8')
+              subprocess.run(['node','--check',str(p)],check=True)
+          PY
+      - name: Stress subject consistency
+        run: python .github/scripts/stress_v43.py
+      - name: Commit validated v43
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html motor-v10.js MOTORE-REGOLE.md STRESS-V43-REPORT.md
+          git diff --cached --quiet || git commit -m "Validate protein subject consistency v43 [skip ci]"
+          git push
