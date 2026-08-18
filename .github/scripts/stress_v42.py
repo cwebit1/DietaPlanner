@@ -16,7 +16,6 @@ req('motoreV10ScoreFrigoRicetta' in v10,'piatto unico/sfiziosa non orientati dal
 req("score+=(await motoreV10ScoreFrigoRicetta(r))*2;" in v10,'bonus frigo non applicato al matching unico')
 req('motor-v10.js?v=9' in idx,'cache bust v42 assente')
 
-# Il blocco proteina non deve contenere fallback globale senza macro.
 m=re.search(r"\}else if\(cella==='proteina'\)\{(.*?)\}else if\(cella==='cottura'\)",idx,re.S)
 req(bool(m),'blocco proteina non trovato')
 if m:
@@ -35,3 +34,5 @@ if errors:report+=['','## Errori']+[f'- {e}' for e in errors]
 Path('STRESS-V42-REPORT.md').write_text('\n'.join(report)+'\n',encoding='utf-8')
 print('\n'.join(report))
 if errors: raise SystemExit(1)
+
+# trigger v42
