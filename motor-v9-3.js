@@ -45,6 +45,8 @@ async function caricaPreferenzeMotoreDaSet(scartoSettimane){
   const recTempo=await getOne('impostazioni','setPocoTempo');
   const recPref=await getOne('impostazioni','setVerdurePreferite');
   const recOff=await getOne('impostazioni','setVerdureDisattivate');
+  const recRic=await getOne('impostazioni','verduraRicorrente');
+  const recRicPasti=await getOne('impostazioni','verduraRicorrentePasti');
   const varianti=await getAll('varianti');
   const prefNomi=new Set(recPref&&recPref.valore?recPref.valore:[]);
   const prefIds=varianti.filter(v=>prefNomi.has(v.nome)).map(v=>v.id);
@@ -55,7 +57,9 @@ async function caricaPreferenzeMotoreDaSet(scartoSettimane){
     pocoTempoPranzo:!!tempo.pranzo,
     pocoTempoCena:!!tempo.cena,
     verdurePreferiteVariantIds:prefIds,
-    verdureDisattivate:recOff&&recOff.valore?recOff.valore:[]
+    verdureDisattivate:recOff&&recOff.valore?recOff.valore:[],
+    verduraRicorrenteVariantId:recRic&&recRic.valore?recRic.valore:null,
+    verduraRicorrentePasti:recRicPasti&&Array.isArray(recRicPasti.valore)?recRicPasti.valore:[]
   };
 }
 
@@ -81,7 +85,8 @@ async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
   const categoria=cella.gruppoProteicoLargo;
   const sottotipo=await scegliSottotipoMotore(categoria,stato);
   const pocoTempo=(pasto==='pranzo'&&preferenze.pocoTempoPranzo)||(pasto==='cena'&&preferenze.pocoTempoCena);
-  const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenze,stato);
+  const preferenzeSlot=Object.assign({},preferenze,{_pastoCorrente:pasto});
+  const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenzeSlot,stato);
   if(!esito) return {voce:null,errore:`Nessuna combinazione completa per ${giorno} ${pasto} (${categoria}/${sottotipo})`};
 
   let primoId=null;

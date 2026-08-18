@@ -148,6 +148,15 @@ async function scegliContornoMotore(giorno, stato, preferenze, escludiId){
   if(!candidati.length) return null;
 
   const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
+  const slotRicorrente=(preferenze._pastoCorrente||'')+'_'+idx;
+  const ricorrenteHard=preferenze.verduraRicorrenteVariantId && (preferenze.verduraRicorrentePasti||[]).includes(slotRicorrente);
+  if(ricorrenteHard){
+    const hard=candidati.filter(x=>x.info.variantId===preferenze.verduraRicorrenteVariantId);
+    if(!hard.length) return null;
+    const scelta=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
+    return scelta?scelta.r:null;
+  }
+
   const ordine=idx<=2?['fresco','resistente','surgelato']:(idx<=4?['resistente','fresco','surgelato']:['surgelato','resistente','fresco']);
   let pool=[];
   for(const t of ordine){
