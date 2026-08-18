@@ -5464,17 +5464,48 @@ async function renderPastoTabContenuto(pasto, giorno, elementId){
 async function generaCandidatoDraftModulare(pasto, giorno){
   giorno=giorno||giornoSelezionato;
   const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
+
+  // v42: prima ricava sempre la macro dalla proteina già presente. Un pasto con
+  // Uova sode deve restare UOVA anche se vecchi record non avevano categoriaLargaE1.
+  if(!draft.categoriaLarga && draft.proteinaId){
+    const corrente=await getOne('ricette',draft.proteinaId);
+    if(corrente&&corrente.gruppoProteico){
+      draft.categoriaLarga=motoreCategoriaDiSottotipo(corrente.gruppoProteico)||corrente.gruppoProteico;
+      draft.sottotipoProposto=corrente.gruppoProteico;
+    }
+  }
+
+  // Un draft completo NON va rigenerato all'apertura: prima questa funzione
+  // riassegnava primo/secondo/contorno e poteva cambiare anche la macro proteica.
+  if(draft.primoCereale && draft.proteinaId && draft.contornoId) return;
+
   const voce=await getOne('piano',giorno+'_'+pasto);
-  const categoriaLarga=voce&&voce.categoriaLargaE1?voce.categoriaLargaE1:draft.categoriaLarga;
-  draft.categoriaLarga=categoriaLarga||draft.categoriaLarga||null;
-  const gruppoProteico=(voce&&voce.sottotipoProteicoMotore)||draft.sottotipoProposto||(categoriaLarga?risolviSottotipoFine(categoriaLarga,{}):null);
-  draft.sottotipoProposto=gruppoProteico||null;
-  const esito=await componiPastoModulare(gruppoProteico,giorno,null,null,null,false,{},null);
-  if(esito){
-    draft.primoCereale=esito.primoCarboidrato; draft.primoSugoId=esito.primoSugoId;
-    draft.proteinaId=esito.proteinaId; draft.cottura=esito.cottura; draft.contornoId=esito.contornoId;
-    draft.primoId=null;
-    if(esito.primoSugoId){const t=await getOne('ricette',esito.primoSugoId);if(t){const pr=await componiPrimoModulare(t,esito.primoCarboidrato);if(pr)draft.primoId=pr.id;}}
+  const categoriaLarga=draft.categoriaLarga||(voce&&voce.categoriaLargaE1)||null;
+  draft.categoriaLarga=categoriaLarga||null;
+  if(!draft.sottotipoProposto && draft.proteinaId){
+    const corrente=await getOne('ricette',draft.proteinaId);
+    if(corrente)draft.sottotipoProposto=corrente.gruppoProteico||null;
+  }
+
+  // Completa soltanto i vuoti usando il coordinatore v10; non tocca mai ciò che
+  // esiste già. Poi compone il primo se il cereale usa un pool sughi.
+  if(typeof motoreV10CompletaDraftPerRealizzazione==='function'){
+    await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
+  }
+  if(draft.primoCereale && !draft.primoId){
+    const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
+    if(cfg&&cfg.haPoolSughi){
+      let sugo=draft.primoSugoId?await getOne('ricette',draft.primoSugoId):null;
+      if(!sugo&&typeof scegliSugoMotore==='function'){
+        const stato=typeof creaStatoMotoreSettimana==='function'?await creaStatoMotoreSettimana():null;
+        if(stato)sugo=await scegliSugoMotore(stato,null);
+      }
+      if(sugo){
+        draft.primoSugoId=sugo.id;
+        const pr=await componiPrimoModulare(sugo,draft.primoCereale);
+        if(pr)draft.primoId=pr.id;
+      }
+    }
   }
 }
 
@@ -5502,6 +5533,33 @@ async function rigeneraPortataDraft(pasto, giorno, tipo){
   }
 }
 
+async function variantiFrigoPrioritarieRefresh(){
+  const score=new Map();
+  try{
+    const [scad,avanzi,inv]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getAll('inventario')]);
+    for(const x of (scad||[])) if(x.variantId) score.set(x.variantId,100);
+    for(const x of (avanzi||[])) if(x.variantId) score.set(x.variantId,Math.max(score.get(x.variantId)||0,80));
+    for(const x of (inv||[])) if(x.variantId&&x.stato!=='esaurito'&&Number(x.quantita)>0) score.set(x.variantId,Math.max(score.get(x.variantId)||0,10));
+  }catch(e){}
+  return score;
+}
+function punteggioRicettaFrigoRefresh(r,score){
+  let n=0;
+  for(const i of (r&&r.ingredienti||[])) if(i.variantId&&score.has(i.variantId)) n+=score.get(i.variantId);
+  return n;
+}
+async function macroProteicaDraftRefresh(draft){
+  if(draft.categoriaLarga)return draft.categoriaLarga;
+  const id=draft.proteinaId||draft.ricettaId;
+  if(!id)return null;
+  const r=await getOne('ricette',id);
+  if(!r||!r.gruppoProteico)return null;
+  const macro=motoreCategoriaDiSottotipo(r.gruppoProteico)||r.gruppoProteico;
+  draft.categoriaLarga=macro;
+  if(!draft.sottotipoProposto)draft.sottotipoProposto=r.gruppoProteico;
+  return macro;
+}
+
 async function cambiaCellaDraft(pasto, giorno, cella){
   giorno=giorno||giornoSelezionato;
   const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
@@ -5514,13 +5572,56 @@ async function cambiaCellaDraft(pasto, giorno, cella){
     else if(draft.primoSugoId){const t=await getOne('ricette',draft.primoSugoId);if(t){const pr=await componiPrimoModulare(t,draft.primoCereale);draft.primoId=pr?pr.id:null;}}
   }else if(cella==='sugo'){
     const cfg=CARBOIDRATI_PASTO[draft.primoCereale]; if(!cfg||!cfg.haPoolSughi)return;
-    const sughi=await cercaComponentiModulari('sugo'); const pool=sughi.filter(x=>x.id!==draft.primoSugoId);
-    if(pool.length){const x=(typeof motoreMescola==='function'?motoreMescola(pool):pool)[0];draft.primoSugoId=x.id;const pr=await componiPrimoModulare(x,draft.primoCereale);draft.primoId=pr?pr.id:null;}
+    const [sughi,frigo]=await Promise.all([cercaComponentiModulari('sugo'),variantiFrigoPrioritarieRefresh()]);
+    const pool=sughi.filter(x=>x.id!==draft.primoSugoId);
+    if(pool.length){
+      let best=-Infinity,scelte=[];
+      for(const x of pool){
+        const score=punteggioRicettaFrigoRefresh(x,frigo);
+        if(score>best){best=score;scelte=[x];}else if(score===best)scelte.push(x);
+      }
+      const x=(typeof motoreMescola==='function'?motoreMescola(scelte):scelte)[0];
+      draft.primoSugoId=x.id;
+      const pr=await componiPrimoModulare(x,draft.primoCereale);
+      draft.primoId=pr?pr.id:null;
+    }
   }else if(cella==='proteina'){
-    const tutte=await getAll('ricette');
-    let pool=tutte.filter(r=>r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina'&&!r.esclusa&&r.id!==draft.proteinaId);
-    if(draft.categoriaLarga) pool=pool.filter(r=>motoreCategoriaDiSottotipo(r.gruppoProteico)===draft.categoriaLarga);
-    if(pool.length){const p=(typeof motoreMescola==='function'?motoreMescola(pool):pool)[0];draft.proteinaId=p.id;draft.sottotipoProposto=p.gruppoProteico;draft.cottura=scegliCotturaStandard(p.gruppoProteico,p.nome);}
+    const macro=await macroProteicaDraftRefresh(draft);
+    if(!macro){
+      await avviso('Non riesco a determinare la macrocategoria proteica di questo secondo.');
+      return;
+    }
+    const [tutte,frigo,storico]=await Promise.all([
+      getAll('ricette'),variantiFrigoPrioritarieRefresh(),
+      typeof costruisciStoricoConsumatiMotore==='function'?costruisciStoricoConsumatiMotore():Promise.resolve({ultimoRicetta:{}})
+    ]);
+    let pool=tutte.filter(r=>{
+      if(r.esclusa||r.piattoSpeciale||r.id===draft.proteinaId)return false;
+      const eProteina=(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina')||r.tipoPortata==='secondo';
+      if(!eProteina||!r.gruppoProteico)return false;
+      return (motoreCategoriaDiSottotipo(r.gruppoProteico)||r.gruppoProteico)===macro;
+    });
+    if(!pool.length){
+      if(typeof registraRichiestaRicettaReview==='function') await registraRichiestaRicettaReview({tipo:'famiglia_proteica_refresh_mancante',categoriaProteica:macro,sottotipoProteico:draft.sottotipoProposto||null,pasto,giorno});
+      await avviso('Non ci sono ancora altre preparazioni disponibili per questa famiglia. La combinazione è stata segnalata per il ricettario.');
+      return;
+    }
+    // Prima usa ciò che ha senso consumare dal frigo; a parità evita ciò che è stato
+    // mangiato più di recente. Nessun candidato di carne/pesce può entrare se macro=UOVA.
+    let best=-Infinity,scelte=[];
+    for(const r of pool){
+      const sf=punteggioRicettaFrigoRefresh(r,frigo);
+      const rec=(storico&&storico.ultimoRicetta&&storico.ultimoRicetta[r.id])||0;
+      const score=sf*1000000-rec;
+      if(score>best){best=score;scelte=[r];}else if(score===best)scelte.push(r);
+    }
+    const p=(typeof motoreMescola==='function'?motoreMescola(scelte):scelte)[0];
+    if(p){
+      draft.proteinaId=p.id;
+      draft.categoriaLarga=macro;
+      draft.sottotipoProposto=p.gruppoProteico;
+      draft.cottura=scegliCotturaStandard(p.gruppoProteico,p.nome);
+    }
   }else if(cella==='cottura'){
     const r=draft.proteinaId?await getOne('ricette',draft.proteinaId):null; if(!r)return;
     const cotture=cottureAmmesseProteina(r.nome,r.gruppoProteico); const pool=cotture.filter(c=>c!==draft.cottura);
@@ -8596,7 +8697,7 @@ motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredient
 scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
 </script>
 
-<script src="motor-v10.js?v=8"></script>
+<script src="motor-v10.js?v=9"></script>
 
 </body>
 </html>

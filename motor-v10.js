@@ -629,6 +629,18 @@ async function motoreV10ComponiUnicoDaDraft(draft,varianti){
   return motoreV10UpsertComposta(key,nome,prot.gruppoProteico||draft.sottotipoProposto||'',ingredienti,procedimento,[prot.id,cont.id]);
 }
 
+async function motoreV10ScoreFrigoRicetta(r){
+  const score=new Map();
+  try{
+    const [scad,avanzi,inv]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getAll('inventario')]);
+    for(const x of (scad||[]))if(x.variantId)score.set(x.variantId,100);
+    for(const x of (avanzi||[]))if(x.variantId)score.set(x.variantId,Math.max(score.get(x.variantId)||0,80));
+    for(const x of (inv||[]))if(x.variantId&&x.stato!=='esaurito'&&Number(x.quantita)>0)score.set(x.variantId,Math.max(score.get(x.variantId)||0,10));
+  }catch(e){}
+  let n=0; for(const i of (r&&r.ingredienti||[]))if(i.variantId&&score.has(i.variantId))n+=score.get(i.variantId);
+  return n;
+}
+
 trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   const info=await infoCombinazioneDraft(draft);
   const [tutte,varianti,ingredienti,storico]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),costruisciStoricoConsumatiMotore()]);
@@ -648,6 +660,7 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     // può essere sostituito col jolly pane solo per adattarsi a un record unico.
     if(mancaSoloCarb&&targetCarbKey&&targetCarbKey!=='pane')continue;
     let score=mancaSoloCarb?-25:0;
+    score+=(await motoreV10ScoreFrigoRicetta(r))*2;
     if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
     else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
     else score+=30;
@@ -688,5 +701,5 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   return null;
 };
 
-window.MOTORE_V10_REGOLE={versione:'1.4',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
+window.MOTORE_V10_REGOLE={versione:'1.5',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
 })();

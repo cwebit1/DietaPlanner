@@ -206,3 +206,14 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - Dentro la stessa funzione nutrizionale il cambio è libero: riso/farro/pasta/cous cous/pane ecc. restano **carboidrati**; un pesce può essere sostituito con un altro pesce; una carne con un'altra carne.
 - Il motore non può invece usare questa libertà per aggirare Set, Bibbia, HARD, esclusioni o rotazione durante la generazione automatica.
 - Per `unico` e `sfiziosa`, prima di dichiarare una lacuna il sistema deve: cercare record compatibili, provare la compatibilità per macro, completare le sole componenti libere e costruire una composizione runtime. Se anche questa catena fallisce, la combinazione va registrata per Review e il DB va rinforzato.
+
+
+## Refresh specifici e realizzazione culinaria (v42)
+
+- Un refresh manuale di una singola portata **non cambia mai la macrocategoria**: UOVA resta UOVA, PESCE resta PESCE, CARNE resta CARNE, ecc.
+- La macrocategoria deve essere ricavata anche dai vecchi pasti/ricette che non hanno i marker recenti; l'assenza di `categoriaLargaE1` non autorizza un pool globale.
+- L'apertura dell'editor di un pasto non deve rigenerare né sovrascrivere componenti già presenti: completa solo i vuoti.
+- Dentro la macrocategoria la preparazione concreta è libera e deve essere variata; a parità di validità si privilegiano ingredienti realmente disponibili, in scadenza o avanzati. Questo vale anche per sughi e per la ricerca di piatti unici/sfiziosi.
+- Esempio UOVA: uova sode, alla coque, strapazzate, frittate, omelette e altre preparazioni restano nella stessa macro. Le varianti di frittata/omelette devono essere guidate anche da ciò che c'è nel frigo.
+- Se una famiglia non dispone di alternative culinarie sufficienti, **non si salta a un'altra macro**: si registra la lacuna nel Review ricette e si rinforza il DB/template.
+- Un piatto unico può rappresentare la stessa macro con una preparazione più completa; il cambio di forma culinaria non autorizza il cambio di funzione nutrizionale.
