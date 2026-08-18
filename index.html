@@ -273,6 +273,13 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
   font-weight:700;
 }
 
+#setProteineLimitate button.active{
+  background:rgba(231,76,60,0.18)!important;
+  color:#e74c3c!important;
+  border-color:#e74c3c!important;
+  font-weight:700!important;
+}
+
 .set-carb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:8px;}
 .set-carb-item{min-width:0;}
 .set-carb-celle{display:flex;gap:3px;flex-wrap:nowrap;}
@@ -2522,11 +2529,17 @@ async function renderMantieniSwipe(renderFn){
 
 async function renderSetPreferenzeMenu(){
   const recLim=await getOne('impostazioni','setProteineLimitate');
-  const limitate=new Set(recLim&&recLim.valore?recLim.valore:[]);
+  const salvate=recLim&&Array.isArray(recLim.valore)?recLim.valore:[];
+  const esclusa=salvate.length?salvate[0]:null;
   const elLim=document.getElementById('setProteineLimitate');
   if(elLim){
-    elLim.innerHTML=CATEGORIE_PROTEICHE_SET.map(c=>`<button data-set-prot-lim="${c.chiave}" class="${limitate.has(c.chiave)?'active':''}">${c.label}</button>`).join('');
-    elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setProtLim; limitate.has(k)?limitate.delete(k):limitate.add(k); await put('impostazioni',{chiave:'setProteineLimitate',valore:[...limitate]}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
+    elLim.innerHTML=CATEGORIE_PROTEICHE_SET.map(c=>`<button data-set-prot-lim="${c.chiave}" class="${esclusa===c.chiave?'active':''}">${c.label}</button>`).join('');
+    elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{
+      const k=b.dataset.setProtLim;
+      const nuova=(esclusa===k)?[]:[k];
+      await put('impostazioni',{chiave:'setProteineLimitate',valore:nuova});
+      await renderMantieniSwipe(renderSetPreferenzeMenu);
+    }));
   }
   const recTempo=await getOne('impostazioni','setPocoTempo');
   const tempo=Object.assign({pranzo:false,cena:false},recTempo&&recTempo.valore?recTempo.valore:{});
