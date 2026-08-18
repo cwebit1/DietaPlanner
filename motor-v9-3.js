@@ -65,9 +65,8 @@ async function caricaPreferenzeMotoreDaSet(scartoSettimane){
 
 async function creaStatoMotoreSettimana(){
   const storico=await costruisciStoricoConsumatiMotore();
-  const ultimoConsumoSottotipo={};
-  // In assenza di timestamp per sottotipo, il totale storico mantiene comunque
-  // una rotazione equilibrata; i singoli piatti usano invece il timestamp reale.
+  // Lo storico reale alimenta la rotazione anche a livello di macrocategoria/sottotipo.
+  const ultimoConsumoSottotipo=Object.assign({},storico.ultimoSottotipo||{});
   return {
     storico,
     ultimoConsumoSottotipo,
@@ -136,6 +135,8 @@ generaPianoSettimana = async function(scartoSettimane, opzioni){
     ? Object.assign(await caricaPreferenzeMotoreDaSet(scartoSettimane),opzioni.preferenze)
     : await caricaPreferenzeMotoreDaSet(scartoSettimane);
 
+  // LAYER 1: scelte esplicite Set. LAYER 2/3: preferenze + Bibbia completano solo i vuoti.
+  // Le scelte utente non vengono mai rimpiazzate dal completamento automatico.
   const griglia=costruisciGrigliaMotore(giorni,preferenze.giornoCategoria||{},preferenze.proteineLimitate||[]);
   if(griglia.errori.length){
     await put('impostazioni',{chiave:'ultimoReportMotore',valore:{data:new Date().toISOString(),ok:false,errori:griglia.errori,conteggi:griglia.conteggi}});

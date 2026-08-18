@@ -3,9 +3,10 @@
    MOTORE MENU DEFINITIVO v9
    Fonte normativa: percorso alimentare + configurazione Set.
    Regole:
-   - Set = vincoli HARD quando espliciti.
+   - Set = vincoli HARD quando espliciti e gia compatibili con il percorso.
+   - La Bibbia NON sovrascrive le scelte utente: completa soltanto gli slot liberi.
    - Default pranzo/cena = portate modulari complete.
-   - Slot non configurati = rotazione automatica entro frequenze del piano.
+   - Slot non configurati = completamento Bibbia + rotazione automatica.
    - La rotazione usa i pasti CONSUMATI, non le sole proposte.
    - Verdure: esclusioni HARD; priorità temporale per conservazione;
      preferite più prevalenti ma con anti-ripetizione tra le preferite.
@@ -201,6 +202,8 @@ async function costruisciStoricoConsumatiMotore(){
   const ultimoCarb={};
   const ultimoVerdura={};
   const sottotipiTotali={};
+  const ultimoSottotipo={};
+  const ultimoCategoriaProteica={};
 
   for(const voce of piano){
     if(!voce || !voce.consumato) continue;
@@ -214,7 +217,12 @@ async function costruisciStoricoConsumatiMotore(){
       ultimoRicetta[rid]=Math.max(ultimoRicetta[rid]||0,ts);
       const r=ricById.get(rid);
       if(!r) continue;
-      if(r.gruppoProteico) sottotipiTotali[r.gruppoProteico]=(sottotipiTotali[r.gruppoProteico]||0)+1;
+      if(r.gruppoProteico){
+        sottotipiTotali[r.gruppoProteico]=(sottotipiTotali[r.gruppoProteico]||0)+1;
+        ultimoSottotipo[r.gruppoProteico]=Math.max(ultimoSottotipo[r.gruppoProteico]||0,ts);
+        const macro=motoreCategoriaDiSottotipo(r.gruppoProteico);
+        if(macro) ultimoCategoriaProteica[macro]=Math.max(ultimoCategoriaProteica[macro]||0,ts);
+      }
       for(const ing of (r.ingredienti||[])){
         if(!ing.variantId) continue;
         const v=varById.get(ing.variantId), b=v?baseById.get(v.ingredienteId):null;
@@ -224,5 +232,5 @@ async function costruisciStoricoConsumatiMotore(){
       }
     }
   }
-  return {ultimoRicetta,ultimoCarb,ultimoVerdura,sottotipiTotali};
+  return {ultimoRicetta,ultimoCarb,ultimoVerdura,sottotipiTotali,ultimoSottotipo,ultimoCategoriaProteica};
 }
