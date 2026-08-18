@@ -1,0 +1,22 @@
+name: Export complete project
+on:
+  push:
+    paths:
+      - '.github/export_complete_trigger.txt'
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build complete archive
+        run: |
+          rm -f DietaPlanner_COMPLETO.zip
+          zip -r DietaPlanner_COMPLETO.zip . -x '.git/*' 'DietaPlanner_COMPLETO.zip'
+      - name: Upload archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: DietaPlanner_COMPLETO
+          path: DietaPlanner_COMPLETO.zip
+          retention-days: 7
