@@ -207,7 +207,12 @@ ul.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 
 .setting-swipe{display:flex;gap:6px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;}
-.setting-swipe button{flex:0 0 auto;scroll-snap-align:start;white-space:nowrap;}
+.setting-swipe button{
+  flex:0 0 auto;scroll-snap-align:start;white-space:nowrap;
+  background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);
+  padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;
+}
+.setting-swipe button.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);}
 .set-carb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:8px;}
 .set-carb-item{min-width:0;}
 .set-carb-celle{display:flex;gap:3px;flex-wrap:nowrap;}
@@ -215,7 +220,7 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 #setTabellaGiorno .riga-label{text-align:left;padding-right:4px;}
 #setTabellaGiorno td.cella button{min-height:28px!important;min-width:28px!important;padding:4px;}
 #setTempoMenu{display:flex;flex-wrap:nowrap;gap:4px;}
-#setTempoMenu button{flex:1 1 0;min-width:0;padding:6px 4px;white-space:nowrap;}
+#setTempoMenu button{flex:0 0 auto;min-width:0;padding:6px 8px;white-space:nowrap;}
 .tabgroup{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
 /* Stile omogeneo per la colazione: una riga scorrevole di pulsanti per ogni
    categoria, con snap allo scroll. Ogni categoria permette UNA sola selezione
