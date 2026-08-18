@@ -48,3 +48,4 @@ for old,new in repls.items():
 
 p.write_text(s,encoding='utf-8')
 print('v19 swipe position preservation applied')
+# trigger: 2026-08-18
