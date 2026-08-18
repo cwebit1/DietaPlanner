@@ -17,7 +17,7 @@ jobs:
           rm -rf .export_chunks DietaPlanner_COMPLETO.zip
           zip -r DietaPlanner_COMPLETO.zip . -x '.git/*' '.export_chunks/*' 'DietaPlanner_COMPLETO.zip'
           mkdir .export_chunks
-          base64 -w 0 DietaPlanner_COMPLETO.zip | split -b 20000 -d -a 3 - .export_chunks/chunk_
+          base64 -w 0 DietaPlanner_COMPLETO.zip | split -b 8000 -d -a 3 - .export_chunks/chunk_
           printf '%s\n' "$(ls .export_chunks/chunk_* | wc -l)" > .export_chunks/count.txt
           sha256sum DietaPlanner_COMPLETO.zip > .export_chunks/sha256.txt
       - name: Commit export chunks
