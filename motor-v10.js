@@ -661,7 +661,7 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     // può essere sostituito col jolly pane solo per adattarsi a un record unico.
     if(mancaSoloCarb&&targetCarbKey&&targetCarbKey!=='pane')continue;
     let score=mancaSoloCarb?-25:0;
-    score+=(await motoreV10ScoreFrigoRicetta(r))*2;
+    score+=Math.min(await motoreV10ScoreFrigoRicetta(r), 15);
     if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
     else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
     else score+=30;
