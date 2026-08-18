@@ -179,8 +179,8 @@ generaPianoSettimana = async function(scartoSettimane, opzioni){
         const componenti={};
         for(const gr of COLAZIONE_GRUPPI){
           const prefId=usa&&pref&&pref.valore?pref.valore[gr.chiave]:null;
-          let opz=varianti.filter(v=>v.colazioneGruppo===gr.chiave);
-          if(prefId&&opz.some(v=>v.id===prefId)) componenti[gr.chiave]=prefId;
+          let opz=opzioniColazioneGruppo(gr,varianti);
+          if(prefId&&opzioneColazioneValida(gr,prefId,varianti)) componenti[gr.chiave]=prefId;
           else{
             if(pref&&pref.valore&&pref.valore[gr.chiave]&&opz.length>1) opz=opz.filter(v=>v.id!==pref.valore[gr.chiave]);
             componenti[gr.chiave]=gr.obbligatorio&&opz.length?motoreMescola(opz)[0].id:null;
