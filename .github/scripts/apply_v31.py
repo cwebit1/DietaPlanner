@@ -10,8 +10,6 @@ s=s.replace('const totale=pasti.size, maxPasti=7, pieno=totale>=maxPasti;',
             'const totale=pasti.size, maxPasti=5, pieno=totale>=maxPasti;',1)
 s=s.replace("if(set.size>=7){await avviso('Puoi programmare al massimo 7 pasti con la verdura ricorrente.');return;}",
             "if(set.size>=5){await avviso('Puoi programmare al massimo 5 pasti con la verdura ricorrente.');return;}",1)
-s=s.replace('`${vScelta.nome}: ${totale} / 7 pasti vincolati.', '`${vScelta.nome}: ${totale} / 5 pasti vincolati.',1)
-# replacement above may not match because prefix includes checkmark; handle exact known line too
 s=s.replace("nota.textContent=vScelta?`✓ ${vScelta.nome}: ${totale} / 7 pasti vincolati. Nei pasti selezionati il motore userà obbligatoriamente un contorno con questa verdura.`",
             "nota.textContent=vScelta?`✓ ${vScelta.nome}: ${totale} / 5 pasti vincolati. Nei pasti selezionati il motore userà obbligatoriamente un contorno con questa verdura.`",1)
 
@@ -93,3 +91,4 @@ s=s.replace(old_excl,new_excl,1)
 
 p.write_text(s,encoding='utf-8')
 print('v31 applied: recurring veg max 5; breakfast group colors, day row restored, breakfast-only exclusions swipe')
+# trigger v31
