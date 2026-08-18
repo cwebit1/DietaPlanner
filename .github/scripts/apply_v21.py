@@ -39,3 +39,4 @@ if css.strip() not in s:
 
 p.write_text(s,encoding='utf-8')
 print('v21: unified all textual Setting selectors')
+# trigger v21
