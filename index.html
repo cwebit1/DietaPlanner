@@ -2721,8 +2721,9 @@ async function renderSetColazione(){
   }
   contGruppi.innerHTML = htmlGruppi;
   // Griglia giorni Lun-Dom, stessa struttura tabella-giorno della configurazione Set
-  const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
-  const celleCol = NOMI_GIORNI_BREVI.map((g, idx)=>{
+  const giorniColazione=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+  const rigaIntestazioneCol = giorniColazione.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
+  const celleCol = giorniColazione.map((g, idx)=>{
     const attivo = giorniAttivi.includes(idx);
     return `<td class="cella"><button data-set-colpref-giorno="${idx}" class="${attivo?'active':''}"></button></td>`;
   }).join('');
