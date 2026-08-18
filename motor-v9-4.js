@@ -53,7 +53,6 @@
     }));
   };
 
-  // Sostituisce i due pulsanti di salvataggio che prima obbligavano a compilare 14 caselle.
   function abilitaSalvataggioParziale(){
     const old=document.getElementById('btnSalvaConfigCarboidrati');
     if(old&&!old.dataset.v9){
@@ -77,10 +76,33 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',abilitaSalvataggioParziale);
   else abilitaSalvataggioParziale();
 
-  // Salvataggio live delle caselle carboidrati: rende realmente persistente anche un Set parziale.
   document.addEventListener('click',e=>{
     if(e.target&&e.target.closest&&e.target.closest('[data-casella-carb]')){
       setTimeout(()=>put('impostazioni',{chiave:'configCarboidrati',valore:statoCaselleCarb}),0);
     }
   });
 })();
+
+/* Associazioni cottura validate dall'utente — override v10.
+   [] significa: nessun metodo/etichetta aggiunto al nome della proteina. */
+COTTURE_STANDARD.carne_bianca = ['alla piastra','al forno','al limone','a dadini','in padella'];
+COTTURE_STANDARD.affettati = [];
+COTTURE_STANDARD.pesce_conservato = [];
+
+const COTTURE_PER_PROTEINA_V10 = {
+  'bresaola': [],
+  'prosciutto crudo': [],
+  'tonno in scatola': [],
+  'sgombro in scatola': [],
+  'mozzarella': [],
+  'parmigiano': []
+};
+
+scegliCotturaStandard = function(gruppoProteico, nomeProteina){
+  const chiave=(nomeProteina||'').trim().toLowerCase();
+  const cotture=Object.prototype.hasOwnProperty.call(COTTURE_PER_PROTEINA_V10,chiave)
+    ? COTTURE_PER_PROTEINA_V10[chiave]
+    : COTTURE_STANDARD[gruppoProteico];
+  if(!cotture||!cotture.length) return null;
+  return cotture[Math.floor(Math.random()*cotture.length)];
+};
