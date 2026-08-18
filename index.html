@@ -654,6 +654,9 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
       <div id="setColazioneGruppi"></div>
       <label style="margin-top:12px;">Giorni in cui applicarla:</label>
       <table class="tabella-giorno"><tbody id="setColazioneGiorni"></tbody></table>
+      <label style="margin-top:16px;">Ingredienti da escludere:</label>
+      <div class="meta" style="margin-bottom:8px;">Gli ingredienti selezionati non verranno mai usati nelle colazioni generate automaticamente. Le scelte impostate manualmente sopra restano prioritarie.</div>
+      <div id="setColazioneEsclusi" class="tabgroup"></div>
       <div class="row" style="margin-top:10px;gap:8px;">
         <button class="small" id="btnResetColazionePref">✕ Reset colazione preferita</button>
       </div>
@@ -1913,9 +1916,13 @@ function componentiDaSchemaColazione(schema, varianti){
   componenti.bibita=null;
   return componenti;
 }
-function scegliColazioneAutomaticaCoerente(varianti, firmeDaEvitare){
+function scegliColazioneAutomaticaCoerente(varianti, firmeDaEvitare, ingredientiEsclusi){
   const escluse=new Set((firmeDaEvitare||[]).filter(Boolean));
-  let pool=COLAZIONI_AUTOMATICHE_COHERENTI.map(schema=>({schema,componenti:componentiDaSchemaColazione(schema,varianti)})).filter(x=>x.componenti);
+  const noIng=new Set((ingredientiEsclusi||[]).map(x=>(x||'').toString().trim().toLowerCase()).filter(Boolean));
+  let pool=COLAZIONI_AUTOMATICHE_COHERENTI
+    .filter(schema=>!['proteine','carboidrati','grassi','carboidrati_semplici'].some(k=>schema[k]&&noIng.has(schema[k].toLowerCase())))
+    .map(schema=>({schema,componenti:componentiDaSchemaColazione(schema,varianti)}))
+    .filter(x=>x.componenti);
   const filtrato=pool.filter(x=>!escluse.has(firmaComponentiColazione(x.componenti)));
   if(filtrato.length) pool=filtrato;
   if(!pool.length) return null;
@@ -2677,10 +2684,12 @@ async function renderSetVerduraRicorrente(){
 async function renderSetColazione(){
   const contGruppi = document.getElementById('setColazioneGruppi');
   const contGiorni = document.getElementById('setColazioneGiorni');
+  const contEsclusi = document.getElementById('setColazioneEsclusi');
   if(!contGruppi || !contGiorni) return;
   const varianti = await getAll('varianti');
   const compRec = await getOne('impostazioni', 'colazionePreferita');
   const giorniRec = await getOne('impostazioni', 'colazionePreferitaGiorni');
+  const esclusiRec = await getOne('impostazioni', 'colazioneIngredientiEsclusi');
   let componenti = compRec && compRec.valore ? Object.assign({}, compRec.valore) : {};
   const giorniAttivi = giorniRec && giorniRec.valore ? giorniRec.valore.slice() : [];
   // Se non ci sono ancora componenti salvati, precarica i default (primo per gruppo obbligatorio)
@@ -2711,6 +2720,22 @@ async function renderSetColazione(){
   contGiorni.innerHTML = `
     <tr><th class="col-label"></th>${rigaIntestazioneCol}</tr>
     <tr><td class="riga-label">Colazione</td>${celleCol}</tr>`;
+  // Ingredienti esclusi dalle sole proposte automatiche.
+  if(contEsclusi){
+    const esclusi=new Set(esclusiRec&&Array.isArray(esclusiRec.valore)?esclusiRec.valore:[]);
+    const nomiMatrice=[...new Set(COLAZIONI_AUTOMATICHE_COHERENTI.flatMap(schema=>
+      ['proteine','carboidrati','grassi','carboidrati_semplici'].map(k=>schema[k]).filter(Boolean)
+    ))].filter(nome=>varianti.some(v=>v.nome&&v.nome.toLowerCase()===nome.toLowerCase())).sort((a,b)=>a.localeCompare(b));
+    contEsclusi.innerHTML=nomiMatrice.map(nome=>`<button data-col-escludi="${nome}" class="${esclusi.has(nome)?'active':''}">${nome}</button>`).join('');
+    contEsclusi.querySelectorAll('[data-col-escludi]').forEach(btn=>btn.addEventListener('click',async()=>{
+      const nome=btn.dataset.colEscludi;
+      const rec=await getOne('impostazioni','colazioneIngredientiEsclusi');
+      const lista=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);
+      lista.has(nome)?lista.delete(nome):lista.add(nome);
+      await put('impostazioni',{chiave:'colazioneIngredientiEsclusi',valore:[...lista]});
+      renderSetColazione();
+    }));
+  }
   // Listener: selezione componenti gruppi (scrive direttamente in impostazioni)
   contGruppi.querySelectorAll('[data-set-col-gruppo]').forEach(slide=>{
     slide.querySelectorAll('[data-set-col-opt]').forEach(btn=>{
@@ -3442,7 +3467,8 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
         componenti=componentiColazioneDaSet(colazionePref.valore,varianti);
       }else{
         const firmaPref=colazionePref&&colazionePref.valore?firmaComponentiColazione(componentiColazioneDaSet(colazionePref.valore,varianti)):null;
-        componenti=scegliColazioneAutomaticaCoerente(varianti,[firmaPref]);
+        const recEsclusiColazione=await getOne('impostazioni','colazioneIngredientiEsclusi');
+        componenti=scegliColazioneAutomaticaCoerente(varianti,[firmaPref],recEsclusiColazione&&recEsclusiColazione.valore?recEsclusiColazione.valore:[]);
       }
       if(componenti) await put('piano', {id:pianoIdColazione, componenti});
     }

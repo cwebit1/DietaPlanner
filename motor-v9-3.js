@@ -182,7 +182,8 @@ generaPianoSettimana = async function(scartoSettimane, opzioni){
           componenti=componentiColazioneDaSet(pref.valore,varianti);
         }else{
           const firmaPref=pref&&pref.valore?firmaComponentiColazione(componentiColazioneDaSet(pref.valore,varianti)):null;
-          componenti=scegliColazioneAutomaticaCoerente(varianti,[firmaPref]);
+          const recEsclusiColazione=await getOne('impostazioni','colazioneIngredientiEsclusi');
+          componenti=scegliColazioneAutomaticaCoerente(varianti,[firmaPref],recEsclusiColazione&&recEsclusiColazione.valore?recEsclusiColazione.valore:[]);
         }
         if(componenti) await put('piano',{id:idCol,componenti});
       }
