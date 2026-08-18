@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/scripts/apply_v30.py'
+      - '.github/triggers/v30.txt'
 jobs:
   apply:
     runs-on: ubuntu-latest
