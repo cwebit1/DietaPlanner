@@ -21,7 +21,7 @@ jobs:
             motor-v9-1.js motor-v9-2.js motor-v9-3.js motor-v9-4.js motor-v10.js \
             MOTORE-REGOLE.md REVIEW-RICETTE-DB.md TEST-MATRICE-SET.md
           mkdir .export_chunks
-          base64 -w 0 DietaPlanner_COMPLETO.zip | split -b 8000 -d -a 3 - .export_chunks/chunk_
+          base64 -w 0 DietaPlanner_COMPLETO.zip | split -b 20000 -d -a 3 - .export_chunks/chunk_
           printf '%s\n' "$(ls .export_chunks/chunk_* | wc -l)" > .export_chunks/count.txt
           sha256sum DietaPlanner_COMPLETO.zip > .export_chunks/sha256.txt
       - name: Commit complete archive
