@@ -26,3 +26,4 @@ if css.strip() not in s:
 
 p.write_text(s,encoding='utf-8')
 print('v27: disabled vegetable availability selectors shown in red')
+# trigger v27
