@@ -104,3 +104,4 @@ if old_m not in m: raise SystemExit('chiamata matrice motor non trovata')
 m=m.replace(old_m,new_m,1)
 p.write_text(m,encoding='utf-8')
 print('v16 breakfast exclusions applied')
+# trigger
