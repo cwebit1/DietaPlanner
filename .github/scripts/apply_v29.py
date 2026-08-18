@@ -9,4 +9,5 @@ if old not in s:
     raise SystemExit('availability group header block not found')
 s=s.replace(old,new,1)
 p.write_text(s,encoding='utf-8')
-print('v29: availability vegetable group headers changed to colored dots with plain text')
+print('v29 availability vegetable group headers changed to colored dots with plain text')
+# v29 ready
