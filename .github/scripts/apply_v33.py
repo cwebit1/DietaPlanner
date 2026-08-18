@@ -20,17 +20,17 @@ if '<script src="motor-v10.js?v=1"></script>' not in s:
 # Direct recipe assignment from Ricettario is a HARD user choice.
 old="""  await put('piano', voce);\n  await segnaRicettaUsata(ricetta.id);"""
 new="""  voce.origine = 'utente';\n  await put('piano', voce);\n  await segnaRicettaUsata(ricetta.id);"""
-if old not in s:
+if old not in s and "voce.origine = 'utente';\n  await put('piano', voce);" not in s:
     raise SystemExit('Ricettario assignment target not found')
-s=s.replace(old,new,1)
+if old in s:s=s.replace(old,new,1)
 
 # Manual breakfast replacement is also HARD and must survive Generate menu.
 old="""    voce.componenti=draft.componenti ? {...draft.componenti} : null;\n    voce.colazioneSpecialeId=draft.colazioneSpecialeId||null;\n    await put('piano',voce);"""
 new="""    voce.componenti=draft.componenti ? {...draft.componenti} : null;\n    voce.colazioneSpecialeId=draft.colazioneSpecialeId||null;\n    voce.origine='utente';\n    await put('piano',voce);"""
-if old not in s:
+if old not in s and "voce.origine='utente';\n    await put('piano',voce);" not in s:
     raise SystemExit('Breakfast manual replacement target not found')
-s=s.replace(old,new,1)
+if old in s:s=s.replace(old,new,1)
 
 p.write_text(s,encoding='utf-8')
 print('v33 motor v10 enabled; direct recipe/breakfast choices marked HARD')
-# trigger layered v33
+# trigger layered v33 final
