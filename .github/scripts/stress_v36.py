@@ -120,3 +120,5 @@ if fail:
 Path('STRESS-V36-REPORT.md').write_text('\n'.join(report)+'\n',encoding='utf-8')
 print('\n'.join(report))
 if fail: raise SystemExit(1)
+
+# trigger v36 workflow
