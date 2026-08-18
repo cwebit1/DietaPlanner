@@ -2104,21 +2104,24 @@ function componiNomeSecondoModulare(nomeProteina, cottura, nomeContorno){
 async function cercaComponentiModulari(sottoCategoria){
   const tutteRicette = await getAll('ricette');
   return tutteRicette.filter(r =>
-    r.tipoPortata === TIPO_PORTATA_MODULARE &&
-    r.sottoCategoriaModulare === sottoCategoria &&
-    !r.esclusa
+    !r.esclusa && (
+      (r.tipoPortata === TIPO_PORTATA_MODULARE && r.sottoCategoriaModulare === sottoCategoria) ||
+      r.tipoPortata === sottoCategoria
+    )
   );
 }
 
 /* Cerca i componenti modulari proteici compatibili con un
-   gruppoProteico specifico (sottotipo fine). */
+   gruppoProteico specifico (sottotipo fine). Include anche le ricette
+   legacy tipoPortata:'secondo' con lo stesso gruppoProteico, allo stesso
+   modo in cui già fa lo swap manuale Salvafrigo. */
 async function cercaProteineModulari(gruppoProteico){
   const tutteRicette = await getAll('ricette');
   return tutteRicette.filter(r =>
-    r.tipoPortata === TIPO_PORTATA_MODULARE &&
-    r.sottoCategoriaModulare === 'proteina' &&
-    r.gruppoProteico === gruppoProteico &&
-    !r.esclusa
+    !r.esclusa && r.gruppoProteico === gruppoProteico && (
+      (r.tipoPortata === TIPO_PORTATA_MODULARE && r.sottoCategoriaModulare === 'proteina') ||
+      r.tipoPortata === 'secondo'
+    )
   );
 }
 
