@@ -1,0 +1,31 @@
+name: Apply DietaPlanner v27
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/scripts/apply_v27.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: python .github/scripts/apply_v27.py
+      - name: Check JavaScript
+        run: |
+          python - <<'PY'
+          import re, subprocess, pathlib
+          s=pathlib.Path('index.html').read_text(encoding='utf-8')
+          for i,code in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)):
+              f=pathlib.Path(f'/tmp/inline_{i}.js')
+              f.write_text(code,encoding='utf-8')
+              subprocess.run(['node','--check',str(f)],check=True)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Show disabled vegetables in red v27 [skip ci]"
+          git push
