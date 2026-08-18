@@ -17,3 +17,4 @@ if old not in s:
 s=s.replace(old,new,1)
 p.write_text(s,encoding='utf-8')
 print('v20: table selector borders lightened and protein selectors made exactly 24x24 like carbohydrate selectors')
+# trigger v20
