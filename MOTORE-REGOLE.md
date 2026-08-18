@@ -190,3 +190,10 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - Assegnare un piatto unico/speciale imposta `hardPasto` e azzera i marker granulari.
 - Una colazione assegnata dal Ricettario imposta `hardColazione`.
 - Il wrapper v34 resta solo come compatibilità con record/percorsi precedenti, non è più l'unica fonte dei marker.
+
+### Coerenza colazione predefinita / esclusioni (v40)
+
+- L'esclusione ingredienti della colazione resta confinata alla colazione e non influisce su pranzo/cena.
+- Il Set non può contenere contemporaneamente lo stesso ingrediente come componente della colazione predefinita e come ingrediente escluso.
+- Se l'ingrediente è già nella colazione predefinita, l'utente deve prima cambiare quella componente per poterlo escludere; se è già escluso, deve prima riattivarlo per poterlo selezionare nella colazione predefinita.
+- Le colazioni speciali deliberate dall'utente restano un ramo volontario distinto e non vengono bloccate da questa coerenza del generatore ordinario.

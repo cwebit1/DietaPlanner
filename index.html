@@ -2769,7 +2769,19 @@ async function renderSetColazione(){
       const nome=btn.dataset.colEscludi;
       const rec=await getOne('impostazioni','colazioneIngredientiEsclusi');
       const lista=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);
-      lista.has(nome)?lista.delete(nome):lista.add(nome);
+      if(lista.has(nome)) lista.delete(nome);
+      else {
+        // Non creare un Set contraddittorio: un ingrediente scelto nella colazione
+        // predefinita non può essere contemporaneamente marcato "da escludere".
+        const prefRec=await getOne('impostazioni','colazionePreferita');
+        const pref=prefRec&&prefRec.valore?prefRec.valore:{};
+        const selezionati=new Set(Object.values(pref).filter(Boolean).map(id=>varianti.find(v=>v.id===id)?.nome).filter(Boolean));
+        if(selezionati.has(nome)){
+          await avviso('Questo ingrediente è già selezionato nella colazione predefinita. Cambia prima quella selezione oppure lascialo disponibile.');
+          return;
+        }
+        lista.add(nome);
+      }
       await put('impostazioni',{chiave:'colazioneIngredientiEsclusi',valore:[...lista]});
       await renderMantieniSwipe(renderSetColazione);
     }));
@@ -2780,6 +2792,15 @@ async function renderSetColazione(){
       btn.addEventListener('click', async ()=>{
         const gruppo = slide.dataset.setColGruppo;
         const idScelto = btn.dataset.setColOpt || null;
+        if(idScelto){
+          const scelta=varianti.find(v=>v.id===idScelto);
+          const off=await getOne('impostazioni','colazioneIngredientiEsclusi');
+          const esclusi=new Set(off&&Array.isArray(off.valore)?off.valore:[]);
+          if(scelta&&esclusi.has(scelta.nome)){
+            await avviso('Questo ingrediente è escluso dalla colazione. Riattivalo prima in Ingredienti da escludere.');
+            return;
+          }
+        }
         const rec = await getOne('impostazioni', 'colazionePreferita');
         const comp = rec && rec.valore ? Object.assign({}, rec.valore) : {};
         comp[gruppo] = idScelto;
