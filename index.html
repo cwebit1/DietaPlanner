@@ -214,7 +214,8 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 /* v22: quadratini tabella Proteine identici ai quadratini Carboidrati */
 .set-carb-celle button,
 #setTabellaGiorno td.cella button,
-#setVerduraRicorrenteTabella td.cella button{
+#setVerduraRicorrenteTabella td.cella button,
+#setColazioneGiorni td.cella button{
   box-sizing:border-box!important;
   width:24px!important;
   height:24px!important;
@@ -230,7 +231,8 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 }
 .set-carb-celle button.active,
 #setTabellaGiorno td.cella button.active,
-#setVerduraRicorrenteTabella td.cella button.active{
+#setVerduraRicorrenteTabella td.cella button.active,
+#setColazioneGiorni td.cella button.active{
   background:var(--accent)!important;
   border-color:var(--accent)!important;
 }
@@ -288,7 +290,7 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 .set-carb-celle button{width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;padding:0!important;border-color:#4b5540!important;}
 #setTabellaGiorno .riga-label{text-align:left;padding-right:4px;}
 #setTabellaGiorno td.cella{text-align:center;}
-#setTabellaGiorno td.cella button,#setVerduraRicorrenteTabella td.cella button{width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;padding:0!important;border-color:#4b5540!important;}
+#setTabellaGiorno td.cella button,#setVerduraRicorrenteTabella td.cella button,#setColazioneGiorni td.cella button{width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;padding:0!important;border-color:#4b5540!important;}
 #setTempoMenu{display:flex;flex-wrap:nowrap;gap:4px;}
 #setTempoMenu button{flex:0 0 auto;min-width:0;padding:6px 8px;white-space:nowrap;}
 .tabgroup{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
@@ -652,8 +654,8 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
   <div id="setCarboidrati"><div class="card"><h3 style="margin-bottom:10px;">🍝 Impostazioni Carboidrati</h3><div class="meta" style="margin-bottom:12px;">Clicca le caselle per indicare quanti pasti a settimana vuoi dedicare a ciascun tipo di carboidrato. Il totale deve essere esattamente 14 (7 giorni × 2 pasti).</div><div id="cfgCarboidratiContenuto"></div><div id="cfgCarboidratiTotale" style="font-weight:700;font-size:0.9rem;margin-top:12px;">Totale: 0 / 14</div><div class="row" style="margin-top:8px;gap:10px;align-items:center;"><div class="meta" style="flex:1;">Le caselle vuote saranno completate dal sistema in rotazione casuale</div><button class="secondary" id="btnResetConfigCarboidrati" style="width:auto;flex:0 0 auto;">🗑 Azzera</button></div></div></div>
   <div id="setProteine"><div class="card"><h3 style="margin-bottom:10px;">🍗 Impostazioni Proteine</h3><div class="meta" style="margin-bottom:12px;">Tocca le caselle per fissare la categoria proteica di ciascun giorno. Max 2 categorie diverse per giorno. I tetti settimanali del percorso sono rispettati automaticamente; le caselle restano valide per tutte le settimane.</div><div id="setTabellaGiorno" style="overflow-x:auto;"></div><div id="setPreferenzeMenu" style="margin-top:16px;"><h3 style="margin-bottom:10px;">⚙️ Preferenze generazione menù</h3><div class="meta" style="margin-bottom:8px;">Categorie che gradisci meno: il motore le penalizza senza eliminarle se servono per rispettare il piano.</div><div class="tabgroup" id="setProteineLimitate"></div><div class="meta" style="margin:14px 0 8px;">Tempo disponibile. Se selezioni poco tempo, quel pasto usa con priorità obbligatoria la famiglia pane / bruschette / friselle.</div><div class="tabgroup" id="setTempoMenu"></div></div></div></div>
-  <div id="setVerdure"><div class="card"><h3 style="margin-bottom:10px;">🥬 Impostazioni Verdure</h3><div id="setVerdurePreferite" style="margin-bottom:16px;"><div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid #2ecc71;color:#2ecc71;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">Verdure da favorire</span></div><div class="meta" style="margin-bottom:8px;">Seleziona una o più verdure stagionali da favorire nella generazione.</div><div class="setting-swipe" id="setVerdurePreferiteLista"></div><div id="setVerdurePreferiteNota" class="meta" style="margin-top:8px;"></div></div><div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid #f1c40f;color:#f1c40f;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">Disponibilità verdure</span></div><div class="meta" style="margin-bottom:10px;">Tocca per escludere le verdure che non vuoi usare. Puoi escluderne al massimo 7; raggiunto il limite devi riattivarne una prima di escluderne un'altra.</div><div id="setVerdureLista"></div><div id="setVerdureRicorrenti" style="margin-top:16px;"><div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid #2ecc71;color:#2ecc71;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">Verdure ricorrenti</span></div><div class="meta" style="margin-bottom:8px;">Seleziona una verdura e fino a 7 pasti settimanali. Nei pasti marcati il contorno viene vincolato a quella verdura.</div><div class="setting-swipe" id="setVerduraRicorrenteScelta"></div><div id="setVerduraRicorrenteTabella" style="overflow-x:auto;margin-top:10px;"></div><div class="meta" id="setVerduraRicorrenteNota" style="margin-top:8px;"></div></div></div></div>
-  <div id="setColazione"><div class="card"><h3 style="margin-bottom:10px;">☕ Impostazioni Colazione</h3><div class="meta" style="margin-bottom:12px;">Componi la colazione da ripetere e scegli i giorni in cui applicarla. Nei giorni non selezionati il motore propone colazioni diverse.</div><div id="setColazioneGruppi"></div><label style="margin-top:12px;">Giorni in cui applicarla:</label><table class="tabella-giorno"><tbody id="setColazioneGiorni"></tbody></table><label style="margin-top:16px;">Ingredienti da escludere:</label><div class="meta" style="margin-bottom:8px;">Gli ingredienti selezionati non verranno mai usati nelle colazioni generate automaticamente. Le scelte impostate manualmente sopra restano prioritarie.</div><div id="setColazioneEsclusi" class="setting-swipe"></div><div class="row" style="margin-top:10px;gap:8px;"><button class="small" id="btnResetColazionePref">✕ Reset colazione preferita</button></div></div></div>
+  <div id="setVerdure"><div class="card"><h3 style="margin-bottom:10px;">🥬 Impostazioni Verdure</h3><div id="setVerdurePreferite" style="margin-bottom:16px;"><div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid #2ecc71;color:#2ecc71;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">Verdure da favorire</span></div><div class="meta" style="margin-bottom:8px;">Seleziona una o più verdure stagionali da favorire nella generazione.</div><div class="setting-swipe" id="setVerdurePreferiteLista"></div><div id="setVerdurePreferiteNota" class="meta" style="margin-top:8px;"></div></div><div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid #f1c40f;color:#f1c40f;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">Disponibilità verdure</span></div><div class="meta" style="margin-bottom:10px;">Tocca per escludere le verdure che non vuoi usare. Puoi escluderne al massimo 7; raggiunto il limite devi riattivarne una prima di escluderne un'altra.</div><div id="setVerdureLista"></div><div id="setVerdureRicorrenti" style="margin-top:16px;"><div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid #2ecc71;color:#2ecc71;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">Verdure ricorrenti</span></div><div class="meta" style="margin-bottom:8px;">Seleziona una verdura e fino a 5 pasti settimanali. Nei pasti marcati il contorno viene vincolato a quella verdura.</div><div class="setting-swipe" id="setVerduraRicorrenteScelta"></div><div id="setVerduraRicorrenteTabella" style="overflow-x:auto;margin-top:10px;"></div><div class="meta" id="setVerduraRicorrenteNota" style="margin-top:8px;"></div></div></div></div>
+  <div id="setColazione"><div class="card"><h3 style="margin-bottom:10px;">☕ Impostazioni Colazione</h3><div class="meta" style="margin-bottom:12px;">Componi la colazione da ripetere e scegli i giorni in cui applicarla. Nei giorni non selezionati il motore propone colazioni diverse.</div><div id="setColazioneGruppi"></div><label style="margin-top:12px;">Giorni in cui applicarla:</label><table class="tabella-giorno"><tbody id="setColazioneGiorni"></tbody></table><label style="margin-top:16px;">Ingredienti da escludere:</label><div id="setColazioneEsclusi" class="setting-swipe" style="margin-top:8px;"></div><div class="meta" style="margin-top:8px;margin-bottom:8px;">Le esclusioni valgono solo per la colazione automatica: un alimento escluso qui resta disponibile per pranzo e cena. Le scelte impostate manualmente sopra restano prioritarie.</div><div class="row" style="margin-top:10px;gap:8px;"><button class="small" id="btnResetColazionePref">✕ Reset colazione preferita</button></div></div></div>
   <div id="setSalvaUnico" style="margin-top:20px;"><button class="primary" id="btnSalvaSetCompleto" style="width:100%;margin-top:8px;">💾 Salva tutta la configurazione</button><div id="setSalvaStato" class="meta" style="margin-top:8px;text-align:center;"></div></div>
 </section>
 
@@ -2665,7 +2667,7 @@ async function renderSetVerduraRicorrente(){
   }));
   const giorni=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
   const head=giorni.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
-  const totale=pasti.size, maxPasti=7, pieno=totale>=maxPasti;
+  const totale=pasti.size, maxPasti=5, pieno=totale>=maxPasti;
   const riga=pasto=>giorni.map((_,i)=>{const key=pasto+'_'+i,on=pasti.has(key),disabled=!attiva||(pieno&&!on);return `<td class="cella"><button data-vr-pasto="${key}" class="${on?'active':''}" ${disabled?'disabled':''}></button></td>`;}).join('');
   tab.innerHTML=`<table class="tabella-giorno"><tr><th class="col-label"></th>${head}</tr><tr><td class="riga-label">Pranzo</td>${riga('pranzo')}</tr><tr><td class="riga-label">Cena</td>${riga('cena')}</tr></table>`;
   tab.querySelectorAll('[data-vr-pasto]').forEach(b=>b.addEventListener('click',async()=>{
@@ -2674,13 +2676,13 @@ async function renderSetVerduraRicorrente(){
     const rec=await getOne('impostazioni','verduraRicorrentePasti');
     const set=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);
     if(set.has(key)) set.delete(key);
-    else {if(set.size>=7){await avviso('Puoi programmare al massimo 7 pasti con la verdura ricorrente.');return;} set.add(key);}
+    else {if(set.size>=5){await avviso('Puoi programmare al massimo 5 pasti con la verdura ricorrente.');return;} set.add(key);}
     await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:[...set]});
     await renderSetVerduraRicorrente();
   }));
   if(nota){
     const vScelta=attiva?verdure.find(v=>v.id===attiva):null;
-    nota.textContent=vScelta?`✓ ${vScelta.nome}: ${totale} / 7 pasti vincolati. Nei pasti selezionati il motore userà obbligatoriamente un contorno con questa verdura.`:'Seleziona una verdura per attivare la programmazione dei pasti.';
+    nota.textContent=vScelta?`✓ ${vScelta.nome}: ${totale} / 5 pasti vincolati. Nei pasti selezionati il motore userà obbligatoriamente un contorno con questa verdura.`:'Seleziona una verdura per attivare la programmazione dei pasti.';
     if(vScelta){nota.style.border='1px solid #2ecc71';nota.style.background='rgba(46,204,113,0.35)';nota.style.borderRadius='8px';nota.style.padding='8px 10px';nota.style.color='var(--text)';}
     else {nota.style.border='none';nota.style.background='transparent';nota.style.borderRadius='0';nota.style.padding='0';nota.style.color='';}
   }
@@ -2706,10 +2708,12 @@ async function renderSetColazione(){
   }
   // 4 gruppi componibili
   let htmlGruppi = '';
+  const coloriGruppiColazione={proteine:'#2ecc71',bibita:'#ffffff',carboidrati:'#2ecc71',grassi:'#f1c40f',carboidrati_semplici:'#f39c12'};
   for(const gr of COLAZIONE_GRUPPI){
     const opzioni = opzioniColazioneGruppo(gr, varianti);
     const selezionatoId = componenti[gr.chiave];
-    htmlGruppi += `<label style="margin-top:8px;">${gr.label}${gr.obbligatorio?'':' (facoltativo)'}</label>
+    const coloreTitolo=coloriGruppiColazione[gr.chiave]||'var(--text-dim)';
+    htmlGruppi += `<div style="margin:10px 0 7px;"><span style="display:inline-block;border:1px solid ${coloreTitolo};color:${coloreTitolo};border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">${gr.label}</span></div>
       <div class="colazione-gruppo-slide" data-set-col-gruppo="${gr.chiave}">
         ${gr.consentiNessuno ? `<button data-set-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>` : ''}
         ${opzioni.map(o=>`<button data-set-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
@@ -2717,21 +2721,20 @@ async function renderSetColazione(){
   }
   contGruppi.innerHTML = htmlGruppi;
   // Griglia giorni Lun-Dom, stessa struttura tabella-giorno della configurazione Set
-  const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th>${g}</th>`).join('');
+  const rigaIntestazioneCol = NOMI_GIORNI_BREVI.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
   const celleCol = NOMI_GIORNI_BREVI.map((g, idx)=>{
     const attivo = giorniAttivi.includes(idx);
     return `<td class="cella"><button data-set-colpref-giorno="${idx}" class="${attivo?'active':''}"></button></td>`;
   }).join('');
   contGiorni.innerHTML = `
     <tr><th class="col-label"></th>${rigaIntestazioneCol}</tr>
-    <tr><td class="riga-label">Colazione</td>${celleCol}</tr>`;
+    <tr><td class="riga-label" style="text-align:left;padding-right:4px;">Colazione</td>${celleCol}</tr>`;
   // Ingredienti esclusi dalle sole proposte automatiche.
   if(contEsclusi){
     const esclusi=new Set(esclusiRec&&Array.isArray(esclusiRec.valore)?esclusiRec.valore:[]);
-    const nomiMatrice=[...new Set(COLAZIONI_AUTOMATICHE_COHERENTI.flatMap(schema=>
-      ['proteine','carboidrati','grassi','carboidrati_semplici'].map(k=>schema[k]).filter(Boolean)
-    ))].filter(nome=>varianti.some(v=>v.nome&&v.nome.toLowerCase()===nome.toLowerCase())).sort((a,b)=>a.localeCompare(b));
-    contEsclusi.innerHTML=nomiMatrice.map(nome=>`<button data-col-escludi="${nome}" class="${esclusi.has(nome)?'active':''}">${nome}</button>`).join('');
+    const gruppiEscludibili=new Set(['proteine','carboidrati','grassi','carboidrati_semplici']);
+    const nomiMatrice=[...new Set(varianti.filter(v=>gruppiEscludibili.has(v.colazioneGruppo)).map(v=>v.nome).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
+    contEsclusi.innerHTML=nomiMatrice.map(nome=>`<button data-col-escludi="${nome}" class="${esclusi.has(nome)?'inactive-red':'active'}">${nome}</button>`).join('');
     contEsclusi.querySelectorAll('[data-col-escludi]').forEach(btn=>btn.addEventListener('click',async()=>{
       const nome=btn.dataset.colEscludi;
       const rec=await getOne('impostazioni','colazioneIngredientiEsclusi');
