@@ -2634,6 +2634,8 @@ async function renderSetVerdure(){
     const lista=new Set(rec&&rec.valore?rec.valore:[]);
     if(lista.has(vid)) lista.delete(vid);
     else {
+      const ric=await getOne('impostazioni','verduraRicorrente');
+      if(ric&&ric.valore===vid){await avviso('Questa verdura è programmata come ricorrente. Togli prima la programmazione ricorrente oppure scegli un’altra verdura.');return;}
       if(lista.size>=maxEsclusioni){await avviso('Puoi escludere al massimo 7 verdure. Riattivane una prima di escluderne un’altra.');return;}
       lista.add(vid);
     }
@@ -2684,8 +2686,12 @@ async function renderSetVerduraRicorrente(){
   el.innerHTML=`<button data-vr="" class="${!attiva?'active':''}">Nessuna</button>`+ordinate.map(v=>`<button data-vr="${v.id}" class="${attiva===v.id?'active':''}">${v.nome}</button>`).join('');
   el.querySelectorAll('[data-vr]').forEach(b=>b.addEventListener('click',async()=>{
     const vid=b.dataset.vr||null;
-    if(vid) await put('impostazioni',{chiave:'verduraRicorrente',valore:vid});
-    else {await delKey('impostazioni','verduraRicorrente');await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:[]});}
+    if(vid){
+      const off=await getOne('impostazioni','setVerdureDisattivate');
+      const escluse=new Set(off&&Array.isArray(off.valore)?off.valore:[]);
+      if(escluse.has(vid)){await avviso('Questa verdura è indicata come non disponibile. Riattivala prima in Disponibilità verdure.');return;}
+      await put('impostazioni',{chiave:'verduraRicorrente',valore:vid});
+    } else {await delKey('impostazioni','verduraRicorrente');await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:[]});}
     await renderMantieniSwipe(renderSetVerduraRicorrente);
   }));
   const giorni=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
@@ -8564,7 +8570,7 @@ motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredient
 scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
 </script>
 
-<script src="motor-v10.js?v=6"></script>
+<script src="motor-v10.js?v=7"></script>
 
 </body>
 </html>

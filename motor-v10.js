@@ -161,10 +161,21 @@ scegliContornoMotore = async function(giorno,stato,preferenze,escludiId){
   const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
   const slot=(preferenze._pastoCorrente||'')+'_'+idx;
   if(preferenze.verduraRicorrenteVariantId && (preferenze.verduraRicorrentePasti||[]).includes(slot)){
+    // Scelta esplicita user: è HARD e può volutamente derogare alla stagionalità,
+    // ma non alla disponibilità (i Set contraddittori vengono bloccati in UI).
     const hard=candidati.filter(x=>x.info.variantId===preferenze.verduraRicorrenteVariantId);
     if(!hard.length) return null;
     const scelta=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
     return scelta?scelta.r:null;
+  }
+  // Filtro stagionale automatico: freschi e freschi duraturi devono essere
+  // coerenti col mese; confezionati e surgelati restano disponibili tutto l'anno.
+  if(typeof verdureDiStagione==='function'){
+    const stag=new Set(verdureDiStagione(new Date(giorno+'T12:00:00'))||[]);
+    if(stag.size){
+      candidati=candidati.filter(x=>x.info.tier==='confezionato'||x.info.tier==='surgelato'||stag.has(x.info.nome));
+      if(!candidati.length)return null;
+    }
   }
   const ordine=(typeof ordineVerdureGiornoV17==='function')?ordineVerdureGiornoV17(idx):(idx<=2?['fresco','resistente','surgelato']:(idx<=4?['resistente','fresco','surgelato']:['surgelato','resistente','fresco']));
   let pool=[];
@@ -639,5 +650,5 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   return null;
 };
 
-window.MOTORE_V10_REGOLE={versione:'1.3',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
+window.MOTORE_V10_REGOLE={versione:'1.4',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
 })();

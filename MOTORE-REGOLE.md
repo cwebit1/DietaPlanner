@@ -175,3 +175,9 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - Se le quote residue occupano tutta la capacità rimasta, prevalgono le quote user; `Poco tempo` non può cancellarle.
 - Una ricetta rapida visualizzata deve corrispondere alla famiglia realmente contabilizzata: se il motore ha scelto `friselle`, mostra una ricetta di friselle; se ha scelto `pane`, non può mostrare friselle. Questo mantiene reale il tetto Friselle <= 1/settimana.
 - Eventuali quote rimaste impossibili da collocare perché l'utente ha successivamente occupato slot con pasti speciali/HARD vengono riportate nel report motore e non producono compensazioni sui pasti speciali.
+
+### Stagionalità e coerenza disponibilità/ricorrenza (v38)
+
+- Negli slot automatici il filtro stagionale è un vero filtro: le verdure fresche/fresche durature fuori dalla lista del mese non vengono proposte; confezionati e surgelati restano disponibili tutto l'anno.
+- Una verdura ricorrente impostata esplicitamente dall'utente è HARD e può derogare alla stagionalità, perché la scelta user precede il filtro automatico.
+- `Disponibilità verdure` e `Verdura ricorrente` non possono contraddirsi: non si può disattivare una verdura già programmata come ricorrente e non si può rendere ricorrente una verdura dichiarata non disponibile.
