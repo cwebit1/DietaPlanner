@@ -1,0 +1,34 @@
+name: Apply DietaPlanner breakfast v13
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-v13-breakfast.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply v13 breakfast patch
+        run: python .github/scripts/apply_v13_breakfast.py
+      - name: Commit changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html motor-v9-3.js
+          if git diff --cached --quiet; then
+            echo 'No changes needed.'
+            exit 0
+          fi
+          git commit -m 'Update breakfast groups and beverage v13 [skip ci]'
+          git push
