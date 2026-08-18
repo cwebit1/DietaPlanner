@@ -7,7 +7,6 @@ errors=[];notes=[]
 def req(c,m):
     if not c:errors.append(m)
 
-# Marker diretti
 req("if(tipo==='primo') voce.hardPrimo = true;" in idx,'hardPrimo non scritto alla fonte')
 req("if(tipo==='secondo') voce.hardSecondo = true;" in idx,'hardSecondo non scritto alla fonte')
 req("if(tipo==='contorno') voce.hardContorno = true;" in idx,'hardContorno non scritto alla fonte')
@@ -16,8 +15,6 @@ req('voce.hardPasto = true;' in idx,'hardPasto non scritto per unico')
 req('voce.hardPasto = false;' in idx,'passaggio unico->multi non libera hardPasto')
 req('voce.ricettaId = null;' in idx,'passaggio unico->multi non elimina ricettaId precedente')
 req('voce.hardPrimo = voce.hardSecondo = voce.hardContorno = false;' in idx,'unico non azzera marker granulari')
-
-# Motore li deve rispettare davvero
 req('hardPrimo' in v94 and 'hardSecondo' in v94 and 'hardContorno' in v94,'wrapper compatibilità marker assente')
 req("if(!seed.hardPrimo)" in v94 and "if(!seed.hardSecondo)" in v94 and "if(!seed.hardContorno)" in v94,'componenti non-HARD non vengono liberate')
 req('motoreV10Protetta' in v10,'protezione v10 assente')
@@ -29,3 +26,4 @@ if errors:report+=['','## Errori']+[f'- {e}' for e in errors]
 Path('STRESS-V39-REPORT.md').write_text('\n'.join(report)+'\n',encoding='utf-8')
 print('\n'.join(report))
 if errors:raise SystemExit(1)
+# trigger v39
