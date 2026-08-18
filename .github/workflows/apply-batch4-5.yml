@@ -1,0 +1,184 @@
+name: Apply Batch 4 and 5
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-batch4-5.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Batch 4 and 5
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+
+          # Batch 4: title button for special dish.
+          old="""  document.getElementById('modalDettaglioTitolo').innerHTML =
+    `<span style=\"flex:1;\">${ricetta.nome}</span> ${stellaBtn(ricetta)}`;"""
+          new="""  const isUnicoDettaglio = (ricetta.tipoPortata||'unico')==='unico';
+  document.getElementById('modalDettaglioTitolo').innerHTML =
+    `<span style=\"flex:1;\">${ricetta.nome}</span> ${stellaBtn(ricetta)} ${isUnicoDettaglio ? `<button class=\"small\" data-speciale=\"${ricetta.id}\">${ricetta.piattoSpeciale?'🍽 Togli speciale':'🍽 Piatto speciale'}</button>` : ''}`;"""
+          if old not in s: raise SystemExit('Batch 4 title target not found')
+          s=s.replace(old,new,1)
+
+          # Batch 5: local edit state before modalitaModifica branch.
+          old="""  if(modalitaModifica){
+    const m = ricetta.nutrizioneManualeTotale || {};
+    corpoHtml += `"""
+          new="""  let modalEditSottoCategoriaScelta = ricetta.sottoCategoriaModulare || 'sugo';
+  let modalEditCerealeScelto = ricetta.cerealeLibero ? 'libero' : (ricetta.tipoCereale || 'libero');
+  if(modalitaModifica){
+    const m = ricetta.nutrizioneManualeTotale || {};
+    const ingredientiTestoEdit = (ricetta.ingredienti||[]).map(i=>{
+      const variante = i.variantId ? varianti.find(v=>v.id===i.variantId) : null;
+      const nome = variante ? variante.nome : (i.nomeLibero||'');
+      return `${nome}, ${i.quantita||0}`;
+    }).join('\\n');
+    corpoHtml += `"""
+          if old not in s: raise SystemExit('Batch 5 state target not found')
+          s=s.replace(old,new,1)
+
+          # Batch 5: insert classification + ingredient editor before procedimento.
+          old="""      <div class=\"meta\" style=\"margin-top:10px;\">Procedimento (un passo per riga):</div>
+      <textarea id=\"modalEditProcedimento\" rows=\"6\">${(ricetta.procedimento||[]).join('\\n')}</textarea>"""
+          new="""      <label>Gruppo proteico coperto</label>
+      <select id=\"modalEditGruppoProteico\">
+        <option value=\"\" ${!ricetta.gruppoProteico?'selected':''}>— nessuno / piatto senza proteina animale —</option>
+        <optgroup label=\"Carne\">
+          <option value=\"carne_bianca\" ${ricetta.gruppoProteico==='carne_bianca'?'selected':''}>Carne bianca</option>
+          <option value=\"carne_rossa\" ${ricetta.gruppoProteico==='carne_rossa'?'selected':''}>Carne rossa</option>
+          <option value=\"affettati\" ${ricetta.gruppoProteico==='affettati'?'selected':''}>Affettati / insaccati</option>
+        </optgroup>
+        <optgroup label=\"Pesce\">
+          <option value=\"pesce_bianco\" ${ricetta.gruppoProteico==='pesce_bianco'?'selected':''}>Pesce bianco</option>
+          <option value=\"pesce_azzurro\" ${ricetta.gruppoProteico==='pesce_azzurro'?'selected':''}>Pesce azzurro</option>
+          <option value=\"pesce_grande\" ${ricetta.gruppoProteico==='pesce_grande'?'selected':''}>Pesce di grande taglia</option>
+          <option value=\"pesce_conservato\" ${ricetta.gruppoProteico==='pesce_conservato'?'selected':''}>Pesce conservato / salmone affumicato</option>
+          <option value=\"molluschi\" ${ricetta.gruppoProteico==='molluschi'?'selected':''}>Molluschi</option>
+          <option value=\"crostacei\" ${ricetta.gruppoProteico==='crostacei'?'selected':''}>Crostacei</option>
+        </optgroup>
+        <optgroup label=\"Formaggi\">
+          <option value=\"formaggio_fresco\" ${ricetta.gruppoProteico==='formaggio_fresco'?'selected':''}>Formaggio fresco</option>
+          <option value=\"formaggio_stagionato\" ${ricetta.gruppoProteico==='formaggio_stagionato'?'selected':''}>Formaggio stagionato</option>
+        </optgroup>
+        <option value=\"uova\" ${ricetta.gruppoProteico==='uova'?'selected':''}>Uova</option>
+        <option value=\"legumi\" ${ricetta.gruppoProteico==='legumi'?'selected':''}>Legumi / Tofu-Tempeh</option>
+      </select>
+      <label>Tipo di portata</label>
+      <select id=\"modalEditTipoPortata\">
+        <option value=\"unico\" ${(ricetta.tipoPortata||'unico')==='unico'?'selected':''}>Piatto unico</option>
+        <option value=\"primo\" ${ricetta.tipoPortata==='primo'?'selected':''}>Primo</option>
+        <option value=\"secondo\" ${ricetta.tipoPortata==='secondo'?'selected':''}>Secondo</option>
+        <option value=\"contorno\" ${ricetta.tipoPortata==='contorno'?'selected':''}>Contorno</option>
+        <option value=\"spuntino\" ${ricetta.tipoPortata==='spuntino'?'selected':''}>Spuntino</option>
+        <option value=\"colazione\" ${ricetta.tipoPortata==='colazione'?'selected':''}>Colazione</option>
+        <option value=\"modulare\" ${ricetta.tipoPortata==='modulare'?'selected':''}>🧩 Modulo componibile</option>
+      </select>
+      <div id=\"modalEditSezioneModulare\" style=\"display:${ricetta.tipoPortata==='modulare'?'block':'none'};\">
+        <label>Sotto-categoria del modulo</label>
+        <div class=\"tabgroup\" id=\"modalEditSottoCategoriaMod\" style=\"flex-wrap:wrap;\">
+          <button data-modaledit-sottocat=\"sugo\" class=\"${modalEditSottoCategoriaScelta==='sugo'?'active':''}\">🍅 Sugo (primo)</button>
+          <button data-modaledit-sottocat=\"proteina\" class=\"${modalEditSottoCategoriaScelta==='proteina'?'active':''}\">🍗 Proteina (secondo)</button>
+          <button data-modaledit-sottocat=\"contorno\" class=\"${modalEditSottoCategoriaScelta==='contorno'?'active':''}\">🥦 Contorno (secondo)</button>
+        </div>
+      </div>
+      <div id=\"modalEditSezioneCereale\" style=\"display:${ricetta.tipoPortata==='primo'?'block':'none'};\">
+        <label>Tipo di cereale</label>
+        <div class=\"tabgroup\" id=\"modalEditCerealeTab\" style=\"flex-wrap:wrap;\">
+          <button data-modaledit-cereale=\"libero\" class=\"${modalEditCerealeScelto==='libero'?'active':''}\">🔄 Libero (il motore sceglie)</button>
+          <button data-modaledit-cereale=\"gnocchi\" class=\"${modalEditCerealeScelto==='gnocchi'?'active':''}\">Gnocchi</button>
+          <button data-modaledit-cereale=\"pasta_ripiena\" class=\"${modalEditCerealeScelto==='pasta_ripiena'?'active':''}\">Pasta ripiena</button>
+        </div>
+      </div>
+      <label>Ingredienti (uno per riga: nome, grammi) — per i primi modulari, NON inserire il cereale</label>
+      <textarea id=\"modalEditIngredienti\" placeholder=\"pomodoro fresco, 100&#10;olio extravergine oliva, 10&#10;petto di pollo, 120\" rows=\"4\">${ingredientiTestoEdit}</textarea>
+      <div class=\"meta\" style=\"margin-top:10px;\">Procedimento (un passo per riga):</div>
+      <textarea id=\"modalEditProcedimento\" rows=\"6\">${(ricetta.procedimento||[]).join('\\n')}</textarea>"""
+          if old not in s: raise SystemExit('Batch 5 editor insertion target not found')
+          s=s.replace(old,new,1)
+
+          # Batch 4 listener after favorite listener.
+          old="""  document.querySelector('#modalDettaglioTitolo [data-star]')?.addEventListener('click', async (e)=>{
+    const aggiornata = await toggleFavorito(e.target.dataset.star);
+    apriModalDettaglioRicetta(aggiornata || ricetta, voce || porzioniSel, modalitaModifica);
+  });
+
+  document.getElementById('modalDettaglioContenuto').querySelector('[data-apri-modifica]')?.addEventListener('click', ()=>{"""
+          new="""  document.querySelector('#modalDettaglioTitolo [data-star]')?.addEventListener('click', async (e)=>{
+    const aggiornata = await toggleFavorito(e.target.dataset.star);
+    apriModalDettaglioRicetta(aggiornata || ricetta, voce || porzioniSel, modalitaModifica);
+  });
+  document.querySelector('#modalDettaglioTitolo [data-speciale]')?.addEventListener('click', async (e)=>{
+    const aggiornata = await togglePiattoSpeciale(e.target.dataset.speciale);
+    apriModalDettaglioRicetta(aggiornata || ricetta, voce || porzioniSel, modalitaModifica);
+  });
+
+  if(modalitaModifica){
+    document.getElementById('modalEditTipoPortata')?.addEventListener('change', (e)=>{
+      const tipo=e.target.value;
+      document.getElementById('modalEditSezioneModulare').style.display = tipo==='modulare' ? 'block' : 'none';
+      document.getElementById('modalEditSezioneCereale').style.display = tipo==='primo' ? 'block' : 'none';
+    });
+    document.getElementById('modalEditSottoCategoriaMod')?.addEventListener('click', (e)=>{
+      const btn=e.target.closest('[data-modaledit-sottocat]');
+      if(!btn) return;
+      modalEditSottoCategoriaScelta=btn.dataset.modaleditSottocat;
+      document.querySelectorAll('#modalEditSottoCategoriaMod button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+    document.getElementById('modalEditCerealeTab')?.addEventListener('click', (e)=>{
+      const btn=e.target.closest('[data-modaledit-cereale]');
+      if(!btn) return;
+      modalEditCerealeScelto=btn.dataset.modaleditCereale;
+      document.querySelectorAll('#modalEditCerealeTab button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  }
+
+  document.getElementById('modalDettaglioContenuto').querySelector('[data-apri-modifica]')?.addEventListener('click', ()=>{"""
+          if old not in s: raise SystemExit('Batch 4 listener target not found')
+          s=s.replace(old,new,1)
+
+          # Batch 5 save classification + ingredient parsing before nutrition handling.
+          old="""    ricetta.procedimento = nuovoProcedimento;
+    ricetta.notePersonali = nuoveNote;
+
+    const mKcal = document.getElementById('modalEditKcal').value;"""
+          new="""    ricetta.procedimento = nuovoProcedimento;
+    ricetta.notePersonali = nuoveNote;
+
+    ricetta.gruppoProteico = document.getElementById('modalEditGruppoProteico').value;
+    const tipoPortataScelto = document.getElementById('modalEditTipoPortata').value;
+    ricetta.tipoPortata = tipoPortataScelto;
+    ricetta.sottoCategoriaModulare = (tipoPortataScelto==='modulare') ? modalEditSottoCategoriaScelta : null;
+    ricetta.cerealeLibero = (tipoPortataScelto==='primo' && modalEditCerealeScelto==='libero');
+    ricetta.tipoCereale = (tipoPortataScelto==='primo' && modalEditCerealeScelto!=='libero') ? modalEditCerealeScelto : null;
+
+    const righeIng = document.getElementById('modalEditIngredienti').value.split('\\n').map(l=>l.trim()).filter(Boolean);
+    const tutteLeVarianti = await getAll('varianti');
+    ricetta.ingredienti = righeIng.map(riga=>{
+      const [nomeParte, gParte] = riga.split(',').map(s=>s.trim());
+      const g = parseFloat(gParte)||0;
+      const v = tutteLeVarianti.find(x=>x.nome.toLowerCase()===nomeParte?.toLowerCase());
+      return v ? {variantId:v.id, quantita:g} : {variantId:null, nomeLibero:nomeParte, quantita:g};
+    });
+
+    const mKcal = document.getElementById('modalEditKcal').value;"""
+          if old not in s: raise SystemExit('Batch 5 save target not found')
+          s=s.replace(old,new,1)
+
+          p.write_text(s)
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Apply Batch 4 and 5 recipe editor improvements"
+          git push
