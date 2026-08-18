@@ -144,3 +144,4 @@ note='''\n## Riclassificazione v35 — carboidrato mancante\n\nNon sono più con
 if '## Riclassificazione v35 — carboidrato mancante' not in s:s+=note
 p.write_text(s,encoding='utf-8')
 print('v35 applied: unico functional composition + bread/cous cous fallback')
+# trigger v35
