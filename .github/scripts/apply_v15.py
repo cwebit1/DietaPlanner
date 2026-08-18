@@ -77,24 +77,6 @@ function scegliColazioneAutomaticaCoerente(varianti, firmeDaEvitare){
 if 'COLAZIONI_AUTOMATICHE_COHERENTI' not in s:
     if marker not in s: raise SystemExit('helper marker non trovato')
     s=s.replace(marker,marker+insert,1)
-old=r'''      const usaColazionePref = giorniColazionePref.length > 0 && giorniColazionePref.includes(indiceGiornoColazione);
-      const componenti = {};
-      for(const gr of COLAZIONE_GRUPPI){
-        const idPref = (usaColazionePref && colazionePref && colazionePref.valore) ? colazionePref.valore[gr.chiave] : null;
-        const variantePrefValida = opzioneColazioneValida(gr, idPref, varianti);
-        if(variantePrefValida){
-          componenti[gr.chiave] = idPref;
-        } else {
-          const idDaEscludere = colazionePref && colazionePref.valore ? colazionePref.valore[gr.chiave] : null;
-          let opz = opzioniColazioneGruppo(gr, varianti);
-          if(idDaEscludere && opz.length > 1){ opz = opz.filter(v=>v.id !== idDaEscludere); }
-          opz.sort((a,b)=>a.nome.localeCompare(b.nome));
-          const sceltaRandom = opz.length > 1 ? opz[Math.floor(Math.random()*opz.length)] : opz[0];
-          componenti[gr.chiave] = gr.obbligatorio && opz.length ? sceltaRandom.id : null;
-        }
-      }
-      await put('piano', {id:pianoIdColazione, componenti});'''
-# tolerate comments in current block by slicing on markers
 start=s.find("      const usaColazionePref = giorniColazionePref.length > 0 && giorniColazionePref.includes(indiceGiornoColazione);")
 if start>=0:
     end=s.find("      await put('piano', {id:pianoIdColazione, componenti});",start)
@@ -134,3 +116,4 @@ newm=r'''        const idx=giorni.indexOf(g);
 m=m[:start]+newm+m[end:]
 p.write_text(m,encoding='utf-8')
 print('v15 coherent breakfast matrix applied')
+# trigger
