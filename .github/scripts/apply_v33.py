@@ -14,3 +14,4 @@ s=s.replace('''  const ultimoConsumoSottotipo={};\n  // In assenza di timestamp 
 s=s.replace('''  const griglia=costruisciGrigliaMotore(giorni,preferenze.giornoCategoria||{},preferenze.proteineLimitate||[]);''','''  // LAYER 1: scelte esplicite Set. LAYER 2/3: preferenze + Bibbia completano solo i vuoti.\n  // Le scelte utente non vengono mai rimpiazzate dal completamento automatico.\n  const griglia=costruisciGrigliaMotore(giorni,preferenze.giornoCategoria||{},preferenze.proteineLimitate||[]);''')
 p.write_text(s,encoding='utf-8')
 print('v33 layer precedence + real subtype history applied')
+# trigger v33
