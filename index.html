@@ -3380,6 +3380,7 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
    ========================================================= */
 /* Draft temporaneo del pasto in editing (non ancora confermato). Chiave: giorno_pasto. */
 let draftPasto = {};
+let draftColazione = {};
 /* I1: stato centralizzato dei pannelli. Un unico oggetto traccia lo stato
    aperto/chiuso di tutti i tipi di pannello, invece di tre oggetti separati
    sparsi nel codice. Gli alias sotto mantengono la compatibilità con tutto
@@ -4278,6 +4279,32 @@ async function nutrizioneColazione(componenti, variantiPrecaricate, colazioneSpe
   return {kcal, prot, carb, grassi};
 }
 
+function componentiColazioneUguali(a,b){
+  const aa=a||{}, bb=b||{};
+  return COLAZIONE_GRUPPI.every(g=>(aa[g.chiave]||null)===(bb[g.chiave]||null));
+}
+
+function fraseColazioneDaNomi(nomi){
+  const n=(nomi||[]).filter(Boolean);
+  if(!n.length) return 'Colazione da configurare';
+  if(n.length===1) return n[0];
+  if(n.length===2) return `${n[0]} e ${n[1]}`;
+  if(n.length===3) return `${n[0]} e ${n[1]} con ${n[2]}`;
+  return `${n[0]} e ${n[1]} con ${n[2]} e ${n.slice(3).join(' e ')}`;
+}
+
+async function descrizioneColazione(componenti, colazioneSpecialeId, variantiPrecaricate){
+  if(colazioneSpecialeId){
+    const cs=await getOne('ricette',colazioneSpecialeId);
+    return cs ? cs.nome : 'Colazione speciale';
+  }
+  const varianti=variantiPrecaricate||await getAll('varianti');
+  const nomi=COLAZIONE_GRUPPI
+    .map(g=>componenti&&componenti[g.chiave] ? varianti.find(v=>v.id===componenti[g.chiave]) : null)
+    .filter(Boolean).map(v=>v.nome);
+  return fraseColazioneDaNomi(nomi);
+}
+
 async function renderColazione(giorno, elementId){
   giorno = giorno || giornoSelezionato;
   const el = document.getElementById(elementId || 'blocColazione');
@@ -4286,14 +4313,8 @@ async function renderColazione(giorno, elementId){
   const varianti = await getAll('varianti');
   const colazioneScaduta = fasciaPastoSuperata(giorno, 'colazione');
 
-  // primo riempimento: se non esiste NESSUN record, oppure esiste ma non ha
-  // né componenti né colazione speciale, genero i componenti a gruppi —
-  // MA SOLO per oggi/futuro: sui giorni passati l'auto-riempimento
-  // impedirebbe di distinguere uno slot mai composto (che deve mostrare
-  // l'editor "cosa hai mangiato?") da uno slot già gestito
   if(!voce) voce = {id:pianoId};
-  // PREMIO COSTANZA: se il contatore è >= 5 e la colazione non è ancora
-  // composta, mostra il selettore radio invece di comporre automaticamente
+
   const recContatorePremioRender = await getOne('impostazioni', 'contatoreColazioniMorigerate');
   const contatorePremioRender = recContatorePremioRender ? recContatorePremioRender.valore : 0;
   const mostraPremioCostanza = contatorePremioRender >= 5 && !voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta && giorno === todayISO();
@@ -4317,12 +4338,14 @@ async function renderColazione(giorno, elementId){
           await put('piano', {id:pianoId, colazioneSpecialeId:ricettaBudinoPremio.id, componenti:null, premioCostanza:true});
         }
         await put('impostazioni', {chiave:'contatoreColazioniMorigerate', valore: 0});
+        delete draftColazione[pianoId];
         renderColazione(giorno, elementId);
         if(giorno===giornoSelezionato) renderNutrizioneGiorno();
       });
     });
     return;
   }
+
   if(!voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta){
     const componenti = {};
     for(const g of COLAZIONE_GRUPPI){
@@ -4334,139 +4357,158 @@ async function renderColazione(giorno, elementId){
   }
 
   const nutri = await nutrizioneColazione(voce.componenti, varianti, voce.colazioneSpecialeId);
-
+  const descrizioneAttuale = await descrizioneColazione(voce.componenti, voce.colazioneSpecialeId, varianti);
   let html = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
 
-  // pasto già consumato (orario superato, fascia 6-9): immutabile, sola lettura —
-  // stesso principio già applicato a pranzo/cena/spuntini ("il rigore è
-  // nell'applicarlo") — qui mancava, corretto
   if(voce.consumato || colazioneScaduta){
-    let righeCons;
-    if(voce.colazioneSpecialeId){
-      const csCons = await getOne('ricette', voce.colazioneSpecialeId);
-      righeCons = csCons ? `<div style="font-weight:700;font-size:0.9rem;">✓ 🎂 ${csCons.nome}</div>` : '';
-    } else if(voce.componenti){
-      righeCons = COLAZIONE_GRUPPI
-        .filter(g=>voce.componenti[g.chiave])
-        .map(g=>{
-          const v = varianti.find(x=>x.id===voce.componenti[g.chiave]);
-          return v ? `<div style="font-weight:700;font-size:0.9rem;">✓ ${v.nome}</div>` : '';
-        }).join('');
-    } else {
-      righeCons = '';
-    }
     const mostraEditorColazione = colazioneScaduta && !voce.consumato && !voce.componenti && !voce.colazioneSpecialeId;
     const btnEditorColazione = mostraEditorColazione ? `<button class="small accent" data-editor-colazione="${giorno}" style="margin-bottom:8px;">✏️ Cosa hai mangiato a colazione?</button>` : '';
     el.innerHTML = html + btnEditorColazione + `<div style="opacity:0.7;">
-      ${righeCons || '<div class="meta">✓ Nessuna colazione registrata</div>'}
-      ${(voce.componenti || voce.colazioneSpecialeId) ? `<div class="meta">${Math.round(nutri.kcal)} kcal totali</div>` : ''}
+      <div style="font-weight:700;font-size:0.95rem;">✓ ${descrizioneAttuale}</div>
+      ${(voce.componenti || voce.colazioneSpecialeId) ? `<div class="meta" style="margin-top:4px;">${Math.round(nutri.kcal)} kcal <button class="icon-info-btn" data-info-colazione="1" title="Valori nutrizionali">ⓘ</button></div>` : ''}
     </div>`;
-    el.querySelector('[data-editor-colazione]')?.addEventListener('click', async ()=>{
-      await apriModalEditorColazione(giorno);
-    });
+    el.querySelector('[data-editor-colazione]')?.addEventListener('click', async ()=>{ await apriModalEditorColazione(giorno); });
+    el.querySelector('[data-info-colazione]')?.addEventListener('click', ()=>apriModalInfoColazione(voce.componenti,voce.colazioneSpecialeId));
     return;
   }
 
-  html += `<div class="meta" style="margin-bottom:8px;">${Math.round(nutri.kcal)} kcal totali</div>`;
+  if(!draftColazione[pianoId]){
+    draftColazione[pianoId]={
+      componenti: voce.componenti ? {...voce.componenti} : null,
+      colazioneSpecialeId: voce.colazioneSpecialeId || null,
+      aperta: false
+    };
+  }
+  const draft=draftColazione[pianoId];
+  const draftNutri=await nutrizioneColazione(draft.componenti,varianti,draft.colazioneSpecialeId);
+  const draftDescrizione=await descrizioneColazione(draft.componenti,draft.colazioneSpecialeId,varianti);
+  const modificata=(draft.colazioneSpecialeId||null)!==(voce.colazioneSpecialeId||null) || !componentiColazioneUguali(draft.componenti,voce.componenti);
+
+  html += `<div style="font-weight:800;font-size:1rem;line-height:1.35;margin-bottom:3px;">${descrizioneAttuale}</div>
+    <div class="meta" style="margin-bottom:9px;">${Math.round(nutri.kcal)} kcal
+      <button class="icon-info-btn" data-info-colazione-attuale="1" title="Valori nutrizionali">ⓘ</button>
+    </div>`;
 
   const tutteRicetteCS = await getAll('ricette');
   const colazioniSpeciali = tutteRicetteCS.filter(r=>r.colazioneSpeciale && !r.esclusa).sort((a,b)=>a.nome.localeCompare(b.nome));
-  const csAttiva = voce.colazioneSpecialeId ? tutteRicetteCS.find(r=>r.id===voce.colazioneSpecialeId) : null;
+  const csDraft = draft.colazioneSpecialeId ? tutteRicetteCS.find(r=>r.id===draft.colazioneSpecialeId) : null;
   const conteggioCS = await contaColazioniSpecialiSettimana();
-  const tettoCS = conteggioCS >= CAP_COLAZIONE_SPECIALE && !csAttiva;
+  const tettoCS = conteggioCS >= CAP_COLAZIONE_SPECIALE && !voce.colazioneSpecialeId;
 
-  html += `<details class="pasto-sub-panel" style="margin-bottom:10px;">
-    <summary>🎂 Colazione speciale: ${csAttiva ? csAttiva.nome : 'nessuna'}</summary>
-    <div class="meta" style="margin-bottom:6px;">Concesse 1-2 volte a settimana. ${tettoCS ? 'Tetto settimanale raggiunto.' : ''}</div>
-    <div class="tabgroup">
-      <button data-cs-opt="" class="${!csAttiva?'active':''}">— nessuna (componi a gruppi) —</button>
-      ${colazioniSpeciali.map(cs=>{
-        const nCS = cs.nutrizioneManualeTotale || {};
-        return `<button data-cs-opt="${cs.id}" class="${voce.colazioneSpecialeId===cs.id?'active':''}" ${tettoCS?'disabled':''}>${cs.nome} (${Math.round(nCS.kcal||0)} kcal)</button>`;
-      }).join('')}
+  const colazionePrefSalvata = await getOne('impostazioni', 'colazionePreferita');
+
+  html += `<details class="pasto-sub-panel" data-config-colazione ${draft.aperta?'open':''} style="margin-bottom:10px;">
+    <summary>⚙️ Configura colazione</summary>
+    <div style="padding-top:10px;">
+      <div class="meta" style="margin-bottom:8px;">Anteprima: <strong style="color:var(--text);">${draftDescrizione}</strong> · ${Math.round(draftNutri.kcal)} kcal</div>
+
+      <details class="pasto-sub-panel" style="margin-bottom:10px;">
+        <summary>🎂 Colazione speciale: ${csDraft ? csDraft.nome : 'nessuna'}</summary>
+        <div class="meta" style="margin:8px 0 6px;">Concesse 1-2 volte a settimana. ${tettoCS ? 'Tetto settimanale raggiunto.' : ''}</div>
+        <div class="tabgroup">
+          <button data-cs-opt="" class="${!csDraft?'active':''}">— nessuna —</button>
+          ${colazioniSpeciali.map(cs=>{
+            const nCS=cs.nutrizioneManualeTotale||{};
+            const dis=tettoCS && draft.colazioneSpecialeId!==cs.id;
+            return `<button data-cs-opt="${cs.id}" class="${draft.colazioneSpecialeId===cs.id?'active':''}" ${dis?'disabled':''}>${cs.nome} (${Math.round(nCS.kcal||0)} kcal)</button>`;
+          }).join('')}
+        </div>
+      </details>
+
+      ${csDraft ? `<div style="font-weight:700;font-size:0.92rem;margin:8px 0;">🎂 ${csDraft.nome}</div>` :
+        COLAZIONE_GRUPPI.map(g=>{
+          const opzioni=varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+          const selezionatoId=draft.componenti&&draft.componenti[g.chiave];
+          return `<label style="margin-top:10px;">${g.label}${g.obbligatorio?'':' (facoltativo)'}</label>
+            <div class="colazione-gruppo-slide" data-gruppo-slide="${g.chiave}">
+              ${g.obbligatorio?'':`<button data-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`}
+              ${opzioni.map(o=>`<button data-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
+            </div>`;
+        }).join('')}
+
+      <div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap;">
+        <button class="small" data-ricetta-colazione="1">Ricetta</button>
+        <button class="small" data-info-colazione="1">Info</button>
+        <button class="small accent" data-salva-colazione-pref="1">💾 ${colazionePrefSalvata ? 'Aggiorna preferita' : 'Salva come preferita'}</button>
+        ${colazionePrefSalvata ? '<button class="small" data-rimuovi-colazione-pref="1">✕ Rimuovi</button>' : ''}
+      </div>
+
+      <button class="primary" data-sostituisci-colazione="1" ${modificata?'':'disabled'} style="margin-top:12px;">
+        Sostituisci colazione
+      </button>
     </div>
   </details>`;
 
-  if(csAttiva){
-    const nCS = csAttiva.nutrizioneManualeTotale || {};
-    html += `<div style="font-weight:700;font-size:0.95rem;margin-bottom:8px;">🎂 ${csAttiva.nome}</div>
-    <div class="meta" style="margin-bottom:8px;">${Math.round(nCS.kcal||0)} kcal · ${Math.round(nCS.prot||0)}g prot · ${Math.round(nCS.carb||0)}g carb · ${Math.round(nCS.grassi||0)}g grassi</div>`;
-  } else {
-    for(const g of COLAZIONE_GRUPPI){
-    const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
-    const selezionatoId = voce.componenti[g.chiave];
-    html += `<label style="margin-top:10px;">${g.label}${g.obbligatorio?'':' (facoltativo)'}</label>
-      <div class="colazione-gruppo-slide" data-gruppo-slide="${g.chiave}">
-        ${g.obbligatorio ? '' : `<button data-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`}
-        ${opzioni.map(o=>`<button data-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
-      </div>`;
-    }
-  } // fine blocco colazione a gruppi (non speciale)
-  const colazionePrefSalvata = await getOne('impostazioni', 'colazionePreferita');
-  html += `<div class="row" style="margin-top:12px;gap:8px;">
-    <button class="small" data-ricetta-colazione="1">Ricetta</button>
-    <button class="small" data-info-colazione="1">Info</button>
-    <button class="small accent" data-salva-colazione-pref="1">💾 ${colazionePrefSalvata ? 'Aggiorna preferita' : 'Salva come preferita'}</button>
-    ${colazionePrefSalvata ? '<button class="small" data-rimuovi-colazione-pref="1">✕ Rimuovi</button>' : ''}
-  </div>`;
-  el.innerHTML = html;
+  el.innerHTML=html;
+
+  el.querySelector('[data-info-colazione-attuale]')?.addEventListener('click',()=>apriModalInfoColazione(voce.componenti,voce.colazioneSpecialeId));
+  el.querySelector('[data-config-colazione]')?.addEventListener('toggle',e=>{ draft.aperta=e.currentTarget.open; });
 
   el.querySelectorAll('[data-gruppo-slide]').forEach(slide=>{
     slide.querySelectorAll('[data-col-opt]').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
-        const gruppo = slide.dataset.gruppoSlide;
-        const idScelto = btn.dataset.colOpt || null;
-        // deseleziona tutti i pulsanti della stessa categoria, poi attiva quello scelto
-        slide.querySelectorAll('[data-col-opt]').forEach(x=>x.classList.remove('active'));
-        btn.classList.add('active');
-        voce.componenti[gruppo] = idScelto;
-        await put('piano', voce);
-        renderColazione(giorno, elementId);
-        if(giorno===giornoSelezionato) renderNutrizioneGiorno();
-        aggiornaListaSpesaAutomatica(0); aggiornaListaSpesaAutomatica(1);
+        const gruppo=slide.dataset.gruppoSlide;
+        if(!draft.componenti) draft.componenti={};
+        draft.colazioneSpecialeId=null;
+        draft.componenti[gruppo]=btn.dataset.colOpt||null;
+        renderColazione(giorno,elementId);
       });
     });
   });
+
   el.querySelectorAll('[data-cs-opt]').forEach(b=>{
     b.addEventListener('click', async ()=>{
-      const idScelto = b.dataset.csOpt;
-      if(idScelto === voce.colazioneSpecialeId) return;
+      const idScelto=b.dataset.csOpt||null;
       if(idScelto){
-        if(!csAttiva && conteggioCS >= CAP_COLAZIONE_SPECIALE){
-          await avviso('Hai già raggiunto il tetto di ' + CAP_COLAZIONE_SPECIALE + ' colazioni speciali questa settimana.');
+        if(!voce.colazioneSpecialeId && conteggioCS>=CAP_COLAZIONE_SPECIALE){
+          await avviso('Hai già raggiunto il tetto di '+CAP_COLAZIONE_SPECIALE+' colazioni speciali questa settimana.');
           return;
         }
-        voce.colazioneSpecialeId = idScelto;
-        voce.componenti = null;
-      } else {
-        voce.colazioneSpecialeId = null;
-        const componenti = {};
+        draft.colazioneSpecialeId=idScelto;
+        draft.componenti=null;
+      }else{
+        draft.colazioneSpecialeId=null;
+        const componenti={};
         for(const g of COLAZIONE_GRUPPI){
-          const opzioni = varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
-          componenti[g.chiave] = g.obbligatorio && opzioni.length ? opzioni[0].id : null;
+          const opzioni=varianti.filter(v=>v.colazioneGruppo===g.chiave).sort((a,b)=>a.nome.localeCompare(b.nome));
+          const precedente=voce.componenti&&voce.componenti[g.chiave];
+          componenti[g.chiave]=precedente || (g.obbligatorio&&opzioni.length?opzioni[0].id:null);
         }
-        voce.componenti = componenti;
+        draft.componenti=componenti;
       }
-      await put('piano', voce);
-      renderColazione(giorno, elementId);
-      if(giorno===giornoSelezionato) renderNutrizioneGiorno();
+      renderColazione(giorno,elementId);
     });
   });
-  el.querySelector('[data-ricetta-colazione]').addEventListener('click', ()=> apriModalDettaglioColazione(voce.componenti, voce.colazioneSpecialeId));
-  el.querySelector('[data-info-colazione]').addEventListener('click', ()=> apriModalInfoColazione(voce.componenti, voce.colazioneSpecialeId));
-  el.querySelector('[data-salva-colazione-pref]')?.addEventListener('click', async ()=>{
-    if(!voce.componenti){
+
+  el.querySelector('[data-ricetta-colazione]')?.addEventListener('click',()=>apriModalDettaglioColazione(draft.componenti,draft.colazioneSpecialeId));
+  el.querySelector('[data-info-colazione]')?.addEventListener('click',()=>apriModalInfoColazione(draft.componenti,draft.colazioneSpecialeId));
+
+  el.querySelector('[data-salva-colazione-pref]')?.addEventListener('click',async()=>{
+    if(!draft.componenti){
       await avviso('⚠ Impossibile salvare come preferita: la colazione speciale è attiva. Torna alla colazione a gruppi per salvare una preferita.');
       return;
     }
-    await put('impostazioni', {chiave:'colazionePreferita', valore: voce.componenti});
-    await avviso('✅ Colazione salvata come preferita. Verrà proposta per tutti i giorni alla generazione del menù.');
-    renderColazione(giorno, elementId);
+    await put('impostazioni',{chiave:'colazionePreferita',valore:{...draft.componenti}});
+    await avviso('✅ Colazione salvata come preferita.');
+    renderColazione(giorno,elementId);
   });
-  el.querySelector('[data-rimuovi-colazione-pref]')?.addEventListener('click', async ()=>{
-    await delKey('impostazioni', 'colazionePreferita');
-    await avviso('Colazione preferita rimossa. Alla generazione del menù verrà usata la colazione automatica.');
-    renderColazione(giorno, elementId);
+
+  el.querySelector('[data-rimuovi-colazione-pref]')?.addEventListener('click',async()=>{
+    await delKey('impostazioni','colazionePreferita');
+    await avviso('Colazione preferita rimossa.');
+    renderColazione(giorno,elementId);
+  });
+
+  el.querySelector('[data-sostituisci-colazione]')?.addEventListener('click',async()=>{
+    if(!modificata) return;
+    voce.componenti=draft.componenti ? {...draft.componenti} : null;
+    voce.colazioneSpecialeId=draft.colazioneSpecialeId||null;
+    await put('piano',voce);
+    delete draftColazione[pianoId];
+    await renderColazione(giorno,elementId);
+    if(giorno===giornoSelezionato) renderNutrizioneGiorno();
+    aggiornaListaSpesaAutomatica(0);
+    aggiornaListaSpesaAutomatica(1);
   });
 }
 
