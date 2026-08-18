@@ -21,3 +21,4 @@ if errors:report+=['','## Errori']+[f'- {e}' for e in errors]
 Path('STRESS-V40-REPORT.md').write_text('\n'.join(report)+'\n',encoding='utf-8')
 print('\n'.join(report))
 if errors:raise SystemExit(1)
+# trigger v40
