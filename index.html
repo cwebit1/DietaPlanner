@@ -4492,7 +4492,7 @@ async function renderColazione(giorno, elementId){
 
   const recContatorePremioRender = await getOne('impostazioni', 'contatoreColazioniMorigerate');
   const contatorePremioRender = recContatorePremioRender ? recContatorePremioRender.valore : 0;
-  const mostraPremioCostanza = contatorePremioRender >= 5 && !voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta && giorno === todayISO();
+  const mostraPremioCostanza = contatorePremioRender >= 5 && !voce.colazioneSpecialeId && !voce.consumato && !colazioneScaduta && giorno === todayISO();
   if(mostraPremioCostanza){
     const tutteRicettePremio = await getAll('ricette');
     const ricettaBudinoPremio = tutteRicettePremio.find(r=>r.nome==='Budino' && r.colazioneSpeciale);
@@ -7358,6 +7358,7 @@ document.getElementById('btnConfermaAssegnazione').addEventListener('click', asy
     voce.primoId = voce.secondoId = voce.contornoId = null;
   }
 
+  voce.origine = 'utente';
   voce.origine = 'utente';
   await put('piano', voce);
   await segnaRicettaUsata(ricetta.id);

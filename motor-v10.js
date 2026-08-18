@@ -418,7 +418,7 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
     const esclusi=recEsclusi&&Array.isArray(recEsclusi.valore)?recEsclusi.valore:[];
     let comp=null;
     if(usa){
-      comp=await motoreV10ColazioneDaSetParziale(pref.valore,varianti,esclusi,[]);
+      comp=componentiColazioneDaSet(pref.valore,varianti);
     }else{
       const firmaPref=pref&&pref.valore?firmaComponentiColazione(componentiColazioneDaSet(pref.valore,varianti)):null;
       comp=scegliColazioneAutomaticaCoerente(varianti,[firmaPref],esclusi);
@@ -436,6 +436,80 @@ generaMenuDaConfigSet = async function(scartoSettimane){
   const preferenze=await caricaPreferenzeMotoreDaSet(scartoSettimane);
   const report=await generaPianoSettimana(scartoSettimane,{forza:true,preferenze});
   await renderMenuSettimanale();await renderPiano();return report;
+};
+
+
+/* v10: ricerca culinaria dopo la griglia alimentare.
+   Unico/sfiziosa non devono imporre gli ingredienti al piano: devono rappresentare
+   la funzione gia decisa. Match forte sugli ingredienti, fallback sulle macro.
+   Una verdura ricorrente programmata resta invece HARD e va mantenuta esatta. */
+async function motoreV10AnalizzaUnico(r,varianti,ingredienti){
+  const vById=new Map(varianti.map(v=>[v.id,v]));
+  const bById=new Map(ingredienti.map(b=>[b.id,b]));
+  const nomi=[]; const verdure=[];
+  for(const ing of (r.ingredienti||[])){
+    if(ing.variantId){
+      const v=vById.get(ing.variantId); if(!v)continue;
+      const nome=(v.nome||'').toLowerCase(); nomi.push(nome);
+      const b=bById.get(v.ingredienteId); if(b&&b.gruppo==='verdura')verdure.push(nome);
+    }else if(ing.nomeLibero)nomi.push((ing.nomeLibero||'').toLowerCase());
+  }
+  const testo=nomi.join(' ');
+  const carbKeys=[];
+  for(const [k,cfg] of Object.entries(CARBOIDRATI_PASTO)){
+    const target=(cfg.ingrediente||'').toLowerCase();
+    if(target&&nomi.includes(target))carbKeys.push(k);
+  }
+  const euristiche=[['pasta','pasta'],['pasta_fresca','raviol'],['riso','riso'],['farro','farro'],['orzo','orzo'],['cous_cous','cous cous'],['pane','pane'],['friselle','frisell'],['patate','patat'],['polenta','polenta'],['piadina','piadin'],['crackers','cracker'],['taralli_grissini_crostini','grissin'],['taralli_grissini_crostini','tarall']];
+  for(const [k,t] of euristiche)if(CARBOIDRATI_PASTO[k]&&testo.includes(t)&&!carbKeys.includes(k))carbKeys.push(k);
+  return {nomi,verdure,carbKeys,categoria:motoreCategoriaDiSottotipo(r.gruppoProteico),sottotipo:r.gruppoProteico||null};
+}
+
+async function motoreV10VerduraHardSlot(giorno,pasto,varianti){
+  const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
+  const [rec,recP]=await Promise.all([getOne('impostazioni','verduraRicorrente'),getOne('impostazioni','verduraRicorrentePasti')]);
+  const pasti=recP&&Array.isArray(recP.valore)?recP.valore:[];
+  if(!rec||!rec.valore||!pasti.includes(pasto+'_'+idx))return null;
+  const v=varianti.find(x=>x.id===rec.valore); return v?(v.nome||'').toLowerCase():null;
+}
+
+trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
+  const info=await infoCombinazioneDraft(draft);
+  const [tutte,varianti,ingredienti,storico]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),costruisciStoricoConsumatiMotore()]);
+  const targetCarbKey=info.carboidrato||null;
+  const targetCarbNome=(info.ingredienteCarboidrato||'').toLowerCase();
+  const targetVerdure=new Set((info.verdure||[]).map(x=>(x||'').toLowerCase()));
+  const hardVerdura=await motoreV10VerduraHardSlot(giorno,pasto,varianti);
+  let best=-Infinity,compatibili=[];
+  for(const r of tutte){
+    if(r.id===escludiId||r.esclusa||r.piattoSpeciale||(r.tipoPortata||'unico')!=='unico')continue;
+    const a=await motoreV10AnalizzaUnico(r,varianti,ingredienti);
+    if(info.categoriaProteica&&a.categoria!==info.categoriaProteica)continue;
+    if(!a.carbKeys.length)continue; // ogni pasto ordinario deve avere fonte di carboidrati
+    if(!a.verdure.length)continue;  // e verdura
+    if(hardVerdura&&!a.verdure.includes(hardVerdura))continue;
+    let score=0;
+    if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
+    else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
+    else score+=30; // stessa funzione: fonte di carboidrati presente
+    if(info.sottotipoProteico&&a.sottotipo===info.sottotipoProteico)score+=35;
+    else if(info.categoriaProteica&&a.categoria===info.categoriaProteica)score+=20;
+    if(hardVerdura)score+=100;
+    else if(targetVerdure.size&&a.verdure.some(v=>targetVerdure.has(v)))score+=60;
+    else score+=20; // verdura diversa ma stessa funzione, se non era hard
+    if(score>best){best=score;compatibili=[r];}
+    else if(score===best)compatibili.push(r);
+  }
+  if(!compatibili.length){
+    if(typeof registraRichiestaRicettaReview==='function')await registraRichiestaRicettaReview({
+      tipo:draft&&draft.tabAttiva==='sfiziosa'?'ricetta_sfiziosa_mancante':'piatto_unico_mancante',
+      carboidrato:info.carboidrato,categoriaProteica:info.categoriaProteica,sottotipoProteico:info.sottotipoProteico,
+      verdura:(info.verdure||[]).join(' + '),pasto,giorno
+    });
+    return null;
+  }
+  const nonCorrente=compatibili.filter(r=>r.id!==draft.ricettaId),pool=nonCorrente.length?nonCorrente:compatibili;
+  return scegliMenoRecenteMotore(pool,r=>storico.ultimoRicetta[r.id]||0,()=>0);
 };
 
 window.MOTORE_V10_REGOLE={versione:'1.0',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
