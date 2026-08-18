@@ -80,6 +80,24 @@ async function creaStatoMotoreSettimana(){
   };
 }
 
+async function scegliPrimoVelocePerCarbMotore(carb,stato){
+  const tutte=await getAll('ricette');
+  let pool=tutte.filter(r=>{
+    if(r.esclusa||r.piattoSpeciale||(r.tipoPortata||'unico')!=='primo')return false;
+    const nome=(r.nome||'').toLowerCase();
+    const isFrisella=nome.includes('frisell');
+    const isPane=nome.includes('bruschett')||nome.includes('pane')||(!isFrisella&&(r.ingredienti||[]).some(i=>(i.nomeLibero||'').toLowerCase()==='pane fresco'));
+    return carb==='friselle'?isFrisella:(carb==='pane'?isPane:false);
+  });
+  if(!pool.length)return null;
+  if(stato&&stato.ricetteUsateGenerazione){
+    const nuove=pool.filter(r=>!stato.ricetteUsateGenerazione.has(r.id));if(nuove.length)pool=nuove;
+  }
+  const scelta=scegliMenoRecenteMotore(pool,r=>stato&&stato.storico?(stato.storico.ultimoRicetta[r.id]||0):0,()=>0);
+  if(scelta&&stato&&stato.ricetteUsateGenerazione)stato.ricetteUsateGenerazione.add(scelta.id);
+  return scelta;
+}
+
 async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
   const categoria=cella.gruppoProteicoLargo;
   const sottotipo=await scegliSottotipoMotore(categoria,stato);
@@ -89,8 +107,8 @@ async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
   if(!esito) return {voce:null,errore:`Nessuna combinazione completa per ${giorno} ${pasto} (${categoria}/${sottotipo})`};
 
   let primoId=null;
-  if(pocoTempo){
-    const rapido=await scegliPrimoVelocePaneFriselle();
+  if(pocoTempo && (esito.primoCarboidrato==='pane'||esito.primoCarboidrato==='friselle')){
+    const rapido=await scegliPrimoVelocePerCarbMotore(esito.primoCarboidrato,stato);
     if(rapido) primoId=rapido.id;
   }
   if(!primoId && esito.primoSugoId){

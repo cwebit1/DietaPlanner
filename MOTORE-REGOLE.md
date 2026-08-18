@@ -167,3 +167,11 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 
 - Ogni nuova scelta proteica nel Set viene accettata soltanto se, dopo averla inserita, il numero di slot pranzo/cena ancora liberi è almeno uguale alla somma dei deficit verso i minimi delle macro non ancora soddisfatte.
 - Questo controllo non completa il piano e non sovrascrive scelte user: impedisce soltanto di creare un Set parziale matematicamente impossibile da completare.
+
+### Poco tempo e quote carboidrati (v37)
+
+- `Poco tempo` favorisce pane/bruschette/friselle senza consumare gli slot che sono matematicamente necessari per soddisfare quote carboidrati esplicite già scelte nel Set.
+- Il motore mantiene un conteggio degli slot in cui deve ancora scegliere il carboidrato: usa il jolly rapido soltanto quando gli slot residui sono più numerosi delle quote esplicite residue.
+- Se le quote residue occupano tutta la capacità rimasta, prevalgono le quote user; `Poco tempo` non può cancellarle.
+- Una ricetta rapida visualizzata deve corrispondere alla famiglia realmente contabilizzata: se il motore ha scelto `friselle`, mostra una ricetta di friselle; se ha scelto `pane`, non può mostrare friselle. Questo mantiene reale il tetto Friselle <= 1/settimana.
+- Eventuali quote rimaste impossibili da collocare perché l'utente ha successivamente occupato slot con pasti speciali/HARD vengono riportate nel report motore e non producono compensazioni sui pasti speciali.

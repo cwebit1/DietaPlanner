@@ -293,6 +293,32 @@ async function motoreV10AssorbiQuoteProtette(giorni,griglia,stato){
   }
 }
 
+async function motoreV10PreparaSlotCarbAutomatici(giorni,griglia,stato,forza){
+  const [ricette,varianti]=await Promise.all([getAll('ricette'),getAll('varianti')]);
+  const rById=new Map(ricette.map(r=>[r.id,r])),vById=new Map(varianti.map(v=>[v.id,v]));
+  const ids=new Set();
+  for(const g of giorni)for(const p of ['pranzo','cena']){
+    const id=g+'_'+p,c=griglia.celle[g][p],v=c.voce;
+    if(c.speciale||v&&v.consumato||v&&v.bloccata)continue;
+    if(c.protetta&&motoreV10VoceCompleta(v))continue;
+    if(!c.protetta&&!forza&&v&&motoreV10VoceCompleta(v))continue;
+    const k=await motoreV10InferisciCarboidrato(v,rById,vById);
+    if(c.protetta&&k)continue;
+    ids.add(id);
+  }
+  stato.slotCarbAutomaticiIds=ids;
+  stato.slotCarbAutomaticiResidui=ids.size;
+  return ids;
+}
+function motoreV10ConsumaSlotCarb(stato,id){
+  if(!stato.slotCarbAutomaticiIds||!stato.slotCarbAutomaticiIds.has(id))return;
+  stato.slotCarbAutomaticiIds.delete(id);
+  stato.slotCarbAutomaticiResidui=Math.max(0,(stato.slotCarbAutomaticiResidui||0)-1);
+}
+function motoreV10QuoteCarbResidue(stato){
+  return Object.fromEntries(Object.entries(stato.budgetCarb.residuo||{}).filter(([,n])=>Number(n)>0));
+}
+
 async function motoreV10CompletaMulti(giorno,pasto,voce,cella,preferenze,stato){
   const nuova=Object.assign({},voce||{id:giorno+'_'+pasto,porzioni:1},{modo:'multi'});
   const categoria=cella.gruppoProteicoLargo;
@@ -375,6 +401,7 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
   const stato=await creaStatoMotoreSettimana();
   const griglia=await motoreV10CostruisciGriglia(giorni,preferenze,stato);
   await motoreV10AssorbiQuoteProtette(giorni,griglia,stato);
+  await motoreV10PreparaSlotCarbAutomatici(giorni,griglia,stato,forza);
   const generati=[];
   for(const g of giorni){
     for(const pasto of ['pranzo','cena']){
@@ -386,7 +413,7 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
       if(protetta&&esistente&&esistente.modo==='multi'){
         const r=await motoreV10CompletaMulti(g,pasto,esistente,cella,preferenze,stato);
         if(!r.voce){stato.errori.push(r.errore);continue;}
-        await put('piano',r.voce);generati.push(r.voce);continue;
+        await put('piano',r.voce);generati.push(r.voce);motoreV10ConsumaSlotCarb(stato,id);continue;
       }
       if(esistente&&!forza&&motoreV10VoceCompleta(esistente))continue;
       if(!cella.gruppoProteicoLargo){
@@ -396,7 +423,7 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
       const r=await generaPortateMotore(g,pasto,cella,preferenze,stato);
       if(!r.voce){stato.errori.push(r.errore);continue;}
       const nuova=Object.assign({},esistente||{},r.voce,{consumato:false,origine:'motore'});
-      await put('piano',nuova);generati.push(nuova);
+      await put('piano',nuova);generati.push(nuova);motoreV10ConsumaSlotCarb(stato,id);
     }
 
     // Colazione: manuale HARD; Set parziale completato con combinazioni coerenti.
@@ -425,7 +452,7 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
     }
     if(comp)await put('piano',{id:idCol,componenti:comp,origine:'motore_set'});
   }
-  const report={data:new Date().toISOString(),versioneMotore:'10',ok:stato.errori.length===0,errori:[...griglia.errori,...stato.errori],conteggiProteici:griglia.conteggi,generati:generati.length,carboidratiUsati:stato.carboidratiUsati,sottotipiUsati:stato.conteggiSottotipi,verdurePreferiteUsate:[...stato.preferiteVerdureUsate]};
+  const report={data:new Date().toISOString(),versioneMotore:'10.3',ok:stato.errori.length===0,errori:[...griglia.errori,...stato.errori],conteggiProteici:griglia.conteggi,generati:generati.length,carboidratiUsati:stato.carboidratiUsati,quoteCarboidratiResidue:motoreV10QuoteCarbResidue(stato),sottotipiUsati:stato.conteggiSottotipi,verdurePreferiteUsate:[...stato.preferiteVerdureUsate]};
   await put('impostazioni',{chiave:'ultimoReportMotore',valore:report});
   if(scartoSettimane===0&&typeof renderPiano==='function')renderPiano();
   return report;
@@ -612,5 +639,5 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   return null;
 };
 
-window.MOTORE_V10_REGOLE={versione:'1.2',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
+window.MOTORE_V10_REGOLE={versione:'1.3',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
 })();

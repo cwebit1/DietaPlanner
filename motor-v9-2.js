@@ -223,9 +223,15 @@ async function preparaBudgetCarboidratiMotore(){
 }
 
 async function scegliCarboidratoMotore(stato, forzaJolly){
-  if(forzaJolly){
+  const residuiOra=Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>n>0&&CARBOIDRATI_PASTO[k]);
+  const totaleResiduo=residuiOra.reduce((n,[,q])=>n+(Number(q)||0),0);
+  const slotResidui=Number.isFinite(stato.slotCarbAutomaticiResidui)?stato.slotCarbAutomaticiResidui:Infinity;
+  // Poco tempo è una preferenza forte, ma non può rendere matematicamente impossibile
+  // soddisfare quote carboidrati già scelte dall'utente. Usa pane/friselle soltanto
+  // quando, dopo questo slot, resterà ancora capacità sufficiente per tutte le quote.
+  const puoUsareJolly=!!forzaJolly && (totaleResiduo===0 || slotResidui>totaleResiduo);
+  if(puoUsareJolly){
     let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
-    // Rispetta il tetto reale definito in CARBOIDRATI_PASTO (friselle = 1/settimana).
     pool=pool.filter(k=>{ const c=CARBOIDRATI_PASTO[k]; return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2); });
     if(!pool.length) pool=['pane'];
     const nonUsati=pool.filter(k=>(stato.carboidratiUsati[k]||0)===0);
@@ -236,7 +242,7 @@ async function scegliCarboidratoMotore(stato, forzaJolly){
   }
 
   // Quote esplicite Set: prima soddisfa le caselle ancora residue.
-  const residui=Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>n>0&&CARBOIDRATI_PASTO[k]);
+  const residui=residuiOra;
   let pool=residui.map(([k])=>k);
   if(!pool.length){
     pool=CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
