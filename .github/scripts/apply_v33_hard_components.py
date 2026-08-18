@@ -129,3 +129,4 @@ s=s.replace("  voce.origine = 'utente';\n  voce.origine = 'utente';","  voce.ori
 s=s.replace('<script src="motor-v10.js?v=2"></script>','<script src="motor-v10.js?v=3"></script>')
 p.write_text(s,encoding='utf-8')
 print('hard component markers integrated')
+# validation-trigger-2026-08-18
