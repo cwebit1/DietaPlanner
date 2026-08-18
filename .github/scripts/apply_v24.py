@@ -58,13 +58,11 @@ new_func=r'''function renderCaselleCarboidrati(){
       if(!tipo) return;
       const cliccateAttuali=statoCaselleCarb[chiave]||0;
 
-      // Le caselle attive restano sempre deselezionabili.
       if(idx<cliccateAttuali){
         statoCaselleCarb[chiave]=cliccateAttuali-1;
       }else{
         if(contaTotaleCaselleCarb()>=CONFIG_CARB_TOTALE_OBBLIGATORIO) return;
         if(tipo.limitato){
-          // Due controlli distinti: tetto complessivo 3 e tetto individuale della voce.
           if(contaCaselleLimitateCarb()>=CONFIG_CARB_TETTO_LIMITATI) return;
           const maxIndividuale=Number.isFinite(tipo.maxIndividuale)?tipo.maxIndividuale:CONFIG_CARB_MAX_CASELLE;
           if(cliccateAttuali>=maxIndividuale) return;
@@ -83,3 +81,4 @@ new_func=r'''function renderCaselleCarboidrati(){
 s=s[:start]+new_func+s[end:]
 p.write_text(s,encoding='utf-8')
 print('v24: bordered carbohydrate section titles + independent global 3/3 and per-item rationed limits')
+# trigger v24
