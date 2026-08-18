@@ -2377,27 +2377,49 @@ async function renderSetTabellaGiorno(){
   }));
 }
 
+function catturaPosizioniSwipe(){
+  return [...document.querySelectorAll('.setting-swipe,.colazione-gruppo-slide')].map((el,i)=>(
+    {i, id:el.id||'', gruppo:el.dataset.setColGruppo||'', x:el.scrollLeft}
+  ));
+}
+function ripristinaPosizioniSwipe(posizioni){
+  const tutti=[...document.querySelectorAll('.setting-swipe,.colazione-gruppo-slide')];
+  for(const p of posizioni){
+    let el=null;
+    if(p.id) el=document.getElementById(p.id);
+    if(!el && p.gruppo) el=document.querySelector(`.colazione-gruppo-slide[data-set-col-gruppo="${p.gruppo}"]`);
+    if(!el) el=tutti[p.i]||null;
+    if(el) el.scrollLeft=p.x;
+  }
+}
+async function renderMantieniSwipe(renderFn){
+  const posizioni=catturaPosizioniSwipe();
+  await renderFn();
+  ripristinaPosizioniSwipe(posizioni);
+  requestAnimationFrame(()=>ripristinaPosizioniSwipe(posizioni));
+}
+
 async function renderSetPreferenzeMenu(){
   const recLim=await getOne('impostazioni','setProteineLimitate');
   const limitate=new Set(recLim&&recLim.valore?recLim.valore:[]);
   const elLim=document.getElementById('setProteineLimitate');
   if(elLim){
     elLim.innerHTML=CATEGORIE_PROTEICHE_SET.map(c=>`<button data-set-prot-lim="${c.chiave}" class="${limitate.has(c.chiave)?'active':''}">${c.label}</button>`).join('');
-    elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setProtLim; limitate.has(k)?limitate.delete(k):limitate.add(k); await put('impostazioni',{chiave:'setProteineLimitate',valore:[...limitate]}); renderSetPreferenzeMenu(); }));
+    elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setProtLim; limitate.has(k)?limitate.delete(k):limitate.add(k); await put('impostazioni',{chiave:'setProteineLimitate',valore:[...limitate]}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
   }
   const recTempo=await getOne('impostazioni','setPocoTempo');
   const tempo=Object.assign({pranzo:false,cena:false},recTempo&&recTempo.valore?recTempo.valore:{});
   const elTempo=document.getElementById('setTempoMenu');
   if(elTempo){
     elTempo.innerHTML=`<button data-set-tempo="pranzo" class="${tempo.pranzo?'active':''}">Poco tempo a pranzo</button><button data-set-tempo="cena" class="${tempo.cena?'active':''}">Poco tempo a cena</button><button data-set-tempo="nessuno" class="${(!tempo.pranzo&&!tempo.cena)?'active':''}">Ho tempo</button>`;
-    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setTempo; if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;} else tempo[k]=!tempo[k]; await put('impostazioni',{chiave:'setPocoTempo',valore:tempo}); renderSetPreferenzeMenu(); }));
+    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setTempo; if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;} else tempo[k]=!tempo[k]; await put('impostazioni',{chiave:'setPocoTempo',valore:tempo}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
   }
   const recV=await getOne('impostazioni','setVerdurePreferite'); const pref=new Set(recV&&recV.valore?recV.valore:[]);
   const stag=verdureDiStagione(new Date()); const elV=document.getElementById('setVerdurePreferiteLista');
   if(elV){
     const stagOrd=[...stag].sort((a,b)=>a.localeCompare(b,'it')); elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
-    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{ const v=b.dataset.setVerdPref; pref.has(v)?pref.delete(v):pref.add(v); await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]}); renderSetPreferenzeMenu(); }));
-    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{ await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]}); renderSetPreferenzeMenu(); });
+    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{ const v=b.dataset.setVerdPref; pref.has(v)?pref.delete(v):pref.add(v); await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
+    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{ await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]}); await renderMantieniSwipe(renderSetPreferenzeMenu); });
   }
   const nota=document.getElementById('setVerdurePreferiteNota'); if(nota){ const alte=[...pref].filter(n=>ingredientiJsonMap[n]?.deperibilita==='alta'); nota.textContent=alte.length?'💡 Molto deperibili: '+alte.join(', ')+'; il motore può limitarle a fine settimana.':''; }
 }
@@ -2423,7 +2445,7 @@ document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async 
 });
 
 function tierDisponibilitaVerdura(v){const n=(v&&v.nome||'').toLowerCase();if(v&&v.categoria==='surgelato')return 'surgelato';if(/barattolo|scatola|craut/.test(n)||(v&&v.categoria==='conf'&&!['patate'].includes(n)))return 'confezionato';const freschi=new Set(['basilico fresco','cetriolo','fagiolini','funghi champignon','insalata mista','pomodoro fresco','radicchio','spinaci freschi','zucchine']);if(freschi.has(n))return 'fresco';return 'fresco_duraturo';}
-async function renderSetVerdure(){const contenitore=document.getElementById('setVerdureLista');if(!contenitore)return;const varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const ingPerId={};for(const i of ingredienti)ingPerId[i.id]=i;const cfgRec=await getOne('impostazioni','setVerdureDisattivate');const disattivate=new Set(cfgRec&&cfgRec.valore?cfgRec.valore:[]);const verdure=varianti.filter(v=>{const base=ingPerId[v.ingredienteId];return base&&(base.gruppo==='verdura'||v.nome.toLowerCase()==='patate');});const gruppi=[['fresco','Freschi'],['fresco_duraturo','Freschi duraturi'],['confezionato','Confezionati'],['surgelato','Surgelati']];let html='';for(const [cat,label] of gruppi){const items=verdure.filter(v=>tierDisponibilitaVerdura(v)===cat).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;html+=`<div class="zona-header" style="margin-top:14px;">${label}</div><div class="setting-swipe">`;for(const v of items){const off=disattivate.has(v.id);html+=`<button data-verdura-toggle="${v.id}" style="background:${off?'var(--panel-2)':'var(--accent-dim)'};color:${off?'var(--text-dim)':'var(--accent)'};border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.8rem;cursor:pointer;">${v.nome}</button>`;}html+='</div>';}contenitore.innerHTML=html||'<div class="meta">Nessuna verdura trovata.</div>';contenitore.querySelectorAll('[data-verdura-toggle]').forEach(b=>b.addEventListener('click',async()=>{const vid=b.dataset.verduraToggle;const rec=await getOne('impostazioni','setVerdureDisattivate');const lista=new Set(rec&&rec.valore?rec.valore:[]);lista.has(vid)?lista.delete(vid):lista.add(vid);await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[...lista]});renderSetVerdure();}));}
+async function renderSetVerdure(){const contenitore=document.getElementById('setVerdureLista');if(!contenitore)return;const varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const ingPerId={};for(const i of ingredienti)ingPerId[i.id]=i;const cfgRec=await getOne('impostazioni','setVerdureDisattivate');const disattivate=new Set(cfgRec&&cfgRec.valore?cfgRec.valore:[]);const verdure=varianti.filter(v=>{const base=ingPerId[v.ingredienteId];return base&&(base.gruppo==='verdura'||v.nome.toLowerCase()==='patate');});const gruppi=[['fresco','Freschi'],['fresco_duraturo','Freschi duraturi'],['confezionato','Confezionati'],['surgelato','Surgelati']];let html='';for(const [cat,label] of gruppi){const items=verdure.filter(v=>tierDisponibilitaVerdura(v)===cat).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;html+=`<div class="zona-header" style="margin-top:14px;">${label}</div><div class="setting-swipe">`;for(const v of items){const off=disattivate.has(v.id);html+=`<button data-verdura-toggle="${v.id}" style="background:${off?'var(--panel-2)':'var(--accent-dim)'};color:${off?'var(--text-dim)':'var(--accent)'};border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:.8rem;cursor:pointer;">${v.nome}</button>`;}html+='</div>';}contenitore.innerHTML=html||'<div class="meta">Nessuna verdura trovata.</div>';contenitore.querySelectorAll('[data-verdura-toggle]').forEach(b=>b.addEventListener('click',async()=>{const vid=b.dataset.verduraToggle;const rec=await getOne('impostazioni','setVerdureDisattivate');const lista=new Set(rec&&rec.valore?rec.valore:[]);lista.has(vid)?lista.delete(vid):lista.add(vid);await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[...lista]});await renderMantieniSwipe(renderSetVerdure);}));}
 
 /* Verifica quali contorni hanno la verdura principale disattivata in Set
    (#setVerdure), e li esclude dal pool. Se il filtro svuota tutto,
@@ -2474,7 +2496,7 @@ async function renderSetVerduraRicorrente(){
       const vid = b.dataset.vr || null;
       if(vid) await put('impostazioni',{chiave:'verduraRicorrente', valore:vid});
       else await delKey('impostazioni','verduraRicorrente');
-      renderSetVerduraRicorrente();
+      await renderMantieniSwipe(renderSetVerduraRicorrente);
     });
   });
   if(nota){
@@ -2537,7 +2559,7 @@ async function renderSetColazione(){
       const lista=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);
       lista.has(nome)?lista.delete(nome):lista.add(nome);
       await put('impostazioni',{chiave:'colazioneIngredientiEsclusi',valore:[...lista]});
-      renderSetColazione();
+      await renderMantieniSwipe(renderSetColazione);
     }));
   }
   // Listener: selezione componenti gruppi (scrive direttamente in impostazioni)
@@ -2550,7 +2572,7 @@ async function renderSetColazione(){
         const comp = rec && rec.valore ? Object.assign({}, rec.valore) : {};
         comp[gruppo] = idScelto;
         await put('impostazioni', {chiave:'colazionePreferita', valore: comp});
-        renderSetColazione();
+        await renderMantieniSwipe(renderSetColazione);
       });
     });
   });
@@ -2563,7 +2585,7 @@ async function renderSetColazione(){
       const pos = arr.indexOf(idx);
       if(pos>=0) arr.splice(pos,1); else arr.push(idx);
       await put('impostazioni', {chiave:'colazionePreferitaGiorni', valore: arr});
-      renderSetColazione();
+      await renderMantieniSwipe(renderSetColazione);
     });
   });
 }
