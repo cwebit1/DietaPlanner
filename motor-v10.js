@@ -517,11 +517,29 @@ async function motoreV10CompletaUnicoConPane(r,varianti){
   const procedimento=[...(r.procedimento||[]),'Servi il pane nella dose prevista insieme al piatto.'];
   return motoreV10UpsertComposta(key,nome,r.gruppoProteico,ingredienti,procedimento,[r.id]);
 }
+async function motoreV10CarboidratoDaDraft(draft,varianti){
+  if(!draft)return null;
+  if(draft.primoCereale&&CARBOIDRATI_PASTO[draft.primoCereale])return draft.primoCereale;
+  if(!draft.primoId)return null;
+  const r=await getOne('ricette',draft.primoId);if(!r)return null;
+  if(r.cerealeUsato&&CARBOIDRATI_PASTO[r.cerealeUsato])return r.cerealeUsato;
+  if(r.tipoCereale&&CARBOIDRATI_PASTO[r.tipoCereale])return r.tipoCereale;
+  const vById=new Map((varianti||[]).map(v=>[v.id,v]));
+  const nomi=(r.ingredienti||[]).map(i=>i.variantId&&vById.get(i.variantId)?(vById.get(i.variantId).nome||'').toLowerCase():(i.nomeLibero||'').toLowerCase());
+  const testo=nomi.join(' ');
+  for(const [k,cfg] of Object.entries(CARBOIDRATI_PASTO)){
+    const target=(cfg.ingrediente||'').toLowerCase();
+    if(target&&nomi.includes(target))return k;
+  }
+  const eur=[['pasta_fresca','raviol'],['cous_cous','cous cous'],['friselle','frisell'],['polenta','polenta'],['farro','farro'],['orzo','orzo'],['riso','riso'],['patate','patat'],['pane','pane'],['pasta','pasta']];
+  for(const [k,t] of eur)if(CARBOIDRATI_PASTO[k]&&testo.includes(t))return k;
+  return null;
+}
 async function motoreV10ComponiUnicoDaDraft(draft,varianti){
   if(!draft||!draft.proteinaId||!draft.contornoId)return null;
   const [prot,cont]=await Promise.all([getOne('ricette',draft.proteinaId),getOne('ricette',draft.contornoId)]);
   if(!prot||!cont)return null;
-  let carb=draft.primoCereale&&CARBOIDRATI_PASTO[draft.primoCereale]?draft.primoCereale:null;
+  let carb=await motoreV10CarboidratoDaDraft(draft,varianti);
   if(!carb){
     const cous=CARBOIDRATI_PASTO.cous_cous;
     const vc=cous&&varianti.find(x=>(x.nome||'').toLowerCase()===(cous.ingrediente||'').toLowerCase());
@@ -556,10 +574,13 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     if(!a.verdure.length)continue;  // la verdura non ha un jolly equivalente
     if(hardVerdura&&!a.verdure.includes(hardVerdura))continue;
     const mancaSoloCarb=!a.carbKeys.length;
+    // Il layer alimentare viene prima della ricetta: un carboidrato già deciso non
+    // può essere sostituito col jolly pane solo per adattarsi a un record unico.
+    if(mancaSoloCarb&&targetCarbKey&&targetCarbKey!=='pane')continue;
     let score=mancaSoloCarb?-25:0;
     if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
     else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
-    else score+=30; // stessa funzione: fonte di carboidrati presente
+    else score+=30;
     if(info.sottotipoProteico&&a.sottotipo===info.sottotipoProteico)score+=35;
     else if(info.categoriaProteica&&a.categoria===info.categoriaProteica)score+=20;
     if(hardVerdura)score+=100;
@@ -591,5 +612,5 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
   return null;
 };
 
-window.MOTORE_V10_REGOLE={versione:'1.1',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
+window.MOTORE_V10_REGOLE={versione:'1.2',maxPastiSpeciali:MOTORE_V10_MAX_SPECIALI,pipeline:['scelte_user','preferenze_esclusioni','completamento_guida','rotazione_varieta','realizzazione_ricetta']};
 })();

@@ -2478,6 +2478,23 @@ async function getExtraCapSottotipiEffettivi(){ return EXTRA_CAP_SOTTOTIPI; }
 
 const NOMI_GIORNI_SET = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
 
+function validaFattibilitaProteineSet(tabella){
+  const conteggi={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
+  let occupati=0;
+  for(let i=0;i<7;i++){
+    const arr=(tabella['giorno_'+i]||[]).slice(0,2);
+    occupati+=arr.length;
+    for(const cat of arr)if(conteggi[cat]!==undefined)conteggi[cat]++;
+  }
+  const slotLiberi=14-occupati;
+  let deficitMinimi=0;
+  for(const cat of Object.keys(conteggi)){
+    const min=Number(FREQUENZE_CONSIGLIATE[cat]?.min||0);
+    deficitMinimi+=Math.max(0,min-conteggi[cat]);
+  }
+  return {ok:deficitMinimi<=slotLiberi,slotLiberi,deficitMinimi,conteggi};
+}
+
 async function renderSetTabellaGiorno(){
   const el=document.getElementById('setTabellaGiorno'); if(!el) return;
   const rec=await getOne('impostazioni','tabellaGiornoCategoria');
@@ -2503,6 +2520,12 @@ async function renderSetTabellaGiorno(){
       if(used>=tetto){ await avviso('Hai già raggiunto il massimo settimanale per questa categoria.'); return; }
       if(arr.length>=2){ await avviso('Hai già selezionato 2 fonti proteiche per questo giorno.'); return; }
       arr.push(cat);
+      const fatt=validaFattibilitaProteineSet(tabella);
+      if(!fatt.ok){
+        arr.pop();
+        await avviso('Questa scelta lascerebbe troppo pochi pasti liberi per completare le frequenze minime delle altre categorie.');
+        return;
+      }
     }
     await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:tabella});
     renderSetTabellaGiorno();
@@ -8541,7 +8564,7 @@ motoreInfoVerduraContorno=async function(r,cache){for(const ing of (r.ingredient
 scegliContornoMotore=async function(giorno,stato,preferenze,escludiId){const ricette=await getAll('ricette'),varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};const off=new Set(preferenze.verdureDisattivate||[]),prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);let candidati=[];for(const r of ricette){if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId)continue;const info=await motoreInfoVerduraContorno(r,cache);if(!info||off.has(info.variantId))continue;candidati.push({r,info});}if(!candidati.length)return null;const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7,ordine=ordineVerdureGiornoV17(idx);let pool=[];for(const t of ordine){pool=candidati.filter(x=>x.info.tier===t);if(pool.length)break;}if(!pool.length)pool=candidati;const preferite=pool.filter(x=>prefIds.has(x.info.variantId));if(preferite.length){const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));pool=nuove.length?nuove:preferite;const scelta=scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);stato.preferiteVerdureUsate.add(scelta.info.variantId);return scelta.r;}return motoreMescola(pool)[0].r;};
 </script>
 
-<script src="motor-v10.js?v=4"></script>
+<script src="motor-v10.js?v=5"></script>
 
 </body>
 </html>

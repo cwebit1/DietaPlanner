@@ -121,7 +121,7 @@ Modalità automatica predefinita. Deve realizzare carboidrato + proteina + verdu
 - Il match esatto ha priorità, ma una variante funzionalmente equivalente può essere proposta quando il vincolo non è HARD (es. altro carboidrato o altra verdura della stessa funzione).
 - Una verdura ricorrente programmata è HARD e non può essere sostituita da una verdura diversa nel fallback macro.
 - La macrocategoria proteica determinata dallo slot deve restare invariata.
-- Se non esiste ricetta compatibile, non proporre nulla e registrare la combinazione in `reviewRicetteMancanti`.
+- Se non esiste un record unico compatibile, tentare prima il completamento/composizione funzionale previsto dalla sezione v35; registrare in `reviewRicetteMancanti` soltanto se anche questo fallisce.
 
 ### Ricetta sfiziosa
 Stessa logica del piatto unico: compatibilità per macro/sottocategorie, non enumerazione di ogni combinazione possibile.
@@ -156,3 +156,14 @@ Resta una modalità di scelta del pasto/portata guidata da inventario e scadenze
 - La composizione non modifica i vincoli HARD già definiti.
 - Le composizioni sono create solo quando servono e deduplicate (`fonte=composta_runtime`, `chiaveComposta`): non si pre-genera un database combinatorio.
 - Si registra una lacuna in Review solo quando non esiste né ricetta compatibile, né completamento con pane, né composizione funzionale valida.
+
+### Vincolo sul carboidrato già determinato (v36)
+
+- Quando il layer alimentare ha già assegnato un carboidrato allo slot, la realizzazione `unico/sfiziosa` non può sostituirlo con pane solo per adattarsi a una ricetta del DB.
+- Un primo HARD assegnato dal Ricettario deve essere analizzato per inferirne la famiglia di carboidrato anche quando non possiede `primoCereale`.
+- Il jolly pane è universale solo quando la funzione carboidrato è ancora libera oppure quando il pane è già la funzione scelta; altrimenti si usa la composizione runtime con il carboidrato determinato dal layer.
+
+### Fattibilità Set proteico parziale (v36)
+
+- Ogni nuova scelta proteica nel Set viene accettata soltanto se, dopo averla inserita, il numero di slot pranzo/cena ancora liberi è almeno uguale alla somma dei deficit verso i minimi delle macro non ancora soddisfatte.
+- Questo controllo non completa il piano e non sovrascrive scelte user: impedisce soltanto di creare un Set parziale matematicamente impossibile da completare.
