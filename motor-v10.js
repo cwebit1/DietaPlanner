@@ -254,8 +254,9 @@ async function motoreV10CostruisciGriglia(giorni,preferenze,stato){
       if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].target && conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max && !limitate.has(k));
       if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].target && conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max);
       if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max && !limitate.has(k));
-      if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max);
-      const alt=candidati.filter(k=>k!==prev); if(alt.length)candidati=alt;
+      const alt=candidati.filter(k=>k!==prev);
+      if(alt.length) candidati=alt;
+      else stato.errori && stato.errori.push(`Proteina ripetuta nello stesso giorno (${g} — nessuna alternativa disponibile per ${prev})`);
       const scelta=motoreV10ScegliCategoria(candidati,conteggi,stato.storico);
       if(!scelta){errori.push(`Nessuna categoria proteica disponibile per ${g} ${p}`);continue;}
       c.gruppoProteicoLargo=scelta;c.origine='motore';c.stato='definita';conteggi[scelta]++;prev=scelta;
