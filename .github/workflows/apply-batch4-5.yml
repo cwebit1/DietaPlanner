@@ -18,7 +18,6 @@ jobs:
           p=Path('index.html')
           s=p.read_text()
 
-          # Batch 4: title button for special dish.
           old="""  document.getElementById('modalDettaglioTitolo').innerHTML =
     `<span style=\"flex:1;\">${ricetta.nome}</span> ${stellaBtn(ricetta)}`;"""
           new="""  const isUnicoDettaglio = (ricetta.tipoPortata||'unico')==='unico';
@@ -27,7 +26,6 @@ jobs:
           if old not in s: raise SystemExit('Batch 4 title target not found')
           s=s.replace(old,new,1)
 
-          # Batch 5: local edit state before modalitaModifica branch.
           old="""  if(modalitaModifica){
     const m = ricetta.nutrizioneManualeTotale || {};
     corpoHtml += `"""
@@ -44,7 +42,6 @@ jobs:
           if old not in s: raise SystemExit('Batch 5 state target not found')
           s=s.replace(old,new,1)
 
-          # Batch 5: insert classification + ingredient editor before procedimento.
           old="""      <div class=\"meta\" style=\"margin-top:10px;\">Procedimento (un passo per riga):</div>
       <textarea id=\"modalEditProcedimento\" rows=\"6\">${(ricetta.procedimento||[]).join('\\n')}</textarea>"""
           new="""      <label>Gruppo proteico coperto</label>
@@ -103,7 +100,6 @@ jobs:
           if old not in s: raise SystemExit('Batch 5 editor insertion target not found')
           s=s.replace(old,new,1)
 
-          # Batch 4 listener after favorite listener.
           old="""  document.querySelector('#modalDettaglioTitolo [data-star]')?.addEventListener('click', async (e)=>{
     const aggiornata = await toggleFavorito(e.target.dataset.star);
     apriModalDettaglioRicetta(aggiornata || ricetta, voce || porzioniSel, modalitaModifica);
@@ -145,7 +141,6 @@ jobs:
           if old not in s: raise SystemExit('Batch 4 listener target not found')
           s=s.replace(old,new,1)
 
-          # Batch 5 save classification + ingredient parsing before nutrition handling.
           old="""    ricetta.procedimento = nuovoProcedimento;
     ricetta.notePersonali = nuoveNote;
 
@@ -182,3 +177,5 @@ jobs:
           git add index.html
           git diff --cached --quiet || git commit -m "Apply Batch 4 and 5 recipe editor improvements"
           git push
+
+# trigger 2
