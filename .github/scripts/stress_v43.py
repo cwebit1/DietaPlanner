@@ -14,7 +14,6 @@ req("const macroTarget=(draft&&draft.soggettoProteico)||info.categoriaProteica||
 req('if(macroTarget&&a.categoria!==macroTarget)continue;' in v10,'piatto unico/sfiziosa non filtrati HARD per soggetto')
 req('motor-v10.js?v=10' in idx,'cache bust v43 mancante')
 
-# macroProteicaDraftRefresh deve leggere la proteina concreta prima dei marker salvati
 m=re.search(r'async function macroProteicaDraftRefresh\(draft\)\{(.*?)\n\}',idx,re.S)
 req(bool(m),'macroProteicaDraftRefresh assente')
 if m:
@@ -23,7 +22,6 @@ if m:
     pcat=body.find('if(draft.categoriaLarga)')
     req(pprot>=0 and pcat>=0 and pprot<pcat,'marker categoria prevale ancora sulla proteina concreta')
 
-# tab e refresh devono sincronizzare prima di cercare unico/sfiziosa
 req("}else if(tab==='unico'||tab==='sfiziosa'){\n    await sincronizzaSoggettoProteicoDraft" in idx,'tab unico/sfiziosa non sincronizza soggetto')
 req("}else if(tipo==='unico'||tipo==='sfiziosa'){\n    await sincronizzaSoggettoProteicoDraft" in idx,'refresh unico/sfiziosa non sincronizza soggetto')
 
@@ -38,3 +36,4 @@ if errors: report += ['','## Errori']+[f'- {e}' for e in errors]
 Path('STRESS-V43-REPORT.md').write_text('\n'.join(report)+'\n',encoding='utf-8')
 print('\n'.join(report))
 if errors: raise SystemExit(1)
+# trigger v43
