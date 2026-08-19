@@ -1311,6 +1311,8 @@ generaPianoSettimana = async function(scartoSettimane,opzioni){
   await motoreV10PreparaSlotCarbAutomatici(giorni,griglia,stato,forza);
   const generati=[];
   for(const g of giorni){
+    // Non generare mai per giorni passati o per oggi: genera solo da domani in poi.
+    if(g<=todayISO())continue;
     for(const pasto of ['pranzo','cena']){
       const id=g+'_'+pasto,cella=griglia.celle[g][pasto];
       let esistente=await getOne('piano',id);
