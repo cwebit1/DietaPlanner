@@ -5194,6 +5194,24 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
     return;
   }
 
+  // Niente pianificato per questo pasto: non generare più una bozza casuale
+  // in automatico solo perché la card è stata aperta. Mostra vuoto, genera
+  // solo se l'utente lo chiede esplicitamente.
+  const vuotoSenzaPianificazione = !voce.primoId && !voce.secondoId && !voce.contornoId && !voce.ricettaId;
+  if(vuotoSenzaPianificazione && !draftPasto[chiaveStato+'_forzaGenera']){
+    el.innerHTML = `
+      <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
+      </div>
+      <div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div>
+      <button class="small accent" data-genera-singolo style="width:100%;">Genera questo pasto</button>`;
+    el.querySelector('[data-genera-singolo]')?.addEventListener('click', ()=>{
+      draftPasto[chiaveStato+'_forzaGenera'] = true;
+      renderBloccoCompleto(pasto, giorno, elementId);
+    });
+    return;
+  }
+
   // Il motore garantisce un pasto programmato iniziale; il draft non scrive sul DB
   // finché l'utente non preme la conferma.
   voce = await garantisciRicettaSlot(giorno, pasto, voce);
