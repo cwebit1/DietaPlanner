@@ -1161,7 +1161,6 @@ async function motoreV10CostruisciGriglia(giorni,preferenze,stato){
       if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].target && conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max && !limitate.has(k));
       if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].target && conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max);
       if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max && !limitate.has(k));
-      if(!candidati.length) candidati=Object.keys(FREQUENZE_MOTORE_BIBBIA).filter(k=>conteggi[k]<FREQUENZE_MOTORE_BIBBIA[k].max);
       const alt=candidati.filter(k=>k!==prev); if(alt.length)candidati=alt;
       const scelta=motoreV10ScegliCategoria(candidati,conteggi,stato.storico);
       if(!scelta){errori.push(`Nessuna categoria proteica disponibile per ${g} ${p}`);continue;}
@@ -1568,7 +1567,7 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     // può essere sostituito col jolly pane solo per adattarsi a un record unico.
     if(mancaSoloCarb&&targetCarbKey&&targetCarbKey!=='pane')continue;
     let score=mancaSoloCarb?-25:0;
-    score+=(await motoreV10ScoreFrigoRicetta(r))*2;
+    score+=Math.min(await motoreV10ScoreFrigoRicetta(r), 15);
     if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
     else if(targetCarbNome&&a.nomi.includes(targetCarbNome))score+=100;
     else score+=30;
@@ -1670,3 +1669,4 @@ async function motoreV10CarboidratoFattibile(carb, giorno, categoria, stato){
   }
   return false;
 }
+
