@@ -4388,6 +4388,9 @@ async function elaboraConsumoAutomatico(){
     if(voce.consumato) continue;
     const sep = voce.id.indexOf('_');
     if(sep<0) continue;
+    // Non creare consumi su voci vuote (nessun contenuto = niente da consumare)
+    const haContenutoVoce = !!(voce.primoId || voce.secondoId || voce.contornoId || voce.ricettaId || voce.primoCereale || voce.componenti || voce.colazioneSpecialeId);
+    if(!haContenutoVoce) continue;
     const giorno = voce.id.slice(0, sep);
     const pasto = voce.id.slice(sep+1);
     if(!fasciaPastoSuperata(giorno, pasto, ora)) continue;
@@ -4564,7 +4567,8 @@ async function renderColazione(giorno, elementId){
   const pianoId = giorno+'_colazione';
   let voce = await getOne('piano', pianoId);
   const varianti = await getAll('varianti');
-  const colazioneScaduta = fasciaPastoSuperata(giorno, 'colazione');
+  const haContenutoColazione = !!(voce.componenti || voce.colazioneSpecialeId);
+  const colazioneScaduta = haContenutoColazione && fasciaPastoSuperata(giorno, 'colazione');
 
   if(!voce) voce = {id:pianoId};
 
@@ -4855,7 +4859,10 @@ async function renderBloccoSemplice(pasto, giorno, elementId){
   // pasto già consumato (orario superato): immutabile, sola lettura — niente più
   // Proposte alternative/Rimuovi, coerente con "la flessibilità è nel cibo, il rigore
   // è nell'applicarlo"
-  const scaduto = fasciaPastoSuperata(giorno, pasto);
+  // Ma SOLO se il blocco ha effettivamente contenuto: uno spuntino vuoto
+  // (dopo un reset del piano) non deve essere trattato come consumato.
+  const haContenutoSpuntino = !!voce.ricettaId;
+  const scaduto = haContenutoSpuntino && fasciaPastoSuperata(giorno, pasto);
   if(voce.consumato || scaduto){
     const ricettaConsumata = voce.ricettaId ? await getOne('ricette', voce.ricettaId) : null;
     const nutriCons = ricettaConsumata ? await nutrizionePerPersona(ricettaConsumata) : null;
@@ -5161,7 +5168,10 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
   voce = Object.assign({id:pianoId, modo:'multi', fascia:'facile', porzioni:1}, voce||{});
 
   // I pasti già consumati o ormai trascorsi restano immutabili.
-  const scaduto = fasciaPastoSuperata(giorno, pasto);
+  // Ma SOLO se il blocco ha effettivamente contenuto: un blocco vuoto
+  // (dopo un reset del piano) non deve essere trattato come consumato.
+  const haContenutoBlocco = !!(voce.primoId || voce.secondoId || voce.contornoId || voce.ricettaId || voce.primoCereale);
+  const scaduto = haContenutoBlocco && fasciaPastoSuperata(giorno, pasto);
   if(voce.consumato || scaduto){
     const idRicetteCons = voce.modo==='multi'
       ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
@@ -8512,6 +8522,10 @@ document.getElementById('btnResetPiano').addEventListener('click', async ()=>{
   if(!ok) return;
   const piano = await getAll('piano');
   for(const voce of piano) await delKey('piano', voce.id);
+  // Invalida esplicitamente la cache del piano e del consumo giornaliero
+  // per garantire che il rendering successivo legga dal DB vuoto.
+  cacheGetAll['piano'] = null;
+  cacheGetAll['consumoGiorno'] = null;
   draftPasto = {}; draftColazione = {};
   await avviso('Piano settimanale azzerato.');
   renderPiano();
