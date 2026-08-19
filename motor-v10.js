@@ -38,7 +38,6 @@ async function motoreV10ScegliPrimoReale(carb, stato, preferenze){
   return scegliMenoRecenteMotore(pool, r=>stato.storico.ultimoRicetta[r.id]||0, ()=>0);
 }
 
-/* UNICA fonte di verità sulla fattibilità di un carboidrato. */
 async function motoreV10CarboidratoFattibile(carb, giorno, categoria, stato){
   const cfg = CARBOIDRATI_PASTO[carb];
   if(!cfg) return false;

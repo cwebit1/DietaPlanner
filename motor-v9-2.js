@@ -223,8 +223,6 @@ async function preparaBudgetCarboidratiMotore(){
 }
 
 async function scegliCarboidratoMotore(stato, forzaJolly, giorno, categoria){
-  // "Poco tempo" resta un caso a parte, invariato: pane/friselle sono jolly,
-  // fattibili per definizione, non passano dal controllo di fattibilita generale.
   if(forzaJolly){
     let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
     pool=pool.filter(k=>{ const c=CARBOIDRATI_PASTO[k]; return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2); });

@@ -10,7 +10,11 @@ componiPastoModulare = async function(gruppoProteico, giorno, escludiSugoId, esc
     };
   }
   const categoriaLarga = gruppoProteico ? motoreCategoriaDiSottotipo(gruppoProteico) : null;
-  const carb=await scegliCarboidratoMotore(statoMotore,!!forzaJolly,giorno,categoriaLarga);
+
+  // Affettati impone pane: scavalca la rotazione, non passa da scegliCarboidratoMotore.
+  const carb = (gruppoProteico==='affettati')
+    ? (statoMotore.carboidratiUsati['pane']=(statoMotore.carboidratiUsati['pane']||0)+1, 'pane')
+    : await scegliCarboidratoMotore(statoMotore,!!forzaJolly,giorno,categoriaLarga);
   const carbCfg=CARBOIDRATI_PASTO[carb];
   if(!carbCfg) return null;
 
@@ -121,8 +125,7 @@ async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
   const categoria=cella.gruppoProteicoLargo;
   const sottotipo=await scegliSottotipoMotore(categoria,stato);
   const pocoTempo=(pasto==='pranzo'&&preferenze.pocoTempoPranzo)||(pasto==='cena'&&preferenze.pocoTempoCena);
-  const preferenzeSlot=Object.assign({},preferenze,{_pastoCorrente:pasto});
-  const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenzeSlot,stato);
+  const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenze,stato);
   if(!esito) return {voce:null,errore:`Nessuna combinazione completa per ${giorno} ${pasto} (${categoria}/${sottotipo})`};
 
   if(esito.soloSfiziosa){
@@ -141,8 +144,8 @@ async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
   }
 
   let primoId = esito.primoRicettaRealeId || null;
-  if(pocoTempo && !primoId && (esito.primoCarboidrato==='pane'||esito.primoCarboidrato==='friselle')){
-    const rapido=await scegliPrimoVelocePerCarbMotore(esito.primoCarboidrato,stato);
+  if(pocoTempo && !primoId){
+    const rapido=await scegliPrimoVelocePaneFriselle();
     if(rapido) primoId=rapido.id;
   }
   if(!primoId && esito.primoSugoId){

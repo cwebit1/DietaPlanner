@@ -5285,6 +5285,8 @@ async function contaCarboidratiSettimanaDraft(giorno, escludiPianoId){
    Quindi riso/farro/pasta/cous cous/pane ecc. sono tutti sostituibili fra loro:
    la funzione nutrizionale resta 'carboidrato'. */
 async function carboidratiAmmessiCambioDraft(giorno,pasto,draft){
+  // Affettati impone pane: nessuna alternativa da proporre nel bottone manuale.
+  if(draft.sottotipoProposto==='affettati') return [];
   const stato = await creaStatoMotoreSettimana();
   const categoria = draft.categoriaLarga || motoreCategoriaDiSottotipo(draft.sottotipoProposto) || null;
   const out=[];
@@ -6811,6 +6813,7 @@ async function apriModalDettaglioRicetta(ricetta, voceOPorzioni, modalitaModific
 
   let modalEditSottoCategoriaScelta = ricetta.sottoCategoriaModulare || 'sugo';
   let modalEditCerealeScelto = ricetta.cerealeLibero ? 'libero' : (ricetta.tipoCereale || 'libero');
+  let modalEditCarbCompatScelti = new Set(ricetta.carboidratiCompatibili || []);
   if(modalitaModifica){
     const m = ricetta.nutrizioneManualeTotale || {};
     const ingredientiTestoEdit = (ricetta.ingredienti||[]).map(i=>{
@@ -6831,6 +6834,8 @@ async function apriModalDettaglioRicetta(ricetta, voceOPorzioni, modalitaModific
       <select id="modalEditTipoPortata"><option value="unico" ${(ricetta.tipoPortata||'unico')==='unico'?'selected':''}>Piatto unico</option><option value="primo" ${ricetta.tipoPortata==='primo'?'selected':''}>Primo</option><option value="secondo" ${ricetta.tipoPortata==='secondo'?'selected':''}>Secondo</option><option value="contorno" ${ricetta.tipoPortata==='contorno'?'selected':''}>Contorno</option><option value="spuntino" ${ricetta.tipoPortata==='spuntino'?'selected':''}>Spuntino</option><option value="colazione" ${ricetta.tipoPortata==='colazione'?'selected':''}>Colazione</option><option value="modulare" ${ricetta.tipoPortata==='modulare'?'selected':''}>🧩 Modulo componibile</option></select>
       <div id="modalEditSezioneModulare" style="display:${ricetta.tipoPortata==='modulare'?'block':'none'};"><label>Sotto-categoria del modulo</label><div class="tabgroup" id="modalEditSottoCategoriaMod" style="flex-wrap:wrap;"><button data-modaledit-sottocat="sugo" class="${modalEditSottoCategoriaScelta==='sugo'?'active':''}">🍅 Sugo (primo)</button><button data-modaledit-sottocat="proteina" class="${modalEditSottoCategoriaScelta==='proteina'?'active':''}">🍗 Proteina (secondo)</button><button data-modaledit-sottocat="contorno" class="${modalEditSottoCategoriaScelta==='contorno'?'active':''}">🥦 Contorno (secondo)</button></div></div>
       <div id="modalEditSezioneCereale" style="display:${ricetta.tipoPortata==='primo'?'block':'none'};"><label>Tipo di cereale</label><div class="tabgroup" id="modalEditCerealeTab" style="flex-wrap:wrap;"><button data-modaledit-cereale="libero" class="${modalEditCerealeScelto==='libero'?'active':''}">🔄 Libero (il motore sceglie)</button><button data-modaledit-cereale="gnocchi" class="${modalEditCerealeScelto==='gnocchi'?'active':''}">Gnocchi</button><button data-modaledit-cereale="pasta_ripiena" class="${modalEditCerealeScelto==='pasta_ripiena'?'active':''}">Pasta ripiena</button></div></div>
+      <div id="modalEditSezioneSugoCompat" style="display:${(ricetta.tipoPortata==='modulare' && (ricetta.sottoCategoriaModulare||'sugo')==='sugo')?'block':'none'};"><label>Carboidrati compatibili (solo per i sughi)</label><div class="tabgroup" id="modalEditCarbCompat" style="flex-wrap:wrap;">${['pasta','pasta_fresca','riso','farro','orzo','cous_cous','polenta'].map(k=>`<button data-modaledit-carbcompat="${k}" class="${(ricetta.carboidratiCompatibili||[]).includes(k)?'active':''}">${CARBOIDRATI_PASTO[k]?CARBOIDRATI_PASTO[k].label:k}</button>`).join('')}</div><div class="meta" style="margin-top:4px;">Il motore userà questo sugo SOLO per i carboidrati selezionati qui.</div></div>
+      <div id="modalEditSezioneImponeCarb" style="display:${((ricetta.tipoPortata==='secondo')||(ricetta.tipoPortata==='modulare' && ricetta.sottoCategoriaModulare==='proteina'))?'block':'none'};"><label>Impone un carboidrato specifico (facoltativo)</label><select id="modalEditImponeCarboidrato"><option value="" ${!ricetta.imponeCarboidrato?'selected':''}>— nessuno, segue la rotazione normale —</option>${Object.keys(CARBOIDRATI_PASTO).map(k=>`<option value="${k}" ${ricetta.imponeCarboidrato===k?'selected':''}>${CARBOIDRATI_PASTO[k].label}</option>`).join('')}</select><div class="meta" style="margin-top:4px;">Usato per casi individuali oltre alla regola di famiglia già cablata per gli affettati.</div></div>
       <label>Ingredienti (uno per riga: nome, grammi) — per i primi modulari, NON inserire il cereale</label>
       <textarea id="modalEditIngredienti" placeholder="pomodoro fresco, 100&#10;olio extravergine oliva, 10&#10;petto di pollo, 120" rows="4">${ingredientiTestoEdit}</textarea>
       <div class="meta" style="margin-top:10px;">Procedimento (un passo per riga):</div>
@@ -6896,8 +6901,27 @@ async function apriModalDettaglioRicetta(ricetta, voceOPorzioni, modalitaModific
     apriModalDettaglioRicetta(aggiornata || ricetta, voce || porzioniSel, modalitaModifica);
   });
   if(modalitaModifica){
-    document.getElementById('modalEditTipoPortata')?.addEventListener('change', (e)=>{const tipo=e.target.value;document.getElementById('modalEditSezioneModulare').style.display=tipo==='modulare'?'block':'none';document.getElementById('modalEditSezioneCereale').style.display=tipo==='primo'?'block':'none';});
-    document.getElementById('modalEditSottoCategoriaMod')?.addEventListener('click', (e)=>{const btn=e.target.closest('[data-modaledit-sottocat]');if(!btn)return;modalEditSottoCategoriaScelta=btn.dataset.modaleditSottocat;document.querySelectorAll('#modalEditSottoCategoriaMod button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');});
+    document.getElementById('modalEditTipoPortata')?.addEventListener('change', (e)=>{
+      const tipo=e.target.value;
+      document.getElementById('modalEditSezioneModulare').style.display=tipo==='modulare'?'block':'none';
+      document.getElementById('modalEditSezioneCereale').style.display=tipo==='primo'?'block':'none';
+      document.getElementById('modalEditSezioneSugoCompat').style.display=(tipo==='modulare' && modalEditSottoCategoriaScelta==='sugo')?'block':'none';
+      document.getElementById('modalEditSezioneImponeCarb').style.display=(tipo==='secondo' || (tipo==='modulare' && modalEditSottoCategoriaScelta==='proteina'))?'block':'none';
+    });
+    document.getElementById('modalEditSottoCategoriaMod')?.addEventListener('click', (e)=>{
+      const btn=e.target.closest('[data-modaledit-sottocat]');if(!btn)return;
+      modalEditSottoCategoriaScelta=btn.dataset.modaleditSottocat;
+      document.querySelectorAll('#modalEditSottoCategoriaMod button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('modalEditSezioneSugoCompat').style.display=(modalEditSottoCategoriaScelta==='sugo')?'block':'none';
+      document.getElementById('modalEditSezioneImponeCarb').style.display=(modalEditSottoCategoriaScelta==='proteina')?'block':'none';
+    });
+    document.getElementById('modalEditCarbCompat')?.addEventListener('click', (e)=>{
+      const btn=e.target.closest('[data-modaledit-carbcompat]'); if(!btn) return;
+      const k = btn.dataset.modaleditCarbcompat;
+      if(modalEditCarbCompatScelti.has(k)){ modalEditCarbCompatScelti.delete(k); btn.classList.remove('active'); }
+      else{ modalEditCarbCompatScelti.add(k); btn.classList.add('active'); }
+    });
     document.getElementById('modalEditCerealeTab')?.addEventListener('click', (e)=>{const btn=e.target.closest('[data-modaledit-cereale]');if(!btn)return;modalEditCerealeScelto=btn.dataset.modaleditCereale;document.querySelectorAll('#modalEditCerealeTab button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');});
   }
 
@@ -6919,6 +6943,8 @@ async function apriModalDettaglioRicetta(ricetta, voceOPorzioni, modalitaModific
     ricetta.sottoCategoriaModulare = tipoPortataScelto==='modulare' ? modalEditSottoCategoriaScelta : null;
     ricetta.cerealeLibero = tipoPortataScelto==='primo' && modalEditCerealeScelto==='libero';
     ricetta.tipoCereale = tipoPortataScelto==='primo' && modalEditCerealeScelto!=='libero' ? modalEditCerealeScelto : null;
+    ricetta.carboidratiCompatibili = (tipoPortataScelto==='modulare' && modalEditSottoCategoriaScelta==='sugo') ? Array.from(modalEditCarbCompatScelti) : (ricetta.carboidratiCompatibili || []);
+    ricetta.imponeCarboidrato = document.getElementById('modalEditImponeCarboidrato') ? (document.getElementById('modalEditImponeCarboidrato').value || null) : (ricetta.imponeCarboidrato || null);
     const righeIng = document.getElementById('modalEditIngredienti').value.split('\n').map(l=>l.trim()).filter(Boolean);
     const tutteLeVarianti = await getAll('varianti');
     ricetta.ingredienti = righeIng.map(riga=>{const [nomeParte,gParte]=riga.split(',').map(s=>s.trim());const g=parseFloat(gParte)||0;const v=tutteLeVarianti.find(x=>x.nome.toLowerCase()===nomeParte?.toLowerCase());return v?{variantId:v.id,quantita:g}:{variantId:null,nomeLibero:nomeParte,quantita:g};});
