@@ -8491,6 +8491,7 @@ document.getElementById('btnAzzeraStoricoSettimana').addEventListener('click', a
   for(const chiave of chiaviDaEliminare){
     localStorage.removeItem(chiave);
   }
+  draftPasto = {}; draftColazione = {};
   await avviso('Storico consumi della settimana corrente azzerato.');
   renderPiano();
   if(document.getElementById('view-menu').classList.contains('active')) renderMenuSettimanale();
@@ -8528,6 +8529,7 @@ document.getElementById('btnAzzeraStorico').addEventListener('click', async ()=>
     localStorage.removeItem(chiave);
   }
   // 4. Azzera le impostazioni di versione (opzionale, per forzare un re-check)
+  draftPasto = {}; draftColazione = {};
   await avviso('Storico consumi azzerato. Tutte le ricette sono ora "nuove" per il motore di rotazione.');
   renderPiano();
   if(document.getElementById('view-menu').classList.contains('active')) renderMenuSettimanale();
@@ -8538,6 +8540,7 @@ document.getElementById('btnResetPiano').addEventListener('click', async ()=>{
   if(!ok) return;
   const piano = await getAll('piano');
   for(const voce of piano) await delKey('piano', voce.id);
+  draftPasto = {}; draftColazione = {};
   await avviso('Piano settimanale azzerato.');
   renderPiano();
   if(document.getElementById('view-menu').classList.contains('active')) renderMenuSettimanale();
