@@ -11,14 +11,31 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Record staged motor hash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64,hashlib
+          s=''.join(p.read_text().strip() for p in sorted(Path('.github/motor_upload').glob('chunk*.b64')))
+          try:
+              raw=base64.b64decode(s,validate=True)
+              out=f"b64={len(s)} bytes={len(raw)} sha256={hashlib.sha256(raw).hexdigest()}\n"
+          except Exception as e:
+              out=f"ERROR {e} b64={len(s)}\n"
+          Path('.github/motor_upload/status.txt').write_text(out)
+          print(out)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/motor_upload/status.txt
+          git diff --cached --quiet || git commit -m "Record staged motor hash [skip ci]"
+          git push
       - name: Apply batch
         run: python .github/scripts/apply_motor_unico_fix.py
       - name: Check motor.js syntax
         run: node --check motor.js
       - name: Commit functional changes
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add motor.js index.html
           git diff --cached --quiet || git commit -m "Use single motor.js and apply UI fixes [skip ci]"
           git push
