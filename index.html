@@ -5446,6 +5446,7 @@ const draft = draftPasto[chiaveStato];
 if(!draft) return;
 let html = '';
 if(draft.tabAttiva === 'pasto'){
+/* --- PROTEINA --- */
 let protNome=''; let protRicetta=null;
 if(draft.proteinaId){ protRicetta=await getOne('ricette',draft.proteinaId); if(protRicetta) protNome=protRicetta.nome; }
 const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
@@ -5463,6 +5464,7 @@ html += '</div>';
 if(protNutri) html += '<div class="meta">'+Math.round(protNutri.kcal)+' kcal</div>';
 if(cottureAmmesse.length>1) html += '<div class="row" style="margin-top:6px;gap:6px;justify-content:flex-end;"><button class="small" data-pasto-cambia="cottura">Cambia cottura</button></div>';
 html += '</div>';
+/* --- CARBOIDRATO --- */
 const carbLabel = draft.primoCereale && CARBOIDRATI_PASTO[draft.primoCereale] ? CARBOIDRATI_PASTO[draft.primoCereale].label : '';
 let sugoNome = '';
 if(draft.primoSugoId){ const sugoR=await getOne('ricette',draft.primoSugoId); if(sugoR) sugoNome=sugoR.nome; }
@@ -5481,6 +5483,7 @@ html += '<div class="row" style="margin-top:6px;gap:6px;"><button class="small" 
 if(draft.primoSugoId) html += '<button class="small" data-pasto-cambia="sugo">Cambia sugo</button>';
 html += '</div>';
 html += '</div>';
+/* --- VERDURA --- */
 let contNome=''; let contRicetta=null;
 if(draft.contornoId){ contRicetta=await getOne('ricette',draft.contornoId); if(contRicetta) contNome=contRicetta.nome; }
 const contNutri=contRicetta?await nutrizionePerPersona(contRicetta):null;
