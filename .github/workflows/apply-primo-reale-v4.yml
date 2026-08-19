@@ -1,0 +1,22 @@
+name: Apply Primo reale v4
+on:
+  push:
+    paths:
+      - '.github/primo-reale-v4-trigger.txt'
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply v4 batch
+        run: python .github/scripts/apply_primo_reale_v4.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html motor-v9-2.js motor-v9-3.js motor-v10.js ricette.json
+          git diff --cached --quiet || git commit -m "Apply Primo reale v4 complete [skip ci]"
+          git push
