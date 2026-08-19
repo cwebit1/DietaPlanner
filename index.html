@@ -5631,7 +5631,7 @@ async function cambiaCellaDraft(pasto, giorno, cella){
     if(cfg.jolly){
       draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=null;
     }else if(cfg.soloSfiziosa){
-      draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=draft.primoCereale;
+      draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=null;
     }else{
       const statoTemp = await creaStatoMotoreSettimana();
       const primoReale = await motoreV10ScegliPrimoReale(draft.primoCereale, statoTemp, {});
