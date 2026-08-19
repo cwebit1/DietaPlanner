@@ -3398,8 +3398,6 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
   }
 
   for(const g of giorni){
-    // Non generare mai per giorni passati o per oggi: genera solo da domani in poi.
-    if(g <= todayISO()) continue;
     // copia di lavoro per QUESTO giorno: se una categoria della tabella viene già
     // soddisfatta a pranzo, non va richiesta di nuovo per la cena dello stesso
     // giorno — altrimenti con due categorie scelte sullo stesso giorno rischiano
