@@ -1,0 +1,27 @@
+name: Apply Primo reale batch
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/scripts/apply_primo_reale.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply batch
+        run: python .github/scripts/apply_primo_reale.py
+      - name: Validate JavaScript
+        run: |
+          node --check motor-v9-2.js
+          node --check motor-v9-3.js
+          node --check motor-v10.js
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ricette.json index.html motor-v9-2.js motor-v9-3.js motor-v10.js
+          git diff --cached --quiet || git commit -m "Primo da ricettario reale - fattibilita unica"
+          git push
