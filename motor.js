@@ -462,30 +462,41 @@ async function preparaBudgetCarboidratiMotore(){
 }
 
 async function scegliCarboidratoMotore(stato, forzaJolly, giorno, categoria){
-  if(forzaJolly){
-    let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
-    pool=pool.filter(k=>{ const c=CARBOIDRATI_PASTO[k]; return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2); });
-    if(!pool.length) pool=['pane'];
-    const nonUsati=pool.filter(k=>(stato.carboidratiUsati[k]||0)===0);
-    if(nonUsati.length) pool=nonUsati;
-    const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
-    stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
-    return scelta;
-  }
+if(forzaJolly){
+let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
+pool=pool.filter(k=>{
+const c=CARBOIDRATI_PASTO[k];
+return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2);
+});
+if(!pool.length) pool=['pane'];
+const nonUsati=pool.filter(k=>(stato.carboidratiUsati[k]||0)===0);
+if(nonUsati.length) pool=nonUsati;
+const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
+stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
+if(stato.budgetCarb.residuo[scelta]>0) stato.budgetCarb.residuo[scelta]--;
+return scelta;
+}
 
-  const residui = Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>n>0&&CARBOIDRATI_PASTO[k]);
-  let pool = residui.length ? residui.map(([k])=>k) : CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
+const residui = Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>Number(n)>0&&CARBOIDRATI_PASTO[k]);
+let pool = residui.length ? residui.map(([k])=>k) : CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
 
-  const fattibili=[];
-  for(const k of pool){
-    if(await motoreV10CarboidratoFattibile(k, giorno, categoria, stato)) fattibili.push(k);
-  }
-  pool = fattibili.length ? fattibili : ['pane'];
+pool=pool.filter(k=>{
+const c=CARBOIDRATI_PASTO[k];
+return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2);
+});
 
-  const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
-  stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
-  if(stato.budgetCarb.residuo[scelta]>0) stato.budgetCarb.residuo[scelta]--;
-  return scelta;
+if(!pool.length){
+pool=CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
+}
+
+if(!pool.length){
+pool=['pane'];
+}
+
+const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
+stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
+if(stato.budgetCarb.residuo[scelta]>0) stato.budgetCarb.residuo[scelta]--;
+return scelta;
 }
 
 /* Override del compositore modulare: usa il nuovo stato di rotazione e la
@@ -1670,3 +1681,85 @@ async function motoreV10CarboidratoFattibile(carb, giorno, categoria, stato){
   return false;
 }
 
+
+/* =========================================================
+BATCH 1 — override proteina-first
+La proteina viene scelta prima.
+Il carboidrato viene scelto dopo e si adatta.
+Nessun ramo soloSfiziosa nella composizione automatica.
+========================================================= */
+componiPastoModulare = async function(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId, forzaJolly, preferenzeMotore, statoMotore){
+preferenzeMotore=preferenzeMotore||{};
+
+if(!statoMotore){
+statoMotore={
+storico:await costruisciStoricoConsumatiMotore(),
+ricetteUsateGenerazione:new Set(),
+preferiteVerdureUsate:new Set(),
+carboidratiUsati:{},
+budgetCarb:await preparaBudgetCarboidratiMotore()
+};
+}
+
+const categoriaLarga = gruppoProteico ? motoreCategoriaDiSottotipo(gruppoProteico) : null;
+
+/* 1. Prima la proteina */
+const proteina = gruppoProteico ? await scegliProteinaModulareMotore(gruppoProteico, statoMotore, escludiProteinaId) : null;
+if(gruppoProteico && !proteina) return null;
+
+/* 2. Poi il carboidrato, che si adatta */
+let carb;
+
+if(gruppoProteico==='affettati'){
+carb='pane';
+statoMotore.carboidratiUsati['pane']=(statoMotore.carboidratiUsati['pane']||0)+1;
+if(statoMotore.budgetCarb.residuo['pane']>0) statoMotore.budgetCarb.residuo['pane']--;
+}else{
+carb=await scegliCarboidratoMotore(statoMotore, !!forzaJolly, giorno, categoriaLarga);
+}
+
+const carbCfg=CARBOIDRATI_PASTO[carb];
+if(!carbCfg) return null;
+
+/* 3. Realizzazione del carboidrato.
+Niente ramo soloSfiziosa.
+Se esiste un primo reale con quel carboidrato, usa quello.
+Altrimenti, se il carboidrato ha pool sughi, sceglie un sugo compatibile. */
+let sugo=null;
+let primoRicettaRealeId=null;
+
+const primoReale = await motoreV10ScegliPrimoReale(carb, statoMotore, preferenzeMotore);
+if(primoReale){
+primoRicettaRealeId=primoReale.id;
+}else if(carbCfg.haPoolSughi){
+const tuttiSughi = await cercaComponentiModulari('sugo');
+const compatibili = tuttiSughi.filter(s=>(s.carboidratiCompatibili||[]).includes(carb));
+const nonUsati = compatibili.filter(s=>s.id!==escludiSugoId);
+const pool = nonUsati.length ? nonUsati : compatibili;
+sugo = scegliMenoRecenteMotore(pool, r=>statoMotore.storico.ultimoRicetta[r.id]||0, ()=>0);
+}
+
+/* 4. Verdura: resta il sistema esistente */
+const contorno=await scegliContornoMotore(giorno,statoMotore,preferenzeMotore,escludiContornoId);
+if(!contorno) return null;
+
+/* 5. Cottura della proteina */
+const cottura=scegliCotturaStandard(proteina.gruppoProteico, proteina.nome);
+
+/* Compatibilità con il codice esistente:
+primoEJolly viene mantenuto solo come flag tecnico per far accettare
+al flusso attuale i carboidrati senza primo composto. */
+const senzaPrimo = !primoRicettaRealeId && !sugo;
+
+return {
+primoRicettaRealeId,
+primoNome: primoRicettaRealeId ? null : (sugo ? componiNomePrimoModulare(carbCfg.label,sugo.nome) : carbCfg.label),
+primoCarboidrato:carb,
+primoSugoId:sugo ? sugo.id : null,
+primoEJolly:senzaPrimo,
+secondoNome:componiNomeSecondoModulare(proteina.nome,cottura,contorno.nome),
+proteinaId:proteina.id,
+cottura,
+contornoId:contorno.id
+};
+};
