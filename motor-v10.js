@@ -9,6 +9,69 @@
 
 const MOTORE_V10_MAX_SPECIALI = 2;
 
+
+/* Sceglie un primo REALE dal ricettario per il carboidrato dato.
+   Zero composizione: se non trova un match, ritorna null e basta. */
+async function motoreV10ScegliPrimoReale(carb, stato, preferenze){
+  const cfg = CARBOIDRATI_PASTO[carb];
+  if(!cfg) return null;
+  const target = (cfg.ingrediente||'').toLowerCase();
+  const [tutte, varianti] = await Promise.all([getAll('ricette'), getAll('varianti')]);
+  const vById = new Map(varianti.map(v=>[v.id,v]));
+
+  let pool = tutte.filter(r=>{
+    if(r.esclusa || (r.tipoPortata||'unico')!=='primo') return false;
+    const nomi = (r.ingredienti||[]).map(i=>{
+      if(i.variantId) return (vById.get(i.variantId)?.nome||'').toLowerCase();
+      return (i.nomeLibero||'').toLowerCase();
+    });
+    return target && nomi.includes(target);
+  });
+  if(!pool.length) return null;
+
+  const prefIds = new Set(preferenze?.ingredientiPreferitiVariantIds || []);
+  if(prefIds.size){
+    const conPreferenza = pool.filter(r=>(r.ingredienti||[]).some(i=>i.variantId && prefIds.has(i.variantId)));
+    if(conPreferenza.length) pool = conPreferenza;
+  }
+
+  return scegliMenoRecenteMotore(pool, r=>stato.storico.ultimoRicetta[r.id]||0, ()=>0);
+}
+
+/* UNICA fonte di verità sulla fattibilità di un carboidrato. */
+async function motoreV10CarboidratoFattibile(carb, giorno, categoria, stato){
+  const cfg = CARBOIDRATI_PASTO[carb];
+  if(!cfg) return false;
+
+  if(cfg.limitato){
+    const attivato = ((stato.budgetCarb && stato.budgetCarb.config && stato.budgetCarb.config[carb]) || 0) > 0;
+    if(!attivato) return false;
+    const usato = await contaCarboidratoSettimana(carb);
+    if(usato >= (cfg.tettoSettimanale||2)) return false;
+  }
+
+  if(cfg.jolly) return true;
+
+  if(cfg.soloSfiziosa){
+    if(!categoria) return false;
+    const tutte = await getAll('ricette');
+    return tutte.some(r=>!r.esclusa && !r.piattoSpeciale && (r.tipoPortata||'unico')==='unico'
+      && motoreCategoriaDiSottotipo(r.gruppoProteico)===categoria);
+  }
+
+  const primoReale = await motoreV10ScegliPrimoReale(carb, stato, {});
+  if(primoReale) return true;
+
+  if(cfg.haPoolSughi){
+    const sughi = await cercaComponentiModulari('sugo');
+    return sughi.some(s=>(s.carboidratiCompatibili||[]).includes(carb));
+  }
+  return false;
+}
+
+window.motoreV10ScegliPrimoReale = motoreV10ScegliPrimoReale;
+window.motoreV10CarboidratoFattibile = motoreV10CarboidratoFattibile;
+
 function motoreV10VoceHaContenuto(v){
   if(!v) return false;
   if(v.colazioneSpecialeId || v.componenti) return true;

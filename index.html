@@ -2003,13 +2003,13 @@ const CARBOIDRATI_PASTO = {
   patate:        { label:'Patate',        ingrediente:'Patate',            porzione:325, gruppo:'patate',         limitato:false, haPoolSughi:false },
   polenta:       { label:'Polenta',       ingrediente:'Farina per polenta', porzione:75, gruppo:'polenta',       limitato:false, haPoolSughi:true },
   // --- Frequenza limitata (0-2/sett dal PDF) ---
-  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:175, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:true },
-  pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:true },
+  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:175, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
+  pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:false, soloSfiziosa:true },
   gallette:      { label:'Gallette',      ingrediente:'Crackers',          porzione:50,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
   crackers:      { label:'Crackers',      ingrediente:'Crackers',          porzione:30,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
   taralli:       { label:'Taralli/Grissini', ingrediente:'Crackers',       porzione:65,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
   piadina:       { label:'Piadina',       ingrediente:'Pane fresco',       porzione:80,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, jolly:true },
-  pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:65, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:true }
+  pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:65, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, soloSfiziosa:true }
 };
 
 /* Rotazione principale del NUOVO sistema modulare.
@@ -5285,7 +5285,14 @@ async function contaCarboidratiSettimanaDraft(giorno, escludiPianoId){
    Quindi riso/farro/pasta/cous cous/pane ecc. sono tutti sostituibili fra loro:
    la funzione nutrizionale resta 'carboidrato'. */
 async function carboidratiAmmessiCambioDraft(giorno,pasto,draft){
-  return Object.keys(CARBOIDRATI_PASTO).filter(k=>k!==draft.primoCereale);
+  const stato = await creaStatoMotoreSettimana();
+  const categoria = draft.categoriaLarga || motoreCategoriaDiSottotipo(draft.sottotipoProposto) || null;
+  const out=[];
+  for(const chiave of Object.keys(CARBOIDRATI_PASTO)){
+    if(chiave===draft.primoCereale) continue;
+    if(await motoreV10CarboidratoFattibile(chiave, giorno, categoria, stato)) out.push(chiave);
+  }
+  return out;
 }
 
 async function validaCarboidratoDraft(giorno,pasto,draft){
@@ -5592,8 +5599,25 @@ async function cambiaCellaDraft(pasto, giorno, cella){
     if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile.');return;}
     draft.primoCereale=(typeof motoreMescola==='function'?motoreMescola(disponibili):disponibili)[0];
     const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
-    if(!cfg.haPoolSughi){draft.primoSugoId=null;draft.primoId=null;}
-    else if(draft.primoSugoId){const t=await getOne('ricette',draft.primoSugoId);if(t){const pr=await componiPrimoModulare(t,draft.primoCereale);draft.primoId=pr?pr.id:null;}}
+
+    if(cfg.jolly){
+      draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=null;
+    }else if(cfg.soloSfiziosa){
+      draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=draft.primoCereale;
+    }else{
+      const statoTemp = await creaStatoMotoreSettimana();
+      const primoReale = await motoreV10ScegliPrimoReale(draft.primoCereale, statoTemp, {});
+      if(primoReale){
+        draft.primoId=primoReale.id; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=null;
+      }else{
+        const sughi = await cercaComponentiModulari('sugo');
+        const compatibili = sughi.filter(s=>(s.carboidratiCompatibili||[]).includes(draft.primoCereale));
+        const sugo = scegliMenoRecenteMotore(compatibili, r=>statoTemp.storico.ultimoRicetta[r.id]||0, ()=>0);
+        draft.primoSugoId=sugo.id;
+        const pr=await componiPrimoModulare(sugo, draft.primoCereale);
+        draft.primoId=pr?pr.id:null; draft.richiedeSfiziosaCompleta=null;
+      }
+    }
   }else if(cella==='sugo'){
     const cfg=CARBOIDRATI_PASTO[draft.primoCereale]; if(!cfg||!cfg.haPoolSughi)return;
     const [sughi,frigo]=await Promise.all([cercaComponentiModulari('sugo'),variantiFrigoPrioritarieRefresh()]);

@@ -222,15 +222,10 @@ async function preparaBudgetCarboidratiMotore(){
   return {config:cfg,residuo,totaleEsplicito:Object.values(residuo).reduce((a,b)=>a+b,0)};
 }
 
-async function scegliCarboidratoMotore(stato, forzaJolly){
-  const residuiOra=Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>n>0&&CARBOIDRATI_PASTO[k]);
-  const totaleResiduo=residuiOra.reduce((n,[,q])=>n+(Number(q)||0),0);
-  const slotResidui=Number.isFinite(stato.slotCarbAutomaticiResidui)?stato.slotCarbAutomaticiResidui:Infinity;
-  // Poco tempo è una preferenza forte, ma non può rendere matematicamente impossibile
-  // soddisfare quote carboidrati già scelte dall'utente. Usa pane/friselle soltanto
-  // quando, dopo questo slot, resterà ancora capacità sufficiente per tutte le quote.
-  const puoUsareJolly=!!forzaJolly && (totaleResiduo===0 || slotResidui>totaleResiduo);
-  if(puoUsareJolly){
+async function scegliCarboidratoMotore(stato, forzaJolly, giorno, categoria){
+  // "Poco tempo" resta un caso a parte, invariato: pane/friselle sono jolly,
+  // fattibili per definizione, non passano dal controllo di fattibilita generale.
+  if(forzaJolly){
     let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
     pool=pool.filter(k=>{ const c=CARBOIDRATI_PASTO[k]; return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2); });
     if(!pool.length) pool=['pane'];
@@ -241,20 +236,14 @@ async function scegliCarboidratoMotore(stato, forzaJolly){
     return scelta;
   }
 
-  // Quote esplicite Set: prima soddisfa le caselle ancora residue.
-  const residui=residuiOra;
-  let pool=residui.map(([k])=>k);
-  if(!pool.length){
-    pool=CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
+  const residui = Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>n>0&&CARBOIDRATI_PASTO[k]);
+  let pool = residui.length ? residui.map(([k])=>k) : CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
+
+  const fattibili=[];
+  for(const k of pool){
+    if(await motoreV10CarboidratoFattibile(k, giorno, categoria, stato)) fattibili.push(k);
   }
-  // Limiti 0-2 per i carboidrati esplicitamente limitati.
-  pool=pool.filter(k=>{
-    const c=CARBOIDRATI_PASTO[k];
-    if(!c.limitato) return true;
-    const cap=(c.tettoSettimanale||2);
-    return (stato.carboidratiUsati[k]||0)<cap;
-  });
-  if(!pool.length) pool=['pane'];
+  pool = fattibili.length ? fattibili : ['pane'];
 
   const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
   stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;

@@ -7538,6 +7538,15 @@
         "Taglia il pomodoro a pezzi e cuocilo in padella con l'olio a fuoco medio per 8-10 minuti, schiacciandolo leggermente.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Manteca il cereale nel sugo a fuoco vivace per un minuto."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca",
+        "riso",
+        "farro",
+        "orzo",
+        "cous_cous",
+        "polenta"
       ]
     },
     {
@@ -7565,6 +7574,15 @@
         "Taglia le verdure a dadini piccoli e saltale in padella con l'olio a fuoco medio-alto per 7-8 minuti.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Unisci il cereale alle verdure e manteca a fuoco vivace un minuto."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca",
+        "riso",
+        "farro",
+        "orzo",
+        "cous_cous",
+        "polenta"
       ]
     },
     {
@@ -7592,6 +7610,14 @@
         "Affetta i funghi e saltali in padella con l'olio e la cipolla tritata a fuoco alto 6-7 minuti.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Manteca il cereale con i funghi a fuoco vivace un minuto."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca",
+        "riso",
+        "farro",
+        "orzo",
+        "polenta"
       ]
     },
     {
@@ -7619,6 +7645,13 @@
         "Frulla il basilico con l'olio e il parmigiano fino a ottenere una crema.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Condisci il cereale con il pesto a fuoco spento, mescolando bene."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca",
+        "riso",
+        "farro",
+        "orzo"
       ]
     },
     {
@@ -7651,6 +7684,14 @@
         "Aggiungi il pomodoro a pezzi e cuoci 10 minuti.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Manteca nel ragù di verdure."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca",
+        "riso",
+        "farro",
+        "orzo",
+        "polenta"
       ]
     },
     {
@@ -7678,6 +7719,13 @@
         "Prepara un'emulsione con succo di limone, olio e prezzemolo tritato.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Condisci il cereale con l'emulsione a fuoco spento."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "riso",
+        "farro",
+        "orzo",
+        "cous_cous"
       ]
     },
     {
@@ -7710,6 +7758,10 @@
         "Aggiungi il pomodoro a pezzi e cuoci altri 5 minuti.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Manteca con il sugo e basilico fresco."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca"
       ]
     },
     {
@@ -7738,6 +7790,14 @@
         "Aggiungi i pomodorini a metà e cuoci altri 3 minuti.",
         "Cuoci il cereale scelto in acqua salata, scolalo al dente.",
         "Manteca con il condimento."
+      ],
+      "carboidratiCompatibili": [
+        "pasta",
+        "pasta_fresca",
+        "riso",
+        "farro",
+        "orzo",
+        "cous_cous"
       ]
     },
     {
