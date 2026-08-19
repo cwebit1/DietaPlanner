@@ -5445,9 +5445,7 @@ if(!cont) return;
 const draft = draftPasto[chiaveStato];
 if(!draft) return;
 let html = '';
-
 if(draft.tabAttiva === 'pasto'){
-/* --- PROTEINA --- */
 let protNome=''; let protRicetta=null;
 if(draft.proteinaId){ protRicetta=await getOne('ricette',draft.proteinaId); if(protRicetta) protNome=protRicetta.nome; }
 const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
@@ -5465,8 +5463,6 @@ html += '</div>';
 if(protNutri) html += '<div class="meta">'+Math.round(protNutri.kcal)+' kcal</div>';
 if(cottureAmmesse.length>1) html += '<div class="row" style="margin-top:6px;gap:6px;justify-content:flex-end;"><button class="small" data-pasto-cambia="cottura">Cambia cottura</button></div>';
 html += '</div>';
-
-/* --- CARBOIDRATO --- */
 const carbLabel = draft.primoCereale && CARBOIDRATI_PASTO[draft.primoCereale] ? CARBOIDRATI_PASTO[draft.primoCereale].label : '';
 let sugoNome = '';
 if(draft.primoSugoId){ const sugoR=await getOne('ricette',draft.primoSugoId); if(sugoR) sugoNome=sugoR.nome; }
@@ -5485,8 +5481,6 @@ html += '<div class="row" style="margin-top:6px;gap:6px;"><button class="small" 
 if(draft.primoSugoId) html += '<button class="small" data-pasto-cambia="sugo">Cambia sugo</button>';
 html += '</div>';
 html += '</div>';
-
-/* --- VERDURA --- */
 let contNome=''; let contRicetta=null;
 if(draft.contornoId){ contRicetta=await getOne('ricette',draft.contornoId); if(contRicetta) contNome=contRicetta.nome; }
 const contNutri=contRicetta?await nutrizionePerPersona(contRicetta):null;
@@ -5501,7 +5495,6 @@ html += '</div>';
 if(contNutri) html += '<div class="meta">'+Math.round(contNutri.kcal)+' kcal</div>';
 html += '<div class="row" style="margin-top:6px;gap:6px;"><button class="small" data-pasto-cambia="contorno">Cambia contorno</button></div>';
 html += '</div>';
-
 } else if(draft.tabAttiva === 'speciale'){
 const ricetta=draft.ricettaId?await getOne('ricette',draft.ricettaId):null;
 const nutri=ricetta?await nutrizionePerPersona(ricetta):null;
@@ -5514,7 +5507,6 @@ if(nutri) html += '<div class="meta">'+Math.round(nutri.kcal)+' kcal</div>';
 if(ricetta&&ricetta.piattoSpeciale) html += '<div class="meta" style="margin-top:4px;">🍽️ Pasto speciale: non genera compensazioni automatiche</div>';
 html += '</div>';
 }
-
 cont.innerHTML=html;
 cont.querySelectorAll('[data-pasto-info]').forEach(btn=>btn.addEventListener('click',async()=>{const r=await getOne('ricette',btn.dataset.pastoInfo);if(r)apriModalInfoNutrizionale(r);}));
 cont.querySelectorAll('[data-pasto-refresh]').forEach(btn=>btn.addEventListener('click',async()=>{await rigeneraPortataDraft(pasto,giorno,btn.dataset.pastoRefresh);renderPastoTabContenuto(pasto,giorno,elementId);}));
@@ -5577,8 +5569,10 @@ if(tipo==='carb'){
 await cambiaCellaDraft(pasto,giorno,'carb');
 const carb=CARBOIDRATI_PASTO[draft.primoCereale];
 if(carb&&carb.haPoolSughi) await cambiaCellaDraft(pasto,giorno,'sugo');
-}else if(tipo==='proteina'){await cambiaCellaDraft(pasto,giorno,'proteina');
-}else if(tipo==='contorno'){await cambiaCellaDraft(pasto,giorno,'contorno');
+}else if(tipo==='proteina'){
+await cambiaCellaDraft(pasto,giorno,'proteina');
+}else if(tipo==='contorno'){
+await cambiaCellaDraft(pasto,giorno,'contorno');
 }else if(tipo==='speciale'){
 const tutte=await getAll('ricette'); const speciali=tutte.filter(r=>r.piattoSpeciale&&!r.esclusa&&(r.tipoPortata||'unico')==='unico');
 const pool=speciali.filter(r=>r.id!==draft.ricettaId); if(speciali.length)draft.ricettaId=(typeof motoreMescola==='function'?motoreMescola(pool.length?pool:speciali):(pool.length?pool:speciali))[0].id;
@@ -5757,7 +5751,9 @@ voceCommittata.secondoId=draft.proteinaId||null;voceCommittata.contornoId=draft.
 voceCommittata.modo='unico';voceCommittata.ricettaId=draft.ricettaId||null;voceCommittata.primoId=voceCommittata.secondoId=voceCommittata.contornoId=null;voceCommittata.primoCereale=null;voceCommittata.primoSugoId=null;voceCommittata.cotturaSecondo=null;
 if(draft.tabAttiva==='speciale'){const r=await getOne('ricette',draft.ricettaId);voceCommittata.modalitaSpeciale=r&&r.piattoSpeciale?'cucinata':null;}else voceCommittata.modalitaSpeciale=null;
 }
-await put('piano',voceCommittata);draftPasto[chiaveStato]=null;renderBloccoCompleto(pasto,giorno,elementId);
+await put('piano',voceCommittata);
+draftPasto[chiaveStato]=null;
+renderBloccoCompleto(pasto,giorno,elementId);
 if(giorno===giornoSelezionato){renderNutrizioneGiorno();renderFrequenzeSettimana();renderIndicatoreFrutta();}
 aggiornaListaSpesaAutomatica(0);aggiornaListaSpesaAutomatica(1);
 }
