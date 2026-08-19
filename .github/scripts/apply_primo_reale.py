@@ -1,0 +1,312 @@
+from pathlib import Path
+import json, re
+
+# PARTE 1 — ricette.json
+p=Path('ricette.json')
+data=json.loads(p.read_text())
+compat={
+  'al pomodoro':['pasta','pasta_fresca','riso','farro','orzo','cous_cous','polenta'],
+  'al pesto di basilico':['pasta','pasta_fresca','riso','farro','orzo'],
+  'al ragù di verdure':['pasta','pasta_fresca','riso','farro','orzo','polenta'],
+  'alle verdure':['pasta','pasta_fresca','riso','farro','orzo','cous_cous','polenta'],
+  'ai funghi':['pasta','pasta_fresca','riso','farro','orzo','polenta'],
+  'al limone e prezzemolo':['pasta','riso','farro','orzo','cous_cous'],
+  'alla Norma':['pasta','pasta_fresca'],
+  'con zucchine e pomodorini':['pasta','pasta_fresca','riso','farro','orzo','cous_cous'],
+}
+found={k:0 for k in compat}
+for r in data.get('ricette',[]):
+  nome=r.get('nome')
+  if nome in compat:
+    r['carboidratiCompatibili']=compat[nome]
+    found[nome]+=1
+if any(v!=1 for v in found.values()):
+  raise SystemExit(f'PARTE 1: attesi 8 sughi univoci, trovati {found}')
+p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
+
+# PARTE 2 + 7 — index.html
+p=Path('index.html'); s=p.read_text()
+replacements={
+"gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:175, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:true },":"gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:175, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },",
+"pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:true },":"pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:false, soloSfiziosa:true },",
+"pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:65, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:true }":"pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:65, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false, soloSfiziosa:true }",
+}
+for old,new in replacements.items():
+  if s.count(old)!=1: raise SystemExit('PARTE 2 target non univoco: '+old[:40])
+  s=s.replace(old,new,1)
+
+old="""async function carboidratiAmmessiCambioDraft(giorno,pasto,draft){
+  return Object.keys(CARBOIDRATI_PASTO).filter(k=>k!==draft.primoCereale);
+}"""
+new="""async function carboidratiAmmessiCambioDraft(giorno,pasto,draft){
+  const stato = await creaStatoMotoreSettimana();
+  const categoria = draft.categoriaLarga || motoreCategoriaDiSottotipo(draft.sottotipoProposto) || null;
+  const out=[];
+  for(const chiave of Object.keys(CARBOIDRATI_PASTO)){
+    if(chiave===draft.primoCereale) continue;
+    if(await motoreV10CarboidratoFattibile(chiave, giorno, categoria, stato)) out.push(chiave);
+  }
+  return out;
+}"""
+if s.count(old)!=1: raise SystemExit('PARTE 7 carboidratiAmmessi target non trovato')
+s=s.replace(old,new,1)
+
+old="""  if(cella==='carb'){
+    const disponibili=await carboidratiAmmessiCambioDraft(giorno,pasto,draft);
+    if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile.');return;}
+    draft.primoCereale=(typeof motoreMescola==='function'?motoreMescola(disponibili):disponibili)[0];
+    const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
+    if(!cfg.haPoolSughi){draft.primoSugoId=null;draft.primoId=null;}
+    else if(draft.primoSugoId){const t=await getOne('ricette',draft.primoSugoId);if(t){const pr=await componiPrimoModulare(t,draft.primoCereale);draft.primoId=pr?pr.id:null;}}
+  }else if(cella==='sugo'){"""
+new="""  if(cella==='carb'){
+    const disponibili=await carboidratiAmmessiCambioDraft(giorno,pasto,draft);
+    if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile.');return;}
+    draft.primoCereale=(typeof motoreMescola==='function'?motoreMescola(disponibili):disponibili)[0];
+    const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
+
+    if(cfg.jolly){
+      draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=null;
+    }else if(cfg.soloSfiziosa){
+      draft.primoId=null; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=draft.primoCereale;
+    }else{
+      const statoTemp = await creaStatoMotoreSettimana();
+      const primoReale = await motoreV10ScegliPrimoReale(draft.primoCereale, statoTemp, {});
+      if(primoReale){
+        draft.primoId=primoReale.id; draft.primoSugoId=null; draft.richiedeSfiziosaCompleta=null;
+      }else{
+        const sughi = await cercaComponentiModulari('sugo');
+        const compatibili = sughi.filter(s=>(s.carboidratiCompatibili||[]).includes(draft.primoCereale));
+        const sugo = scegliMenoRecenteMotore(compatibili, r=>statoTemp.storico.ultimoRicetta[r.id]||0, ()=>0);
+        draft.primoSugoId=sugo.id;
+        const pr=await componiPrimoModulare(sugo, draft.primoCereale);
+        draft.primoId=pr?pr.id:null; draft.richiedeSfiziosaCompleta=null;
+      }
+    }
+  }else if(cella==='sugo'){"""
+if s.count(old)!=1: raise SystemExit('PARTE 7 cambiaCellaDraft target non trovato')
+s=s.replace(old,new,1)
+p.write_text(s)
+
+# PARTE 3 — motor-v10.js
+p=Path('motor-v10.js'); s=p.read_text()
+if 'function motoreV10ScegliPrimoReale(' in s or 'window.motoreV10ScegliPrimoReale' in s:
+  raise SystemExit('PARTE 3 già presente')
+marker="const MOTORE_V10_MAX_SPECIALI = 2;\n"
+block=r'''
+
+/* Sceglie un primo REALE dal ricettario per il carboidrato dato.
+   Zero composizione: se non trova un match, ritorna null e basta. */
+async function motoreV10ScegliPrimoReale(carb, stato, preferenze){
+  const cfg = CARBOIDRATI_PASTO[carb];
+  if(!cfg) return null;
+  const target = (cfg.ingrediente||'').toLowerCase();
+  const [tutte, varianti] = await Promise.all([getAll('ricette'), getAll('varianti')]);
+  const vById = new Map(varianti.map(v=>[v.id,v]));
+
+  let pool = tutte.filter(r=>{
+    if(r.esclusa || (r.tipoPortata||'unico')!=='primo') return false;
+    const nomi = (r.ingredienti||[]).map(i=>{
+      if(i.variantId) return (vById.get(i.variantId)?.nome||'').toLowerCase();
+      return (i.nomeLibero||'').toLowerCase();
+    });
+    return target && nomi.includes(target);
+  });
+  if(!pool.length) return null;
+
+  const prefIds = new Set(preferenze?.ingredientiPreferitiVariantIds || []);
+  if(prefIds.size){
+    const conPreferenza = pool.filter(r=>(r.ingredienti||[]).some(i=>i.variantId && prefIds.has(i.variantId)));
+    if(conPreferenza.length) pool = conPreferenza;
+  }
+
+  return scegliMenoRecenteMotore(pool, r=>stato.storico.ultimoRicetta[r.id]||0, ()=>0);
+}
+
+/* UNICA fonte di verità sulla fattibilità di un carboidrato. */
+async function motoreV10CarboidratoFattibile(carb, giorno, categoria, stato){
+  const cfg = CARBOIDRATI_PASTO[carb];
+  if(!cfg) return false;
+
+  if(cfg.limitato){
+    const attivato = ((stato.budgetCarb && stato.budgetCarb.config && stato.budgetCarb.config[carb]) || 0) > 0;
+    if(!attivato) return false;
+    const usato = await contaCarboidratoSettimana(carb);
+    if(usato >= (cfg.tettoSettimanale||2)) return false;
+  }
+
+  if(cfg.jolly) return true;
+
+  if(cfg.soloSfiziosa){
+    if(!categoria) return false;
+    const tutte = await getAll('ricette');
+    return tutte.some(r=>!r.esclusa && !r.piattoSpeciale && (r.tipoPortata||'unico')==='unico'
+      && motoreCategoriaDiSottotipo(r.gruppoProteico)===categoria);
+  }
+
+  const primoReale = await motoreV10ScegliPrimoReale(carb, stato, {});
+  if(primoReale) return true;
+
+  if(cfg.haPoolSughi){
+    const sughi = await cercaComponentiModulari('sugo');
+    return sughi.some(s=>(s.carboidratiCompatibili||[]).includes(carb));
+  }
+  return false;
+}
+
+window.motoreV10ScegliPrimoReale = motoreV10ScegliPrimoReale;
+window.motoreV10CarboidratoFattibile = motoreV10CarboidratoFattibile;
+'''
+if s.count(marker)!=1: raise SystemExit('PARTE 3 marker non trovato')
+s=s.replace(marker,marker+block,1)
+p.write_text(s)
+
+# PARTE 4 — motor-v9-2.js
+p=Path('motor-v9-2.js'); s=p.read_text()
+pattern=r"async function scegliCarboidratoMotore\(stato, forzaJolly\)\{.*?\n\}\n\n/\* Override del compositore"
+new=r'''async function scegliCarboidratoMotore(stato, forzaJolly, giorno, categoria){
+  // "Poco tempo" resta un caso a parte, invariato: pane/friselle sono jolly,
+  // fattibili per definizione, non passano dal controllo di fattibilita generale.
+  if(forzaJolly){
+    let pool=['pane','friselle'].filter(k=>CARBOIDRATI_PASTO[k]);
+    pool=pool.filter(k=>{ const c=CARBOIDRATI_PASTO[k]; return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2); });
+    if(!pool.length) pool=['pane'];
+    const nonUsati=pool.filter(k=>(stato.carboidratiUsati[k]||0)===0);
+    if(nonUsati.length) pool=nonUsati;
+    const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
+    stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
+    return scelta;
+  }
+
+  const residui = Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>n>0&&CARBOIDRATI_PASTO[k]);
+  let pool = residui.length ? residui.map(([k])=>k) : CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
+
+  const fattibili=[];
+  for(const k of pool){
+    if(await motoreV10CarboidratoFattibile(k, giorno, categoria, stato)) fattibili.push(k);
+  }
+  pool = fattibili.length ? fattibili : ['pane'];
+
+  const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
+  stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
+  if(stato.budgetCarb.residuo[scelta]>0) stato.budgetCarb.residuo[scelta]--;
+  return scelta;
+}
+
+/* Override del compositore'''
+s2,n=re.subn(pattern,new,s,count=1,flags=re.S)
+if n!=1: raise SystemExit(f'PARTE 4 funzione non trovata ({n})')
+p.write_text(s2)
+
+# PARTE 5 + 6 — motor-v9-3.js
+p=Path('motor-v9-3.js'); s=p.read_text()
+pattern=r"componiPastoModulare = async function\(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId, forzaJolly, preferenzeMotore, statoMotore\)\{.*?\n\};"
+new=r'''componiPastoModulare = async function(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId, forzaJolly, preferenzeMotore, statoMotore){
+  preferenzeMotore=preferenzeMotore||{};
+  if(!statoMotore){
+    statoMotore={
+      storico:await costruisciStoricoConsumatiMotore(),
+      ricetteUsateGenerazione:new Set(),
+      preferiteVerdureUsate:new Set(),
+      carboidratiUsati:{},
+      budgetCarb:await preparaBudgetCarboidratiMotore()
+    };
+  }
+  const categoriaLarga = gruppoProteico ? motoreCategoriaDiSottotipo(gruppoProteico) : null;
+  const carb=await scegliCarboidratoMotore(statoMotore,!!forzaJolly,giorno,categoriaLarga);
+  const carbCfg=CARBOIDRATI_PASTO[carb];
+  if(!carbCfg) return null;
+
+  if(carbCfg.soloSfiziosa){
+    return {soloSfiziosa:true, primoCarboidrato:carb, categoriaLarga};
+  }
+
+  let sugo=null, primoRicettaRealeId=null;
+  if(!carbCfg.jolly){
+    const primoReale = await motoreV10ScegliPrimoReale(carb, statoMotore, preferenzeMotore);
+    if(primoReale){
+      primoRicettaRealeId = primoReale.id;
+    }else if(carbCfg.haPoolSughi){
+      const tuttiSughi = await cercaComponentiModulari('sugo');
+      const compatibili = tuttiSughi.filter(s=>(s.carboidratiCompatibili||[]).includes(carb));
+      const nonUsati = compatibili.filter(s=>s.id!==escludiSugoId);
+      const pool = nonUsati.length?nonUsati:compatibili;
+      sugo = scegliMenoRecenteMotore(pool, r=>statoMotore.storico.ultimoRicetta[r.id]||0, ()=>0);
+    }
+  }
+
+  const proteina=gruppoProteico ? await scegliProteinaModulareMotore(gruppoProteico,statoMotore,escludiProteinaId) : null;
+  const contorno=await scegliContornoMotore(giorno,statoMotore,preferenzeMotore,escludiContornoId);
+  if(!proteina || !contorno) return null;
+
+  const cottura=scegliCotturaStandard(proteina.gruppoProteico,proteina.nome);
+  return {
+    primoRicettaRealeId,
+    primoNome: primoRicettaRealeId ? null : (sugo?componiNomePrimoModulare(carbCfg.label,sugo.nome):carbCfg.label),
+    primoCarboidrato:carb,
+    primoSugoId:sugo?sugo.id:null,
+    primoEJolly:!!carbCfg.jolly,
+    secondoNome:componiNomeSecondoModulare(proteina.nome,cottura,contorno.nome),
+    proteinaId:proteina.id,
+    cottura,
+    contornoId:contorno.id
+  };
+};'''
+s2,n=re.subn(pattern,new,s,count=1,flags=re.S)
+if n!=1: raise SystemExit(f'PARTE 5 funzione non trovata ({n})')
+s=s2
+
+pattern=r"async function generaPortateMotore\(giorno,pasto,cella,preferenze,stato\)\{.*?\n\}\n\n/\* Generatore unico v9"
+new=r'''async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
+  const categoria=cella.gruppoProteicoLargo;
+  const sottotipo=await scegliSottotipoMotore(categoria,stato);
+  const pocoTempo=(pasto==='pranzo'&&preferenze.pocoTempoPranzo)||(pasto==='cena'&&preferenze.pocoTempoCena);
+  const preferenzeSlot=Object.assign({},preferenze,{_pastoCorrente:pasto});
+  const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenzeSlot,stato);
+  if(!esito) return {voce:null,errore:`Nessuna combinazione completa per ${giorno} ${pasto} (${categoria}/${sottotipo})`};
+
+  if(esito.soloSfiziosa){
+    const draftFittizio={categoriaLarga:categoria, sottotipoProposto:sottotipo, contornoId:null};
+    const sfiziosa=await trovaPiattoUnicoCompatibileDraft(pasto, giorno, draftFittizio, null);
+    if(!sfiziosa) return {voce:null,errore:`Sfiziosa risultata indisponibile a runtime per ${giorno} ${pasto} — verificare coerenza dati`};
+    return {
+      voce:{
+        id:giorno+'_'+pasto, modo:'unico', fascia:sfiziosa.fascia||'medio', porzioni:1,
+        ricettaId:sfiziosa.id, primoId:null, secondoId:null, contornoId:null,
+        categoriaLargaE1:categoria, sottotipoProteicoMotore:sottotipo,
+        origineCategoriaMotore:cella.origine, origine:'motore'
+      },
+      errore:null
+    };
+  }
+
+  let primoId = esito.primoRicettaRealeId || null;
+  if(pocoTempo && !primoId && (esito.primoCarboidrato==='pane'||esito.primoCarboidrato==='friselle')){
+    const rapido=await scegliPrimoVelocePerCarbMotore(esito.primoCarboidrato,stato);
+    if(rapido) primoId=rapido.id;
+  }
+  if(!primoId && esito.primoSugoId){
+    const template=await getOne('ricette',esito.primoSugoId);
+    if(template){
+      const composto=await componiPrimoModulare(template,esito.primoCarboidrato);
+      if(composto) primoId=composto.id;
+    }
+  }
+  return {
+    voce:{
+      id:giorno+'_'+pasto, modo:'multi', fascia:'facile', porzioni:1,
+      primoId, primoCereale:esito.primoCarboidrato, primoSugoId:esito.primoSugoId||null,
+      secondoId:esito.proteinaId, contornoId:esito.contornoId, cotturaSecondo:esito.cottura||null,
+      ricettaId:null, categoriaLargaE1:categoria, sottotipoProteicoMotore:sottotipo,
+      origineCategoriaMotore:cella.origine, pocoTempoMotore:!!pocoTempo, origine:'motore'
+    },
+    errore:null
+  };
+}
+
+/* Generatore unico v9'''
+s2,n=re.subn(pattern,new,s,count=1,flags=re.S)
+if n!=1: raise SystemExit(f'PARTE 6 funzione non trovata ({n})')
+p.write_text(s2)
+
+json.loads(Path('ricette.json').read_text())
