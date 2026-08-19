@@ -476,23 +476,18 @@ stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
 if(stato.budgetCarb.residuo[scelta]>0) stato.budgetCarb.residuo[scelta]--;
 return scelta;
 }
-
-const residui = Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>Number(n)>0&&CARBOIDRATI_PASTO[k]);
-let pool = residui.length ? residui.map(([k])=>k) : CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
-
+const residui=Object.entries(stato.budgetCarb.residuo).filter(([k,n])=>Number(n)>0&&CARBOIDRATI_PASTO[k]);
+let pool=residui.length?residui.map(([k])=>k):CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
 pool=pool.filter(k=>{
 const c=CARBOIDRATI_PASTO[k];
-return !c.limitato || (stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2);
+return !c.limitato||(stato.carboidratiUsati[k]||0)<(c.tettoSettimanale||2);
 });
-
 if(!pool.length){
 pool=CARBOIDRATI_ROTAZIONE.filter(k=>CARBOIDRATI_PASTO[k]);
 }
-
 if(!pool.length){
 pool=['pane'];
 }
-
 const scelta=scegliMenoRecenteMotore(pool,k=>stato.storico.ultimoCarb[k]||0,k=>stato.carboidratiUsati[k]||0);
 stato.carboidratiUsati[scelta]=(stato.carboidratiUsati[scelta]||0)+1;
 if(stato.budgetCarb.residuo[scelta]>0) stato.budgetCarb.residuo[scelta]--;
@@ -628,49 +623,33 @@ async function scegliPrimoVelocePerCarbMotore(carb,stato){
 }
 
 async function generaPortateMotore(giorno,pasto,cella,preferenze,stato){
-  const categoria=cella.gruppoProteicoLargo;
-  const sottotipo=await scegliSottotipoMotore(categoria,stato);
-  const pocoTempo=(pasto==='pranzo'&&preferenze.pocoTempoPranzo)||(pasto==='cena'&&preferenze.pocoTempoCena);
-  const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenze,stato);
-  if(!esito) return {voce:null,errore:`Nessuna combinazione completa per ${giorno} ${pasto} (${categoria}/${sottotipo})`};
-
-  if(esito.soloSfiziosa){
-    const draftFittizio={categoriaLarga:categoria, sottotipoProposto:sottotipo, contornoId:null};
-    const sfiziosa=await trovaPiattoUnicoCompatibileDraft(pasto, giorno, draftFittizio, null);
-    if(!sfiziosa) return {voce:null,errore:`Sfiziosa risultata indisponibile a runtime per ${giorno} ${pasto} — verificare coerenza dati`};
-    return {
-      voce:{
-        id:giorno+'_'+pasto, modo:'unico', fascia:sfiziosa.fascia||'medio', porzioni:1,
-        ricettaId:sfiziosa.id, primoId:null, secondoId:null, contornoId:null,
-        categoriaLargaE1:categoria, sottotipoProteicoMotore:sottotipo,
-        origineCategoriaMotore:cella.origine, origine:'motore'
-      },
-      errore:null
-    };
-  }
-
-  let primoId = esito.primoRicettaRealeId || null;
-  if(pocoTempo && !primoId){
-    const rapido=await scegliPrimoVelocePaneFriselle();
-    if(rapido) primoId=rapido.id;
-  }
-  if(!primoId && esito.primoSugoId){
-    const template=await getOne('ricette',esito.primoSugoId);
-    if(template){
-      const composto=await componiPrimoModulare(template,esito.primoCarboidrato);
-      if(composto) primoId=composto.id;
-    }
-  }
-  return {
-    voce:{
-      id:giorno+'_'+pasto, modo:'multi', fascia:'facile', porzioni:1,
-      primoId, primoCereale:esito.primoCarboidrato, primoSugoId:esito.primoSugoId||null,
-      secondoId:esito.proteinaId, contornoId:esito.contornoId, cotturaSecondo:esito.cottura||null,
-      ricettaId:null, categoriaLargaE1:categoria, sottotipoProteicoMotore:sottotipo,
-      origineCategoriaMotore:cella.origine, pocoTempoMotore:!!pocoTempo, origine:'motore'
-    },
-    errore:null
-  };
+const categoria=cella.gruppoProteicoLargo;
+const sottotipo=await scegliSottotipoMotore(categoria,stato);
+const pocoTempo=(pasto==='pranzo'&&preferenze.pocoTempoPranzo)||(pasto==='cena'&&preferenze.pocoTempoCena);
+const esito=await componiPastoModulare(sottotipo,giorno,null,null,null,pocoTempo,preferenze,stato);
+if(!esito) return {voce:null,errore:'Nessuna combinazione completa per '+giorno+' '+pasto+' ('+categoria+'/'+sottotipo+')'};
+let primoId=esito.primoRicettaRealeId||null;
+if(pocoTempo&&!primoId){
+const rapido=await scegliPrimoVelocePaneFriselle();
+if(rapido) primoId=rapido.id;
+}
+if(!primoId&&esito.primoSugoId){
+const template=await getOne('ricette',esito.primoSugoId);
+if(template){
+const composto=await componiPrimoModulare(template,esito.primoCarboidrato);
+if(composto) primoId=composto.id;
+}
+}
+return {
+voce:{
+id:giorno+'_'+pasto,modo:'multi',fascia:'facile',porzioni:1,
+primoId,primoCereale:esito.primoCarboidrato,primoSugoId:esito.primoSugoId||null,
+secondoId:esito.proteinaId,contornoId:esito.contornoId,cotturaSecondo:esito.cottura||null,
+ricettaId:null,categoriaLargaE1:categoria,sottotipoProteicoMotore:sottotipo,
+origineCategoriaMotore:cella.origine,pocoTempoMotore:!!pocoTempo,origine:'motore'
+},
+errore:null
+};
 }
 
 /* Generatore unico v9. Non usa più E2 né il 50/50 unico/multi.
@@ -1576,7 +1555,7 @@ trovaPiattoUnicoCompatibileDraft = async function(pasto,giorno,draft,escludiId){
     const mancaSoloCarb=!a.carbKeys.length;
     // Il layer alimentare viene prima della ricetta: un carboidrato già deciso non
     // può essere sostituito col jolly pane solo per adattarsi a un record unico.
-    if(mancaSoloCarb&&targetCarbKey&&targetCarbKey!=='pane')continue;
+    if(mancaSoloCarb&&targetCarbKey&&targetCarbKey!=='pane'&&targetCarbKey!=='patate')continue;
     let score=mancaSoloCarb?-25:0;
     score+=Math.min(await motoreV10ScoreFrigoRicetta(r), 15);
     if(targetCarbKey&&a.carbKeys.includes(targetCarbKey))score+=100;
@@ -1690,7 +1669,6 @@ Nessun ramo soloSfiziosa nella composizione automatica.
 ========================================================= */
 componiPastoModulare = async function(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId, forzaJolly, preferenzeMotore, statoMotore){
 preferenzeMotore=preferenzeMotore||{};
-
 if(!statoMotore){
 statoMotore={
 storico:await costruisciStoricoConsumatiMotore(),
@@ -1700,65 +1678,52 @@ carboidratiUsati:{},
 budgetCarb:await preparaBudgetCarboidratiMotore()
 };
 }
+const categoriaLarga=gruppoProteico?motoreCategoriaDiSottotipo(gruppoProteico):null;
 
-const categoriaLarga = gruppoProteico ? motoreCategoriaDiSottotipo(gruppoProteico) : null;
+/* 1. PRIMA LA PROTEINA */
+const proteina=gruppoProteico?await scegliProteinaModulareMotore(gruppoProteico,statoMotore,escludiProteinaId):null;
+if(gruppoProteico&&!proteina) return null;
 
-/* 1. Prima la proteina */
-const proteina = gruppoProteico ? await scegliProteinaModulareMotore(gruppoProteico, statoMotore, escludiProteinaId) : null;
-if(gruppoProteico && !proteina) return null;
-
-/* 2. Poi il carboidrato, che si adatta */
+/* 2. POI IL CARBOIDRATO — si adatta alla proteina */
 let carb;
-
 if(gruppoProteico==='affettati'){
 carb='pane';
 statoMotore.carboidratiUsati['pane']=(statoMotore.carboidratiUsati['pane']||0)+1;
 if(statoMotore.budgetCarb.residuo['pane']>0) statoMotore.budgetCarb.residuo['pane']--;
 }else{
-carb=await scegliCarboidratoMotore(statoMotore, !!forzaJolly, giorno, categoriaLarga);
+carb=await scegliCarboidratoMotore(statoMotore,!!forzaJolly,giorno,categoriaLarga);
 }
-
 const carbCfg=CARBOIDRATI_PASTO[carb];
 if(!carbCfg) return null;
 
-/* 3. Realizzazione del carboidrato.
-Niente ramo soloSfiziosa.
-Se esiste un primo reale con quel carboidrato, usa quello.
-Altrimenti, se il carboidrato ha pool sughi, sceglie un sugo compatibile. */
-let sugo=null;
-let primoRicettaRealeId=null;
-
-const primoReale = await motoreV10ScegliPrimoReale(carb, statoMotore, preferenzeMotore);
+/* 3. REALIZZAZIONE DEL CARBOIDRATO — composizione DOPO la scelta */
+let sugo=null,primoRicettaRealeId=null;
+const primoReale=await motoreV10ScegliPrimoReale(carb,statoMotore,preferenzeMotore);
 if(primoReale){
 primoRicettaRealeId=primoReale.id;
 }else if(carbCfg.haPoolSughi){
-const tuttiSughi = await cercaComponentiModulari('sugo');
-const compatibili = tuttiSughi.filter(s=>(s.carboidratiCompatibili||[]).includes(carb));
-const nonUsati = compatibili.filter(s=>s.id!==escludiSugoId);
-const pool = nonUsati.length ? nonUsati : compatibili;
-sugo = scegliMenoRecenteMotore(pool, r=>statoMotore.storico.ultimoRicetta[r.id]||0, ()=>0);
+const tuttiSughi=await cercaComponentiModulari('sugo');
+const compatibili=tuttiSughi.filter(s=>(s.carboidratiCompatibili||[]).includes(carb));
+const nonUsati=compatibili.filter(s=>s.id!==escludiSugoId);
+const pool=nonUsati.length?nonUsati:compatibili;
+sugo=scegliMenoRecenteMotore(pool,r=>statoMotore.storico.ultimoRicetta[r.id]||0,()=>0);
 }
 
-/* 4. Verdura: resta il sistema esistente */
+/* 4. VERDURA — mantiene il sistema esistente */
 const contorno=await scegliContornoMotore(giorno,statoMotore,preferenzeMotore,escludiContornoId);
 if(!contorno) return null;
 
-/* 5. Cottura della proteina */
-const cottura=scegliCotturaStandard(proteina.gruppoProteico, proteina.nome);
-
-/* Compatibilità con il codice esistente:
-primoEJolly viene mantenuto solo come flag tecnico per far accettare
-al flusso attuale i carboidrati senza primo composto. */
-const senzaPrimo = !primoRicettaRealeId && !sugo;
+/* 5. COTTURA */
+const cottura=proteina?scegliCotturaStandard(proteina.gruppoProteico,proteina.nome):null;
 
 return {
 primoRicettaRealeId,
-primoNome: primoRicettaRealeId ? null : (sugo ? componiNomePrimoModulare(carbCfg.label,sugo.nome) : carbCfg.label),
+primoNome:primoRicettaRealeId?null:(sugo?componiNomePrimoModulare(carbCfg.label,sugo.nome):carbCfg.label),
 primoCarboidrato:carb,
-primoSugoId:sugo ? sugo.id : null,
-primoEJolly:senzaPrimo,
-secondoNome:componiNomeSecondoModulare(proteina.nome,cottura,contorno.nome),
-proteinaId:proteina.id,
+primoSugoId:sugo?sugo.id:null,
+primoEJolly:!primoRicettaRealeId&&!sugo,
+secondoNome:proteina?componiNomeSecondoModulare(proteina.nome,cottura,contorno.nome):'',
+proteinaId:proteina?proteina.id:null,
 cottura,
 contornoId:contorno.id
 };
