@@ -2580,9 +2580,14 @@ async function renderSetPreferenzeMenu(){
     elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setTempo; if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;} else tempo[k]=!tempo[k]; await put('impostazioni',{chiave:'setPocoTempo',valore:tempo}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
   }
   const recV=await getOne('impostazioni','setVerdurePreferite'); const pref=new Set(recV&&recV.valore?recV.valore:[]);
-  const stag=verdureDiStagione(new Date()); const elV=document.getElementById('setVerdurePreferiteLista');
+  const stag=verdureDiStagione(new Date());
+  const invPref=await getAll('inventario'); const varPref=await getAll('varianti');
+  const inCasaPref=new Set(invPref.filter(i=>i.stato==='disponibile'&&i.quantita>0).map(i=>i.variantId));
+  const nomiInCasa=varPref.filter(v=>inCasaPref.has(v.id)).map(v=>v.nome);
+  const listaPref=Array.from(new Set([...stag,...nomiInCasa]));
+  const elV=document.getElementById('setVerdurePreferiteLista');
   if(elV){
-    const stagOrd=[...stag].sort((a,b)=>a.localeCompare(b,'it')); elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
+    const stagOrd=listaPref.sort((a,b)=>a.localeCompare(b,'it')); elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
     elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{ const v=b.dataset.setVerdPref; pref.has(v)?pref.delete(v):pref.add(v); await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
     elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{ await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]}); await renderMantieniSwipe(renderSetPreferenzeMenu); });
   }
