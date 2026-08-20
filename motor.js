@@ -1748,3 +1748,51 @@ cottura,
 contornoId:contorno.id
 };
 };
+
+/* BATCH 2 — storico consumi da log immutabile consumoGiorno */
+costruisciStoricoConsumatiMotore = async function(){
+const [log,ricette,varianti,ingredienti]=await Promise.all([getAll('consumoGiorno'),getAll('ricette'),getAll('varianti'),getAll('ingredienti')]);
+const ricById=new Map(ricette.map(r=>[r.id,r]));
+const varById=new Map(varianti.map(v=>[v.id,v]));
+const baseById=new Map(ingredienti.map(i=>[i.id,i]));
+const ultimoRicetta={},ultimoCarb={},ultimoVerdura={},sottotipiTotali={},ultimoSottotipo={},ultimoCategoriaProteica={};
+for(const rec of log){
+const ts=Date.parse((rec.giorno||'')+'T12:00:00')||0;
+if(rec.primoCereale)ultimoCarb[rec.primoCereale]=Math.max(ultimoCarb[rec.primoCereale]||0,ts);
+for(const rid of (rec.ricettaIds||[])){
+ultimoRicetta[rid]=Math.max(ultimoRicetta[rid]||0,ts);
+const r=ricById.get(rid);if(!r)continue;
+if(r.gruppoProteico){
+sottotipiTotali[r.gruppoProteico]=(sottotipiTotali[r.gruppoProteico]||0)+1;
+ultimoSottotipo[r.gruppoProteico]=Math.max(ultimoSottotipo[r.gruppoProteico]||0,ts);
+const macro=motoreCategoriaDiSottotipo(r.gruppoProteico);
+if(macro)ultimoCategoriaProteica[macro]=Math.max(ultimoCategoriaProteica[macro]||0,ts);
+}
+for(const ing of (r.ingredienti||[])){
+if(!ing.variantId)continue;
+const v=varById.get(ing.variantId),b=v?baseById.get(v.ingredienteId):null;
+if(b&&b.gruppo==='verdura')ultimoVerdura[v.id]=Math.max(ultimoVerdura[v.id]||0,ts);
+}
+}
+}
+return {ultimoRicetta,ultimoCarb,ultimoVerdura,sottotipiTotali,ultimoSottotipo,ultimoCategoriaProteica};
+};
+async function motoreV10ConsumiDaLog(){
+const [log,ricette]=await Promise.all([getAll('consumoGiorno'),getAll('ricette')]);
+const rById=new Map(ricette.map(r=>[r.id,r]));
+const gruppi={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
+const sottotipi={carne_rossa:0,affettati:0,pesce_grande:0,pesce_conservato:0};
+const giorni=new Set(giorniSettimana(0));
+for(const rec of log){
+if(!giorni.has(rec.giorno))continue;
+for(const rid of (rec.ricettaIds||[])){
+const r=rById.get(rid);if(!r||!r.gruppoProteico||r.piattoSpeciale)continue;
+const s=r.gruppoProteico,m=motoreCategoriaDiSottotipo(s);
+if(gruppi[m]!==undefined)gruppi[m]++;
+if(sottotipi[s]!==undefined)sottotipi[s]++;
+}
+}
+return {gruppi,sottotipi};
+}
+if(typeof getConsumiProteiciSettimanaConsumati==='function')getConsumiProteiciSettimanaConsumati=()=>motoreV10ConsumiDaLog();
+
