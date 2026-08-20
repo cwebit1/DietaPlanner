@@ -1045,49 +1045,54 @@ costruisciStoricoConsumatiMotore = async function(){
 
 /* Ripristina insieme: deperibilita v17 + verdura ricorrente HARD v30. */
 scegliContornoMotore = async function(giorno,stato,preferenze,escludiId){
-preferenze=preferenze||{};
 const [ricette,varianti,ingredienti,inventario]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),getAll('inventario')]);
 const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};
-const off=new Set(preferenze.verdureDisattivate||[]);
-const prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);
-const qty={};
-for(const it of (inventario||[])){
-if(it.stato!=='disponibile'||!(it.quantita>0)) continue;
-qty[it.variantId]=(qty[it.variantId]||0)+it.quantita;
+const off=new Set(preferenze.verdureDisattivate||[]), prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);
+// grammi realmente disponibili in frigo per variante
+const grammiPerVariante={};
+for(const item of (inventario||[])){
+if(item.stato==='disponibile'&&item.quantita>0) grammiPerVariante[item.variantId]=(grammiPerVariante[item.variantId]||0)+item.quantita;
 }
-const candidati=[];
+let candidati=[];
 for(const r of ricette){
-if(r.esclusa||r.id===escludiId) continue;
-if(!(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno')) continue;
-const info=await motoreInfoVerduraContorno(r,cache);
-if(!info||off.has(info.variantId)) continue;
-candidati.push({r,info,q:qty[info.variantId]||0});
+if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId) continue;
+if(r.gruppoProteico) continue;
+const info=await motoreInfoVerduraContorno(r,cache); if(!info||off.has(info.variantId)) continue;
+candidati.push({r,info,grammi:grammiPerVariante[info.variantId]||0});
 }
 if(!candidati.length) return null;
-// HARD: verdura ricorrente programmata dall'utente
 const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
 const slot=(preferenze._pastoCorrente||'')+'_'+idx;
-if(preferenze.verduraRicorrenteVariantId&&(preferenze.verduraRicorrentePasti||[]).includes(slot)){
+if(preferenze.verduraRicorrenteVariantId && (preferenze.verduraRicorrentePasti||[]).includes(slot)){
 const hard=candidati.filter(x=>x.info.variantId===preferenze.verduraRicorrenteVariantId);
-if(hard.length){const s=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0); if(s) return s.r;}
+if(hard.length){
+const scelta=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
+return scelta?scelta.r:null;
 }
-stato.contorniUsatiOggi=stato.contorniUsatiOggi||[];
-stato.contorniUsatiSett=stato.contorniUsatiSett||{};
+}
+if(typeof verdureDiStagione==='function'){
+const stag=new Set(verdureDiStagione(new Date(giorno+'T12:00:00'))||[]);
+if(stag.size){
+const filtrati=candidati.filter(x=>x.info.tier==='confezionato'||x.info.tier==='surgelato'||stag.has(x.info.nome));
+if(filtrati.length) candidati=filtrati;
+}
+}
+const ordine=(typeof ordineVerdureGiornoV17==='function')?ordineVerdureGiornoV17(idx):['fresco','fresco_duraturo','confezionato','surgelato'];
+const usateSett=stato.contorniUsatiSettimana||(stato.contorniUsatiSettimana=new Set());
 const score=x=>{
-let p=0;
-const porz=(/insalata/i.test(x.info.nome))?70:200;
-if(x.q>=porz) p+=1000; else if(x.q>0) p+=450;
-if(prefIds.has(x.info.variantId)) p+=200;
-if(x.info.tier==='fresco') p+=100; else if(x.info.tier==='fresco_duraturo') p+=40;
-if(stato.contorniUsatiOggi.includes(x.info.variantId)) p-=5000;
-p-=300*(stato.contorniUsatiSett[x.info.variantId]||0);
-return p;
+let s=0;
+const ti=ordine.indexOf(x.info.tier); s-=(ti>=0?ti:9)*100;
+if(x.grammi>0) s+=500;
+if(prefIds.has(x.info.variantId)) s+=250;
+if(!usateSett.has(x.info.variantId)) s+=150;
+const gg=(Date.now()-(stato.storico.ultimoVerdura[x.info.variantId]||0))/86400000;
+s+=Math.min(gg,30);
+return s;
 };
 candidati.sort((a,b)=>score(b)-score(a));
-const scelto=candidati[0];
-stato.contorniUsatiOggi.push(scelto.info.variantId);
-stato.contorniUsatiSett[scelto.info.variantId]=(stato.contorniUsatiSett[scelto.info.variantId]||0)+1;
-return scelto.r;
+const scelta=candidati[0];
+usateSett.add(scelta.info.variantId);
+return scelta.r;
 };
 
 async function motoreV10CategoriaVoce(voce,ricById){
