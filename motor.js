@@ -638,6 +638,7 @@ const template=await getOne('ricette',esito.primoSugoId);
 if(template){
 const composto=await componiPrimoModulare(template,esito.primoCarboidrato);
 if(composto) primoId=composto.id;
+if(primoId){ stato.ricetteUsateGenerazione=stato.ricetteUsateGenerazione||new Set(); stato.ricetteUsateGenerazione.add(primoId); }
 }
 }
 return {
@@ -1044,49 +1045,49 @@ costruisciStoricoConsumatiMotore = async function(){
 
 /* Ripristina insieme: deperibilita v17 + verdura ricorrente HARD v30. */
 scegliContornoMotore = async function(giorno,stato,preferenze,escludiId){
-  const [ricette,varianti,ingredienti]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti')]);
-  const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};
-  const off=new Set(preferenze.verdureDisattivate||[]), prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);
-  let candidati=[];
-  for(const r of ricette){
-    if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId) continue;
-    if(r.gruppoProteico) continue; // il secondo copre già la proteina, il contorno non può portarne un'altra
-    const info=await motoreInfoVerduraContorno(r,cache); if(!info||off.has(info.variantId)) continue;
-    candidati.push({r,info});
-  }
-  if(!candidati.length) return null;
-  const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
-  const slot=(preferenze._pastoCorrente||'')+'_'+idx;
-  if(preferenze.verduraRicorrenteVariantId && (preferenze.verduraRicorrentePasti||[]).includes(slot)){
-    // Scelta esplicita user: è HARD e può volutamente derogare alla stagionalità,
-    // ma non alla disponibilità (i Set contraddittori vengono bloccati in UI).
-    const hard=candidati.filter(x=>x.info.variantId===preferenze.verduraRicorrenteVariantId);
-    if(!hard.length) return null;
-    const scelta=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
-    return scelta?scelta.r:null;
-  }
-  // Filtro stagionale automatico: freschi e freschi duraturi devono essere
-  // coerenti col mese; confezionati e surgelati restano disponibili tutto l'anno.
-  if(typeof verdureDiStagione==='function'){
-    const stag=new Set(verdureDiStagione(new Date(giorno+'T12:00:00'))||[]);
-    if(stag.size){
-      candidati=candidati.filter(x=>x.info.tier==='confezionato'||x.info.tier==='surgelato'||stag.has(x.info.nome));
-      if(!candidati.length)return null;
-    }
-  }
-  const ordine=(typeof ordineVerdureGiornoV17==='function')?ordineVerdureGiornoV17(idx):(idx<=2?['fresco','resistente','surgelato']:(idx<=4?['resistente','fresco','surgelato']:['surgelato','resistente','fresco']));
-  let pool=[];
-  for(const t of ordine){ pool=candidati.filter(x=>x.info.tier===t); if(pool.length) break; }
-  if(!pool.length) pool=candidati;
-  const preferite=pool.filter(x=>prefIds.has(x.info.variantId));
-  if(preferite.length){
-    const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));
-    const p=nuove.length?nuove:preferite;
-    const scelta=scegliMenoRecenteMotore(p,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
-    if(scelta) stato.preferiteVerdureUsate.add(scelta.info.variantId);
-    return scelta?scelta.r:null;
-  }
-  return motoreMescola(pool)[0].r;
+preferenze=preferenze||{};
+const [ricette,varianti,ingredienti,inventario]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),getAll('inventario')]);
+const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};
+const off=new Set(preferenze.verdureDisattivate||[]);
+const prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);
+const qty={};
+for(const it of (inventario||[])){
+if(it.stato!=='disponibile'||!(it.quantita>0)) continue;
+qty[it.variantId]=(qty[it.variantId]||0)+it.quantita;
+}
+const candidati=[];
+for(const r of ricette){
+if(r.esclusa||r.id===escludiId) continue;
+if(!(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno')) continue;
+const info=await motoreInfoVerduraContorno(r,cache);
+if(!info||off.has(info.variantId)) continue;
+candidati.push({r,info,q:qty[info.variantId]||0});
+}
+if(!candidati.length) return null;
+// HARD: verdura ricorrente programmata dall'utente
+const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
+const slot=(preferenze._pastoCorrente||'')+'_'+idx;
+if(preferenze.verduraRicorrenteVariantId&&(preferenze.verduraRicorrentePasti||[]).includes(slot)){
+const hard=candidati.filter(x=>x.info.variantId===preferenze.verduraRicorrenteVariantId);
+if(hard.length){const s=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0); if(s) return s.r;}
+}
+stato.contorniUsatiOggi=stato.contorniUsatiOggi||[];
+stato.contorniUsatiSett=stato.contorniUsatiSett||{};
+const score=x=>{
+let p=0;
+const porz=(/insalata/i.test(x.info.nome))?70:200;
+if(x.q>=porz) p+=1000; else if(x.q>0) p+=450;
+if(prefIds.has(x.info.variantId)) p+=200;
+if(x.info.tier==='fresco') p+=100; else if(x.info.tier==='fresco_duraturo') p+=40;
+if(stato.contorniUsatiOggi.includes(x.info.variantId)) p-=5000;
+p-=300*(stato.contorniUsatiSett[x.info.variantId]||0);
+return p;
+};
+candidati.sort((a,b)=>score(b)-score(a));
+const scelto=candidati[0];
+stato.contorniUsatiOggi.push(scelto.info.variantId);
+stato.contorniUsatiSett[scelto.info.variantId]=(stato.contorniUsatiSett[scelto.info.variantId]||0)+1;
+return scelto.r;
 };
 
 async function motoreV10CategoriaVoce(voce,ricById){
@@ -1604,6 +1605,16 @@ window.MOTORE_V10_REGOLE={versione:'1.6',maxPastiSpeciali:MOTORE_V10_MAX_SPECIAL
 /* ---------- AGGIUNTA: funzioni mancanti (causavano il bottone
    'Genera menu' rotto) ---------- */
 
+function ricettaDoppioCarboidrato(r, vById, bById){
+let fonti=0;
+for(const i of (r.ingredienti||[])){
+const v=i.variantId?vById.get(i.variantId):null;
+const b=v?bById.get(v.ingredienteId):null;
+if(b&&b.gruppo==='carboidrati'&&(i.quantita||0)>=50) fonti++;
+}
+return fonti>=2;
+}
+
 async function motoreV10ScegliPrimoReale(carb, stato, preferenze){
   const cfg = CARBOIDRATI_PASTO[carb];
   if(!cfg) return null;
@@ -1627,7 +1638,16 @@ async function motoreV10ScegliPrimoReale(carb, stato, preferenze){
     if(conPreferenza.length) pool = conPreferenza;
   }
 
-  return scegliMenoRecenteMotore(pool, r=>stato.storico.ultimoRicetta[r.id]||0, ()=>0);
+  const [ingBase]=await Promise.all([getAll('ingredienti')]);
+  const bById2=new Map(ingBase.map(b=>[b.id,b]));
+  const senzaDoppio=pool.filter(r=>!ricettaDoppioCarboidrato(r, vById, bById2));
+  if(senzaDoppio.length) pool=senzaDoppio;
+
+  stato.ricetteUsateGenerazione=stato.ricetteUsateGenerazione||new Set();
+  const libere=pool.filter(r=>!stato.ricetteUsateGenerazione.has(r.id));
+  const sceltaPrimo=scegliMenoRecenteMotore(libere.length?libere:pool, r=>stato.storico.ultimoRicetta[r.id]||0, ()=>0);
+  if(sceltaPrimo) stato.ricetteUsateGenerazione.add(sceltaPrimo.id);
+  return sceltaPrimo;
 }
 
 async function motoreV10CarboidratoFattibile(carb, giorno, categoria, stato){
