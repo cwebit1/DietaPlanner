@@ -3845,6 +3845,52 @@ async function calcolaCoperturaRicetta(ricetta){
   return rapporti.reduce((a,b)=>a+b,0)/rapporti.length;
 }
 
+async function mappaStatiDisponibilita(){
+const [inv,ricette]=await Promise.all([getAll('inventario'),getAll('ricette')]);
+const porzMin={};
+for(const r of ricette)for(const i of (r.ingredienti||[])){
+if(!i.variantId||!(i.quantita>0))continue;
+if(porzMin[i.variantId]===undefined||i.quantita<porzMin[i.variantId])porzMin[i.variantId]=i.quantita;
+}
+const tot={};
+for(const i of inv){if(i.stato!=='disponibile')continue;tot[i.variantId]=(tot[i.variantId]||0)+i.quantita;}
+const out={};
+for(const id of Object.keys(tot)){
+const t=tot[id]||0;
+if(t<=0)out[id]='esaurito';
+else if((porzMin[id]||0)>0&&t<porzMin[id])out[id]='quasi_esaurito';
+else out[id]='disponibile';
+}
+return out;
+}
+function ricettaHaQuasiEsaurito(r,mappaStati){
+for(const i of (r.ingredienti||[])){
+if(!i.variantId)continue;
+const st=mappaStati[i.variantId];
+if(st==='quasi_esaurito'||st==='esaurito')return true;
+}
+return false;
+}
+const WARN_QUASI='<span title="Ingrediente quasi esaurito in inventario" style="color:var(--warn);margin-left:6px;">⚠️</span>';
+
+async function registraConsumoStorico(voce,origine){
+if(!voce||!voce.id)return;
+const sep=voce.id.lastIndexOf('_');
+const giorno=voce.id.slice(0,sep),pasto=voce.id.slice(sep+1);
+await put('consumoGiorno',{
+id:voce.id+'_'+(voce.dataConsumato||todayISO()),
+giorno,pasto,
+dataConsumato:voce.dataConsumato||todayISO(),
+origine:origine||voce.origine||'auto',
+ricettaIds:voce.modo==='multi'?[voce.primoId,voce.secondoId,voce.contornoId].filter(Boolean):(voce.ricettaId?[voce.ricettaId]:[]),
+primoCereale:voce.primoCereale||null,
+componenti:voce.componenti||null,
+colazioneSpecialeId:voce.colazioneSpecialeId||null,
+porzioni:voce.porzioni||1,
+registratoIl:new Date().toISOString()
+});
+}
+
 /* Vero se la ricetta include già una fonte di carboidrati (stessa soglia di B10:
    almeno 50g di un ingrediente del gruppo "carboidrati"). Usata dal riquadro
    "🍞 Carboidrati" nel modal Ricetta, per piatto unico/secondo. */
@@ -3931,28 +3977,22 @@ function targetPeriodo(periodo){
 /* Somma kcal/prot/carb/grassi dei pasti CONSUMATI (mai solo programmati) su un
    elenco di giorni — colazione (a gruppi) + i 3 spuntini + pranzo + cena. */
 async function calcolaConsumoGiorni(listaGiorniIso){
-  const tot = {kcal:0, prot:0, carb:0, grassi:0};
-  for(const g of listaGiorniIso){
-    const voceColazione = await getOne('piano', g+'_colazione');
-    if(voceColazione && voceColazione.consumato && (voceColazione.componenti || voceColazione.colazioneSpecialeId)){
-      const n = await nutrizioneColazione(voceColazione.componenti, null, voceColazione.colazioneSpecialeId);
-      tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
-    }
-    for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
-      const voce = await getOne('piano', g+'_'+pasto);
-      if(!voce || !voce.consumato) continue;
-      const idRicette = voce.modo==='multi'
-        ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
-        : [voce.ricettaId].filter(Boolean);
-      for(const rid of idRicette){
-        const r = await getOne('ricette', rid);
-        if(!r) continue;
-        const n = await nutrizionePerPersona(r);
-        tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
-      }
-    }
-  }
-  return tot;
+const tot={kcal:0,prot:0,carb:0,grassi:0};
+const set=new Set(listaGiorniIso);
+const log=await getAll('consumoGiorno');
+for(const rec of log){
+if(!set.has(rec.giorno))continue;
+if(rec.componenti||rec.colazioneSpecialeId){
+const n=await nutrizioneColazione(rec.componenti,null,rec.colazioneSpecialeId);
+tot.kcal+=n.kcal;tot.prot+=n.prot;tot.carb+=n.carb;tot.grassi+=n.grassi;
+}
+for(const rid of (rec.ricettaIds||[])){
+const r=await getOne('ricette',rid);if(!r)continue;
+const n=await nutrizionePerPersona(r);
+tot.kcal+=n.kcal;tot.prot+=n.prot;tot.carb+=n.carb;tot.grassi+=n.grassi;
+}
+}
+return tot;
 }
 
 /* Somma kcal/prot/carb/grassi di tutti i pasti PROGRAMMATI (con ricetta
@@ -4404,6 +4444,7 @@ async function elaboraConsumoAutomatico(){
       voce.consumato = true;
       voce.dataConsumato = todayISO();
       await put('piano', voce);
+      await registraConsumoStorico(voce,'auto');
       // Premio costanza: aggiorna il contatore delle colazioni morigerate
       const recContatorePremio = await getOne('impostazioni', 'contatoreColazioniMorigerate');
       let contatorePremio = recContatorePremio ? recContatorePremio.valore : 0;
@@ -4428,6 +4469,7 @@ async function elaboraConsumoAutomatico(){
       voce.consumato = true;
       voce.dataConsumato = todayISO();
       await put('piano', voce);
+      await registraConsumoStorico(voce,'auto');
       continue;
     }
 
@@ -4443,6 +4485,7 @@ async function elaboraConsumoAutomatico(){
     voce.consumato = true;
     voce.dataConsumato = todayISO();
     await put('piano', voce);
+      await registraConsumoStorico(voce,'auto');
   }
 }
 
@@ -5075,6 +5118,7 @@ async function apriModalEditorPasto(giorno, pasto){
         voce.dataConsumato = giorno;
         voce.origine = 'utente';
         await put('piano', voce);
+        await registraConsumoStorico(voce,'utente');
         await segnaRicettaUsata(rid);
         document.getElementById('modalDettaglio').classList.add('hidden');
         renderPiano();
@@ -5118,7 +5162,7 @@ async function apriModalEditorColazione(giorno){
   document.getElementById('modalDettaglioContenuto').querySelectorAll('[data-editor-col-speciale]').forEach(b=>{
     b.addEventListener('click', async ()=>{
       const pianoId = giorno+'_colazione';
-      await put('piano', {id:pianoId, colazioneSpecialeId:b.dataset.editorColSpeciale, componenti:null, consumato:true, dataConsumato:giorno});
+      const voce={id:pianoId, colazioneSpecialeId:b.dataset.editorColSpeciale, componenti:null, consumato:true, dataConsumato:giorno}; await put('piano',voce); await registraConsumoStorico(voce,'utente');
       document.getElementById('modalDettaglio').classList.add('hidden');
       renderPiano();
     });
@@ -5143,14 +5187,14 @@ async function apriModalEditorColazione(giorno){
       componenti[gruppo] = attivo ? (attivo.dataset.editorColOpt || null) : null;
     });
     const pianoId = giorno+'_colazione';
-    await put('piano', {id:pianoId, componenti, colazioneSpecialeId:null, consumato:true, dataConsumato:giorno});
+    const voce={id:pianoId, componenti, colazioneSpecialeId:null, consumato:true, dataConsumato:giorno}; await put('piano',voce); await registraConsumoStorico(voce,'utente');
     document.getElementById('modalDettaglio').classList.add('hidden');
     renderPiano();
   });
   document.getElementById('modalDettaglioContenuto').appendChild(btnSalvaGruppi);
   document.getElementById('modalDettaglioContenuto').querySelector('[data-editor-col-niente]').addEventListener('click', async ()=>{
     const pianoId = giorno+'_colazione';
-    await put('piano', {id:pianoId, componenti:null, colazioneSpecialeId:null, consumato:true, dataConsumato:giorno});
+    const voce={id:pianoId, componenti:null, colazioneSpecialeId:null, consumato:true, dataConsumato:giorno}; await put('piano',voce); await registraConsumoStorico(voce,'utente');
     document.getElementById('modalDettaglio').classList.add('hidden');
     renderPiano();
   });
@@ -5449,6 +5493,7 @@ const cont = document.getElementById(contId);
 if(!cont) return;
 const draft = draftPasto[chiaveStato];
 if(!draft) return;
+const mappaStati=await mappaStatiDisponibilita();
 let html = '';
 if(draft.tabAttiva === 'pasto'){
 /* --- PROTEINA --- */
@@ -5456,7 +5501,7 @@ let protNome=''; let protRicetta=null;
 if(draft.proteinaId){ protRicetta=await getOne('ricette',draft.proteinaId); if(protRicetta) protNome=protRicetta.nome; }
 const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
 if(draft.cottura && !cottureAmmesse.includes(draft.cottura)) draft.cottura=cottureAmmesse.length?cottureAmmesse[0]:null;
-const secondoNome=protNome+(draft.cottura?' '+draft.cottura:'');
+const secondoNome=protNome+(draft.cottura?' '+draft.cottura:'')+(protRicetta&&ricettaHaQuasiEsaurito(protRicetta,mappaStati)?' ⚠️':'');
 const protNutri=protRicetta?await nutrizionePerPersona(protRicetta):null;
 html += '<div style="margin-bottom:14px;">';
 html += '<div class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;margin-bottom:4px;">🍗 Proteina</div>';
@@ -5473,8 +5518,8 @@ html += '</div>';
 const carbLabel = draft.primoCereale && CARBOIDRATI_PASTO[draft.primoCereale] ? CARBOIDRATI_PASTO[draft.primoCereale].label : '';
 let sugoNome = '';
 if(draft.primoSugoId){ const sugoR=await getOne('ricette',draft.primoSugoId); if(sugoR) sugoNome=sugoR.nome; }
-const primoNome = carbLabel + (sugoNome ? ' ' + sugoNome : '');
 const primoRicetta = draft.primoId ? await getOne('ricette', draft.primoId) : null;
+const primoNome = carbLabel + (sugoNome ? ' ' + sugoNome : '')+(primoRicetta&&ricettaHaQuasiEsaurito(primoRicetta,mappaStati)?' ⚠️':'');
 const primoNutri = primoRicetta ? await nutrizionePerPersona(primoRicetta) : null;
 html += '<div style="margin-bottom:14px;">';
 html += '<div class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;margin-bottom:4px;">🍝 Carboidrato</div>';
@@ -5495,7 +5540,7 @@ const contNutri=contRicetta?await nutrizionePerPersona(contRicetta):null;
 html += '<div style="margin-bottom:14px;">';
 html += '<div class="meta" style="text-transform:uppercase;letter-spacing:.04em;font-size:0.65rem;margin-bottom:4px;">🥦 Verdura</div>';
 html += '<div class="row" style="align-items:baseline;gap:8px;">';
-html += '<span style="font-weight:700;font-size:0.9rem;flex:1;">'+(contNome||'Nessuna verdura')+'</span>';
+html += '<span style="font-weight:700;font-size:0.9rem;flex:1;">'+(contNome||'Nessuna verdura')+(contRicetta&&ricettaHaQuasiEsaurito(contRicetta,mappaStati)?' ⚠️':'')+'</span>';
 if(contRicetta) html += '<button class="icon-info-btn" data-pasto-info="'+contRicetta.id+'">ⓘ</button>';
 html += '<button data-pasto-refresh="contorno" title="Roll verdura" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">🔄</button>';
 html += '<button data-pasto-salvafrigo="contorno" title="Salvafrigo" style="background:none;border:none;cursor:pointer;font-size:0.85rem;">♻️</button>';
@@ -7335,6 +7380,7 @@ document.getElementById('cercaRicette').addEventListener('input', (e)=>{
 });
 
 async function renderRicette(){
+const mappaStatiDisp=await mappaStatiDisponibilita();
   // ---- filtro Salvafrigo: solo ingredienti con avanzo scomodo da confezione ----
   const disponibili = await getAvanziScomodi();
   const salvafrigoEl = document.getElementById('filtroSalvafrigo');
@@ -7455,6 +7501,7 @@ async function renderRicette(){
     const nutri = await nutrizionePerPersona(r);
     const isColazione = (r.tipoPortata||'unico')==='colazione';
     const isUnico = (r.tipoPortata||'unico')==='unico';
+    const quasi=ricettaHaQuasiEsaurito(r,mappaStatiDisp);
     const div = document.createElement('div');
     div.className='card';
     div.innerHTML = `
@@ -7466,7 +7513,7 @@ async function renderRicette(){
       ${r.componente==='proteina'?'<span class="pill dim" style="margin-left:6px;background:#c0792a;">Base proteica</span>':r.componente==='contorno'?'<span class="pill dim" style="margin-left:6px;background:#5e9c63;">Contorno</span>':''}
       ${r.tipoPortata==='modulare' ? '<span class="pill dim" style="margin-left:6px;background:#6a4ac2;">🧩 ' + (r.sottoCategoriaModulare||'') + '</span>' : ''}
       ${r.preparazione?`<span class="pill dim" style="margin-left:6px;">${r.preparazione}</span>`:''}
-      <div class="row" style="margin-top:6px;${r.esclusa?'opacity:0.55;':''}"><h3 style="flex:1;">${r.nome}</h3>${stellaBtn(r)}</div>
+      <div class="row" style="margin-top:6px;${r.esclusa?'opacity:0.55;':''}"><h3 style="flex:1;">${r.nome}</h3>${quasi?WARN_QUASI:''}${stellaBtn(r)}</div>
       <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
       ${nutrizioneInaffidabile(r) ? '<div class="warn-tag">⚠ nutrizione non compilata — conta 0 nel computo giornaliero, compilala manualmente nella modifica</div>' : ''}
       ${isColazione ? '<div class="meta" style="margin-top:6px;">Spunto per la colazione — componila dalla scheda Piano, scegliendo gli alimenti a gruppi.</div>' : ''}
@@ -7989,6 +8036,7 @@ async function renderInventario(){
   const varianti = await getAll('varianti');
   const ingredientiBaseInv = await getAll('ingredienti');
   const ingredientiPerIdInv = {}; for(const ing of ingredientiBaseInv) ingredientiPerIdInv[ing.id] = ing;
+  const mappaStati=await mappaStatiDisponibilita();
 
   const el = document.getElementById('zoneInventario');
   el.innerHTML = '';
@@ -8028,7 +8076,7 @@ async function renderInventario(){
       row.innerHTML = `
         <div>
           <div class="nome">${variante.nome}</div>
-          <div class="qty">${formattaQuantita(variante, voce.quantita)}${variante.unitaPezzo ? '' : (variante.formato ? ' · '+variante.formato+'g/conf.' : ' · sfuso')}${scadenzaTesto}</div>
+          <div class="qty">${formattaQuantita(variante, voce.quantita)}${variante.unitaPezzo ? '' : (variante.formato ? ' · '+variante.formato+'g/conf.' : ' · sfuso')}${mappaStati[variante.id]==='quasi_esaurito'?' · <span style="color:var(--warn);">quasi esaurito</span>':''}${scadenzaTesto}</div>
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
           ${btnCongela}
@@ -8504,7 +8552,9 @@ document.getElementById('btnAzzeraStorico').addEventListener('click', async ()=>
   for(const chiave of chiaviDaEliminare){
     localStorage.removeItem(chiave);
   }
-  // 4. Azzera le impostazioni di versione (opzionale, per forzare un re-check)
+  // 4. Cancella il log immutabile dei consumi solo su richiesta esplicita
+  for(const r of await getAll('consumoGiorno')) await delKey('consumoGiorno', r.id);
+  // 5. Azzera le impostazioni di versione (opzionale, per forzare un re-check)
   draftPasto = {}; draftColazione = {};
   await avviso('Storico consumi azzerato. Tutte le ricette sono ora "nuove" per il motore di rotazione.');
   renderPiano();
