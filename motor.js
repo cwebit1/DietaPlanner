@@ -1048,51 +1048,46 @@ scegliContornoMotore = async function(giorno,stato,preferenze,escludiId){
 const [ricette,varianti,ingredienti,inventario]=await Promise.all([getAll('ricette'),getAll('varianti'),getAll('ingredienti'),getAll('inventario')]);
 const cache={vById:new Map(varianti.map(v=>[v.id,v])),bById:new Map(ingredienti.map(b=>[b.id,b]))};
 const off=new Set(preferenze.verdureDisattivate||[]), prefIds=new Set(preferenze.verdurePreferiteVariantIds||[]);
-// grammi realmente disponibili in frigo per variante
-const grammiPerVariante={};
-for(const item of (inventario||[])){
-if(item.stato==='disponibile'&&item.quantita>0) grammiPerVariante[item.variantId]=(grammiPerVariante[item.variantId]||0)+item.quantita;
-}
+const inCasaSet=new Set((inventario||[]).filter(i=>i.stato==='disponibile'&&i.quantita>0).map(i=>i.variantId));
 let candidati=[];
 for(const r of ricette){
 if(r.tipoPortata!=='modulare'||r.sottoCategoriaModulare!=='contorno'||r.esclusa||r.id===escludiId) continue;
 if(r.gruppoProteico) continue;
 const info=await motoreInfoVerduraContorno(r,cache); if(!info||off.has(info.variantId)) continue;
-candidati.push({r,info,grammi:grammiPerVariante[info.variantId]||0});
+info.inCasa=inCasaSet.has(info.variantId);
+candidati.push({r,info});
 }
 if(!candidati.length) return null;
 const idx=(new Date(giorno+'T00:00:00').getDay()+6)%7;
 const slot=(preferenze._pastoCorrente||'')+'_'+idx;
 if(preferenze.verduraRicorrenteVariantId && (preferenze.verduraRicorrentePasti||[]).includes(slot)){
 const hard=candidati.filter(x=>x.info.variantId===preferenze.verduraRicorrenteVariantId);
-if(hard.length){
+if(!hard.length) return null;
 const scelta=scegliMenoRecenteMotore(hard,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
 return scelta?scelta.r:null;
-}
 }
 if(typeof verdureDiStagione==='function'){
 const stag=new Set(verdureDiStagione(new Date(giorno+'T12:00:00'))||[]);
 if(stag.size){
-const filtrati=candidati.filter(x=>x.info.tier==='confezionato'||x.info.tier==='surgelato'||stag.has(x.info.nome));
-if(filtrati.length) candidati=filtrati;
+candidati=candidati.filter(x=>x.info.tier==='confezionato'||x.info.tier==='surgelato'||stag.has(x.info.nome)||x.info.inCasa);
+if(!candidati.length)return null;
 }
 }
-const ordine=(typeof ordineVerdureGiornoV17==='function')?ordineVerdureGiornoV17(idx):['fresco','fresco_duraturo','confezionato','surgelato'];
-const usateSett=stato.contorniUsatiSettimana||(stato.contorniUsatiSettimana=new Set());
-const score=x=>{
-let s=0;
-const ti=ordine.indexOf(x.info.tier); s-=(ti>=0?ti:9)*100;
-if(x.grammi>0) s+=500;
-if(prefIds.has(x.info.variantId)) s+=250;
-if(!usateSett.has(x.info.variantId)) s+=150;
-const gg=(Date.now()-(stato.storico.ultimoVerdura[x.info.variantId]||0))/86400000;
-s+=Math.min(gg,30);
-return s;
-};
-candidati.sort((a,b)=>score(b)-score(a));
-const scelta=candidati[0];
-usateSett.add(scelta.info.variantId);
-return scelta.r;
+const ordine=(typeof ordineVerdureGiornoV17==='function')?ordineVerdureGiornoV17(idx):(idx<=2?['fresco','fresco_duraturo','confezionato','surgelato']:(idx<=4?['fresco_duraturo','fresco','confezionato','surgelato']:['confezionato','surgelato','fresco_duraturo','fresco']));
+const inCasa=candidati.filter(x=>x.info.inCasa);
+const base=inCasa.length?inCasa:candidati;
+let pool=[];
+for(const t of ordine){ pool=base.filter(x=>x.info.tier===t); if(pool.length) break; }
+if(!pool.length) pool=base;
+const preferite=pool.filter(x=>prefIds.has(x.info.variantId));
+if(preferite.length){
+const nuove=preferite.filter(x=>!stato.preferiteVerdureUsate.has(x.info.variantId));
+const p=nuove.length?nuove:preferite;
+const scelta=scegliMenoRecenteMotore(p,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
+if(scelta) stato.preferiteVerdureUsate.add(scelta.info.variantId);
+return scelta?scelta.r:null;
+}
+return scegliMenoRecenteMotore(pool,x=>stato.storico.ultimoVerdura[x.info.variantId]||0,()=>0);
 };
 
 async function motoreV10CategoriaVoce(voce,ricById){
