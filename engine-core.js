@@ -51,6 +51,7 @@ function recipeBlocked(recipe,ctx){
   if(!recipe||recipe.esclusa)return true;
   if(ctx&&ctx.automatic&&recipe.soloManuale)return true;
   const blocked=new Set((ctx&&ctx.blockedIngredientIds)||[]),allergens=new Set((ctx&&ctx.activeAllergens)||[]);
+  if((recipe.allergeniPresenti||[]).some(a=>allergens.has(a)))return true;
   for(const ing of recipe.ingredienti||[]){
     const id=ing.variantId||ing.nomeLibero||ing[0];
     if(blocked.has(id))return true;

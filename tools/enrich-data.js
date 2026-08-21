@@ -66,7 +66,14 @@ function upsert(r){const at=recipesDoc.ricette.findIndex(x=>x.nome.toLowerCase()
  {nome:'Radicchio rosso e carote',tipoPortata:'modulare',sottoCategoriaModulare:'contorno',ingredienti:[['Radicchio',100],['Carote',100],['Olio extravergine oliva',10]],procedimento:['Taglia finemente e condisci.']}
 ].forEach(upsert);
 
-recipesDoc.versione=Math.max(8,Number(recipesDoc.versione)||0);
+for(const recipe of recipesDoc.ricette){
+  recipe.allergeniPresenti=[...new Set((recipe.ingredienti||[]).flatMap(row=>{
+    const meta=ingredients[row[0]];
+    return meta&&Array.isArray(meta.allergeni)?meta.allergeni:[];
+  }))].sort();
+}
+
+recipesDoc.versione=Math.max(9,Number(recipesDoc.versione)||0);
 ingredientsDoc.versione=Math.max(5,Number(ingredientsDoc.versione)||0);
 fs.writeFileSync(ingredientsPath,JSON.stringify(ingredientsDoc,null,2)+'\n');
 fs.writeFileSync(recipesPath,JSON.stringify(recipesDoc,null,2)+'\n');

@@ -35,6 +35,9 @@
 | SAFE-02 | Profili onnivoro/vegetariano/vegano sono configurati solo nell'area nutrizionista | HARD | `dietProfile`, `ricetteAmmesse` | profile filters |
 | SAFE-03 | Ogni allergia o intolleranza si seleziona dalla griglia allergeni | HARD | `allergeniAttivi`, `recipeBlocked` | allergen filters |
 | SAFE-04 | Esclusioni ingredienti modificabili solo nell'area nutrizionista | HARD | `ingredientiBloccati`, `filtriSicurezzaRicette` | ingredient exclusion |
+| SAFE-05 | Ogni ingrediente dichiara esplicitamente l'array `allergeni`, anche quando vuoto | HARD | `ingredienti.json`, import IndexedDB | schema + coverage audit |
+| SAFE-06 | Ogni ricetta rende determinabili gli allergeni attraverso i propri ingredienti risolti; eventuali campi ricetta sono solo una cache derivata | HARD | `ricette.json`, catalogo ingredienti | allergen derivation audit |
+| SAFE-07 | Un allergene attivo o ingrediente escluso dal nutrizionista rimuove la ricetta da ogni pool automatico e manuale | HARD | `recipeBlocked`, `ricetteAmmesse` | exhaustive hard-exclusion test |
 | UI-01 | Menù renderizzabile con piano, inventario e storico vuoti | HARD | `renderMenuSettimanale` | first-run smoke test |
 | UI-02 | Set utente e configurazione nutrizionista sono viste separate | HARD | `view-set`, `view-impostazioni` | DOM/browser test |
 | MENU-01 | Bozza separata dal piano committato | HARD | `menuDraft` UI | isolation test |

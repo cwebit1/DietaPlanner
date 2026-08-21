@@ -1,5 +1,5 @@
 {
-  "versione": 8,
+  "versione": 9,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -34,7 +34,11 @@
       ],
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte",
+        "uova"
+      ]
     },
     {
       "nome": "Insalata di tonno, pomodoro e mozzarella",
@@ -73,7 +77,11 @@
       ],
       "copertura": "PP",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con zucchine, pancetta e pomodorini",
@@ -112,7 +120,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Petto di pollo con zucchine e insalata",
@@ -147,7 +158,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pasta con ceci e pomodoro",
@@ -186,7 +198,10 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Filetto di nasello con patate al forno",
@@ -217,7 +232,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Frittata con zucchine e patate",
@@ -252,7 +270,10 @@
       ],
       "copertura": "PU+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Riso e lenticchie con carote",
@@ -287,7 +308,8 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Risotto piselli e pancetta",
@@ -326,7 +348,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pasta e fagioli",
@@ -365,7 +390,10 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Gamberetti saltati con peperoni e riso",
@@ -400,7 +428,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Melanzane alla parmigiana leggera",
@@ -439,7 +470,10 @@
       ],
       "copertura": "PF+V",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Lasagna di verdure con besciamella",
@@ -491,7 +525,11 @@
       ],
       "copertura": "PF+C+V",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Polenta con stracchino e radicchio",
@@ -526,7 +564,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Cous cous con zucchine, ceci e menta",
@@ -561,7 +603,10 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pollo al limone e rosmarino con verdura e pane",
@@ -600,7 +645,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Frittata con spinaci, verdura e pane",
@@ -635,7 +683,11 @@
       ],
       "copertura": "PU+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ]
     },
     {
       "nome": "Pasta con zucchine, pomodorini e brie a cubetti",
@@ -674,7 +726,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Nodino di maiale con verdura e patate",
@@ -705,7 +761,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Farro con zucchine e gamberetti",
@@ -740,7 +797,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei",
+        "glutine"
+      ]
     },
     {
       "nome": "Ramen con tofu e verdura",
@@ -779,7 +840,11 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "soia"
+      ]
     },
     {
       "nome": "Insalata mista con uova sode e pane",
@@ -814,7 +879,11 @@
       ],
       "copertura": "PU+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ]
     },
     {
       "nome": "Farro con pomodorini, feta sbriciolata e basilico",
@@ -853,7 +922,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Prosciutto crudo e melone con pane",
@@ -883,7 +956,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Friselle con pomodori, cetrioli e fagioli cannellini",
@@ -922,7 +998,10 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Sogliola con verdura e pane",
@@ -957,7 +1036,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con melanzane, pomodorini e mozzarella a cubetti",
@@ -996,7 +1079,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Ramen con pollo e verdura",
@@ -1035,7 +1122,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Latte con cereali e frutta",
@@ -1063,7 +1153,11 @@
         "Lava e taglia la mela a pezzi, servendola a parte o unita ai cereali."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Latte con biscotti e frutta",
@@ -1091,7 +1185,11 @@
         "Sbuccia la banana e tagliala a rondelle."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Pane con marmellata e latte",
@@ -1119,7 +1217,11 @@
         "Spalma la marmellata in uno strato uniforme."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Pane con ricotta e miele",
@@ -1147,7 +1249,11 @@
         "Completa con un filo di miele."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Yogurt con fette biscottate e frutta",
@@ -1175,7 +1281,11 @@
         "Accompagna con le fette biscottate."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Colazione salata con uova e pane",
@@ -1204,7 +1314,11 @@
         "Servi con il pane, tostato se preferisci."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ]
     },
     {
       "nome": "Frutta fresca",
@@ -1223,7 +1337,8 @@
         "Asciugala e mangiala con la buccia, dove si concentra buona parte delle fibre."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Yogurt bianco",
@@ -1242,7 +1357,10 @@
         "Mescolalo brevemente con un cucchiaio se si è separato in superficie, poi servi."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Grana o parmigiano a cubetti",
@@ -1262,7 +1380,10 @@
         "Disponili in una ciotolina e servi a temperatura ambiente."
       ],
       "copertura": "PF",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pane con marmellata (spuntino)",
@@ -1286,7 +1407,10 @@
         "Spalma la marmellata in uno strato uniforme."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Frutta secca mista",
@@ -1305,7 +1429,10 @@
         "Porziona la frutta secca in una ciotolina, senza eccedere nella quantità: è calorica anche in piccole dosi."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio"
+      ]
     },
     {
       "nome": "Cioccolato fondente (spuntino)",
@@ -1324,7 +1451,8 @@
         "Servilo a temperatura ambiente: il sapore risulta più pieno che freddo di frigo."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pasta al pomodoro",
@@ -1354,7 +1482,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso freddo con tonno e pomodorini",
@@ -1389,7 +1520,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta fredda con tonno, olive e pomodorini",
@@ -1424,7 +1558,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Cous cous freddo con verdure crude",
@@ -1459,7 +1597,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Farro freddo con salmone affumicato",
@@ -1494,7 +1635,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Riso in bianco con parmigiano",
@@ -1523,7 +1668,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pasta con pomodorini e olio",
@@ -1552,7 +1700,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Orzo freddo con verdure",
@@ -1586,7 +1737,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Polenta al parmigiano",
@@ -1616,7 +1770,11 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Pasta integrale al pomodoro",
@@ -1646,7 +1804,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso integrale con verdure",
@@ -1679,7 +1840,8 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Cous cous alle verdure",
@@ -1714,7 +1876,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Farro freddo",
@@ -1744,7 +1909,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Petto di pollo alla piastra",
@@ -1769,7 +1937,8 @@
       "preparazione": "alla piastra",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Uova sode",
@@ -1793,7 +1962,10 @@
       "preparazione": "sode",
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Ceci conditi",
@@ -1817,7 +1989,8 @@
       "preparazione": "conditi",
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Tonno condito",
@@ -1840,7 +2013,10 @@
       "preparazione": "condito",
       "copertura": "PP",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Filetto di nasello al forno",
@@ -1864,7 +2040,10 @@
       "preparazione": "al forno",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sogliola al forno",
@@ -1888,7 +2067,10 @@
       "preparazione": "al forno",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Gamberetti saltati",
@@ -1912,7 +2094,10 @@
       "preparazione": "saltati",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Nodino di maiale alla piastra",
@@ -1936,7 +2121,8 @@
       "preparazione": "alla piastra",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Tofu saltato",
@@ -1959,7 +2145,10 @@
       "preparazione": "saltato",
       "copertura": "PL",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "soia"
+      ]
     },
     {
       "nome": "Frittata semplice",
@@ -1983,7 +2172,10 @@
       "preparazione": "semplice",
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Formaggio fresco a fette",
@@ -2006,7 +2198,10 @@
       "preparazione": "a fette",
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Formaggio stagionato a scaglie",
@@ -2029,7 +2224,10 @@
       "preparazione": "a scaglie",
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Insalata mista condita",
@@ -2055,7 +2253,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Carote julienne",
@@ -2081,7 +2280,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Radicchio saltato",
@@ -2107,7 +2307,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Zucchine grigliate",
@@ -2134,7 +2335,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Melanzane grigliate",
@@ -2161,7 +2363,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Broccoli al vapore",
@@ -2187,7 +2390,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Peperoni saltati",
@@ -2213,7 +2417,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Spinaci saltati",
@@ -2239,7 +2444,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Cavolfiore al vapore",
@@ -2265,7 +2471,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Funghi trifolati",
@@ -2292,7 +2499,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Fagiolini lessati",
@@ -2318,7 +2526,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Insalata di pomodori",
@@ -2344,7 +2553,8 @@
       "richiedeCottura": false,
       "soloManuale": false,
       "sottoCategoriaModulare": "contorno",
-      "piattoSpeciale": false
+      "piattoSpeciale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Spiedini di pollo alle erbe",
@@ -2368,7 +2578,8 @@
       "preparazione": "alle erbe",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Petto di tacchino in padella",
@@ -2391,7 +2602,8 @@
       "preparazione": "in padella",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Fettina di manzo ai ferri",
@@ -2415,7 +2627,8 @@
       "preparazione": "ai ferri",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Bresaola con rucola e limone",
@@ -2444,7 +2657,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Prosciutto cotto",
@@ -2465,7 +2679,8 @@
       "componente": "proteina",
       "copertura": "PC",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Orata al forno",
@@ -2488,7 +2703,10 @@
       "preparazione": "al forno",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sgombro al forno",
@@ -2512,7 +2730,10 @@
       "preparazione": "al forno",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Salmone al forno",
@@ -2535,7 +2756,10 @@
       "preparazione": "al forno",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sgombro in scatola condito",
@@ -2558,7 +2782,10 @@
       "preparazione": "condito",
       "copertura": "PP",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Polpo lesso con limone",
@@ -2583,7 +2810,10 @@
       "preparazione": "lesso",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Crescenza a fette",
@@ -2605,7 +2835,10 @@
       "preparazione": "a fette",
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Ricotta al naturale",
@@ -2628,7 +2861,10 @@
       "preparazione": "al naturale",
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pecorino a scaglie",
@@ -2650,7 +2886,10 @@
       "preparazione": "a scaglie",
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Omelette alle erbe",
@@ -2674,7 +2913,10 @@
       "preparazione": "alle erbe",
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Uova in camicia",
@@ -2698,7 +2940,10 @@
       "preparazione": "in camicia",
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Hummus di ceci",
@@ -2721,7 +2966,8 @@
       "componente": "proteina",
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Lenticchie condite",
@@ -2744,7 +2990,8 @@
       "preparazione": "condite",
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Fagioli conditi",
@@ -2767,7 +3014,8 @@
       "preparazione": "conditi",
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Risotto alla zucchina",
@@ -2802,7 +3050,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Farro con verdure miste",
@@ -2835,7 +3086,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta aglio, olio e pomodorini",
@@ -2864,7 +3118,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso con piselli",
@@ -2893,7 +3150,8 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pane con burro di arachidi e frutta",
@@ -2921,7 +3179,12 @@
         "Sbuccia la banana e tagliala a rondelle, disponendola sopra."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "arachidi",
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Yogurt con frutta secca e miele",
@@ -2949,7 +3212,11 @@
         "Completa con un filo di miele."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio",
+        "latte"
+      ]
     },
     {
       "nome": "Toast con prosciutto cotto e formaggio",
@@ -2977,7 +3244,11 @@
         "Se hai una piastra per toast, scalda il panino 3-4 minuti per lato finché il formaggio si scioglie e il pane è dorato e croccante."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Fette biscottate con ricotta e miele",
@@ -3004,7 +3275,11 @@
         "Completa con un filo di miele."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Latte con fette biscottate e cioccolato",
@@ -3032,7 +3307,11 @@
         "Spezza il cioccolato fondente in quadratini e servilo a parte."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Crackers",
@@ -3051,7 +3330,10 @@
         "Porziona i crackers in una ciotolina o direttamente dalla confezione monodose."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pane con prosciutto crudo (spuntino)",
@@ -3075,7 +3357,10 @@
       ],
       "sottotipoSpuntino": null,
       "copertura": "PC+C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Patatine in busta (occasionale)",
@@ -3094,7 +3379,8 @@
         "Apri una monoporzione di patatine, preferibilmente in confezione singola per non eccedere nella quantità."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Biscotti tipo Grisbi (occasionale)",
@@ -3113,7 +3399,10 @@
         "Porziona 2 biscotti in una ciotolina o direttamente dalla confezione monodose."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Granita fatta in casa (spuntino)",
@@ -3132,7 +3421,8 @@
         "Servi una porzione di granita fatta in casa in un bicchiere o coppetta."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Ricotta con miele (spuntino)",
@@ -3156,7 +3446,10 @@
       ],
       "sottotipoSpuntino": null,
       "copertura": "PF",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Uovo sodo (spuntino)",
@@ -3177,7 +3470,10 @@
       ],
       "sottotipoSpuntino": null,
       "copertura": "PU",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Frutta con yogurt (spuntino)",
@@ -3200,7 +3496,10 @@
         "Versa lo yogurt in una ciotola e unisci la frutta, mescolando delicatamente."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pane con crescenza (spuntino)",
@@ -3224,7 +3523,11 @@
       ],
       "sottotipoSpuntino": null,
       "copertura": "PF+C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Friselle con pomodoro (spuntino)",
@@ -3252,7 +3555,10 @@
         "Distribuisci il pomodoro condito sulle friselle appena prima di servire, così restano leggermente croccanti."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Banana con frutta secca (spuntino)",
@@ -3276,7 +3582,10 @@
         "Disponila in una ciotolina e completa con la frutta secca."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio"
+      ]
     },
     {
       "nome": "Pane tostato con crema di nocciole e frutta",
@@ -3304,7 +3613,11 @@
         "Lava e taglia la mela a fettine, servendola a parte o sopra il pane."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio",
+        "glutine"
+      ]
     },
     {
       "nome": "Latte con muesli e frutta",
@@ -3332,7 +3645,11 @@
         "Sbuccia e taglia la pera a cubetti, unendola."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Toast con avocado",
@@ -3362,7 +3679,11 @@
         "Cuoci un uovo (in camicia, strapazzato o all'occhio di bue, a piacere) e adagialo sopra."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ]
     },
     {
       "nome": "Yogurt con miele e frutta secca",
@@ -3389,7 +3710,11 @@
         "Completa con un filo di miele e la frutta secca."
       ],
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio",
+        "latte"
+      ]
     },
     {
       "nome": "Pane con ricotta e frutta",
@@ -3417,7 +3742,11 @@
         "Sbuccia la banana e tagliala a rondelle, disponendola sopra."
       ],
       "copertura": "C",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Riso con gamberetti e zucchine",
@@ -3452,7 +3781,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Pasta al tonno e pomodorini",
@@ -3487,7 +3819,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Cous cous con pollo e verdure miste",
@@ -3522,7 +3858,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso con tacchino e piselli",
@@ -3557,7 +3896,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pasta al salmone",
@@ -3592,7 +3932,12 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte",
+        "pesce"
+      ]
     },
     {
       "nome": "Farro con salmone e zucchine",
@@ -3627,7 +3972,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con sgombro e pomodorini",
@@ -3662,7 +4011,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Insalata di farro con feta e verdure",
@@ -3701,7 +4054,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Pasta con ricotta e spinaci",
@@ -3736,7 +4093,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Riso con verdure e uova strapazzate",
@@ -3775,7 +4136,10 @@
       ],
       "copertura": "PU+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Cous cous con lenticchie e verdure",
@@ -3810,7 +4174,10 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso con fagioli e verdure",
@@ -3845,7 +4212,8 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pasta con tofu e verdure saltate",
@@ -3880,7 +4248,11 @@
       ],
       "copertura": "PL+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "soia"
+      ]
     },
     {
       "nome": "Insalata di riso con tonno e verdure",
@@ -3919,7 +4291,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con bresaola e rucola",
@@ -3954,7 +4329,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Farro con prosciutto crudo e melone",
@@ -3989,7 +4367,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso con nodino di maiale e verdure",
@@ -4024,7 +4405,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Cous cous con manzo e verdure",
@@ -4059,7 +4441,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Riso con orata e zucchine",
@@ -4094,7 +4479,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con polpo e pomodorini",
@@ -4129,7 +4517,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "molluschi"
+      ]
     },
     {
       "nome": "Piselli in barattolo conditi",
@@ -4155,7 +4547,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Uova con maionese",
@@ -4180,7 +4573,10 @@
       ],
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Pasta con panna e piselli",
@@ -4214,7 +4610,11 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Patate al forno",
@@ -4240,7 +4640,8 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Noodles saltati in padella",
@@ -4265,7 +4666,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Friselle olio e origano",
@@ -4290,7 +4694,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Piselli saltati",
@@ -4316,7 +4723,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Cipolla saltata",
@@ -4342,7 +4750,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pomodorini conditi al basilico",
@@ -4372,7 +4781,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Insalata di cetrioli",
@@ -4398,7 +4808,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Zucchine crude a nastro",
@@ -4424,7 +4835,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Peperoni crudi in insalata",
@@ -4450,7 +4862,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Carote e finocchi in insalata",
@@ -4480,7 +4893,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Broccoli saltati in padella",
@@ -4506,7 +4920,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Melanzane a fette con basilico",
@@ -4533,7 +4948,8 @@
       "componente": "contorno",
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pancetta croccante",
@@ -4556,7 +4972,8 @@
       "preparazione": "croccante",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Stracchino a cucchiaiate",
@@ -4578,7 +4995,10 @@
       "preparazione": "a cucchiaiate",
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Fagioli borlotti conditi",
@@ -4601,7 +5021,8 @@
       "preparazione": "conditi",
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Brie a fette",
@@ -4623,7 +5044,10 @@
       "preparazione": "a fette",
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Feta a cubetti",
@@ -4646,7 +5070,10 @@
       "preparazione": "a cubetti",
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Prosciutto crudo a fette",
@@ -4668,7 +5095,8 @@
       "preparazione": "a fette",
       "copertura": "PC",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Bruschette al pomodoro",
@@ -4698,7 +5126,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Risotto al radicchio e taleggio",
@@ -4737,7 +5168,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pasta con speck e taleggio",
@@ -4771,7 +5205,11 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Scaloppine al taleggio",
@@ -4805,7 +5243,11 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Patate gratinate al taleggio",
@@ -4835,7 +5277,10 @@
       "componente": "contorno",
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Crostoni di pane e taleggio",
@@ -4864,7 +5309,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Cotoletta di pollo con emmental",
@@ -4902,7 +5351,12 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte",
+        "uova"
+      ]
     },
     {
       "nome": "Insalata con emmental e prosciutto cotto",
@@ -4940,7 +5394,10 @@
       ],
       "copertura": "PF+V",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Toast con emmental e prosciutto cotto",
@@ -4973,7 +5430,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Gratin di zucchine ed emmental",
@@ -5003,7 +5464,10 @@
       "componente": "contorno",
       "copertura": "V",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Farro con emmental e verdure",
@@ -5041,7 +5505,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Provola alla piastra",
@@ -5065,7 +5533,10 @@
       "preparazione": "alla piastra",
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Pasta alla provola e pomodoro",
@@ -5103,7 +5574,11 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Provola impanata",
@@ -5137,7 +5612,12 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte",
+        "uova"
+      ]
     },
     {
       "nome": "Melanzane e provola al forno",
@@ -5170,7 +5650,10 @@
       ],
       "copertura": "PF+V",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Riso con provola e zucchine",
@@ -5203,7 +5686,10 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Tomini in carrozza",
@@ -5241,7 +5727,12 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte",
+        "uova"
+      ]
     },
     {
       "nome": "Tomini alla piastra con verdure",
@@ -5274,7 +5765,10 @@
       ],
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Insalata con tomini e noci",
@@ -5312,7 +5806,11 @@
       ],
       "copertura": "PF+V",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio",
+        "latte"
+      ]
     },
     {
       "nome": "Tomini gratinati al forno",
@@ -5341,7 +5839,10 @@
       ],
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Tramezzini con formaggio spalmabile e salmone affumicato",
@@ -5370,7 +5871,12 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte",
+        "pesce"
+      ]
     },
     {
       "nome": "Crostini con formaggio spalmabile e pomodoro",
@@ -5403,7 +5909,11 @@
       ],
       "copertura": "PF+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Uova strapazzate con formaggio spalmabile",
@@ -5432,7 +5942,11 @@
       ],
       "copertura": "PF",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte",
+        "uova"
+      ]
     },
     {
       "nome": "Cetriolo farcito con formaggio spalmabile",
@@ -5456,7 +5970,10 @@
         "Taglia a rondelle spesse e servi fresco."
       ],
       "copertura": "PF",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Branzino al forno con patate",
@@ -5489,7 +6006,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Branzino all'acqua pazza",
@@ -5522,7 +6042,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Filetti di branzino in padella",
@@ -5549,7 +6072,10 @@
       "preparazione": "in padella",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Riso con branzino e zucchine",
@@ -5582,7 +6108,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Branzino in cartoccio",
@@ -5615,7 +6144,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sovracosce di pollo al forno con patate",
@@ -5644,7 +6176,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Sovracosce di pollo in padella con peperoni",
@@ -5677,7 +6210,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Sovracosce di pollo alla griglia",
@@ -5703,7 +6237,8 @@
       "preparazione": "alla griglia",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Sovracosce di pollo con carote e zucchine",
@@ -5736,7 +6271,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Cous cous con sovracosce di pollo",
@@ -5769,7 +6305,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pollo a dadini con peperoni e cipolla",
@@ -5802,7 +6341,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pasta con pollo a dadini e zucchine",
@@ -5836,7 +6376,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pollo a dadini in padella con funghi",
@@ -5865,7 +6408,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Riso con pollo a dadini e piselli",
@@ -5898,7 +6442,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Insalata di pollo a dadini e verdure croccanti",
@@ -5931,7 +6476,8 @@
       ],
       "copertura": "PC+V",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Costine di maiale al forno",
@@ -5957,7 +6503,8 @@
       "preparazione": "al forno",
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Costine di maiale con patate al forno",
@@ -5986,7 +6533,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Costine di maiale in padella con cipolla",
@@ -6014,7 +6562,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Costine di maiale alla griglia con verdure",
@@ -6047,7 +6596,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di suino alla piastra con patate",
@@ -6076,7 +6626,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di suino con verdure grigliate",
@@ -6109,7 +6660,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di suino al pane",
@@ -6141,7 +6693,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Hamburger di pollo alla piastra con insalata",
@@ -6173,7 +6728,8 @@
       ],
       "copertura": "PC+V",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di pollo con patate al forno",
@@ -6202,7 +6758,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di pollo al pane con verdure",
@@ -6235,7 +6792,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Hamburger di tacchino alla piastra con zucchine",
@@ -6264,7 +6824,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di tacchino con carote e insalata",
@@ -6297,7 +6858,8 @@
       ],
       "copertura": "PC+V",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di tacchino al pane integrale",
@@ -6329,7 +6891,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Hamburger di vitello alla piastra con patate",
@@ -6358,7 +6923,8 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di vitello con verdure saltate",
@@ -6391,7 +6957,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Hamburger di vitello al pane con radicchio",
@@ -6424,7 +6991,10 @@
       ],
       "copertura": "PC+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta alla Norma",
@@ -6462,7 +7032,10 @@
       ],
       "copertura": "C+V",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Orecchiette con cime di rapa",
@@ -6496,7 +7069,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta con zucca e rosmarino",
@@ -6530,7 +7106,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta con asparagi e limone",
@@ -6564,7 +7143,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta con carciofi",
@@ -6598,7 +7180,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta con broccoli aglio e peperoncino",
@@ -6636,7 +7221,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Risotto ai funghi champignon",
@@ -6674,7 +7262,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Risotto alla zucca",
@@ -6712,7 +7303,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Risotto agli asparagi",
@@ -6750,7 +7344,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Orzo con zucca e rosmarino",
@@ -6784,7 +7381,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Farro con carciofi e menta",
@@ -6818,7 +7418,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Gnocchi al pomodoro e basilico",
@@ -6852,7 +7455,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Gnocchi alla sorrentina",
@@ -6890,7 +7496,11 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Pasta con cavolfiore e zafferano",
@@ -6924,7 +7534,10 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Pasta e patate cremosa",
@@ -6962,7 +7575,11 @@
       ],
       "copertura": "C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ]
     },
     {
       "nome": "Merluzzo al forno con pomodorini e olive",
@@ -6992,7 +7609,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Merluzzo in padella al limone e capperi",
@@ -7022,7 +7642,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Merluzzo in umido con olive e capperi",
@@ -7056,7 +7679,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Filetto di orata al cartoccio",
@@ -7090,7 +7716,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sardine al forno con limone e pangrattato",
@@ -7124,7 +7753,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Alici gratinate al forno",
@@ -7158,7 +7791,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Sgombro in umido con pomodorini",
@@ -7192,7 +7829,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sardine in padella con pomodorini",
@@ -7226,7 +7866,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Salmone in padella con semi di sesamo",
@@ -7256,7 +7899,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Pesce spada alla piastra",
@@ -7284,7 +7930,10 @@
       "preparazione": "alla piastra",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Trancio di tonno fresco alla piastra",
@@ -7312,7 +7961,10 @@
       "preparazione": "alla piastra",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Gamberetti al vapore con limone e prezzemolo",
@@ -7340,7 +7992,10 @@
       "preparazione": "al vapore",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Gamberetti all'aglio in padella",
@@ -7368,7 +8023,10 @@
       "preparazione": "all'aglio in padella",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Insalata tiepida di gamberi e zucchine",
@@ -7402,7 +8060,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Totani alla griglia con limone",
@@ -7430,7 +8091,10 @@
       "preparazione": "alla griglia",
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Totani in umido con piselli",
@@ -7468,7 +8132,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Seppie in umido con patate",
@@ -7506,7 +8173,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Insalata di polpo e patate",
@@ -7540,7 +8210,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Pasta con merluzzo e pomodorini",
@@ -7574,7 +8247,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Farro con merluzzo e verdure",
@@ -7608,7 +8285,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con le sarde",
@@ -7646,7 +8327,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con alici fresche e pangrattato",
@@ -7680,7 +8365,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Riso con sarde e pomodorini",
@@ -7714,7 +8403,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Cous cous con sgombro e verdure",
@@ -7748,7 +8440,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con tonno fresco e pomodorini",
@@ -7782,7 +8478,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Pasta con pesce spada e melanzane",
@@ -7820,7 +8520,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ]
     },
     {
       "nome": "Cous cous con gamberi e pomodorini",
@@ -7854,7 +8558,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei",
+        "glutine"
+      ]
     },
     {
       "nome": "Insalatona di mare con gamberi e polpo",
@@ -7896,7 +8604,11 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei",
+        "molluschi"
+      ]
     },
     {
       "nome": "Linguine con cozze e pomodorini",
@@ -7934,7 +8646,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "molluschi"
+      ]
     },
     {
       "nome": "Cous cous con totani e verdure",
@@ -7968,7 +8684,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "molluschi"
+      ]
     },
     {
       "nome": "Pasta con totani e pomodorini",
@@ -8002,7 +8722,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "molluschi"
+      ]
     },
     {
       "nome": "Risotto ai totani e zucchine",
@@ -8040,7 +8764,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Farro con polpo, patate e olive",
@@ -8074,7 +8801,11 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "molluschi"
+      ]
     },
     {
       "nome": "Riso con seppie e piselli",
@@ -8112,7 +8843,10 @@
       ],
       "copertura": "PP+C",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Panettone (fetta)",
@@ -8130,7 +8864,8 @@
         "grassi": 8
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pandoro (fetta)",
@@ -8148,7 +8883,8 @@
         "grassi": 10
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Colomba (fetta)",
@@ -8166,7 +8902,8 @@
         "grassi": 9
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Crostata (fetta)",
@@ -8184,7 +8921,8 @@
         "grassi": 12
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Torta allo yogurt (fetta)",
@@ -8202,7 +8940,8 @@
         "grassi": 10
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Ciambellone (fetta)",
@@ -8220,7 +8959,8 @@
         "grassi": 10
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Toast al prosciutto",
@@ -8238,7 +8978,8 @@
         "grassi": 9
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Pane tostato e uova strapazzate",
@@ -8256,7 +8997,8 @@
         "grassi": 17
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Colazione con budino",
@@ -8274,7 +9016,8 @@
         "grassi": 4
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Colazione al bar (cappuccino e brioche)",
@@ -8292,7 +9035,8 @@
         "grassi": 17
       },
       "copertura": "",
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "al pomodoro",
@@ -8331,7 +9075,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "alle verdure",
@@ -8370,7 +9115,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "ai funghi",
@@ -8408,7 +9154,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "al pesto di basilico",
@@ -8445,7 +9192,10 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "al ragù di verdure",
@@ -8488,7 +9238,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "al limone e prezzemolo",
@@ -8525,7 +9276,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "alla Norma",
@@ -8564,7 +9316,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "con zucchine e pomodorini",
@@ -8603,7 +9356,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Petto di pollo",
@@ -8623,7 +9377,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Petto di tacchino",
@@ -8643,7 +9398,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Filetto di nasello",
@@ -8663,7 +9419,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Orata",
@@ -8683,7 +9442,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sogliola",
@@ -8703,7 +9465,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Branzino",
@@ -8723,7 +9488,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Salmone",
@@ -8743,7 +9511,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Sgombro",
@@ -8763,7 +9534,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "Gamberetti",
@@ -8783,7 +9557,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ]
     },
     {
       "nome": "Polpo",
@@ -8803,7 +9580,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "molluschi"
+      ]
     },
     {
       "nome": "Uova",
@@ -8823,7 +9603,10 @@
       ],
       "copertura": "PU",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ]
     },
     {
       "nome": "Ceci",
@@ -8843,7 +9626,8 @@
       ],
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Lenticchie",
@@ -8863,7 +9647,8 @@
       ],
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Fagioli",
@@ -8883,7 +9668,8 @@
       ],
       "copertura": "PL",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Tofu",
@@ -8903,7 +9689,10 @@
       ],
       "copertura": "PL",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "soia"
+      ]
     },
     {
       "nome": "Mozzarella",
@@ -8923,7 +9712,10 @@
       ],
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Ricotta",
@@ -8943,7 +9735,10 @@
       ],
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Parmigiano",
@@ -8963,7 +9758,10 @@
       ],
       "copertura": "PF",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ]
     },
     {
       "nome": "Fettina di manzo",
@@ -8983,7 +9781,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Nodino di maiale",
@@ -9003,7 +9802,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Bresaola",
@@ -9023,7 +9823,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Prosciutto crudo",
@@ -9043,7 +9844,8 @@
       ],
       "copertura": "PC",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Tonno in scatola",
@@ -9063,7 +9865,10 @@
       ],
       "copertura": "PP",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ]
     },
     {
       "nome": "zucchine grigliate",
@@ -9088,7 +9893,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "insalata mista",
@@ -9113,7 +9919,8 @@
       ],
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "broccoli al vapore",
@@ -9138,7 +9945,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "carote julienne",
@@ -9163,7 +9971,8 @@
       ],
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "peperoni saltati",
@@ -9188,7 +9997,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "spinaci saltati",
@@ -9213,7 +10023,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "melanzane grigliate",
@@ -9238,7 +10049,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "pomodori in insalata",
@@ -9263,7 +10075,8 @@
       ],
       "copertura": "",
       "richiedeCottura": false,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "cavolfiore al vapore",
@@ -9288,7 +10101,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "funghi trifolati",
@@ -9313,7 +10127,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "radicchio saltato",
@@ -9338,7 +10153,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "fagiolini lessati",
@@ -9363,7 +10179,8 @@
       ],
       "copertura": "",
       "richiedeCottura": true,
-      "soloManuale": false
+      "soloManuale": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Ramen Giapponese",
@@ -9409,7 +10226,12 @@
       "porzioni": 1,
       "piattoSpeciale": false,
       "copertura": "PC+C",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": [
+        "glutine",
+        "soia",
+        "uova"
+      ]
     },
     {
       "nome": "Tagliolini al salmone",
@@ -9437,7 +10259,12 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "PP+C",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce",
+        "uova"
+      ]
     },
     {
       "nome": "Tagliolini ai funghi",
@@ -9464,7 +10291,11 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "C+V",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ]
     },
     {
       "nome": "Tagliolini al pomodoro fresco e basilico",
@@ -9495,7 +10326,11 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "C+V",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ]
     },
     {
       "nome": "Zuppa cereali e legumi in brodo",
@@ -9531,7 +10366,10 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "PL+C",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": [
+        "glutine"
+      ]
     },
     {
       "nome": "Zuppa di lenticchie",
@@ -9563,7 +10401,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "PL+V",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": []
     },
     {
       "nome": "Zuppa di ceci",
@@ -9595,7 +10434,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "PL+V",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": []
     },
     {
       "nome": "Zuppa di fagioli al rosmarino",
@@ -9627,7 +10467,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "PL+V",
-      "richiedeCottura": true
+      "richiedeCottura": true,
+      "allergeniPresenti": []
     },
     {
       "nome": "Insalata mista con carote e finocchi",
@@ -9655,7 +10496,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "V",
-      "richiedeCottura": false
+      "richiedeCottura": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Julienne di carote",
@@ -9679,7 +10521,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "V",
-      "richiedeCottura": false
+      "richiedeCottura": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Carote e finocchi",
@@ -9707,7 +10550,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "V",
-      "richiedeCottura": false
+      "richiedeCottura": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Insalata di pomodori e basilico",
@@ -9735,7 +10579,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "V",
-      "richiedeCottura": false
+      "richiedeCottura": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Misticanza di radicchio",
@@ -9763,7 +10608,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "V",
-      "richiedeCottura": false
+      "richiedeCottura": false,
+      "allergeniPresenti": []
     },
     {
       "nome": "Radicchio rosso e carote",
@@ -9791,7 +10637,8 @@
       "piattoSpeciale": false,
       "soloManuale": false,
       "copertura": "V",
-      "richiedeCottura": false
+      "richiedeCottura": false,
+      "allergeniPresenti": []
     }
   ]
 }

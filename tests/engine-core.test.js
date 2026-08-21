@@ -31,6 +31,12 @@ const rng=E.seeded(42);
   assert.equal(E.chooseRecipe(recipes,state,{automatic:true},rng).id,'normal');
 }
 {
+  const recipe={id:'latte',allergeniPresenti:['latte'],ingredienti:[{variantId:'v-latte'}]};
+  assert.equal(E.recipeBlocked(recipe,{activeAllergens:['latte'],ingredientMeta:{'v-latte':{allergeni:['latte']}}}),true);
+  assert.equal(E.recipeBlocked(recipe,{blockedIngredientIds:['v-latte'],ingredientMeta:{'v-latte':{allergeni:[]}}}),true);
+  assert.equal(E.recipeBlocked(recipe,{activeAllergens:[],blockedIngredientIds:[],ingredientMeta:{'v-latte':{allergeni:['latte']}}}),false);
+}
+{
   assert.equal(E.automaticDayAllowed('2026-08-22','2026-08-21'),true);
   assert.equal(E.automaticDayAllowed('2026-08-21','2026-08-21'),false);
 }

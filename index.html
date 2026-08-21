@@ -1763,6 +1763,7 @@ async function importaListaRicette(lista){
       classe: r.classe || null,
       richiedeCottura: typeof r.richiedeCottura==='boolean' ? r.richiedeCottura : null,
       soloManuale: !!r.soloManuale,
+      allergeniPresenti: Array.isArray(r.allergeniPresenti) ? r.allergeniPresenti : [],
       piattoSpeciale: !!r.piattoSpeciale,
       modalitaSpecialeDefault: r.modalitaSpecialeDefault || null,
       imponeCarboidrato: r.imponeCarboidrato || null,
@@ -8954,7 +8955,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=70').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=71').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Quando il browser rileva un nuovo SW installato, gli dice
@@ -9012,8 +9013,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=70"></script>
-<script src="motor.js?v=70"></script>
+<script src="engine-core.js?v=71"></script>
+<script src="motor.js?v=71"></script>
 
 </body>
 </html>
