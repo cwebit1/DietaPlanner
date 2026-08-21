@@ -664,7 +664,17 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <section class="view" id="view-impostazioni">
   <div class="card">
     <h3 style="margin-bottom:10px;">Configurazione avanzata nutrizionista</h3>
-    <div class="meta" style="margin-bottom:12px;">Valori iniziali dal piano nutrizionale. I range restano modificabili e sono letti direttamente dal motore.</div>
+    <div class="meta" style="margin-bottom:12px;">Area distinta dal Set utente. Qui il nutrizionista configura i vincoli clinici e strutturali letti direttamente dal motore.</div>
+    <label>Profilo alimentare
+      <select id="configProfiloAlimentare">
+        <option value="onnivoro">Onnivoro</option>
+        <option value="vegetariano">Vegetariano</option>
+        <option value="vegano">Vegano</option>
+        <option value="celiaco">Celiachia / senza glutine</option>
+        <option value="intollerante_lattosio">Intolleranza al lattosio</option>
+      </select>
+    </label>
+    <div class="meta" style="margin:6px 0 12px;">Il profilo applica esclusioni rigide. Le allergie e altre intolleranze possono essere combinate sotto.</div>
     <div id="configAvanzataCampi" class="set-carb-grid"></div>
     <label style="margin-top:14px;">Profilo allergie/intolleranze</label>
     <div class="tabgroup" id="configAllergeniAttivi"></div>
@@ -1807,9 +1817,10 @@ function labelGiorno(iso){
 }
 
 const ALLERGENI_UE=[['glutine','🌾','Glutine'],['crostacei','🦐','Crostacei'],['uova','🥚','Uova'],['pesce','🐟','Pesce'],['arachidi','🥜','Arachidi'],['soia','🌱','Soia'],['latte','🥛','Latte'],['frutta_guscio','🌰','Frutta a guscio'],['sedano','🥬','Sedano'],['senape','🟡','Senape'],['sesamo','⚪','Sesamo'],['solfiti','🍷','Solfiti'],['lupini','🫘','Lupini'],['molluschi','🐚','Molluschi']];
-const CONFIG_AVANZATA_DEFAULT={proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},maxProteinSourcesPerDay:2,specialBreakfastMax:1,specialMealsMax:2,fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerMeal:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
+const CONFIG_AVANZATA_DEFAULT={dietProfile:'onnivoro',proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},maxProteinSourcesPerDay:2,specialBreakfastMax:1,specialMealsMax:2,fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerMeal:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
 async function renderConfigAvanzata(){
   const rec=await getOne('impostazioni','configAvanzata'),cfg=Object.assign({},CONFIG_AVANZATA_DEFAULT,rec&&rec.valore||{}),box=document.getElementById('configAvanzataCampi');if(!box)return;
+  document.getElementById('configProfiloAlimentare').value=cfg.dietProfile||'onnivoro';
   const fields=[];for(const m of ['carne','pesce','formaggi','uova','legumi']){const f=(cfg.proteinFrequencies||CONFIG_AVANZATA_DEFAULT.proteinFrequencies)[m];fields.push([`proteinFrequencies.${m}.min`,`${m}: minimo/sett.`,f.min],[`proteinFrequencies.${m}.max`,`${m}: massimo/sett.`,f.max===null?'':f.max]);}
   for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])fields.push([`subtypeCaps.${s}`,`${s}: massimo/sett.`,(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]]);
   fields.push(['maxProteinSourcesPerDay','Fonti proteiche max/giorno',cfg.maxProteinSourcesPerDay],['specialBreakfastMax','Colazioni speciali max/sett.',cfg.specialBreakfastMax],['specialMealsMax','Pasti speciali max/sett.',cfg.specialMealsMax],['oilGramsPerMeal','Olio g/pasto',cfg.oilGramsPerMeal],['fruit.min','Frutta min/giorno',cfg.fruit&&cfg.fruit.min],['fruit.max','Frutta max/giorno',cfg.fruit&&cfg.fruit.max],['fruit.portionMin','Frutta porzione min g',cfg.fruit&&cfg.fruit.portionMin],['fruit.portionMax','Frutta porzione max g',cfg.fruit&&cfg.fruit.portionMax]);
@@ -1818,6 +1829,7 @@ async function renderConfigAvanzata(){
 }
 async function salvaConfigAvanzata(){
   const old=await getOne('impostazioni','configAvanzata'),cfg=structuredClone(old&&old.valore||CONFIG_AVANZATA_DEFAULT);document.querySelectorAll('[data-cfg-avanzata]').forEach(i=>{const path=i.dataset.cfgAvanzata.split('.');let target=cfg;for(let n=0;n<path.length-1;n++)target=target[path[n]]||(target[path[n]]={});target[path[path.length-1]]=i.value===''?null:Number(i.value);});
+  cfg.dietProfile=document.getElementById('configProfiloAlimentare').value||'onnivoro';
   const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene);await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
 }
 
@@ -8935,7 +8947,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=67').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=68').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Quando il browser rileva un nuovo SW installato, gli dice
@@ -8993,8 +9005,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=67"></script>
-<script src="motor.js?v=67"></script>
+<script src="engine-core.js?v=68"></script>
+<script src="motor.js?v=68"></script>
 
 </body>
 </html>
