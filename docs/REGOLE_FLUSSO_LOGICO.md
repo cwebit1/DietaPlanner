@@ -4,6 +4,11 @@
 
 Prima di qualsiasi modifica devono essere rilette integralmente le sezioni pertinenti di questo documento. Si implementa esclusivamente quanto richiesto e autorizzato: dati, valori predefiniti, ricette, ingredienti, quantità, versioni e logiche adiacenti non si modificano senza un'istruzione esplicita. Gli esempi grafici o numerici non diventano vincoli funzionali. Se durante l'implementazione emerge una modifica ulteriore ritenuta necessaria, il lavoro su quel punto si ferma e viene chiesta autorizzazione prima di applicarla.
 
+## CORREZIONI UI V80
+
+- Nel Set utente non deve più comparire la sezione **“Tetti personali per ingrediente”** né devono essere eseguiti il relativo rendering o i relativi listener. La configurazione clinica degli ingredienti resta esclusivamente nella vista nutrizionista.
+- All'avvio la striscia delle date della vista Piano deve essere interamente visibile sotto l'header. Il centraggio del giorno attivo deve modificare soltanto lo scorrimento orizzontale della striscia e non deve spostare verticalmente la pagina. L'eventuale posizione verticale ripristinata automaticamente dal browser viene azzerata al termine dell'avvio.
+
 ## SPECIFICA VINCOLANTE — NUOVA VISTA NUTRIZIONISTA COMPLETA
 
 Questa sezione sostituisce la disposizione precedente della configurazione avanzata. La configurazione nutrizionista resta nello stesso `index.html`, ma diventa una vista interna autonoma: in Impostazioni compare soltanto il collegamento per aprirla; non compare nella barra di navigazione; contiene un comando per tornare a Impostazioni; in futuro il suo ingresso potrà essere protetto senza cambiare database o struttura della pagina.
