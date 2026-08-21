@@ -17,6 +17,87 @@ Questo file unisce la sezione "Generazione programmazione settimanale" (dettata 
 
 ---
 
+## 21. Presentazione di condimenti e cotture
+
+- I simboli `+` usati nelle descrizioni funzionali indicano soltanto la composizione concettuale e **non devono essere mostrati nell'interfaccia**.
+- Se il carboidrato è realizzato mediante una ricetta di primo completa, la card mostra il nome reale della ricetta (che contiene già il condimento), non la sola etichetta del cereale.
+- Se il primo è composto modularmente, la card mostra carboidrato e sugo con un separatore grafico neutro (`·`). `primoSugoId` resta il riferimento del sugo modulare; una ricetta di primo completa non deve fingere di avere un sugo separato.
+- Una proteina il cui nome contiene già una cottura (per esempio “alla piastra”, “al forno”, “sode” o “in frittata”) mantiene quella cottura: il motore non ne aggiunge una casuale e la UI non propone “Cambia cottura”.
+- Le cotture configurabili e il relativo comando restano disponibili per le proteine generiche che non incorporano già una preparazione nel nome.
+
+---
+
+## 22. Vincolo dominante — composizione matematica, non eccezioni nominali
+
+**Istruzione esplicita di Cwe:** ogni indicazione fornita durante l'analisi deve essere salvata in questo documento e consultata prima di progettare o modificare il codice. La memoria temporanea della conversazione non è una fonte sufficiente. Prima di implementare una nuova interpretazione proposta autonomamente, occorre confrontarla con queste regole e chiedere conferma; non si modifica il comportamento sulla sola base di un'idea dello sviluppatore.
+
+### 22.1 Principio di rappresentazione
+
+Il motore non deve ricavare struttura, cottura o condimento interpretando il testo del nome di una ricetta. Ogni proposta deve essere rappresentata mediante dimensioni indipendenti e combinabili:
+
+1. **soggetto/base**: ingrediente o componente principale (es. pollo, tacchino, pasta, riso);
+2. **realizzazione**: ricetta completa oppure componente semplice;
+3. **condimento**: assente, incluso nella ricetta completa oppure componente modulare esplicito;
+4. **cottura**: assente/non applicabile, inclusa e vincolata dalla ricetta completa oppure scelta da un insieme compatibile;
+5. **copertura nutrizionale**: carboidrato, proteina e verdura effettivamente coperti dalla realizzazione.
+
+Il nome è soltanto una proprietà di presentazione. Non determina le regole del motore.
+
+### 22.2 Modello senza eccezioni
+
+Per ogni realizzazione `r` devono essere disponibili metadati strutturati equivalenti a:
+
+```text
+r = {
+  soggettoId,
+  tipoRealizzazione,
+  condimentoId | condimentoIncluso | nessunCondimento,
+  cotturaId | cotturaInclusa | nessunaCottura,
+  coperturaMacro,
+  sostituzioniCompatibili
+}
+```
+
+La validità di una combinazione è calcolata con regole sui campi, non con espressioni regolari sul nome e non con eccezioni dedicate a singole ricette.
+
+### 22.3 Ricette con e senza condimento
+
+- Una ricetta completa può dichiarare il proprio condimento come **incluso**: non riceve automaticamente un secondo sugo/condimento.
+- Una realizzazione semplice può dichiarare **nessun condimento** oppure richiedere un condimento scelto da un pool compatibile.
+- Il campo visualizzato deve distinguere chiaramente la ricetta completa dal componente modulare, senza inventare un `sugoId` per una ricetta che incorpora già il condimento.
+- Cambiare sugo è disponibile soltanto quando la realizzazione corrente è modulare e il carboidrato ammette un pool di sughi. Non si determina questa possibilità dal nome visualizzato.
+
+### 22.4 Sostituzione del soggetto proteico
+
+Esempio guida: se esiste la ricetta completa “Petto di pollo al limone” e l'utente richiede tacchino, il sistema non deve né rinominare il pollo né creare un'eccezione “pollo → tacchino”. Deve operare su una trasformazione strutturata:
+
+```text
+(soggetto=pollo, realizzazione=al_limone)
+→ richiesta sostituzione soggetto
+→ cerca (soggetto=tacchino, realizzazione compatibile=al_limone)
+```
+
+- Se la realizzazione è dichiarata parametrica e il tacchino è tra i soggetti compatibili, viene costruita la variante valida con gli ingredienti e le quantità previsti.
+- Se esiste una ricetta completa specifica equivalente, viene scelta quella.
+- Se nessuna delle due condizioni è soddisfatta, quella trasformazione non appartiene al dominio valido: il motore propone un'altra realizzazione compatibile del tacchino. Non improvvisa e non altera soltanto il nome.
+
+### 22.5 Conseguenza per lo sviluppo
+
+Prima di cambiare il comportamento di sughi, cotture, analoghi o sostituzioni, occorre definire e validare lo schema dati necessario. Le euristiche basate sul nome possono essere usate esclusivamente in uno strumento di migrazione/revisione dati, con verifica finale, mai come regola permanente del motore.
+
+---
+
+## 23. Nomi ricette e storico nutrizionale consumato
+
+- Il nome di ogni ricetta deve iniziare sempre con una lettera maiuscola. La regola appartiene ai dati: viene applicata all'importazione e a ogni salvataggio, non soltanto resa graficamente con CSS.
+- Il grafico dei consumi deve usare una fotografia nutrizionale completa e immutabile registrata nel momento in cui il pasto viene consumato.
+- La fotografia comprende colazione o ricetta speciale, spuntino, primo, proteina e verdura. Comprende inoltre il carboidrato modulare e l'eventuale sugo quando non esiste una ricetta composta che li rappresenti già.
+- Una componente già inclusa in una ricetta completa non deve essere conteggiata una seconda volta.
+- I record storici precedenti, privi della fotografia nutrizionale, restano leggibili mediante il calcolo legacy basato sugli ID ricetta.
+- Modifiche future alle ricette o il reset del piano non devono cambiare retroattivamente i valori di un consumo già registrato.
+
+---
+
 ## 1. INGREDIENTI
 
 - Ingredienti contiene tutti gli alimenti con le loro caratteristiche e info di disponibilità.

@@ -994,6 +994,10 @@ function rawDelKey(store,key){
   cacheGetAll[store]=null;
   return new Promise((res,reject)=>{const r=tx(store,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>reject(r.error);});
 }
+function nomeRicettaConInizialeMaiuscola(nome){
+  const testo=String(nome||'').trim();
+  return testo ? testo.charAt(0).toLocaleUpperCase('it-IT')+testo.slice(1) : testo;
+}
 function getAll(store){
   if(store==='piano'&&menuDraft&&document.getElementById('view-menu')?.classList.contains('active')){
     return new Promise(async res=>{const base=await getAllRaw('piano'),m=new Map(base.map(x=>[x.id,x]));for(const [id,v] of menuDraft.voci){if(v===null)m.delete(id);else m.set(id,v);}res([...m.values()]);});
@@ -1013,6 +1017,7 @@ function getAllRaw(store){
   return promessa;
 }
 function put(store, obj){
+  if(store==='ricette'&&obj&&obj.nome) obj.nome=nomeRicettaConInizialeMaiuscola(obj.nome);
   if(menuDraftIntercetta(store,obj.id)){menuDraft.voci.set(obj.id,structuredClone(obj));menuDraft.modificata=true;return Promise.resolve(obj);}
   return rawPut(store,obj);
 }
@@ -4067,6 +4072,7 @@ async function registraConsumoStorico(voce,origine){
 if(!voce||!voce.id)return;
 const sep=voce.id.lastIndexOf('_');
 const giorno=voce.id.slice(0,sep),pasto=voce.id.slice(sep+1);
+const nutrizioneTotale=await calcolaNutrizioneVoceConsumata(voce);
 await put('consumoGiorno',{
 id:voce.id+'_'+(voce.dataConsumato||todayISO()),
 giorno,pasto,
@@ -4074,11 +4080,53 @@ dataConsumato:voce.dataConsumato||todayISO(),
 origine:origine||voce.origine||'auto',
 ricettaIds:voce.modo==='multi'?[voce.primoId,voce.secondoId,voce.contornoId].filter(Boolean):(voce.ricettaId?[voce.ricettaId]:[]),
 primoCereale:voce.primoCereale||null,
+primoSugoId:voce.primoSugoId||null,
 componenti:voce.componenti||null,
 colazioneSpecialeId:voce.colazioneSpecialeId||null,
 porzioni:voce.porzioni||1,
+nutrizioneTotale,
 registratoIl:new Date().toISOString()
 });
+}
+
+function aggiungiNutrizione(tot,n){
+  if(!n)return tot;
+  for(const k of ['kcal','prot','carb','grassi'])tot[k]+=Number(n[k])||0;
+  return tot;
+}
+
+async function nutrizioneCarboidratoModulare(chiave){
+  const cfg=CARBOIDRATI_PASTO[chiave];
+  if(!cfg)return null;
+  const varianti=await getAll('varianti');
+  const variante=varianti.find(v=>String(v.nome||'').toLowerCase()===String(cfg.ingrediente||'').toLowerCase());
+  if(!variante)return null;
+  const fattore=(Number(cfg.porzione)||0)/100;
+  return {kcal:(Number(variante.kcal100)||0)*fattore,prot:(Number(variante.prot100)||0)*fattore,carb:(Number(variante.carb100)||0)*fattore,grassi:(Number(variante.grassi100)||0)*fattore};
+}
+
+async function calcolaNutrizioneVoceConsumata(voce){
+  const tot={kcal:0,prot:0,carb:0,grassi:0};
+  if(voce.componenti||voce.colazioneSpecialeId){
+    return aggiungiNutrizione(tot,await nutrizioneColazione(voce.componenti,null,voce.colazioneSpecialeId));
+  }
+  if(voce.modo!=='multi'){
+    const r=voce.ricettaId?await getOne('ricette',voce.ricettaId):null;
+    return aggiungiNutrizione(tot,r?await nutrizionePerPersona(r):null);
+  }
+  const primo=voce.primoId?await getOne('ricette',voce.primoId):null;
+  const secondo=voce.secondoId?await getOne('ricette',voce.secondoId):null;
+  const contorno=voce.contornoId?await getOne('ricette',voce.contornoId):null;
+  if(primo)aggiungiNutrizione(tot,await nutrizionePerPersona(primo));
+  else{
+    const carbGiaIncluso=secondo&&await ricettaContieneCarboidrati(secondo);
+    if(voce.primoCereale&&!carbGiaIncluso)aggiungiNutrizione(tot,await nutrizioneCarboidratoModulare(voce.primoCereale));
+    const sugo=voce.primoSugoId?await getOne('ricette',voce.primoSugoId):null;
+    if(sugo)aggiungiNutrizione(tot,await nutrizionePerPersona(sugo));
+  }
+  if(secondo)aggiungiNutrizione(tot,await nutrizionePerPersona(secondo));
+  if(contorno)aggiungiNutrizione(tot,await nutrizionePerPersona(contorno));
+  return tot;
 }
 
 /* Vero se la ricetta include già una fonte di carboidrati (stessa soglia di B10:
@@ -4172,6 +4220,7 @@ const set=new Set(listaGiorniIso);
 const log=await getAll('consumoGiorno');
 for(const rec of log){
 if(!set.has(rec.giorno))continue;
+if(rec.nutrizioneTotale){aggiungiNutrizione(tot,rec.nutrizioneTotale);continue;}
 if(rec.componenti||rec.colazioneSpecialeId){
 const n=await nutrizioneColazione(rec.componenti,null,rec.colazioneSpecialeId);
 tot.kcal+=n.kcal;tot.prot+=n.prot;tot.carb+=n.carb;tot.grassi+=n.grassi;
@@ -5543,6 +5592,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
 }
 
 function cottureAmmesseProteina(nomeProteina, gruppoProteico){
+  if(/\b(alla piastra|al vapore|al forno|al naturale|al limone|in umido|in padella|alla griglia|grigliat[oaie]|gratinat[oaie]|saltat[oaie]|less[oaie]|bollit[oaie]|sod[oaie]|strapazzat[oaie]|frittata)\b/i.test(nomeProteina||'')||/prosciutto|bresaola|formagg|mozzarella|ricotta|tonno in scatola/i.test(nomeProteina||'')) return [];
   const chiave=(nomeProteina||'').trim().toLowerCase();
   if(typeof COTTURE_PER_PROTEINA!=='undefined' && Object.prototype.hasOwnProperty.call(COTTURE_PER_PROTEINA,chiave)){
     return (COTTURE_PER_PROTEINA[chiave]||[]).slice();
@@ -5803,7 +5853,9 @@ async function renderPastoTabContenuto(pasto,giorno,elementId){
     const contRicetta=draft.contornoId?await getOne('ricette',draft.contornoId):null;
     const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
     if(draft.cottura&&!cottureAmmesse.includes(draft.cottura))draft.cottura=cottureAmmesse[0]||null;
-    const primoNome=(carbLabel+(sugoRicetta?' + '+sugoRicetta.nome:''))||'Nessun carboidrato';
+    const primoNome=primoRicetta
+      ? primoRicetta.nome
+      : ((carbLabel+(sugoRicetta?' · '+sugoRicetta.nome:''))||'Nessun carboidrato');
     const protNome=protRicetta?protRicetta.nome+(draft.cottura?' · '+draft.cottura:''):'Nessuna proteina';
     const contNome=contRicetta?contRicetta.nome:'Nessuna verdura';
     const warn=r=>r&&ricettaHaQuasiEsaurito(r,mappaStati)?' ⚠️':'';
@@ -9166,7 +9218,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=74').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=76').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Il nuovo SW entra in controllo senza ricaricare immediatamente la pagina.
@@ -9217,8 +9269,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=74"></script>
-<script src="motor.js?v=74"></script>
+<script src="engine-core.js?v=76"></script>
+<script src="motor.js?v=76"></script>
 
 </body>
 </html>

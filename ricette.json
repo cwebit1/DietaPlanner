@@ -1,5 +1,5 @@
 {
-  "versione": 9,
+  "versione": 10,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -9039,7 +9039,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "al pomodoro",
+      "nome": "Al pomodoro",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9079,7 +9079,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "alle verdure",
+      "nome": "Alle verdure",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9119,7 +9119,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "ai funghi",
+      "nome": "Ai funghi",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9158,7 +9158,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "al pesto di basilico",
+      "nome": "Al pesto di basilico",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9198,7 +9198,7 @@
       ]
     },
     {
-      "nome": "al ragù di verdure",
+      "nome": "Al ragù di verdure",
       "fascia": "medio",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9242,7 +9242,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "al limone e prezzemolo",
+      "nome": "Al limone e prezzemolo",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9280,7 +9280,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "alla Norma",
+      "nome": "Alla Norma",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9320,7 +9320,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "con zucchine e pomodorini",
+      "nome": "Con zucchine e pomodorini",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9871,7 +9871,7 @@
       ]
     },
     {
-      "nome": "zucchine grigliate",
+      "nome": "Zucchine grigliate",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9897,7 +9897,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "insalata mista",
+      "nome": "Insalata mista",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9923,7 +9923,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "broccoli al vapore",
+      "nome": "Broccoli al vapore",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9949,7 +9949,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "carote julienne",
+      "nome": "Carote julienne",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -9975,7 +9975,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "peperoni saltati",
+      "nome": "Peperoni saltati",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10001,7 +10001,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "spinaci saltati",
+      "nome": "Spinaci saltati",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10027,7 +10027,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "melanzane grigliate",
+      "nome": "Melanzane grigliate",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10053,7 +10053,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "pomodori in insalata",
+      "nome": "Pomodori in insalata",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10079,7 +10079,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "cavolfiore al vapore",
+      "nome": "Cavolfiore al vapore",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10105,7 +10105,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "funghi trifolati",
+      "nome": "Funghi trifolati",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10131,7 +10131,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "radicchio saltato",
+      "nome": "Radicchio saltato",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",
@@ -10157,7 +10157,7 @@
       "allergeniPresenti": []
     },
     {
-      "nome": "fagiolini lessati",
+      "nome": "Fagiolini lessati",
       "fascia": "facile",
       "porzioni": 1,
       "gruppoProteico": "",

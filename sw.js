@@ -4,7 +4,7 @@
    Questo garantisce che l'app installata veda sempre l'ultima
    versione caricata su GitHub, senza dover reinstallare nulla. */
 
-const CACHE_NAME = 'dieta-planner-v74';
+const CACHE_NAME = 'dieta-planner-v76';
 
 /* All'attivazione: cancella le cache vecchie e prende il
    controllo di tutte le pagine aperte immediatamente. */

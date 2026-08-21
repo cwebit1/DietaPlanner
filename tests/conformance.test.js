@@ -4,6 +4,8 @@ const root=path.resolve(__dirname,'..'),motor=fs.readFileSync(path.join(root,'mo
 const mh=x=>assert(motor.includes(x),`motor manca ${x}`),hh=x=>assert(html.includes(x),`index manca ${x}`);
 mh("pipeline:['proteina','carboidrato','verdura']");mh("subtype==='affettati'?'pane'");mh('automaticDayAllowed(day,today)');mh('ricettaDoppioCarboidrato');mh('inventoryByVariant');mh('tettiIngredienteSettimanali');mh('cerealiNonGraditi');mh("safe.profilo==='vegetariano'");mh("safe.profilo==='vegano'");
 mh("hasPotato=carbInRecipe(protein,'patate',vBy)");mh("first=hasPotato?null:await motoreV10ScegliPrimoReale");
+mh('function ricettaHaCotturaNelNome');mh('if(ricettaHaCotturaNelNome(name)||/prosciutto|bresaola|formagg|mozzarella|ricotta|tonno in scatola/i.test(name||\'\'))return null');
+hh('function cottureAmmesseProteina');hh("prosciutto|bresaola|formagg|mozzarella|ricotta|tonno in scatola/i.test(nomeProteina||'')) return []");
 hh("chiave:'allergeniAttivi'");hh("chiave:'ingredientiBloccati'");hh("chiave:'tettiIngredienteSettimanali'");hh("chiave:'cerealiNonGraditi'");hh("chiave:'configCarboidratiOrigini'");hh('commitMenuDraftAtomico');hh('propostoOriginale');hh("getAll('consumoGiorno')");hh("for(const r of await getAll('consumoGiorno')) await delKey('consumoGiorno', r.id)");
 hh("patate:        { label:'Patate',        ingrediente:'Patate',            porzione:300, gruppo:'patate',         limitato:false, haPoolSughi:false }");
 assert(/engine-core\.js\?v=\d+/.test(html));assert(/motor\.js\?v=\d+/.test(html));assert(/CACHE_NAME/.test(sw));
