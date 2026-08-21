@@ -663,6 +663,16 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <!-- ============ VIEW: IMPOSTAZIONI ============ -->
 <section class="view" id="view-impostazioni">
   <div class="card">
+    <h3 style="margin-bottom:10px;">Configurazione avanzata nutrizionista</h3>
+    <div class="meta" style="margin-bottom:12px;">Valori iniziali dal piano nutrizionale. I range restano modificabili e sono letti direttamente dal motore.</div>
+    <div id="configAvanzataCampi" class="set-carb-grid"></div>
+    <label style="margin-top:14px;">Profilo allergie/intolleranze</label>
+    <div class="tabgroup" id="configAllergeniAttivi"></div>
+    <button class="primary" id="btnSalvaConfigAvanzata" style="margin-top:12px;">Salva configurazione</button>
+    <button class="secondary" id="btnResetConfigAvanzata" style="margin-top:8px;">Ripristina valori del piano</button>
+    <div class="meta" id="configAvanzataStato" style="margin-top:8px;"></div>
+  </div>
+  <div class="card">
     <h3 style="margin-bottom:10px;">Libreria ricette</h3>
     <div class="meta" style="margin-bottom:10px;">Le ricette non sono più incluse nel file dell'app: vivono in un file separato (ricette.json) da importare qui. Puoi reimportarlo quante volte vuoi: aggiorna quelle già presenti (per nome) senza mai duplicarle, e non tocca ricette generate con l'AI o modificate a mano.</div>
     <button class="primary" id="btnImportaRicette" style="margin-bottom:8px;">Importa ricette (JSON)</button>
@@ -899,6 +909,9 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
       <input id="ingGrassi" type="number" placeholder="grassi g / 100g">
     </div>
     <div id="confrontoCarbGrassi" class="meta" style="margin-top:2px;"></div>
+    <label style="margin-top:12px;">Allergeni</label>
+    <div class="tabgroup" id="ingAllergeni"></div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;"><input type="checkbox" id="ingBloccoManuale" style="width:auto;"> Escludi questo ingrediente da ogni proposta</label>
     <button class="primary" id="btnSalvaIngrediente" style="margin-top:14px;">Salva</button>
   </div>
 </div>
@@ -937,7 +950,26 @@ function tx(store, mode='readonly'){ return db.transaction(store, mode).objectSt
    non è cambiato. Invalidata automaticamente ad ogni scrittura sulla stessa tabella
    (put/delKey), quindi non rischia mai di mostrare dati vecchi. */
 let cacheGetAll = {};
+let menuDraft = null;
+function menuDraftIntercetta(store,key){
+  if(store!=='piano'||!menuDraft||!document.getElementById('view-menu')?.classList.contains('active')) return false;
+  return menuDraft.giorni.has(String(key).slice(0,10));
+}
+function rawPut(store,obj){
+  cacheGetAll[store]=null;
+  return new Promise((res,reject)=>{const r=tx(store,'readwrite').put(obj);r.onsuccess=()=>res(obj);r.onerror=()=>reject(r.error);});
+}
+function rawDelKey(store,key){
+  cacheGetAll[store]=null;
+  return new Promise((res,reject)=>{const r=tx(store,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>reject(r.error);});
+}
 function getAll(store){
+  if(store==='piano'&&menuDraft&&document.getElementById('view-menu')?.classList.contains('active')){
+    return new Promise(async res=>{const base=await getAllRaw('piano'),m=new Map(base.map(x=>[x.id,x]));for(const [id,v] of menuDraft.voci){if(v===null)m.delete(id);else m.set(id,v);}res([...m.values()]);});
+  }
+  return getAllRaw(store);
+}
+function getAllRaw(store){
   if(cacheGetAll[store]) return cacheGetAll[store];
   const promessa = new Promise((res)=>{
     const out=[]; const req = tx(store).openCursor();
@@ -950,6 +982,23 @@ function getAll(store){
   return promessa;
 }
 function put(store, obj){
+  if(menuDraftIntercetta(store,obj.id)){menuDraft.voci.set(obj.id,structuredClone(obj));menuDraft.modificata=true;return Promise.resolve(obj);}
+  return rawPut(store,obj);
+}
+function getOneRaw(store,key){
+  return new Promise((res)=>{const r=tx(store).get(key);r.onsuccess=(e)=>res(e.target.result);});
+}
+function getOne(store, key){
+  if(menuDraftIntercetta(store,key)&&menuDraft.voci.has(key)){const v=menuDraft.voci.get(key);return Promise.resolve(v===null?undefined:structuredClone(v));}
+  return getOneRaw(store,key);
+}
+function delKey(store, key){
+  if(menuDraftIntercetta(store,key)){menuDraft.voci.set(key,null);menuDraft.modificata=true;return Promise.resolve();}
+  return rawDelKey(store,key);
+}
+/* Implementazioni raw usate dal commit atomico della bozza Menù. */
+/* legacy body kept below intentionally replaced */
+/*
   cacheGetAll[store] = null;
   return new Promise((res)=>{
     const r = tx(store,'readwrite').put(obj);
@@ -969,6 +1018,7 @@ function delKey(store, key){
     r.onsuccess = ()=> res();
   });
 }
+*/
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
 /* F5: storico delle proposte per slot (giorno_pasto). Salvato in localStorage
@@ -1326,7 +1376,7 @@ async function seedIfEmpty(){
   for(const b of baseData){
     let base = trovaBase(b.nome);
     let baseId;
-    if(base){ baseId = base.id; }
+    if(base){ baseId = base.id; base.allergeni=allergeni; base.bloccoManuale=bloccoManuale; await put('ingredienti',base); }
     else{
       baseId = uid();
       const nuovoBase = {id:baseId, nome:b.nome, gruppo:b.gruppo};
@@ -1541,16 +1591,23 @@ async function sincronizzaCatalogoIngredientiJson(){
   const varByName=new Map(varianti.map(x=>[x.nome.toLowerCase(),x]));
   let aggiunte=0;
   for(const [nome,d] of Object.entries(ingredientiJsonMap||{})){
-    if(varByName.has(nome.toLowerCase())) continue;
     let base=baseByName.get(nome.toLowerCase());
     if(!base){
-      base={id:uid(),nome,gruppo:d.gruppo||'altro'};
-      await put('ingredienti',base); baseByName.set(nome.toLowerCase(),base);
+      base={id:uid(),nome};
+      baseByName.set(nome.toLowerCase(),base);
     }
+    Object.assign(base,{gruppo:d.gruppo||'altro',deperibilita:d.deperibilita||'bassa',conservazione:d.conservazione||null,
+      porzione:d.porzione||null,gradimento:d.gradimento===undefined?1:d.gradimento,stock:d.stock===undefined?1:d.stock,
+      formatoRiordino:d.formatoRiordino||{valore:null,unita:null},allergeni:Array.isArray(d.allergeni)?d.allergeni:[],
+      bloccoManuale:!!d.bloccoManuale,nonRichiedeInventario:!!d.nonRichiedeInventario});
+    await put('ingredienti',base);
+    let v=varByName.get(nome.toLowerCase());
     const alta=d.deperibilita==='alta';
-    const v={id:uid(),ingredienteId:base.id,nome,formato:0,consistenza:(d.gruppo==='grassi'?'gia_cotto':'da_cuocere'),congelabile:'no',
-      kcal100:d.kcal||0,prot100:d.proteine||0,carb100:d.carboidrati||0,grassi100:d.grassi||0,unitaPezzo:false,integrale:false,categoria:alta?'fresco':'conf'};
-    await put('varianti',v); varByName.set(nome.toLowerCase(),v); aggiunte++;
+    if(!v){v={id:uid(),ingredienteId:base.id,nome,formato:0,unitaPezzo:false,integrale:false};aggiunte++;}
+    Object.assign(v,{ingredienteId:base.id,consistenza:(d.gruppo==='grassi'?'gia_cotto':'da_cuocere'),congelabile:d.conservazione==='surgelato'?'si':'no',
+      kcal100:d.kcal||0,prot100:d.proteine||0,carb100:d.carboidrati||0,grassi100:d.grassi||0,
+      categoria:d.conservazione==='surgelato'?'surgelato':(alta?'fresco':'conf')});
+    await put('varianti',v); varByName.set(nome.toLowerCase(),v);
   }
   if(aggiunte){
     const ricette=await getAll('ricette');
@@ -1685,6 +1742,15 @@ async function importaListaRicette(lista){
       componente: r.componente || null,
       preparazione: r.preparazione || null,
       sottoCategoriaModulare: r.sottoCategoriaModulare || null,
+      carboidratiCompatibili: Array.isArray(r.carboidratiCompatibili) ? r.carboidratiCompatibili : [],
+      copertura: r.copertura || '',
+      classe: r.classe || null,
+      richiedeCottura: typeof r.richiedeCottura==='boolean' ? r.richiedeCottura : null,
+      soloManuale: !!r.soloManuale,
+      piattoSpeciale: !!r.piattoSpeciale,
+      modalitaSpecialeDefault: r.modalitaSpecialeDefault || null,
+      imponeCarboidrato: r.imponeCarboidrato || null,
+      cerealeUsato: r.cerealeUsato || null,
       fonte:'libreria',
       ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
       ingredienti: ingredientiRisolti,
@@ -1733,6 +1799,21 @@ function labelGiorno(iso){
   const d = new Date(iso+'T00:00:00');
   const nomi=['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
   return nomi[d.getDay()]+' '+d.getDate();
+}
+
+const ALLERGENI_UE=[['glutine','🌾','Glutine'],['crostacei','🦐','Crostacei'],['uova','🥚','Uova'],['pesce','🐟','Pesce'],['arachidi','🥜','Arachidi'],['soia','🌱','Soia'],['latte','🥛','Latte'],['frutta_guscio','🌰','Frutta a guscio'],['sedano','🥬','Sedano'],['senape','🟡','Senape'],['sesamo','⚪','Sesamo'],['solfiti','🍷','Solfiti'],['lupini','🫘','Lupini'],['molluschi','🐚','Molluschi']];
+const CONFIG_AVANZATA_DEFAULT={proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},maxProteinSourcesPerDay:2,specialBreakfastMax:1,specialMealsMax:2,fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerMeal:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
+async function renderConfigAvanzata(){
+  const rec=await getOne('impostazioni','configAvanzata'),cfg=Object.assign({},CONFIG_AVANZATA_DEFAULT,rec&&rec.valore||{}),box=document.getElementById('configAvanzataCampi');if(!box)return;
+  const fields=[];for(const m of ['carne','pesce','formaggi','uova','legumi']){const f=(cfg.proteinFrequencies||CONFIG_AVANZATA_DEFAULT.proteinFrequencies)[m];fields.push([`proteinFrequencies.${m}.min`,`${m}: minimo/sett.`,f.min],[`proteinFrequencies.${m}.max`,`${m}: massimo/sett.`,f.max===null?'':f.max]);}
+  for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])fields.push([`subtypeCaps.${s}`,`${s}: massimo/sett.`,(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]]);
+  fields.push(['maxProteinSourcesPerDay','Fonti proteiche max/giorno',cfg.maxProteinSourcesPerDay],['specialBreakfastMax','Colazioni speciali max/sett.',cfg.specialBreakfastMax],['specialMealsMax','Pasti speciali max/sett.',cfg.specialMealsMax],['oilGramsPerMeal','Olio g/pasto',cfg.oilGramsPerMeal],['fruit.min','Frutta min/giorno',cfg.fruit&&cfg.fruit.min],['fruit.max','Frutta max/giorno',cfg.fruit&&cfg.fruit.max],['fruit.portionMin','Frutta porzione min g',cfg.fruit&&cfg.fruit.portionMin],['fruit.portionMax','Frutta porzione max g',cfg.fruit&&cfg.fruit.portionMax]);
+  box.innerHTML=fields.map(([k,l,v])=>`<label>${l}<input type="number" min="0" data-cfg-avanzata="${k}" value="${v}"></label>`).join('');
+  const a=await getOne('impostazioni','allergeniAttivi'),active=new Set(a&&a.valore||[]),el=document.getElementById('configAllergeniAttivi');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>`<button data-allergene="${k}" class="${active.has(k)?'active':''}" title="${l}">${i} ${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));
+}
+async function salvaConfigAvanzata(){
+  const old=await getOne('impostazioni','configAvanzata'),cfg=structuredClone(old&&old.valore||CONFIG_AVANZATA_DEFAULT);document.querySelectorAll('[data-cfg-avanzata]').forEach(i=>{const path=i.dataset.cfgAvanzata.split('.');let target=cfg;for(let n=0;n<path.length-1;n++)target=target[path[n]]||(target[path[n]]={});target[path[path.length-1]]=i.value===''?null:Number(i.value);});
+  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene);await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
 }
 
 const NOMI_GIORNI_ESTESI = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
@@ -1991,35 +2072,35 @@ const COMPONENTE_CONTORNO = 'contorno';
    ========================================================= */
 const CARBOIDRATI_PASTO = {
   // --- Cereali in chicco (rotazione libera, con pool sughi) ---
-  pasta:         { label:'Pasta',         ingrediente:'Pasta corta',       porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  pasta:         { label:'Pasta',         ingrediente:'Pasta corta',       porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   pasta_fresca:  { label:'Pasta fresca',  ingrediente:'Pasta corta',       porzione:90,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
-  riso:          { label:'Riso',          ingrediente:'Riso Arborio',      porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
-  farro:         { label:'Farro',         ingrediente:'Farro perlato',     porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
-  orzo:          { label:'Orzo',          ingrediente:'Orzo perlato',      porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
-  cous_cous:     { label:'Cous cous',     ingrediente:'Cous cous',         porzione:80,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  riso:          { label:'Riso',          ingrediente:'Riso Arborio',      porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  farro:         { label:'Farro',         ingrediente:'Farro perlato',     porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  orzo:          { label:'Orzo',          ingrediente:'Orzo perlato',      porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  cous_cous:     { label:'Cous cous',     ingrediente:'Cous cous',         porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   // --- Pane e derivati (sostituiscono il primo, niente sugo) ---
   pane:          { label:'Pane',          ingrediente:'Pane fresco',       porzione:100, gruppo:'pane',           limitato:false, haPoolSughi:false },
-  friselle:      { label:'Friselle',      ingrediente:'Friselle',          porzione:50,  gruppo:'pane',           limitato:true,  tettoSettimanale:1, haPoolSughi:false },
+  friselle:      { label:'Friselle',      ingrediente:'Friselle',          porzione:50,  gruppo:'pane',           limitato:true,  tettoSettimanale:2, haPoolSughi:false },
   // --- Tuberi e altri ---
-  patate:        { label:'Patate',        ingrediente:'Patate',            porzione:325, gruppo:'patate',         limitato:false, haPoolSughi:false },
-  polenta:       { label:'Polenta',       ingrediente:'Farina per polenta', porzione:75, gruppo:'polenta',       limitato:false, haPoolSughi:true },
+  patate:        { label:'Patate',        ingrediente:'Patate',            porzione:300, gruppo:'patate',         limitato:false, haPoolSughi:false },
+  polenta:       { label:'Polenta',       ingrediente:'Farina per polenta', porzione:70, gruppo:'polenta',       limitato:false, haPoolSughi:false },
   // --- Frequenza limitata (0-2/sett dal PDF) ---
-  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:175, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
+  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:150, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
   pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:false },
-  gallette:      { label:'Gallette',      ingrediente:'Crackers',          porzione:50,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
-  crackers:      { label:'Crackers',      ingrediente:'Crackers',          porzione:30,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
-  taralli:       { label:'Taralli/Grissini', ingrediente:'Crackers',       porzione:65,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
-  piadina:       { label:'Piadina',       ingrediente:'Pane fresco',       porzione:80,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
-  pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:65, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false }
+  gallette:      { label:'Gallette',      ingrediente:'Gallette di riso',  porzione:50,  gruppo:'pane',           limitato:false, haPoolSughi:false },
+  crackers:      { label:'Crackers',      ingrediente:'Crackers',          porzione:30,  gruppo:'pane',           limitato:false, haPoolSughi:false },
+  taralli:       { label:'Taralli/Grissini', ingrediente:'Taralli',        porzione:65,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
+  piadina:       { label:'Piadina',       ingrediente:'Piadina',           porzione:80,  gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
+  pasta_sfoglia: { label:'Pasta sfoglia', ingrediente:'Sfoglie di lasagna', porzione:60, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false }
 };
 
 /* Rotazione principale del NUOVO sistema modulare.
    NON tocca CEREALI_MODULARI usato dal motore E3 esistente. */
-const CARBOIDRATI_ROTAZIONE = ['pasta','pasta_fresca','riso','farro','orzo','cous_cous','pane','patate','polenta'];
+const CARBOIDRATI_ROTAZIONE = ['pasta','pasta_fresca','riso','farro','orzo','cous_cous','pane','patate','polenta','gallette','crackers','friselle','gnocchi','pasta_ripiena','taralli','piadina','pasta_sfoglia'];
 
 /* Carboidrati a frequenza limitata.
    Vengono proposti solo se il tetto settimanale non è raggiunto. */
-const CARBOIDRATI_LIMITATI = ['friselle','gnocchi','pasta_ripiena','gallette','crackers','taralli','piadina','pasta_sfoglia'];
+const CARBOIDRATI_LIMITATI = ['friselle','gnocchi','pasta_ripiena','taralli','piadina','pasta_sfoglia'];
 
 /* =========================================================
    CATEGORIA MODULARE — i "mattoncini Lego" del pasto
@@ -2103,7 +2184,7 @@ function componiNomeSecondoModulare(nomeProteina, cottura, nomeContorno){
    Ritorna un array di ricette con tipoPortata='modulare' e la
    sottoCategoriaModulare richiesta, escluse quelle marcate 'esclusa'. */
 async function cercaComponentiModulari(sottoCategoria){
-  const tutteRicette = await getAll('ricette');
+  const tutteRicette = typeof ricetteAmmesse==='function' ? await ricetteAmmesse(true) : await getAll('ricette');
   return tutteRicette.filter(r =>
     !r.esclusa && (
       (r.tipoPortata === TIPO_PORTATA_MODULARE && r.sottoCategoriaModulare === sottoCategoria) ||
@@ -3237,7 +3318,7 @@ function mostraVista(nome){
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
   if(nome==='set'){ renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
-  if(nome==='impostazioni'){ renderInfoVersioniRemote(); }
+  if(nome==='impostazioni'){ renderInfoVersioniRemote(); renderConfigAvanzata(); }
 }
 document.querySelectorAll('nav.tabbar button').forEach(btn=>{
   btn.addEventListener('click', ()=> mostraVista(btn.dataset.view));
@@ -4436,6 +4517,8 @@ async function elaboraConsumoAutomatico(){
     const giorno = voce.id.slice(0, sep);
     const pasto = voce.id.slice(sep+1);
     if(!fasciaPastoSuperata(giorno, pasto, ora)) continue;
+    const fineOra=FASCE_ORARIE_PASTO[pasto]?.[1];
+    if(voce.programmatoIl&&fineOra!==undefined){const deadline=new Date(giorno+'T00:00:00');deadline.setHours(fineOra,0,0,0);if(Date.parse(voce.programmatoIl)>deadline.getTime())continue;}
 
     if(pasto==='colazione'){
       // G: composizione a gruppi, mai scala l'inventario (comportamento invariato) —
@@ -4461,17 +4544,7 @@ async function elaboraConsumoAutomatico(){
       ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
       : [voce.ricettaId].filter(Boolean);
     const isSpuntino = pasto.startsWith('spuntino');
-    if(!idRicette.length){
-      if(!isSpuntino) continue; // pranzo/cena/colazione: slot mai riempito, resta com'è
-      // spuntino MAI scelto: il tempo per sceglierlo è comunque scaduto — si blocca
-      // uguale (nulla da scalare, nessuna ricetta), coerente con "il rigore è
-      // nell'applicarlo": non deve restare selezionabile all'infinito
-      voce.consumato = true;
-      voce.dataConsumato = todayISO();
-      await put('piano', voce);
-      await registraConsumoStorico(voce,'auto');
-      continue;
-    }
+    if(!idRicette.length) continue;
 
     const speciale = idRicette.length===1 ? ricettePerId[idRicette[0]] : null;
     const asporto = speciale && speciale.piattoSpeciale && voce.modalitaSpeciale==='asporto';
@@ -5080,7 +5153,7 @@ async function scambiaPranzoCena(giorno){
 async function apriModalEditorPasto(giorno, pasto){
   const isSpuntino = pasto.startsWith('spuntino');
   const tipoPortataFiltro = isSpuntino ? 'spuntino' : ['primo','secondo','contorno','unico'];
-  const tutteRicette = await getAll('ricette');
+  const tutteRicette = typeof ricetteAmmesse==='function' ? await ricetteAmmesse(false) : await getAll('ricette');
   const candidate = tutteRicette.filter(r=>{
     if(r.esclusa || r.piattoSpeciale) return false;
     if(isSpuntino) return r.tipoPortata === 'spuntino';
@@ -5113,6 +5186,8 @@ async function apriModalEditorPasto(giorno, pasto){
         const rid = el.dataset.editorScelta;
         const pianoId = giorno+'_'+pasto;
         let voce = await getOne('piano', pianoId) || {id:pianoId, porzioni:1};
+        if(!voce.propostoOriginale&&(voce.ricettaId||voce.primoId||voce.secondoId||voce.contornoId))voce.propostoOriginale={modo:voce.modo||null,ricettaId:voce.ricettaId||null,primoId:voce.primoId||null,secondoId:voce.secondoId||null,contornoId:voce.contornoId||null,primoCereale:voce.primoCereale||null,primoSugoId:voce.primoSugoId||null,cotturaSecondo:voce.cotturaSecondo||null};
+        voce.modo='unico';voce.primoId=voce.secondoId=voce.contornoId=null;voce.primoCereale=voce.primoSugoId=voce.cotturaSecondo=null;
         voce.ricettaId = rid;
         voce.consumato = true;
         voce.dataConsumato = giorno;
@@ -7796,14 +7871,16 @@ async function riepilogoTestualePasto(giorno, pasto){
 }
 
 async function renderMenuSettimanale(){
-  const tabEl = document.getElementById('menuSettimanaTab');
-  tabEl.innerHTML = `<button data-ms="0" class="${menuSettimanaScarto===0?'active':''}">Questa settimana</button>
-    <button data-ms="1" class="${menuSettimanaScarto===1?'active':''}">Settimana prossima</button>`;
-  tabEl.querySelectorAll('button').forEach(b=>{
-    b.addEventListener('click', ()=>{ menuSettimanaScarto = parseInt(b.dataset.ms); renderMenuSettimanale(); });
-  });
-
   const giorni = giorniSettimana(menuSettimanaScarto);
+  if(!menuDraft || menuDraft.scarto!==menuSettimanaScarto){
+    menuDraft={scarto:menuSettimanaScarto,giorni:new Set(giorni),voci:new Map(),modificata:false};
+  }
+  const tabEl = document.getElementById('menuSettimanaTab');
+  tabEl.innerHTML = `<button data-menu-prev aria-label="Settimana precedente">‹</button>
+    <button class="active" style="flex:1;">${labelGiorno(giorni[0])} — ${labelGiorno(giorni[6])}</button>
+    <button data-menu-next aria-label="Settimana successiva">›</button>`;
+  tabEl.querySelector('[data-menu-prev]').addEventListener('click',()=>{menuSettimanaScarto--;menuDraft=null;renderMenuSettimanale();});
+  tabEl.querySelector('[data-menu-next]').addEventListener('click',()=>{menuSettimanaScarto++;menuDraft=null;renderMenuSettimanale();});
   const el = document.getElementById('menuSettimanale');
   el.innerHTML = '';
 
@@ -7875,9 +7952,24 @@ function renderMenuFooter(){
   document.getElementById('menuFooter')?.remove();
   const menu=document.getElementById('menuSettimanale'); if(!menu) return;
   const f=document.createElement('div'); f.id='menuFooter'; f.style.cssText='margin-top:16px;display:flex;flex-direction:column;gap:8px;';
-  f.innerHTML='<button class="primary" id="btnGeneraMenuFooter">Genera menù da Set</button><button class="secondary" id="btnVaiSpesaFooter">🛒 Vai alla spesa</button>';
+  f.innerHTML='<div class="row" style="gap:7px;position:sticky;bottom:68px;background:var(--bg);padding:8px 0;z-index:8;">'+
+    '<button class="secondary" id="btnAnnullaMenu">Annulla</button><button class="secondary" id="btnResettaMenu">Resetta</button>'+
+    '<button class="secondary" id="btnRigeneraMenu">Rigenera</button><button class="primary" id="btnSalvaMenu">Salva</button></div>'+
+    '<button class="secondary" id="btnVaiSpesaFooter">🛒 Vai alla spesa</button>';
   menu.parentNode.insertBefore(f,menu.nextSibling);
-  f.querySelector('#btnGeneraMenuFooter').addEventListener('click',()=>generaMenuDaConfigSet(menuSettimanaScarto));
+  f.querySelector('#btnAnnullaMenu').addEventListener('click',()=>{menuDraft=null;mostraVista('piano');});
+  f.querySelector('#btnResettaMenu').addEventListener('click',async()=>{
+    const giorni=giorniSettimana(menuSettimanaScarto);
+    for(const g of giorni)for(const p of ['colazione','pranzo','cena'])await delKey('piano',g+'_'+p);
+    await generaPianoSettimana(menuSettimanaScarto,{forza:true});
+    renderMenuSettimanale();
+  });
+  f.querySelector('#btnRigeneraMenu').addEventListener('click',async()=>{await generaPianoSettimana(menuSettimanaScarto,{forza:true});renderMenuSettimanale();});
+  f.querySelector('#btnSalvaMenu').addEventListener('click',async()=>{
+    if(!menuDraft)return;
+    for(const [id,v] of menuDraft.voci){if(v===null)await rawDelKey('piano',id);else await rawPut('piano',v);}
+    menuDraft=null;await avviso('Menù salvato.');await renderMenuSettimanale();aggiornaListaSpesaAutomatica(menuSettimanaScarto);
+  });
   f.querySelector('#btnVaiSpesaFooter').addEventListener('click',()=>{ mostraVista('spesa'); calcolaListaSpesa(menuSettimanaScarto); });
 }
 
@@ -7975,7 +8067,10 @@ function resetFormIngrediente(){
   document.getElementById('ingGruppo').value='';
   document.getElementById('confrontoKcalProt').textContent='';
   document.getElementById('confrontoCarbGrassi').textContent='';
+  document.getElementById('ingBloccoManuale').checked=false;
+  renderAllergeniIngrediente([]);
 }
+function renderAllergeniIngrediente(selezionati){const set=new Set(selezionati||[]),el=document.getElementById('ingAllergeni');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>`<button type="button" data-ing-allergene="${k}" class="${set.has(k)?'active':''}" title="${l}">${i}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));}
 
 /* Deriva consistenza/congelabile/zona dalla categoria (fresco/conf/surgelato) —
    l'utente sceglie solo la categoria, il resto è dedotto automaticamente. */
@@ -8026,6 +8121,8 @@ async function apriModalModificaVariante(varianteId){
   document.getElementById('ingProt').value = v.prot100 || '';
   document.getElementById('ingCarb').value = v.carb100 || '';
   document.getElementById('ingGrassi').value = v.grassi100 || '';
+  document.getElementById('ingBloccoManuale').checked=!!(base&&base.bloccoManuale);
+  renderAllergeniIngrediente(base&&base.allergeni||[]);
 
   document.getElementById('modalIngrediente').classList.remove('hidden');
 }
@@ -8114,6 +8211,8 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
   const prot = parseFloat(document.getElementById('ingProt').value)||0;
   const carb = parseFloat(document.getElementById('ingCarb').value)||0;
   const grassi = parseFloat(document.getElementById('ingGrassi').value)||0;
+  const allergeni=[...document.querySelectorAll('#ingAllergeni button.active')].map(b=>b.dataset.ingAllergene);
+  const bloccoManuale=document.getElementById('ingBloccoManuale').checked;
 
   if(!nome){ return; }
 
@@ -8125,7 +8224,7 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
     const ingredienti = await getAll('ingredienti');
     let base = ingredienti.find(x=>x.id===v.ingredienteId);
     if(base){
-      base.nome = nome; base.gruppo = gruppo;
+      base.nome = nome; base.gruppo = gruppo; base.allergeni=allergeni; base.bloccoManuale=bloccoManuale;
       await put('ingredienti', base);
     }
     v.nome = nome; v.formato = qtaIniziale || v.formato; v.categoria = categoria;
@@ -8141,7 +8240,7 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
     if(base){ baseId = base.id; }
     else{
       baseId = uid();
-      await put('ingredienti', {id:baseId, nome, gruppo});
+      await put('ingredienti', {id:baseId, nome, gruppo, allergeni, bloccoManuale});
     }
     const varId = uid();
     await put('varianti', {
@@ -8161,6 +8260,9 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
   document.getElementById('modalIngrediente').classList.add('hidden');
   renderInventario();
 });
+
+document.getElementById('btnSalvaConfigAvanzata').addEventListener('click',salvaConfigAvanzata);
+document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{await put('impostazioni',{chiave:'configAvanzata',valore:structuredClone(CONFIG_AVANZATA_DEFAULT)});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati.';});
 
 /* =========================================================
    VIEW: SPESA
@@ -8515,6 +8617,9 @@ document.getElementById('btnAzzeraStoricoSettimana').addEventListener('click', a
   for(const chiave of chiaviDaEliminare){
     localStorage.removeItem(chiave);
   }
+  for(const rec of await getAll('consumoGiorno')){
+    if(giorniSett.includes(rec.giorno)) await delKey('consumoGiorno',rec.id);
+  }
   draftPasto = {}; draftColazione = {};
   await avviso('Storico consumi della settimana corrente azzerato.');
   renderPiano();
@@ -8812,9 +8917,20 @@ document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
 })();
 </script>
 <script>
+/* Adatta tutti i bottom-sheet alla visual viewport e mantiene visibile il campo
+   attivo quando la tastiera mobile riduce l'area disponibile. */
+(function(){
+  const vv=window.visualViewport;
+  function adatta(){if(!vv)return;document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(el=>{el.style.height=vv.height+'px';el.style.top=vv.offsetTop+'px';});}
+  if(vv){vv.addEventListener('resize',adatta);vv.addEventListener('scroll',adatta);}
+  document.addEventListener('focusin',e=>{if(e.target.matches('.modal input,.modal select,.modal textarea'))setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),300);});
+  document.addEventListener('click',e=>{if(e.target.matches('[data-close]')){const el=document.getElementById(e.target.dataset.close);if(el){el.style.height='';el.style.top='';}}});
+})();
+</script>
+<script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=2').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=65').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Quando il browser rileva un nuovo SW installato, gli dice
@@ -8872,7 +8988,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="motor.js?v=1"></script>
+<script src="engine-core.js?v=65"></script>
+<script src="motor.js?v=65"></script>
 
 </body>
 </html>
