@@ -1376,10 +1376,15 @@ async function seedIfEmpty(){
   for(const b of baseData){
     let base = trovaBase(b.nome);
     let baseId;
-    if(base){ baseId = base.id; base.allergeni=allergeni; base.bloccoManuale=bloccoManuale; await put('ingredienti',base); }
+    if(base){
+      baseId = base.id;
+      base.allergeni = Array.isArray(base.allergeni) ? base.allergeni : [];
+      base.bloccoManuale = !!base.bloccoManuale;
+      await put('ingredienti',base);
+    }
     else{
       baseId = uid();
-      const nuovoBase = {id:baseId, nome:b.nome, gruppo:b.gruppo};
+      const nuovoBase = {id:baseId, nome:b.nome, gruppo:b.gruppo, allergeni:[], bloccoManuale:false};
       await put('ingredienti', nuovoBase);
       ingredientiEsistenti.push(nuovoBase);
     }
@@ -8930,7 +8935,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=66').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=67').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Quando il browser rileva un nuovo SW installato, gli dice
@@ -8988,8 +8993,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=66"></script>
-<script src="motor.js?v=66"></script>
+<script src="engine-core.js?v=67"></script>
+<script src="motor.js?v=67"></script>
 
 </body>
 </html>
