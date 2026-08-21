@@ -43,7 +43,22 @@
 | MENU-01 | Bozza separata dal piano committato | HARD | `menuDraft` UI | isolation test |
 | MENU-02 | Annulla/Resetta/Rigenera/Salva con semantica specificata | HARD | menu UI | browser test |
 | MENU-03 | Carosello multi-settimana | UX | menu UI | browser test |
-| UI-01 | Pannello pasto: Pasto/Speciale e roll macro | HARD | UI | browser test |
-| UI-02 | Tastiera mobile non copre il campo attivo | UX | visualViewport helper | mobile test |
+| UI-03 | Pannello pasto: Pasto/Speciale e roll macro | HARD | UI | `ui-contract.test.js` + browser |
+| UI-04 | Tastiera mobile non copre il campo attivo | UX | visualViewport helper | `ui-contract.test.js` + viewport browser |
+| SET-01 | Tabelle carboidrati e proteine hanno Pulisci/Completa/Casuale/Salva | HARD | Set UI | `ui-contract.test.js` + browser |
+| SET-02 | Celle di sistema distinguibili da quelle utente | UX | `origineCaselleCarb` | `ui-contract.test.js` |
+| SET-03 | Cereali non graditi senza possibilità di escluderli tutti | HARD | Set UI, `ricetteAmmesse` | browser + conformance |
+| SET-04 | Tetto settimanale personalizzato trasversale con fallback segnalato | SOFT | `applyIngredientCaps`, adapter | `engine-core.test.js` |
+| MAN-01 | Ricerca diretta per Carbo/Prot/Verdura include `soloManuale` | HARD | `abilitaRicercaDirettaPasto` | `ui-contract.test.js` + browser |
+| MAN-02 | Ricerca diretta rispetta allergie, blocchi e tetti raggiunti | HARD | `ricetteAmmesse(false)`, ricerca UI | conformance + browser |
+| BREAK-01 | Colazione a gruppi, speciale configurabile e premio dopo 5 regolari | HARD | colazione UI | conformance + browser |
+| SNACK-01 | Tetti settimanali/giornalieri spuntini configurabili | HARD | config nutrizionista + UI | conformance |
+| SHOP-01 | Comprati immutabili durante il ricalcolo | HARD | lista spesa UI | source contract |
+| CONSUME-01 | Inventario scalato solo al consumo reale | HARD | `elaboraConsumoAutomatico` | source contract |
+| RESET-01 | Reset piano non cancella `consumoGiorno` | HARD | reset UI | source contract |
+| RESET-02 | Reset storico esplicito cancella `consumoGiorno` | HARD | reset UI | `conformance.test.js` |
+| PWA-01 | Cache versionata e asset attivi inclusi | HARD | `sw.js` | `conformance.test.js` + live smoke |
 
-I requisiti non coperti da test unitario puro sono coperti nella suite browser integrata prima della pubblicazione.
+## Criterio di chiusura
+
+Un requisito è considerato chiuso soltanto quando ha almeno un controllo automatico e, se coinvolge DOM/IndexedDB, una verifica browser sulla build pubblicata. La matrice non attribuisce più genericamente alla suite browser coperture che lo smoke test non esegue.

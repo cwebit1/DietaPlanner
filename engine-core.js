@@ -134,6 +134,30 @@ function composeMeal(input,state,rng){
 }
 function automaticDayAllowed(day,today){return String(day)>String(today);}
 
-const api={DEFAULTS,SUBTYPE_TO_MACRO,PROTEIN_CODE,mergeConfig,macroOf,seeded,shuffle,oldest,recipeBlocked,parseCoverage,coverageForRecipe,buildProteinGrid,validateCarbBudget,chooseCarb,inventoryUrgency,chooseRecipe,vegetableTier,chooseVegetable,composeMeal,automaticDayAllowed};
+function buildCarbGrid(days,meals,budget,carbConfig,rng){
+  const slots=[];for(const day of days||[])for(const meal of meals||['pranzo','cena'])slots.push({day,meal});
+  const validation=validateCarbBudget(budget,carbConfig);if(!validation.ok)return {cells:{},errors:validation.errors.slice()};
+  const keys=[];for(const [key,n] of Object.entries(validation.normalized))for(let i=0;i<n;i++)keys.push(key);
+  const shuffled=shuffle(keys,rng),cells={};slots.forEach((slot,i)=>{cells[slot.day]=cells[slot.day]||{};cells[slot.day][slot.meal]={carbKey:shuffled[i],source:'system'};});
+  return {cells,errors:[]};
+}
+function recipeIngredientKeys(recipe){return (recipe&&recipe.ingredienti||[]).map(i=>i.variantId||i.nomeLibero||i[0]).filter(Boolean);}
+function applyIngredientCaps(pool,weeklyCounts,caps){
+  const limits=caps||{},counts=weeklyCounts||{},all=(pool||[]).slice();
+  const allowed=all.filter(r=>recipeIngredientKeys(r).every(k=>limits[k]===undefined||(counts[k]||0)<Number(limits[k])));
+  return {pool:allowed.length?allowed:all,exceeded:!allowed.length&&all.length>0};
+}
+function accumulateRecipeIngredients(recipe,counts){const out=counts||{};for(const k of new Set(recipeIngredientKeys(recipe)))out[k]=(out[k]||0)+1;return out;}
+function shoppingDeficits(requirements,inventory,variantMeta){
+  const available={};for(const row of inventory||[])if(row.stato==='disponibile'&&Number(row.quantita)>0)available[row.variantId]=(available[row.variantId]||0)+Number(row.quantita);
+  const rows=[];for(const [variantId,required0] of Object.entries(requirements||{})){const required=Number(required0)||0,have=available[variantId]||0,missing=Math.max(0,required-have);if(!missing)continue;const meta=variantMeta&&variantMeta[variantId]||{},format=Number(meta.formato)||0,packages=format>0?Math.ceil(missing/format):1;rows.push({variantId,required,available:have,missing,packages,purchase:format>0?packages*format:missing});}return rows;
+}
+function hasMealContent(meal){return !!(meal&&(meal.primoId||meal.secondoId||meal.contornoId||meal.ricettaId||meal.primoCereale||meal.componenti||meal.colazioneSpecialeId));}
+function automaticConsumptionAllowed(meal,deadlineMs){if(!hasMealContent(meal)||meal.consumato)return false;const planned=Date.parse(meal.programmatoIl||'');return Number.isFinite(planned)&&planned<=Number(deadlineMs);}
+function countSpecialMeals(records){return (records||[]).filter(x=>x&&x.piattoSpeciale).length;}
+function withinWeeklyCap(current,max){return max==null||Number(current)<Number(max);}
+function profileAllowsRecipe(recipe,profile){const macro=macroOf(recipe&&recipe.gruppoProteico);if(profile==='vegano')return !['carne','pesce','formaggi','uova'].includes(macro);if(profile==='vegetariano')return !['carne','pesce'].includes(macro);return true;}
+
+const api={DEFAULTS,SUBTYPE_TO_MACRO,PROTEIN_CODE,mergeConfig,macroOf,seeded,shuffle,oldest,recipeBlocked,parseCoverage,coverageForRecipe,buildProteinGrid,validateCarbBudget,chooseCarb,inventoryUrgency,chooseRecipe,vegetableTier,chooseVegetable,composeMeal,automaticDayAllowed,buildCarbGrid,recipeIngredientKeys,applyIngredientCaps,accumulateRecipeIngredients,shoppingDeficits,hasMealContent,automaticConsumptionAllowed,countSpecialMeals,withinWeeklyCap,profileAllowsRecipe};
 global.DietaPlannerEngine=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

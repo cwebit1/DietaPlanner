@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert'),fs=require('fs');
+const html=fs.readFileSync(require('path').resolve(__dirname,'../index.html'),'utf8');
+const has=x=>assert(html.includes(x),`manca: ${x}`),not=x=>assert(!html.includes(x),`residuo vietato: ${x}`);
+for(const id of ['view-menu','view-set','view-impostazioni','configAllergeniAttivi','configIngredientiEsclusi','btnPulisciCarboidrati','btnCompletaCarboidrati','btnCasualeCarboidrati','btnSalvaCarboidrati','btnPulisciProteine','btnCompletaProteine','btnCasualeProteine','btnSalvaProteine','setCerealiGradimento','setTettiIngrediente','btnAnnullaMenu','btnResettaMenu','btnRigeneraMenu','btnSalvaMenu'])has(`id="${id}"`);
+has("? [['pasto','Pasto']]");has(": [['pasto','Pasto'],['speciale','Speciale']]");has("tabAttiva: 'pasto'");
+for(const label of ['🍗 Proteina','🍝 Carboidrato','🥦 Verdura','Cosa ti va di mangiare oggi?'])has(label);
+for(const type of ['data-pasto-refresh="proteina"','data-pasto-refresh="carb"','data-pasto-refresh="contorno"','data-pasto-salvafrigo="proteina"','data-pasto-salvafrigo="contorno"'])has(type);
+for(const fn of ['commitMenuDraftAtomico','registraConsumoStorico','mappaStatiDisponibilita','applicaConfigAvanzataRuntime','abilitaRicercaDirettaPasto'])has(`function ${fn}`);
+has("if(elementId && !haContenutoColazione)");has('const haContenutoSpuntino');has('const haContenutoBlocco');has('if(!haContenutoVoce || !voce.programmatoIl) continue;');
+has('window.visualViewport');has("scrollIntoView({block:'center',behavior:'smooth'})");
+not("tabAttiva==='portate'");not("tabAttiva==='sfiziosa'");
+console.log('ui-contract: ok');
