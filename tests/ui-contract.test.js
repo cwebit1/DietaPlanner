@@ -4,6 +4,7 @@ const html=fs.readFileSync(require('path').resolve(__dirname,'../index.html'),'u
 const has=x=>assert(html.includes(x),`manca: ${x}`),not=x=>assert(!html.includes(x),`residuo vietato: ${x}`);
 for(const id of ['view-menu','view-set','view-impostazioni','configAllergeniAttivi','configIngredientiEsclusi','btnPulisciCarboidrati','btnCompletaCarboidrati','btnCasualeCarboidrati','btnSalvaCarboidrati','btnPulisciProteine','btnCompletaProteine','btnCasualeProteine','btnSalvaProteine','setCerealiGradimento','setTettiIngrediente','btnAnnullaMenu','btnResettaMenu','btnRigeneraMenu','btnSalvaMenu'])has(`id="${id}"`);
 for(const marker of ['data-pasto-switch','data-pasto-expander','pasto-contenuto-espandibile','pasto-selettori','data-pasto-imposta'])has(marker);
+has('data-componente-editor="carb"');has('aria-pressed=');not('name="ruoloRicerca_${chiaveStato}"');
 for(const label of ['🍗 Proteine','🍝 Carboidrato','🥦 Verdure','Cerca ricetta per nome...','Pasto speciale'])has(label);
 for(const type of ['data-pasto-refresh="proteina"','data-pasto-refresh="carb"','data-pasto-refresh="contorno"','data-pasto-salvafrigo="proteina"','data-pasto-salvafrigo="contorno"'])has(type);
 for(const fn of ['commitMenuDraftAtomico','registraConsumoStorico','mappaStatiDisponibilita','applicaConfigAvanzataRuntime','abilitaRicercaDirettaPasto'])has(`function ${fn}`);
