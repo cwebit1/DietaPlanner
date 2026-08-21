@@ -8875,7 +8875,7 @@ document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
   await renderCalendarioVisuale();
 });
 
-(async ()=>{
+window.addEventListener('load', async ()=>{
   try{
     aggiornaLoader(5, 'Apro il database...');
     await openDB();
@@ -8914,7 +8914,7 @@ document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
       setTimeout(()=>{ loader.remove(); }, 450);
     }
   }
-})();
+});
 </script>
 <script>
 /* Adatta tutti i bottom-sheet alla visual viewport e mantiene visibile il campo
@@ -8930,7 +8930,7 @@ document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=65').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=66').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Quando il browser rileva un nuovo SW installato, gli dice
@@ -8988,8 +8988,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=65"></script>
-<script src="motor.js?v=65"></script>
+<script src="engine-core.js?v=66"></script>
+<script src="motor.js?v=66"></script>
 
 </body>
 </html>
