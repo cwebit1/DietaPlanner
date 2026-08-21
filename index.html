@@ -285,21 +285,28 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 }
 
 .set-carb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:8px;}
-.nutri-grid{display:grid;gap:8px;}
-.nutri-row{display:grid;grid-template-columns:minmax(105px,1fr) 58px 58px 78px;gap:6px;align-items:center;min-height:38px;padding:6px 8px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);}
+.nutri-config-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;width:100%;min-width:0;}
+.nutri-row{display:grid;grid-template-columns:minmax(0,1fr) 46px 54px 62px;gap:4px;align-items:center;width:100%;min-width:0;min-height:38px;padding:6px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);overflow:hidden;}
 .nutri-row.header{min-height:auto;background:transparent;border:0;padding:0 8px;color:var(--text-dim);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;}
 .nutri-row .nutri-name{min-width:0;font-size:.76rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.nutri-row input{width:100%;min-width:0;height:32px;padding:5px 4px;text-align:center;margin:0;}
+.nutri-row input{display:block;width:100%;max-width:100%;min-width:0;height:32px;padding:5px 2px;text-align:center;margin:0;font-size:.78rem;}
+.nutri-row.single>span:empty{display:none;}
+.nutri-row.single>input{grid-column:2/4;}
 .nutri-unit{font-size:.7rem;color:var(--text-dim);white-space:nowrap;text-align:center;}
 .nutri-excluded{grid-column:2/5;color:#e74c3c;font-weight:700;text-align:right;font-size:.76rem;}
-.nutri-swipe{display:flex;gap:6px;overflow-x:auto;padding:3px 0 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.nutri-quantity{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px;width:100%;min-width:0;margin:0!important;}
+.nutri-swipe{display:flex;gap:6px;width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:hidden;padding:3px 0 8px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
 .nutri-swipe button{flex:0 0 auto;scroll-snap-align:start;background:var(--panel-2);border:1px solid var(--border);color:var(--text-dim);padding:8px 11px;border-radius:18px;font:inherit;font-size:.74rem;white-space:nowrap;}
 .nutri-swipe button.limitato{background:rgba(241,196,15,.17);border-color:#f1c40f;color:#f1c40f;font-weight:700;}
 .nutri-swipe button.escluso{background:rgba(231,76,60,.18);border-color:#e74c3c;color:#e74c3c;font-weight:700;}
 .nutri-swipe button.piano{box-shadow:inset 0 0 0 1px currentColor;cursor:not-allowed;}
 .nutri-section-title{margin-bottom:5px;font-size:.86rem;}
-.nutri-fieldset{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
-@media(max-width:380px){.nutri-row{grid-template-columns:minmax(88px,1fr) 48px 48px 68px;gap:4px;padding:5px}.nutri-row.header{padding:0 5px}.nutri-row input{font-size:.76rem}}
+.nutri-fieldset{width:100%;min-width:0;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);overflow:hidden;}
+#view-nutrizionista{width:100%;min-width:0;overflow-x:hidden;}
+#view-nutrizionista .card{width:100%;min-width:0;overflow:hidden;}
+#view-nutrizionista .tabgroup{max-width:100%;}
+@media(max-width:400px){#view-nutrizionista .card{padding:11px}.nutri-row{grid-template-columns:minmax(0,1fr) 42px 48px 58px;padding:5px 4px;gap:3px}.nutri-row.header{padding:0 4px;font-size:.6rem}.nutri-row input{font-size:.74rem}.nutri-unit{font-size:.62rem}}
+@media(max-width:340px){#view-nutrizionista .card{padding:9px}.nutri-row{grid-template-columns:minmax(0,1fr) 38px 44px 54px}.nutri-row .nutri-name{font-size:.7rem}}
 .set-carb-item{min-width:0;}
 .set-carb-celle{display:flex;gap:3px;flex-wrap:nowrap;}
 .set-carb-celle button{width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;padding:0!important;border-color:#4b5540!important;}
@@ -743,9 +750,9 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <button class="secondary" id="btnTornaImpostazioni" style="margin-bottom:12px;">← Torna a Impostazioni</button>
   <div class="card"><h3>Allergeni e intolleranze</h3><div class="meta">La selezione esclude in modo rigido tutti gli ingredienti e le ricette collegati.</div><div class="tabgroup" id="configAllergeniAttivi" style="margin-top:10px;"></div></div>
   <div class="card"><h3>Piano alimentare</h3><div class="meta">Le esclusioni del piano sono automatiche, visibili e non modificabili finché il piano resta selezionato.</div><select id="configProfiloAlimentare" style="margin-top:10px;"><option value="onnivoro">Onnivoro</option><option value="vegetariano">Vegetariano</option><option value="vegano">Vegano</option></select></div>
-  <div class="card"><h3>Parametri nutrizionali globali</h3><div id="configAvanzataCampi" class="nutri-grid" style="margin-top:10px;"></div></div>
-  <div class="card"><h3>Carboidrati complessi e semplici</h3><div id="configClassiCarboidrati" class="nutri-grid" style="margin-top:10px;"></div></div>
-  <div class="card"><h3>Vincoli per ingrediente</h3><div class="meta">Tocca un ingrediente: giallo = limitato, rosso = escluso, terzo tocco = senza restrizioni.</div><div id="configMacroIngredienti" style="margin-top:12px;"></div><div id="configVincoliIngredienti" class="nutri-grid" style="margin-top:12px;"></div></div>
+  <div class="card"><h3>Parametri nutrizionali globali</h3><div id="configAvanzataCampi" class="nutri-config-grid" style="margin-top:10px;"></div></div>
+  <div class="card"><h3>Carboidrati complessi e semplici</h3><div id="configClassiCarboidrati" class="nutri-config-grid" style="margin-top:10px;"></div></div>
+  <div class="card"><h3>Vincoli per ingrediente</h3><div class="meta">Tocca un ingrediente: giallo = limitato, rosso = escluso, terzo tocco = senza restrizioni.</div><div id="configMacroIngredienti" style="min-width:0;margin-top:12px;"></div><div id="configVincoliIngredienti" class="nutri-config-grid" style="margin-top:12px;"></div></div>
   <button class="primary" id="btnSalvaConfigAvanzata">Salva configurazione</button>
   <button class="secondary" id="btnResetConfigAvanzata" style="margin-top:8px;">Ripristina valori del piano</button>
   <div class="meta" id="configAvanzataStato" style="margin:8px 0 20px;"></div>
@@ -1878,15 +1885,15 @@ async function renderConfigAvanzata(){
   document.getElementById('configProfiloAlimentare').value=cfg.dietProfile||'onnivoro';
   let html='<div class="nutri-row header"><span>Voce</span><span>Min</span><span>Max</span><span>Unità</span></div>';
   for(const m of ['carne','pesce','formaggi','uova','legumi']){const f=(cfg.proteinFrequencies||CONFIG_AVANZATA_DEFAULT.proteinFrequencies)[m];html+=rigaNumericaConfig(`proteinFrequencies.${m}`,m,f.min,f.max,'sett.');}
-  for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+=`<div class="nutri-row"><span class="nutri-name">${s.replaceAll('_',' ')}</span><span></span><input type="number" data-cfg-avanzata="subtypeCaps.${s}" value="${(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]??''}"><span class="nutri-unit">max/sett.</span></div>`;
+  for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+=`<div class="nutri-row single"><span class="nutri-name">${s.replaceAll('_',' ')}</span><span></span><input type="number" data-cfg-avanzata="subtypeCaps.${s}" value="${(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]??''}"><span class="nutri-unit">max/sett.</span></div>`;
   html+=rigaNumericaConfig('fruit','Frutta',cfg.fruit&&cfg.fruit.min,cfg.fruit&&cfg.fruit.max,'giorno');
   html+=rigaNumericaConfig('fruit.portion','Porzione frutta',cfg.fruit&&cfg.fruit.portionMin,cfg.fruit&&cfg.fruit.portionMax,'g');
   const singoli=[['maxProteinSourcesPerDay','Fonti proteiche/giorno',cfg.maxProteinSourcesPerDay,'giorno'],['specialBreakfastMax','Colazioni speciali',cfg.specialBreakfastMax,'sett.'],['specialMealsMax','Pasti speciali',cfg.specialMealsMax,'sett.'],['oilGramsPerMeal','Olio per pasto',cfg.oilGramsPerMeal,'g']];
-  for(const [path,label,val,unit] of singoli)html+=`<div class="nutri-row"><span class="nutri-name">${label}</span><span></span><input type="number" data-cfg-avanzata="${path}" value="${val??''}"><span class="nutri-unit">${unit}</span></div>`;
-  for(const [k,v] of Object.entries(cfg.snackWeeklyCaps||CONFIG_AVANZATA_DEFAULT.snackWeeklyCaps))html+=`<div class="nutri-row"><span class="nutri-name">Spuntino ${k.replaceAll('_',' ')}</span><span></span><input type="number" data-cfg-avanzata="snackWeeklyCaps.${k}" value="${v??''}"><span class="nutri-unit">max/sett.</span></div>`;
-  html+=`<div class="nutri-row"><span class="nutri-name">Frutta secca</span><span></span><input type="number" data-cfg-avanzata="snackDailyCaps.frutta_secca_giornaliero" value="${(cfg.snackDailyCaps||CONFIG_AVANZATA_DEFAULT.snackDailyCaps).frutta_secca_giornaliero??''}"><span class="nutri-unit">max/giorno</span></div>`;
-  for(const k of ['carboidrati','verdure'])html+=`<div class="nutri-row"><span class="nutri-name">Cooldown ${k}</span><span></span><input type="number" data-cfg-avanzata="cooldownDays.${k}" value="${(cfg.cooldownDays||CONFIG_AVANZATA_DEFAULT.cooldownDays)[k]??''}"><span class="nutri-unit">giorni</span></div>`;
-  for(const k of ['pranzo','cena'])html+=`<div class="nutri-row"><span class="nutri-name">Scadenza ${k}</span><span></span><input type="time" data-cfg-avanzata="deadlines.${k}" data-cfg-testo="1" value="${(cfg.deadlines||CONFIG_AVANZATA_DEFAULT.deadlines)[k]||''}"><span class="nutri-unit">ora</span></div>`;
+  for(const [path,label,val,unit] of singoli)html+=`<div class="nutri-row single"><span class="nutri-name">${label}</span><span></span><input type="number" data-cfg-avanzata="${path}" value="${val??''}"><span class="nutri-unit">${unit}</span></div>`;
+  for(const [k,v] of Object.entries(cfg.snackWeeklyCaps||CONFIG_AVANZATA_DEFAULT.snackWeeklyCaps))html+=`<div class="nutri-row single"><span class="nutri-name">Spuntino ${k.replaceAll('_',' ')}</span><span></span><input type="number" data-cfg-avanzata="snackWeeklyCaps.${k}" value="${v??''}"><span class="nutri-unit">max/sett.</span></div>`;
+  html+=`<div class="nutri-row single"><span class="nutri-name">Frutta secca</span><span></span><input type="number" data-cfg-avanzata="snackDailyCaps.frutta_secca_giornaliero" value="${(cfg.snackDailyCaps||CONFIG_AVANZATA_DEFAULT.snackDailyCaps).frutta_secca_giornaliero??''}"><span class="nutri-unit">max/giorno</span></div>`;
+  for(const k of ['carboidrati','verdure'])html+=`<div class="nutri-row single"><span class="nutri-name">Cooldown ${k}</span><span></span><input type="number" data-cfg-avanzata="cooldownDays.${k}" value="${(cfg.cooldownDays||CONFIG_AVANZATA_DEFAULT.cooldownDays)[k]??''}"><span class="nutri-unit">giorni</span></div>`;
+  for(const k of ['pranzo','cena'])html+=`<div class="nutri-row single"><span class="nutri-name">Scadenza ${k}</span><span></span><input type="time" data-cfg-avanzata="deadlines.${k}" data-cfg-testo="1" value="${(cfg.deadlines||CONFIG_AVANZATA_DEFAULT.deadlines)[k]||''}"><span class="nutri-unit">ora</span></div>`;
   box.innerHTML=html;
   const active=new Set(a&&a.valore||[]),el=document.getElementById('configAllergeniAttivi');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>`<button type="button" data-allergene="${k}" class="${active.has(k)?'active':''}" title="${l}">${i} ${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));
   const classi=classiRec&&classiRec.valore||{},classBox=document.getElementById('configClassiCarboidrati');classBox.innerHTML='<div class="nutri-row header"><span>Classe</span><span>Min</span><span>Max</span><span>Unità</span></div>'+rigaNumericaConfig('vincoliClassiCarboidrati.complessi','Complessi',classi.complessi&&classi.complessi.min,classi.complessi&&classi.complessi.max,'sett.')+rigaNumericaConfig('vincoliClassiCarboidrati.semplici','Semplici',classi.semplici&&classi.semplici.min,classi.semplici&&classi.semplici.max,'sett.');
@@ -1899,7 +1906,7 @@ async function renderVincoliIngredientiNutrizionista(){
   macroBox.innerHTML=gruppi.map(([key,label])=>`<div class="nutri-fieldset"><div class="nutri-section-title">${label}</div><div class="nutri-swipe">${basi.filter(b=>macroNutrizionistaIngrediente(b)===key).sort((a,b)=>a.nome.localeCompare(b.nome,'it')).map(b=>{const locked=esclusionePianoIngrediente(b,profilo),st=locked?'escluso':(vincoliIngredientiNutrizionistaDraft[b.id]&&vincoliIngredientiNutrizionistaDraft[b.id].stato||'');return `<button type="button" data-vincolo-ing="${b.id}" class="${st} ${locked?'piano':''}" ${locked?'disabled':''}>${b.nome}${locked?' · piano':''}</button>`;}).join('')}</div></div>`).join('');
   const attivi=basi.filter(b=>esclusionePianoIngrediente(b,profilo)||vincoliIngredientiNutrizionistaDraft[b.id]);
   for(const b of attivi){const v=vincoliIngredientiNutrizionistaDraft[b.id];if(v&&v.stato==='limitato'&&(v.quantita===undefined||v.quantita===null))v.quantita=quantitaRiferimentoIngrediente(b);}
-  righe.innerHTML='<div class="nutri-row header"><span>Ingrediente</span><span>Min</span><span>Max</span><span>Quantità</span></div>'+attivi.map(b=>{const locked=esclusionePianoIngrediente(b,profilo),v=vincoliIngredientiNutrizionistaDraft[b.id]||{},excluded=locked||v.stato==='escluso';return excluded?`<div class="nutri-row"><span class="nutri-name">${b.nome}${locked?' · piano':''}</span><span class="nutri-excluded">Escluso</span></div>`:`<div class="nutri-row"><span class="nutri-name">${b.nome}</span><input type="number" data-vincolo-campo="min" data-vincolo-id="${b.id}" value="${v.min??''}"><input type="number" data-vincolo-campo="max" data-vincolo-id="${b.id}" value="${v.max??''}"><label style="display:flex;align-items:center;gap:3px;margin:0;"><input type="number" data-vincolo-campo="quantita" data-vincolo-id="${b.id}" value="${v.quantita??quantitaRiferimentoIngrediente(b)}"><span class="nutri-unit">${unitaRiferimentoIngrediente(b)}</span></label></div>`;}).join('');
+  righe.innerHTML='<div class="nutri-row header"><span>Ingrediente</span><span>Min</span><span>Max</span><span>Qtà</span></div>'+attivi.map(b=>{const locked=esclusionePianoIngrediente(b,profilo),v=vincoliIngredientiNutrizionistaDraft[b.id]||{},excluded=locked||v.stato==='escluso';return excluded?`<div class="nutri-row"><span class="nutri-name">${b.nome}${locked?' · piano':''}</span><span class="nutri-excluded">Escluso</span></div>`:`<div class="nutri-row"><span class="nutri-name">${b.nome}</span><input type="number" data-vincolo-campo="min" data-vincolo-id="${b.id}" value="${v.min??''}"><input type="number" data-vincolo-campo="max" data-vincolo-id="${b.id}" value="${v.max??''}"><label class="nutri-quantity"><input type="number" data-vincolo-campo="quantita" data-vincolo-id="${b.id}" value="${v.quantita??quantitaRiferimentoIngrediente(b)}"><span class="nutri-unit">${unitaRiferimentoIngrediente(b)}</span></label></div>`;}).join('');
   macroBox.querySelectorAll('[data-vincolo-ing]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.vincoloIng,old=vincoliIngredientiNutrizionistaDraft[id];if(!old)vincoliIngredientiNutrizionistaDraft[id]={stato:'limitato'};else if(old.stato==='limitato')vincoliIngredientiNutrizionistaDraft[id]={stato:'escluso'};else delete vincoliIngredientiNutrizionistaDraft[id];renderVincoliIngredientiNutrizionista();}));
   righe.querySelectorAll('[data-vincolo-campo]').forEach(i=>i.addEventListener('input',()=>{const v=vincoliIngredientiNutrizionistaDraft[i.dataset.vincoloId]||(vincoliIngredientiNutrizionistaDraft[i.dataset.vincoloId]={stato:'limitato'});v[i.dataset.vincoloCampo]=i.value===''?null:Number(i.value);}));
 }
@@ -9346,8 +9353,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=80"></script>
-<script src="motor.js?v=80"></script>
+<script src="engine-core.js?v=81"></script>
+<script src="motor.js?v=81"></script>
 
 </body>
 </html>

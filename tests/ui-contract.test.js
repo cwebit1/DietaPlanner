@@ -6,6 +6,8 @@ for(const id of ['view-menu','view-set','view-impostazioni','view-nutrizionista'
 not('id="setTettiIngrediente"');not('id="setCercaTettoIngrediente"');not('function renderSetTettiIngrediente');
 not("bottoneGiornoAttivo?.scrollIntoView");has("history.scrollRestoration='manual'");
 for(const marker of ['vincoliIngredientiNutrizionista','vincoliClassiCarboidrati','nutri-row','data-vincolo-ing'])has(marker);
+for(const marker of ['nutri-config-grid','nutri-quantity','#view-nutrizionista{width:100%;min-width:0;overflow-x:hidden;'])has(marker);
+not('id="configAvanzataCampi" class="nutri-grid"');not('id="configClassiCarboidrati" class="nutri-grid"');not('id="configVincoliIngredienti" class="nutri-grid"');
 for(const marker of ['data-pasto-switch','data-pasto-expander','pasto-contenuto-espandibile','pasto-selettori','data-pasto-imposta'])has(marker);
 has('data-componente-editor="carb"');has('aria-pressed=');not('name="ruoloRicerca_${chiaveStato}"');
 for(const label of ['🍗 Proteine','🍝 Carboidrato','🥦 Verdure','Cerca ricetta per nome...','Pasto speciale'])has(label);

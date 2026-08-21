@@ -9,6 +9,13 @@ Prima di qualsiasi modifica devono essere rilette integralmente le sezioni perti
 - Nel Set utente non deve più comparire la sezione **“Tetti personali per ingrediente”** né devono essere eseguiti il relativo rendering o i relativi listener. La configurazione clinica degli ingredienti resta esclusivamente nella vista nutrizionista.
 - All'avvio la striscia delle date della vista Piano deve essere interamente visibile sotto l'header. Il centraggio del giorno attivo deve modificare soltanto lo scorrimento orizzontale della striscia e non deve spostare verticalmente la pagina. L'eventuale posizione verticale ripristinata automaticamente dal browser viene azzerata al termine dell'avvio.
 
+## CORREZIONE RESPONSIVE NUTRIZIONISTA V81
+
+- La vista nutrizionista è progettata anzitutto per smartphone Android e non può produrre scorrimento orizzontale dell'intera pagina.
+- La griglia della configurazione usa una classe dedicata, distinta dalla griglia del riepilogo nutrizionale giornaliero: ogni parametro occupa una sola riga a larghezza piena dentro la propria card.
+- Le colonne restano `Nome | Min | Max | Quantità/Unità`, ma nome e campi numerici si ridimensionano entro la larghezza disponibile. Solo gli swipe degli ingredienti possono scorrere orizzontalmente nel proprio contenitore.
+- Questa correzione è esclusivamente grafica: dati, valori, validazioni e comportamento funzionale restano invariati.
+
 ## SPECIFICA VINCOLANTE — NUOVA VISTA NUTRIZIONISTA COMPLETA
 
 Questa sezione sostituisce la disposizione precedente della configurazione avanzata. La configurazione nutrizionista resta nello stesso `index.html`, ma diventa una vista interna autonoma: in Impostazioni compare soltanto il collegamento per aprirla; non compare nella barra di navigazione; contiene un comando per tornare a Impostazioni; in futuro il suo ingresso potrà essere protetto senza cambiare database o struttura della pagina.
