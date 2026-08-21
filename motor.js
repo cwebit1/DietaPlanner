@@ -1,4 +1,4 @@
-/* DietaPlanner — motore unico v69. Dipende da engine-core.js. */
+/* DietaPlanner — motore unico v70. Dipende da engine-core.js. */
 (function(global){
 'use strict';
 const E=global.DietaPlannerEngine;
@@ -68,5 +68,5 @@ async function motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft){if(!dr
 async function trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,exclude){const all=await ricetteAmmesse(false),macro=draft.categoriaLarga||motoreCategoriaDiSottotipo(draft.sottotipoProposto),pool=all.filter(r=>r.id!==exclude&&!r.piattoSpeciale&&(r.tipoPortata||'unico')==='unico'&&(!macro||motoreCategoriaDiSottotipo(r.gruppoProteico)===macro));return E.oldest(pool,{},{});}
 global.FREQUENZE_MOTORE_BIBBIA=FREQUENZE_MOTORE_BIBBIA;global.CAP_SOTTOTIPI_MOTORE=CAP_SOTTOTIPI_MOTORE;global.COTTURE_STANDARD=COTTURE_STANDARD;global.COTTURE_PER_PROTEINA_V10=COTTURE_PER_PROTEINA_V10;
 Object.assign(global,{motoreMescola,motoreCategoriaDiSottotipo,costruisciGrigliaBase,validaGrigliaBase,costruisciStoricoConsumatiMotore,scegliMenoRecenteMotore,risolviSottotipoFine,costruisciMappaVarianti,poolDelGiorno,contorniAmmessiPerPool,calcolaPoolVerdureGiornaliero,scegliContornoMotore,scegliSugoMotore,caricaPreferenzeMotoreDaSet,creaStatoMotoreSettimana,ricetteAmmesse,registraRichiestaRicettaReview,sviluppaGrigliaCrossWeek,motoreV10CompletaDraftPerRealizzazione,motoreV10ScegliPrimoReale,motoreV10CarboidratoFattibile,filtraContorniPerVerdureAttive,componiPastoModulare,generaPianoSettimana,generaMenuDaConfigSet,scegliCotturaStandard,trovaPiattoUnicoCompatibileDraft});
-global.MOTORE_REGOLE={versione:'69',pipeline:['proteina','carboidrato','verdura'],defaults:E.DEFAULTS};
+global.MOTORE_REGOLE={versione:'70',pipeline:['proteina','carboidrato','verdura'],defaults:E.DEFAULTS};
 })(window);

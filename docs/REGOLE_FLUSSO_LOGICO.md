@@ -1,5 +1,14 @@
 # DIETAPLANNER — REGOLE DEL FLUSSO LOGICO (unificato)
 
+## 0. SEPARAZIONE DELLE CONFIGURAZIONI E STATO VUOTO
+
+- La vista **Menù** deve renderizzarsi normalmente anche quando piano, inventario e storico sono completamente vuoti: mostra tutti gli slot vuoti e i comandi, senza creare proposte implicite.
+- Il **Set** è riservato all'utente e configura preferenze e vincoli desiderati per i menù da generare.
+- **Impostazioni → Configurazione avanzata nutrizionista** è un'area distinta, per ora ad accesso libero. Contiene limiti, frequenze, quantità, profili strutturali onnivoro/vegetariano/vegano, allergie, intolleranze ed esclusioni ingredienti.
+- Allergie e intolleranze, inclusi glutine e latte quando pertinenti, si selezionano dalla griglia completa degli allergeni e sono combinabili; non costituiscono profili separati.
+- Le esclusioni degli ingredienti dalla dieta sono modificabili esclusivamente nell'area nutrizionista.
+- I vincoli clinici e di sicurezza del nutrizionista prevalgono sempre sulle preferenze del Set e sulle scelte incompatibili dell'utente.
+
 ### Nota di unificazione
 Questo file unisce la sezione "Generazione programmazione settimanale" (dettata a voce) con la "Mappa completa delle istruzioni" (documento allegato), che si sovrapponevano parlando delle stesse cose (flag proteina, flag verdura, salvafrigo, storico) con formulazioni diverse. Operazioni fatte, nessuna interpretazione oltre queste:
 1. **Polarità flag/stock unificata**: 1 = disponibile/estraibile, 0 = non disponibile/escluso (come deciso). Dove il testo originale usava la polarità opposta (Mappa 2.3/2.5/4.2/4.3), i numeri sono stati invertiti per coerenza, non il significato.

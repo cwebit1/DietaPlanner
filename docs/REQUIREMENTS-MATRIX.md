@@ -32,6 +32,11 @@
 | DATA-02 | Copertura granulare PC/PP/PF/PU/PL+C+V | HARD | `coverageForRecipe`, dati | coverage test |
 | DATA-03 | Verdura: 70g insalata, 200g ortaggi, aromatici esclusi | HARD | `coverageForRecipe` | thresholds test |
 | SAFE-01 | Allergie attive e blocchi ingrediente escludono ovunque | HARD | `recipeBlocked`, UI ricerca | filter test |
+| SAFE-02 | Profili onnivoro/vegetariano/vegano sono configurati solo nell'area nutrizionista | HARD | `dietProfile`, `ricetteAmmesse` | profile filters |
+| SAFE-03 | Ogni allergia o intolleranza si seleziona dalla griglia allergeni | HARD | `allergeniAttivi`, `recipeBlocked` | allergen filters |
+| SAFE-04 | Esclusioni ingredienti modificabili solo nell'area nutrizionista | HARD | `ingredientiBloccati`, `filtriSicurezzaRicette` | ingredient exclusion |
+| UI-01 | Menù renderizzabile con piano, inventario e storico vuoti | HARD | `renderMenuSettimanale` | first-run smoke test |
+| UI-02 | Set utente e configurazione nutrizionista sono viste separate | HARD | `view-set`, `view-impostazioni` | DOM/browser test |
 | MENU-01 | Bozza separata dal piano committato | HARD | `menuDraft` UI | isolation test |
 | MENU-02 | Annulla/Resetta/Rigenera/Salva con semantica specificata | HARD | menu UI | browser test |
 | MENU-03 | Carosello multi-settimana | UX | menu UI | browser test |
