@@ -8,7 +8,8 @@ has('data-componente-editor="carb"');has('aria-pressed=');not('name="ruoloRicerc
 for(const label of ['🍗 Proteine','🍝 Carboidrato','🥦 Verdure','Cerca ricetta per nome...','Pasto speciale'])has(label);
 for(const type of ['data-pasto-refresh="proteina"','data-pasto-refresh="carb"','data-pasto-refresh="contorno"','data-pasto-salvafrigo="proteina"','data-pasto-salvafrigo="contorno"'])has(type);
 for(const fn of ['commitMenuDraftAtomico','registraConsumoStorico','mappaStatiDisponibilita','applicaConfigAvanzataRuntime','abilitaRicercaDirettaPasto'])has(`function ${fn}`);
-for(const fn of ['nomeRicettaConInizialeMaiuscola','calcolaNutrizioneVoceConsumata','nutrizioneCarboidratoModulare'])has(`function ${fn}`);
+for(const fn of ['nomeConInizialeMaiuscola','calcolaNutrizioneVoceConsumata','nutrizioneCarboidratoModulare'])has(`function ${fn}`);
+has("['ricette','ingredienti','varianti'].includes(store)");
 has('nutrizioneTotale,');has('if(rec.nutrizioneTotale){aggiungiNutrizione(tot,rec.nutrizioneTotale);continue;}');
 has("if(elementId && !haContenutoColazione)");has('const haContenutoSpuntino');has('const haContenutoBlocco');has('if(!haContenutoVoce || !voce.programmatoIl) continue;');
 has('window.visualViewport');has("scrollIntoView({block:'center',behavior:'smooth'})");

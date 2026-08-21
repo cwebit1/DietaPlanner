@@ -1,4 +1,4 @@
-/* DietaPlanner — motore unico v76. Dipende da engine-core.js. */
+/* DietaPlanner — motore unico v77. Dipende da engine-core.js. */
 (function(global){
 'use strict';
 const E=global.DietaPlannerEngine;

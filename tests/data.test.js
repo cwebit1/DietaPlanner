@@ -8,6 +8,7 @@ for(const r of recipes.ricette){assert(r.nome);assert.equal(r.nome[0],r.nome[0].
 for(const required of ['Ramen Giapponese','Tagliolini al salmone','Tagliolini ai funghi','Tagliolini al pomodoro fresco e basilico','Zuppa cereali e legumi in brodo','Zuppa di lenticchie','Zuppa di ceci','Zuppa di fagioli al rosmarino','Misticanza di radicchio','Radicchio rosso e carote'])assert(recipes.ricette.some(r=>r.nome===required),required);
 assert(recipes.ricette.find(r=>r.nome==='Ramen Giapponese').soloManuale);
 for(const [name,x] of Object.entries(ingredients.ingredienti)){assert(Array.isArray(x.allergeni),name);assert.equal(typeof x.bloccoManuale,'boolean',name);}
+for(const [name,x] of Object.entries(ingredients.ingredienti).filter(([,x])=>x.gruppo==='verdura'))assert.equal(name[0],name[0].toLocaleUpperCase('it-IT'),`${name}: verdura senza iniziale maiuscola`);
 let allergenChecks=0,ingredientBlockChecks=0;
 for(const r of recipes.ricette){for(const allergen of r.allergeniPresenti){assert(E.recipeBlocked(r,{activeAllergens:[allergen],ingredientMeta:{}}),`${r.nome}: allergene ${allergen}`);allergenChecks++;}for(const row of r.ingredienti){assert(E.recipeBlocked(r,{blockedIngredientIds:[row[0]],ingredientMeta:{}}),`${r.nome}: blocco ${row[0]}`);ingredientBlockChecks++;}}
 const mealRecipes=recipes.ricette.filter(r=>!['colazione','spuntino'].includes(r.tipoPortata));

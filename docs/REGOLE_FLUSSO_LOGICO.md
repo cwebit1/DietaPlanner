@@ -90,6 +90,7 @@ Prima di cambiare il comportamento di sughi, cotture, analoghi o sostituzioni, o
 ## 23. Nomi ricette e storico nutrizionale consumato
 
 - Il nome di ogni ricetta deve iniziare sempre con una lettera maiuscola. La regola appartiene ai dati: viene applicata all'importazione e a ogni salvataggio, non soltanto resa graficamente con CSS.
+- Anche i nomi degli ingredienti e delle varianti — in particolare tutte le verdure — devono iniziare con una lettera maiuscola. La normalizzazione si applica al catalogo remoto, al database locale e ai nuovi inserimenti.
 - Il grafico dei consumi deve usare una fotografia nutrizionale completa e immutabile registrata nel momento in cui il pasto viene consumato.
 - La fotografia comprende colazione o ricetta speciale, spuntino, primo, proteina e verdura. Comprende inoltre il carboidrato modulare e l'eventuale sugo quando non esiste una ricetta composta che li rappresenti già.
 - Una componente già inclusa in una ricetta completa non deve essere conteggiata una seconda volta.

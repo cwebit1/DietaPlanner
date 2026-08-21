@@ -994,7 +994,7 @@ function rawDelKey(store,key){
   cacheGetAll[store]=null;
   return new Promise((res,reject)=>{const r=tx(store,'readwrite').delete(key);r.onsuccess=()=>res();r.onerror=()=>reject(r.error);});
 }
-function nomeRicettaConInizialeMaiuscola(nome){
+function nomeConInizialeMaiuscola(nome){
   const testo=String(nome||'').trim();
   return testo ? testo.charAt(0).toLocaleUpperCase('it-IT')+testo.slice(1) : testo;
 }
@@ -1017,7 +1017,7 @@ function getAllRaw(store){
   return promessa;
 }
 function put(store, obj){
-  if(store==='ricette'&&obj&&obj.nome) obj.nome=nomeRicettaConInizialeMaiuscola(obj.nome);
+  if(['ricette','ingredienti','varianti'].includes(store)&&obj&&obj.nome) obj.nome=nomeConInizialeMaiuscola(obj.nome);
   if(menuDraftIntercetta(store,obj.id)){menuDraft.voci.set(obj.id,structuredClone(obj));menuDraft.modificata=true;return Promise.resolve(obj);}
   return rawPut(store,obj);
 }
@@ -9218,7 +9218,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=76').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=77').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Il nuovo SW entra in controllo senza ricaricare immediatamente la pagina.
@@ -9269,8 +9269,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=76"></script>
-<script src="motor.js?v=76"></script>
+<script src="engine-core.js?v=77"></script>
+<script src="motor.js?v=77"></script>
 
 </body>
 </html>
