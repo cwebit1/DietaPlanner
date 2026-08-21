@@ -138,8 +138,35 @@ Questo file unisce la sezione "Generazione programmazione settimanale" (dettata 
 
 ## 10. INTERFACCIA
 
-- Tab: **solo "Pasto" e "Speciale"**. *(ex 7.1 — confermato corrente; il pannello a 4 tab Portate/Piatto unico/Ricetta sfiziosa/Speciale di un batch precedente è superato e va ricondotto a questa regola)*
-- Pannello Pasto: **3 righe** Proteina / Carboidrato / Verdura, ognuna con **roll 🔄** e **salvafrigo ♻️**. *(ex 7.2)*
+- **Revisione della disposizione del pasto — requisito registrato, definizione ancora in corso (NON implementare finché Cwe non conclude le indicazioni):** il pannello deve essere immediatamente leggibile e composto, nell'ordine, dalle seguenti tre righe:
+  1. **Carboidrato:** alimento scelto + comando **"Scegli sugo"**, solo quando il carboidrato prevede un sugo.
+  2. **Proteine:** alimento scelto + indicazione/selezione **"cotto così"**, solo quando è prevista una cottura configurabile.
+  3. **Verdure:** alimento scelto + indicazione/selezione della **cottura**, solo quando è prevista.
+- A destra di **ciascuna** delle tre righe devono comparire, con disposizione coerente e sempre riconoscibile:
+  - **refresh 🔄** della singola componente;
+  - **informazioni nutrizionali ⓘ** della singola componente.
+- Nella testata del pannello, sul lato opposto rispetto al punto in cui viene visualizzato il **livello della ricetta**, deve esserci **un solo pulsante di switch** tra:
+  - **Pasto**;
+  - **Pasto speciale**.
+  Lo switch deve mantenere **lo stesso pulsante e le stesse dimensioni** nei due stati, cambiando scritta, stato e funzione associata senza spostare gli altri elementi della testata.
+- Le precedenti tab separate non sono il riferimento grafico: il passaggio Pasto/Pasto speciale avviene tramite lo switch unico nella testata.
+- **Vista compatta ed espansione — Colazione, Pranzo e Cena:** nello stato normale ciascun blocco deve mostrare **soltanto le informazioni essenziali definite sopra**. Per Pranzo e Cena: Carboidrato (+ sugo se previsto), Proteine (+ cottura se prevista), Verdure (+ cottura se prevista), con refresh e informazioni nutrizionali a destra. Per Colazione dovrà essere mostrata soltanto la sua composizione essenziale, secondo le specifiche che verranno completate da Cwe.
+- Tutte le altre funzioni già previste per cambio, modifica, sostituzione, salvafrigo, conferma e ulteriori impostazioni **non vengono eliminate**: restano disponibili ma sono **nascoste nello stato compatto** e diventano visibili esclusivamente aprendo il pannello espandibile del relativo pasto.
+- **Controllo grafico di apertura:** al centro del bordo inferiore di ogni blocco Colazione/Pranzo/Cena va collocato un piccolo pulsante circolare sovrapposto al bordo:
+  - `⌄` quando il pannello è chiuso;
+  - `⌃` quando il pannello è aperto.
+  Il cerchio deve avere il fondo coerente con la card, bordo sottile e un'area cliccabile indicativa di **36–40 px**. L'apertura non deve cambiare la larghezza della card né spostare la testata; deve espandere verticalmente il contenuto secondario.
+- Il pulsante circolare è l'unico comando per mostrare o nascondere le impostazioni secondarie del blocco. Lo stato iniziale è **chiuso**.
+- **Comportamento tecnico dell'espansione (precisazione confermata):** il contenuto secondario e tutte le relative funzioni sono già presenti all'interno della card anche quando questa è chiusa. La vista compatta limita l'altezza della card e ne ritaglia/nasconde la parte inferiore; il pulsante `⌄` rimuove tale limite e rende visibile il contenuto già esistente. Il pulsante `⌃` ripristina il limite e torna a nasconderlo. Apertura e chiusura sono quindi una variazione esclusivamente visiva: **non devono creare, distruggere, ricaricare, rigenerare o azzerare** contenuti, selezioni, bozze, listener o stato del pasto.
+- **Contenuto espanso di Pranzo/Cena (definizione confermata):** la parte nascosta contiene in alto tre celle selezionabili, graficamente analoghe ai selettori del Set, ciascuna con radio, icona e descrizione: **Carboidrati**, **Proteine**, **Verdure**. È attiva inizialmente Carboidrati. Sotto le tre celle esiste una sola area dinamica, riutilizzata per la componente selezionata:
+  - Carboidrati: pulsanti **Analogo**, **Cambia sugo** (solo se applicabile), **Imposta**;
+  - Proteine: pulsanti **Analogo**, **Cambia cottura** (solo se applicabile), **Imposta**;
+  - Verdure: pulsanti **Cambia verdura**, **Imposta**.
+- Sotto i pulsanti compare una barra di ricerca dinamica per nome. Durante la digitazione mostra al massimo le **prime 5 ricette ammesse** pertinenti alla componente attiva. Una ricetta può essere selezionata dalla lista; **Imposta** applica la selezione alla componente del pasto. Cambiando il radio in alto cambiano comandi, risultati e destinazione dell'impostazione, sempre nella stessa area sottostante.
+- Il precedente comando generale **"Usa questi come pasto programmato" / "Imposta questo"** deve essere rimosso dal pannello: l'impostazione viene eseguita dal pulsante contestuale **Imposta** della componente attiva. Le altre funzioni esistenti non eliminate da queste regole restano nel contenuto espanso, organizzate senza duplicazioni.
+- **Loading:** l'avvio deve mostrare un solo ciclo di caricamento. Il cambio/aggiornamento del service worker non deve provocare un secondo reload immediato e quindi una seconda animazione di loading consecutiva.
+- **Patate — composizione non ambigua:** le patate sono una fonte di carboidrati e hanno `haPoolSughi:false`: non devono mai ricevere un sugo né mostrare il comando “Cambia sugo”. Come carboidrato autonomo possono essere realizzate da una ricetta dedicata (es. Patate al forno). Se sono già contenute nella ricetta proteica, il pasto non deve aggiungere un secondo carboidrato. Le ricette a doppio carboidrato, come Pasta e patate, restano fallback e non vengono scelte se esiste un'alternativa semplice. Le preparazioni di patate non devono entrare nel selettore Verdure soltanto perché archiviate come `contorno`: quel selettore accetta esclusivamente componenti modulari classificati come verdura.
+- **Stato del requisito:** definizione sufficiente per l'implementazione corrente. Eventuali dettagli futuri possono affinare il contenuto essenziale della Colazione e le ulteriori interazioni senza ripristinare la vecchia struttura confusa.
 - **Refresh combinatorio con registro di sessione**: nessuna combinazione ripetuta finché il giro non è esaurito, poi riparte. *(ex 7.3)*
 - Set: bottone **"Genera menù" in alto** dopo la descrizione; **giorni non programmabili (≤ oggi) disattivati**; salvataggio **non automatico** con **Annulla / Sì / Rigenera** in fondo. *(ex 7.4)*
 

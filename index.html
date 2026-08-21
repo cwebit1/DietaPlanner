@@ -437,8 +437,27 @@ details{margin-top:14px;}
 /* Blocco pasto: contenitore netto e ben distinto per ogni pasto */
 .pasto-block{
   border:1px solid var(--border);border-radius:14px;
-  padding:14px;margin-bottom:16px;background:var(--panel);
+  padding:14px 14px 20px;margin-bottom:22px;background:var(--panel);position:relative;
 }
+.pasto-contenuto-espandibile{max-height:0;overflow:hidden;opacity:0;margin-top:0;transition:max-height .28s ease,opacity .2s ease,margin-top .28s ease;}
+.pasto-card-aperta .pasto-contenuto-espandibile{max-height:1200px;opacity:1;margin-top:12px;overflow:visible;}
+.pasto-expander{position:absolute;left:50%;bottom:-18px;transform:translateX(-50%);width:38px;height:38px;min-width:38px;padding:0;border-radius:50%;border:1px solid var(--border);background:var(--panel);color:var(--accent);font-size:1.15rem;font-weight:800;line-height:36px;text-align:center;z-index:3;box-shadow:0 3px 9px rgba(0,0,0,.22);}
+.pasto-expander:hover,.pasto-expander:focus{border-color:var(--accent);outline:none;}
+.pasto-switch{min-width:112px;height:34px;padding:0 12px;border-radius:17px;white-space:nowrap;font-size:.76rem;}
+.pasto-livello-switch{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.pasto-riga-essenziale{padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent);}
+.pasto-riga-essenziale:last-child{border-bottom:none;}
+.pasto-riga-etichetta{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);margin-bottom:3px;}
+.pasto-riga-valore{font-size:.9rem;font-weight:700;min-width:0;flex:1;}
+.pasto-riga-azioni{display:flex;align-items:center;gap:4px;flex:0 0 auto;}
+.pasto-riga-azioni button{background:none;border:none;color:var(--text);cursor:pointer;font-size:.9rem;padding:5px;min-width:30px;}
+.pasto-selettori{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
+.pasto-selettore{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;border:1px solid var(--border);border-radius:10px;padding:9px 5px;background:var(--panel-2);font-size:.7rem;font-weight:700;cursor:pointer;text-align:center;}
+.pasto-selettore.attivo{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--panel-2));}
+.pasto-selettore input{margin:0;accent-color:var(--accent);}
+.pasto-comandi-dinamici{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.pasto-risultato-ricerca{width:100%;margin-top:5px;text-align:left;}
+.pasto-risultato-ricerca.selezionato{border-color:var(--accent);color:var(--accent);}
 .filtro-alfabetico{
   position:fixed;right:2px;top:50%;transform:translateY(-50%);
   display:flex;flex-direction:column;align-items:center;gap:0;
@@ -4872,8 +4891,7 @@ async function renderColazione(giorno, elementId){
 
   const colazionePrefSalvata = await getOne('impostazioni', 'colazionePreferita');
 
-  html += `<details class="pasto-sub-panel" data-config-colazione ${draft.aperta?'open':''} style="margin-bottom:10px;">
-    <summary>⚙️ Modifica</summary>
+  html += `<div class="pasto-contenuto-espandibile" data-config-colazione>
     <div style="padding-top:10px;">
       <div class="meta" style="margin-bottom:8px;">Anteprima: <strong style="color:var(--text);">${draftDescrizione}</strong> · ${Math.round(draftNutri.kcal)} kcal</div>
 
@@ -4912,12 +4930,19 @@ async function renderColazione(giorno, elementId){
         Sostituisci colazione
       </button>
     </div>
-  </details>`;
+  </div><button class="pasto-expander" data-colazione-expander aria-expanded="${draft.aperta?'true':'false'}" title="${draft.aperta?'Nascondi modifiche':'Mostra modifiche'}">${draft.aperta?'⌃':'⌄'}</button>`;
 
   el.innerHTML=html;
+  el.classList.toggle('pasto-card-aperta',!!draft.aperta);
 
   el.querySelector('[data-info-colazione-attuale]')?.addEventListener('click',()=>apriModalInfoColazione(voce.componenti,voce.colazioneSpecialeId));
-  el.querySelector('[data-config-colazione]')?.addEventListener('toggle',e=>{ draft.aperta=e.currentTarget.open; });
+  el.querySelector('[data-colazione-expander]')?.addEventListener('click',e=>{
+    draft.aperta=!draft.aperta;
+    el.classList.toggle('pasto-card-aperta',draft.aperta);
+    e.currentTarget.textContent=draft.aperta?'⌃':'⌄';
+    e.currentTarget.setAttribute('aria-expanded',String(draft.aperta));
+    e.currentTarget.title=draft.aperta?'Nascondi modifiche':'Mostra modifiche';
+  });
 
   el.querySelectorAll('[data-gruppo-slide]').forEach(slide=>{
     slide.querySelectorAll('[data-col-opt]').forEach(btn=>{
@@ -5460,46 +5485,46 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
       categoriaLarga: voce.categoriaLargaE1 || motoreCategoriaDiSottotipo(voce.sottotipoProteicoMotore) || null,
       soggettoProteico: voce.categoriaLargaE1 || motoreCategoriaDiSottotipo(voce.sottotipoProteicoMotore) || null,
       sottotipoProposto: voce.sottotipoProteicoMotore || null,
-      origineCategoria: voce.origineCategoriaMotore || null
+      origineCategoria: voce.origineCategoriaMotore || null,
+      espanso: false,
+      componenteEditor: 'carb',
+      ricercaSelezionata: null
     };
     await generaCandidatoDraftModulare(pasto, giorno);
   }
   const draft = draftPasto[chiaveStato];
   await sincronizzaSoggettoProteicoDraft(pasto,giorno,draft);
 
-  const swapHtml = `<button data-swap-pasto style="background:none;border:none;cursor:pointer;font-size:1.05rem;" title="Scambia pranzo/cena">🔄</button>`;
+  const swapHtml = `<button data-swap-pasto style="background:none;border:none;cursor:pointer;font-size:1.05rem;" title="Scambia pranzo/cena">⇄</button>`;
+  const isMenuContext = !!elementId;
+  const switchLabel=draft.tabAttiva==='speciale'?'Pasto':'Pasto speciale';
   let html = `
     <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
       <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
       <span>${swapHtml}</span>
     </div>
-    <div style="margin-bottom:8px;">${fasciaBadgeColorata(draft.fascia)}</div>`;
-
-  const isMenuContext = !!elementId;
-  const tabs = isMenuContext
-    ? [['pasto','Pasto']]
-    : [['pasto','Pasto'],['speciale','Speciale']];
-
-  html += `<div class="tabgroup" style="margin-bottom:12px;">`;
-  for(const [key,label] of tabs){
-    html += `<button data-pasto-tab="${key}" class="${draft.tabAttiva===key?'active':''}">${label}</button>`;
-  }
-  html += `</div>`;
+    <div class="pasto-livello-switch">
+      <div>${fasciaBadgeColorata(draft.fascia)}</div>
+      ${isMenuContext?'':`<button class="secondary pasto-switch" data-pasto-switch>${switchLabel}</button>`}
+    </div>`;
   html += `<div id="pastoTabContenuto_${elementId?'m_':''}${chiaveStato}"></div>`;
-  html += `<button class="small accent" data-pasto-conferma style="width:100%;margin-top:12px;">Usa questi come pasto programmato</button>`;
+  html += `<button class="pasto-expander" data-pasto-expander aria-expanded="${draft.espanso?'true':'false'}" title="${draft.espanso?'Nascondi modifiche':'Mostra modifiche'}">${draft.espanso?'⌃':'⌄'}</button>`;
   el.innerHTML = html;
+  el.classList.toggle('pasto-card-aperta',!!draft.espanso);
 
   await renderPastoTabContenuto(pasto, giorno, elementId);
 
-  el.querySelectorAll('[data-pasto-tab]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      draft.tabAttiva = btn.dataset.pastoTab;
+  el.querySelector('[data-pasto-switch]')?.addEventListener('click', async ()=>{
+      draft.tabAttiva = draft.tabAttiva==='speciale'?'pasto':'speciale';
       await preparaCandidatoPerTabDraft(pasto,giorno,draft.tabAttiva);
       renderBloccoCompleto(pasto, giorno, elementId);
-    });
   });
-  el.querySelector('[data-pasto-conferma]')?.addEventListener('click', async ()=>{
-    await confermaPastoDaTab(pasto, voce, giorno, elementId);
+  el.querySelector('[data-pasto-expander]')?.addEventListener('click', e=>{
+    draft.espanso=!draft.espanso;
+    el.classList.toggle('pasto-card-aperta',draft.espanso);
+    e.currentTarget.textContent=draft.espanso?'⌃':'⌄';
+    e.currentTarget.setAttribute('aria-expanded',String(draft.espanso));
+    e.currentTarget.title=draft.espanso?'Nascondi modifiche':'Mostra modifiche';
   });
   el.querySelector('[data-swap-pasto]')?.addEventListener('click', async ()=>{
     const altro = pasto==='pranzo'?'cena':'pranzo';
@@ -5668,7 +5693,7 @@ if(speciali.length && !speciali.some(r=>r.id===draft.ricettaId)) draft.ricettaId
 }
 }
 
-async function renderPastoTabContenuto(pasto, giorno, elementId){
+async function renderPastoTabContenutoLegacyV72(pasto, giorno, elementId){
 giorno = giorno || giornoSelezionato;
 const chiaveStato = giorno+'_'+pasto;
 const contId = 'pastoTabContenuto_'+(elementId?'m_':'')+chiaveStato;
@@ -5752,7 +5777,7 @@ cont.querySelectorAll('[data-pasto-cambia]').forEach(btn=>btn.addEventListener('
 if(draft.tabAttiva==='pasto')await abilitaRicercaDirettaPasto(cont,pasto,giorno,elementId,draft);
 }
 
-async function abilitaRicercaDirettaPasto(cont,pasto,giorno,elementId,draft){
+async function abilitaRicercaDirettaPastoLegacyV72(cont,pasto,giorno,elementId,draft){
   const input=cont.querySelector('[data-ricerca-pasto]'),results=cont.querySelector('[data-risultati-ricerca-pasto]');if(!input||!results)return;
   const [all,capsRec,vars,piano]=await Promise.all([typeof ricetteAmmesse==='function'?ricetteAmmesse(false):getAll('ricette'),getOne('impostazioni','tettiIngredienteSettimanali'),getAll('varianti'),getAll('piano')]);
   const caps=capsRec&&capsRec.valore||{},vBy=new Map(vars.map(v=>[v.id,v])),days=new Set(giorniSettimanaDiDataMotore(giorno)),counts={};
@@ -5760,6 +5785,95 @@ async function abilitaRicercaDirettaPasto(cont,pasto,giorno,elementId,draft){
   const ammessaTetti=r=>(r.ingredienti||[]).every(i=>{const base=vBy.get(i.variantId)?.ingredienteId;return !base||caps[base]===undefined||(counts[base]||0)<Number(caps[base]);});
   const draw=()=>{const q=input.value.trim().toLowerCase(),role=cont.querySelector('input[name="ruoloRicerca_'+giorno+'_'+pasto+'"]:checked')?.value||'carb';let pool=all.filter(r=>!r.piattoSpeciale&&ammessaTetti(r));if(role==='carb')pool=pool.filter(r=>['primo','unico'].includes(r.tipoPortata||'unico'));if(role==='proteina')pool=pool.filter(r=>r.gruppoProteico&&['secondo','unico','modulare'].includes(r.tipoPortata||'unico'));if(role==='contorno')pool=pool.filter(r=>r.tipoPortata==='contorno'||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno'));pool=pool.filter(r=>!q||r.nome.toLowerCase().includes(q)).slice(0,40);results.innerHTML=pool.map(r=>`<button class="small" data-scelta-diretta="${r.id}" data-ruolo="${role}" style="width:100%;margin-top:5px;text-align:left;">${r.nome}${r.soloManuale?' · solo manuale':''}</button>`).join('')||'<div class="meta">Nessuna ricetta ammessa.</div>';results.querySelectorAll('[data-scelta-diretta]').forEach(b=>b.addEventListener('click',async()=>{const r=await getOne('ricette',b.dataset.sceltaDiretta);if(!r)return;if(b.dataset.ruolo==='carb'){draft.primoId=r.id;draft.primoSugoId=null;}else if(b.dataset.ruolo==='proteina'){draft.proteinaId=r.id;draft.sottotipoProposto=r.gruppoProteico;draft.categoriaLarga=motoreCategoriaDiSottotipo(r.gruppoProteico);draft.cottura=scegliCotturaStandard(r.gruppoProteico,r.nome);}else draft.contornoId=r.id;await renderPastoTabContenuto(pasto,giorno,elementId);}));};
   input.addEventListener('input',draw);cont.querySelectorAll('input[name="ruoloRicerca_'+giorno+'_'+pasto+'"]').forEach(r=>r.addEventListener('change',draw));draw();
+}
+
+async function renderPastoTabContenuto(pasto,giorno,elementId){
+  giorno=giorno||giornoSelezionato;
+  const chiaveStato=giorno+'_'+pasto;
+  const cont=document.getElementById('pastoTabContenuto_'+(elementId?'m_':'')+chiaveStato);
+  const draft=draftPasto[chiaveStato];
+  if(!cont||!draft)return;
+  const mappaStati=await mappaStatiDisponibilita();
+  let html='';
+  if(draft.tabAttiva==='pasto'){
+    const carbCfg=draft.primoCereale&&CARBOIDRATI_PASTO[draft.primoCereale];
+    const carbLabel=carbCfg?carbCfg.label:'';
+    const sugoRicetta=draft.primoSugoId?await getOne('ricette',draft.primoSugoId):null;
+    const primoRicetta=draft.primoId?await getOne('ricette',draft.primoId):null;
+    const protRicetta=draft.proteinaId?await getOne('ricette',draft.proteinaId):null;
+    const contRicetta=draft.contornoId?await getOne('ricette',draft.contornoId):null;
+    const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
+    if(draft.cottura&&!cottureAmmesse.includes(draft.cottura))draft.cottura=cottureAmmesse[0]||null;
+    const primoNome=(carbLabel+(sugoRicetta?' + '+sugoRicetta.nome:''))||'Nessun carboidrato';
+    const protNome=protRicetta?protRicetta.nome+(draft.cottura?' · '+draft.cottura:''):'Nessuna proteina';
+    const contNome=contRicetta?contRicetta.nome:'Nessuna verdura';
+    const warn=r=>r&&ricettaHaQuasiEsaurito(r,mappaStati)?' ⚠️':'';
+    const riga=(tipo,icona,label,nome,r)=>`<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">${icona} ${label}</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore">${nome}${warn(r)}</span><span class="pasto-riga-azioni"><button data-pasto-refresh="${tipo}" title="Cambia ${label.toLowerCase()}">🔄</button>${r?`<button class="icon-info-btn" data-pasto-info="${r.id}" title="Informazioni nutrizionali">ⓘ</button>`:''}</span></div></div>`;
+    html+=riga('carb','🍝','Carboidrato',primoNome,primoRicetta);
+    html+=riga('proteina','🍗','Proteine',protNome,protRicetta);
+    html+=riga('contorno','🥦','Verdure',contNome,contRicetta);
+    const ruolo=draft.componenteEditor||'carb';
+    html+=`<div class="pasto-contenuto-espandibile">
+      <div class="pasto-selettori">
+        <label class="pasto-selettore ${ruolo==='carb'?'attivo':''}"><input type="radio" name="ruoloRicerca_${chiaveStato}" value="carb" ${ruolo==='carb'?'checked':''}>🍝 Carboidrati</label>
+        <label class="pasto-selettore ${ruolo==='proteina'?'attivo':''}"><input type="radio" name="ruoloRicerca_${chiaveStato}" value="proteina" ${ruolo==='proteina'?'checked':''}>🍗 Proteine</label>
+        <label class="pasto-selettore ${ruolo==='contorno'?'attivo':''}"><input type="radio" name="ruoloRicerca_${chiaveStato}" value="contorno" ${ruolo==='contorno'?'checked':''}>🥦 Verdure</label>
+      </div>
+      <div class="pasto-comandi-dinamici">
+        ${ruolo==='carb'?`<button class="small" data-pasto-cambia="carb">Analogo</button>${carbCfg&&carbCfg.haPoolSughi?'<button class="small" data-pasto-cambia="sugo">Cambia sugo</button>':''}`:''}
+        ${ruolo==='proteina'?`<button class="small" data-pasto-cambia="proteina">Analogo</button>${cottureAmmesse.length>1?'<button class="small" data-pasto-cambia="cottura">Cambia cottura</button>':''}`:''}
+        ${ruolo==='contorno'?'<button class="small" data-pasto-cambia="contorno">Cambia verdura</button>':''}
+        <button class="small" data-pasto-salvafrigo="${ruolo}">♻️ Salvafrigo</button>
+        <button class="small accent" data-pasto-imposta>Imposta</button>
+      </div>
+      <input type="search" data-ricerca-pasto placeholder="Cerca ricetta per nome..." value="${String(draft.testoRicerca||'').replace(/"/g,'&quot;')}">
+      <div data-risultati-ricerca-pasto style="max-height:220px;overflow:auto;"></div>
+    </div>`;
+  }else{
+    const ricetta=draft.ricettaId?await getOne('ricette',draft.ricettaId):null;
+    const nutri=ricetta?await nutrizionePerPersona(ricetta):null;
+    html=`<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">🍽️ Pasto speciale</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore">${ricetta?ricetta.nome:'Nessun piatto speciale'}</span><span class="pasto-riga-azioni"><button data-pasto-refresh="speciale" title="Cambia piatto">🔄</button>${ricetta?`<button class="icon-info-btn" data-pasto-info="${ricetta.id}">ⓘ</button>`:''}</span></div>${nutri?`<div class="meta">${Math.round(nutri.kcal)} kcal</div>`:''}</div><div class="pasto-contenuto-espandibile"><button class="small" data-pasto-refresh="speciale">Analogo</button><button class="small accent" data-pasto-imposta style="margin-left:6px;">Imposta</button></div>`;
+  }
+  cont.innerHTML=html;
+  cont.querySelectorAll('[data-pasto-info]').forEach(btn=>btn.addEventListener('click',async()=>{const r=await getOne('ricette',btn.dataset.pastoInfo);if(r)apriModalInfoNutrizionale(r);}));
+  cont.querySelectorAll('[data-pasto-refresh]').forEach(btn=>btn.addEventListener('click',async()=>{await rigeneraPortataDraft(pasto,giorno,btn.dataset.pastoRefresh);await renderPastoTabContenuto(pasto,giorno,elementId);}));
+  cont.querySelectorAll('[data-pasto-salvafrigo]').forEach(btn=>btn.addEventListener('click',async()=>{await applicaSalvafrigoAPortata(pasto,giorno,btn.dataset.pastoSalvafrigo,btn,elementId);}));
+  cont.querySelectorAll('[data-pasto-cambia]').forEach(btn=>btn.addEventListener('click',async()=>{await cambiaCellaDraft(pasto,giorno,btn.dataset.pastoCambia);await renderPastoTabContenuto(pasto,giorno,elementId);}));
+  cont.querySelector('[data-pasto-imposta]')?.addEventListener('click',async()=>{
+    await applicaSelezioneRicercaPasto(draft);
+    const corrente=await getOne('piano',chiaveStato)||{id:chiaveStato,modo:'multi',fascia:draft.fascia||'facile',porzioni:1};
+    await confermaPastoDaTab(pasto,corrente,giorno,elementId);
+  });
+  if(draft.tabAttiva==='pasto')await abilitaRicercaDirettaPasto(cont,pasto,giorno,elementId,draft);
+}
+
+async function applicaSelezioneRicercaPasto(draft){
+  const scelta=draft&&draft.ricercaSelezionata;if(!scelta)return;
+  const r=await getOne('ricette',scelta.id);if(!r)return;
+  if(scelta.ruolo==='carb'){draft.primoId=r.id;draft.primoSugoId=null;draft.primoCereale=await carboidratoPrincipaleRicetta(r,draft.primoCereale);}
+  else if(scelta.ruolo==='proteina'){draft.proteinaId=r.id;draft.sottotipoProposto=r.gruppoProteico;draft.categoriaLarga=motoreCategoriaDiSottotipo(r.gruppoProteico);draft.cottura=scegliCotturaStandard(r.gruppoProteico,r.nome);}
+  else draft.contornoId=r.id;
+  draft.ricercaSelezionata=null;
+}
+
+async function carboidratoPrincipaleRicetta(r,corrente){
+  const varianti=await getAll('varianti'),vBy=new Map(varianti.map(v=>[v.id,v]));
+  const nomi=new Set((r.ingredienti||[]).map(i=>vBy.get(i.variantId)?.nome).filter(Boolean).map(x=>x.toLowerCase()));
+  const contiene=k=>CARBOIDRATI_PASTO[k]&&nomi.has(String(CARBOIDRATI_PASTO[k].ingrediente||'').toLowerCase());
+  if(corrente&&contiene(corrente))return corrente;
+  return Object.keys(CARBOIDRATI_PASTO).find(contiene)||corrente||null;
+}
+
+async function abilitaRicercaDirettaPasto(cont,pasto,giorno,elementId,draft){
+  const input=cont.querySelector('[data-ricerca-pasto]'),results=cont.querySelector('[data-risultati-ricerca-pasto]');if(!input||!results)return;
+  const [all,capsRec,vars,piano]=await Promise.all([typeof ricetteAmmesse==='function'?ricetteAmmesse(false):getAll('ricette'),getOne('impostazioni','tettiIngredienteSettimanali'),getAll('varianti'),getAll('piano')]);
+  const caps=capsRec&&capsRec.valore||{},vBy=new Map(vars.map(v=>[v.id,v])),days=new Set(giorniSettimanaDiDataMotore(giorno)),counts={};
+  for(const voce of piano.filter(v=>days.has(String(v.id).slice(0,10))))for(const rid of (voce.modo==='multi'?[voce.primoId,voce.secondoId,voce.contornoId]:[voce.ricettaId]).filter(Boolean)){const r=all.find(x=>x.id===rid)||await getOne('ricette',rid);for(const baseId of new Set((r&&r.ingredienti||[]).map(i=>vBy.get(i.variantId)?.ingredienteId).filter(Boolean)))counts[baseId]=(counts[baseId]||0)+1;}
+  const ammessaTetti=r=>(r.ingredienti||[]).every(i=>{const base=vBy.get(i.variantId)?.ingredienteId;return !base||caps[base]===undefined||(counts[base]||0)<Number(caps[base]);});
+  const draw=()=>{const q=input.value.trim().toLowerCase(),role=draft.componenteEditor||'carb';draft.testoRicerca=input.value;let pool=all.filter(r=>!r.piattoSpeciale&&ammessaTetti(r));if(role==='carb')pool=pool.filter(r=>(r.tipoPortata||'unico')==='primo');if(role==='proteina')pool=pool.filter(r=>r.gruppoProteico&&((r.tipoPortata||'unico')==='secondo'||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina')));if(role==='contorno')pool=pool.filter(r=>r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno'&&!r.gruppoProteico);pool=pool.filter(r=>!q||r.nome.toLowerCase().includes(q)).slice(0,5);results.innerHTML=pool.map(r=>`<button class="small pasto-risultato-ricerca ${draft.ricercaSelezionata&&draft.ricercaSelezionata.id===r.id&&draft.ricercaSelezionata.ruolo===role?'selezionato':''}" data-scelta-diretta="${r.id}" data-ruolo="${role}">${r.nome}${r.soloManuale?' · solo manuale':''}</button>`).join('')||'<div class="meta">Nessuna ricetta ammessa.</div>';results.querySelectorAll('[data-scelta-diretta]').forEach(b=>b.addEventListener('click',()=>{draft.ricercaSelezionata={id:b.dataset.sceltaDiretta,ruolo:b.dataset.ruolo};draw();}));};
+  input.addEventListener('input',draw);
+  cont.querySelectorAll('input[name="ruoloRicerca_'+giorno+'_'+pasto+'"]').forEach(r=>r.addEventListener('change',()=>{draft.componenteEditor=r.value;draft.ricercaSelezionata=null;renderPastoTabContenuto(pasto,giorno,elementId);}));
+  draw();
 }
 
 async function generaCandidatoDraftModulare(pasto, giorno){
@@ -9053,19 +9167,12 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=72').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=73').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
-    /* Quando il browser rileva un nuovo SW installato, gli dice
-       di attivarsi subito (skipWaiting è già nel sw.js). Poi,
-       quando il nuovo SW prende il controllo, ricarica la pagina
-       così l'utente vede immediatamente la versione aggiornata. */
-    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
-      if(!window.__swRicaricato){
-        window.__swRicaricato = true;
-        window.location.reload();
-      }
-    });
+    /* Il nuovo SW entra in controllo senza ricaricare immediatamente la pagina.
+       Il reload su controllerchange faceva eseguire due avvii e due loader di
+       seguito. Le nuove risorse saranno usate alla successiva apertura naturale. */
   });
 }
 </script>
@@ -9111,8 +9218,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=72"></script>
-<script src="motor.js?v=72"></script>
+<script src="engine-core.js?v=73"></script>
+<script src="motor.js?v=73"></script>
 
 </body>
 </html>
