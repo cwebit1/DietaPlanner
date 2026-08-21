@@ -3847,11 +3847,10 @@ async function nutrizionePerPersona(ricetta){
    "a pezzo" (es. le uova): la variante porta il flag unitaPezzo e il peso di un
    singolo pezzo nel campo formato. */
 function formattaQuantita(variante, grammi){
-  if(variante && variante.unitaPezzo && variante.formato){
-    const n = Math.round(grammi / variante.formato);
-    const nomeBase = variante.nome.toLowerCase();
-    const singolare = nomeBase==='uova' ? 'uovo' : nomeBase;
-    return n===1 ? `1 ${singolare}` : `${n} ${nomeBase}`;
+  const pesoPezzo=variante&&Number(variante.pesoPezzo||variante.formato)||0;
+  if(variante && variante.unitaPezzo && pesoPezzo){
+    const n = Math.round(grammi / pesoPezzo);
+    return `${n} pz`;
   }
   return `${Math.round(grammi)}g`;
 }
