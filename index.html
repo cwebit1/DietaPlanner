@@ -286,12 +286,12 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 
 .set-carb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;row-gap:8px;}
 .nutri-config-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;width:100%;min-width:0;}
-.nutri-row{display:grid;grid-template-columns:minmax(0,1fr) 46px 54px 62px;gap:4px;align-items:center;width:100%;min-width:0;min-height:38px;padding:6px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);overflow:hidden;}
-.nutri-row.header{min-height:auto;background:transparent;border:0;padding:0 8px;color:var(--text-dim);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;}
+.nutri-row{display:grid;grid-template-columns:minmax(0,1fr) 62px 46px 54px;gap:4px;align-items:center;width:100%;min-width:0;min-height:38px;padding:6px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);overflow:hidden;}
+.nutri-row.nutri-vincolo{grid-template-columns:minmax(0,1fr) 40px 42px 46px 64px;}
+.nutri-row.header{min-height:auto;background:transparent;border:0;padding:6px;color:var(--text-dim);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;}
 .nutri-row .nutri-name{min-width:0;font-size:.76rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .nutri-row input{display:block;width:100%;max-width:100%;min-width:0;height:32px;padding:5px 2px;text-align:center;margin:0;font-size:.78rem;}
-.nutri-row.single>span:empty{display:none;}
-.nutri-row.single>input{grid-column:2/4;}
+.nutri-row.single>input{grid-column:3/5;}
 .nutri-unit{font-size:.7rem;color:var(--text-dim);white-space:nowrap;text-align:center;}
 .nutri-excluded{grid-column:2/5;color:#e74c3c;font-weight:700;text-align:right;font-size:.76rem;}
 .nutri-quantity{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px;width:100%;min-width:0;margin:0!important;}
@@ -305,8 +305,8 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 #view-nutrizionista{width:100%;min-width:0;overflow-x:hidden;}
 #view-nutrizionista .card{width:100%;min-width:0;overflow:hidden;}
 #view-nutrizionista .tabgroup{max-width:100%;}
-@media(max-width:400px){#view-nutrizionista .card{padding:11px}.nutri-row{grid-template-columns:minmax(0,1fr) 42px 48px 58px;padding:5px 4px;gap:3px}.nutri-row.header{padding:0 4px;font-size:.6rem}.nutri-row input{font-size:.74rem}.nutri-unit{font-size:.62rem}}
-@media(max-width:340px){#view-nutrizionista .card{padding:9px}.nutri-row{grid-template-columns:minmax(0,1fr) 38px 44px 54px}.nutri-row .nutri-name{font-size:.7rem}}
+@media(max-width:400px){#view-nutrizionista .card{padding:11px}.nutri-row{grid-template-columns:minmax(0,1fr) 58px 42px 48px;padding:5px 4px;gap:3px}.nutri-row.nutri-vincolo{grid-template-columns:minmax(0,1fr) 34px 38px 42px 58px}.nutri-row.header{padding:5px 4px;font-size:.6rem}.nutri-row input{font-size:.74rem}.nutri-unit{font-size:.62rem}}
+@media(max-width:340px){#view-nutrizionista .card{padding:9px}.nutri-row{grid-template-columns:minmax(0,1fr) 52px 38px 44px}.nutri-row.nutri-vincolo{grid-template-columns:minmax(0,1fr) 31px 35px 39px 52px}.nutri-row .nutri-name{font-size:.7rem}}
 .set-carb-item{min-width:0;}
 .set-carb-celle{display:flex;gap:3px;flex-wrap:nowrap;}
 .set-carb-celle button{width:24px!important;height:24px!important;min-width:24px!important;max-width:24px!important;min-height:24px!important;max-height:24px!important;padding:0!important;border-color:#4b5540!important;}
@@ -1674,7 +1674,8 @@ async function sincronizzaCatalogoIngredientiJson(){
     if(!v){v={id:uid(),ingredienteId:base.id,nome,formato:0,unitaPezzo:false,integrale:false};aggiunte++;}
     Object.assign(v,{ingredienteId:base.id,consistenza:(d.gruppo==='grassi'?'gia_cotto':'da_cuocere'),congelabile:d.conservazione==='surgelato'?'si':'no',
       kcal100:d.kcal||0,prot100:d.proteine||0,carb100:d.carboidrati||0,grassi100:d.grassi||0,
-      categoria:d.conservazione==='surgelato'?'surgelato':(alta?'fresco':'conf')});
+      categoria:d.conservazione==='surgelato'?'surgelato':(alta?'fresco':'conf'),
+      unitaPezzo:d.unitaPorzione==='pezzi',pesoPezzo:Number(d.pesoPezzo||(d.unitaPorzione==='pezzi'&&d.pesoPorzioneGrammi&&d.porzione?d.pesoPorzioneGrammi/d.porzione:0))||null});
     await put('varianti',v); varByName.set(nome.toLowerCase(),v);
   }
   if(aggiunte){
@@ -1884,25 +1885,27 @@ function unitaRiferimentoIngrediente(b){return b.unitaPorzione==='pezzi'?'pz':'g
 function quantitaRiferimentoIngrediente(b){return Number(b.porzione||b.pesoPorzioneGrammi||b.pesoPezzo||0)||'';}
 function macroProteicoDaBase(b){return typeof motoreCategoriaDiSottotipo==='function'?motoreCategoriaDiSottotipo(b.sottotipo):null;}
 function esclusionePianoIngrediente(b,profilo){const macro=macroProteicoDaBase(b);if(profilo==='vegetariano')return macro==='carne'||macro==='pesce';if(profilo==='vegano')return ['carne','pesce','formaggi','uova'].includes(macro)||(b.allergeni||[]).some(a=>['latte','uova','pesce','crostacei','molluschi'].includes(a));return false;}
-function rigaNumericaConfig(path,label,min,max,extra){return `<div class="nutri-row"><span class="nutri-name">${label}</span><input type="number" data-cfg-avanzata="${path}.min" value="${min??''}" aria-label="${label} minimo"><input type="number" data-cfg-avanzata="${path}.max" value="${max??''}" aria-label="${label} massimo"><span class="nutri-unit">${extra||'sett.'}</span></div>`;}
+function rigaNumericaConfig(path,label,min,max,extra){return `<div class="nutri-row"><span class="nutri-name">${label}</span><span class="nutri-unit">${extra||'sett.'}</span><input type="number" data-cfg-avanzata="${path}.min" value="${min??''}" aria-label="${label} minimo"><input type="number" data-cfg-avanzata="${path}.max" value="${max??''}" aria-label="${label} massimo"></div>`;}
+function quantitaNutrizionistaInGrammi(base,quantita){const q=Number(quantita)||0;if(base&&base.unitaPorzione==='pezzi'){const peso=Number(base.pesoPezzo||(base.pesoPorzioneGrammi&&base.porzione?base.pesoPorzioneGrammi/base.porzione:0))||0;return q*peso;}return q;}
+async function applicaQuantitaNutrizionistaAlleRicette(){const rec=await getOne('impostazioni','vincoliIngredientiNutrizionista'),vincoli=rec&&rec.valore||{},basi=await getAll('ingredienti'),varianti=await getAll('varianti'),ricette=await getAll('ricette'),bBy=new Map(basi.map(b=>[b.id,b])),vBy=new Map(varianti.map(v=>[v.id,v]));for(const ricetta of ricette){let cambiata=false;for(const ing of ricetta.ingredienti||[]){const variante=vBy.get(ing.variantId),base=variante&&bBy.get(variante.ingredienteId),vincolo=base&&vincoli[base.id];if(!base||!vincolo||vincolo.stato!=='limitato'||!(Number(vincolo.quantita)>0))continue;const nuova=quantitaNutrizionistaInGrammi(base,vincolo.quantita)*(Number(ricetta.porzioni)||1);if(nuova>0&&Number(ing.quantita)!==nuova){ing.quantita=nuova;cambiata=true;}}if(cambiata)await put('ricette',ricetta);}}
 async function renderConfigAvanzata(){
   const [rec,a,vincoliRec,classiRec]=await Promise.all([getOne('impostazioni','configAvanzata'),getOne('impostazioni','allergeniAttivi'),getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','vincoliClassiCarboidrati')]);
   const cfg=Object.assign({},CONFIG_AVANZATA_DEFAULT,rec&&rec.valore||{}),box=document.getElementById('configAvanzataCampi');if(!box)return;
   document.getElementById('configProfiloAlimentare').value=cfg.dietProfile||'onnivoro';
-  let html='<div class="nutri-row header"><span>Voce</span><span>Min</span><span>Max</span><span>Unità</span></div>';
+  let html='<div class="nutri-row header"><span>Voce</span><span>Unità</span><span>Min</span><span>Max</span></div>';
   for(const m of ['carne','pesce','formaggi','uova','legumi']){const f=(cfg.proteinFrequencies||CONFIG_AVANZATA_DEFAULT.proteinFrequencies)[m];html+=rigaNumericaConfig(`proteinFrequencies.${m}`,m,f.min,f.max,'sett.');}
-  for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+=`<div class="nutri-row single"><span class="nutri-name">${s.replaceAll('_',' ')}</span><span></span><input type="number" data-cfg-avanzata="subtypeCaps.${s}" value="${(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]??''}"><span class="nutri-unit">max/sett.</span></div>`;
+  for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+=`<div class="nutri-row single"><span class="nutri-name">${s.replaceAll('_',' ')}</span><span class="nutri-unit">max/sett.</span><input type="number" data-cfg-avanzata="subtypeCaps.${s}" value="${(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]??''}"></div>`;
   html+=rigaNumericaConfig('fruit','Frutta',cfg.fruit&&cfg.fruit.min,cfg.fruit&&cfg.fruit.max,'giorno');
   html+=rigaNumericaConfig('fruit.portion','Porzione frutta',cfg.fruit&&cfg.fruit.portionMin,cfg.fruit&&cfg.fruit.portionMax,'g');
   const singoli=[['maxProteinSourcesPerDay','Fonti proteiche/giorno',cfg.maxProteinSourcesPerDay,'giorno'],['specialBreakfastMax','Colazioni speciali',cfg.specialBreakfastMax,'sett.'],['specialMealsMax','Pasti speciali',cfg.specialMealsMax,'sett.'],['oilGramsPerMeal','Olio per pasto',cfg.oilGramsPerMeal,'g']];
-  for(const [path,label,val,unit] of singoli)html+=`<div class="nutri-row single"><span class="nutri-name">${label}</span><span></span><input type="number" data-cfg-avanzata="${path}" value="${val??''}"><span class="nutri-unit">${unit}</span></div>`;
-  for(const [k,v] of Object.entries(cfg.snackWeeklyCaps||CONFIG_AVANZATA_DEFAULT.snackWeeklyCaps))html+=`<div class="nutri-row single"><span class="nutri-name">Spuntino ${k.replaceAll('_',' ')}</span><span></span><input type="number" data-cfg-avanzata="snackWeeklyCaps.${k}" value="${v??''}"><span class="nutri-unit">max/sett.</span></div>`;
-  html+=`<div class="nutri-row single"><span class="nutri-name">Frutta secca</span><span></span><input type="number" data-cfg-avanzata="snackDailyCaps.frutta_secca_giornaliero" value="${(cfg.snackDailyCaps||CONFIG_AVANZATA_DEFAULT.snackDailyCaps).frutta_secca_giornaliero??''}"><span class="nutri-unit">max/giorno</span></div>`;
-  for(const k of ['carboidrati','verdure'])html+=`<div class="nutri-row single"><span class="nutri-name">Cooldown ${k}</span><span></span><input type="number" data-cfg-avanzata="cooldownDays.${k}" value="${(cfg.cooldownDays||CONFIG_AVANZATA_DEFAULT.cooldownDays)[k]??''}"><span class="nutri-unit">giorni</span></div>`;
-  for(const k of ['pranzo','cena'])html+=`<div class="nutri-row single"><span class="nutri-name">Scadenza ${k}</span><span></span><input type="time" data-cfg-avanzata="deadlines.${k}" data-cfg-testo="1" value="${(cfg.deadlines||CONFIG_AVANZATA_DEFAULT.deadlines)[k]||''}"><span class="nutri-unit">ora</span></div>`;
+  for(const [path,label,val,unit] of singoli)html+=`<div class="nutri-row single"><span class="nutri-name">${label}</span><span class="nutri-unit">${unit}</span><input type="number" data-cfg-avanzata="${path}" value="${val??''}"></div>`;
+  for(const [k,v] of Object.entries(cfg.snackWeeklyCaps||CONFIG_AVANZATA_DEFAULT.snackWeeklyCaps))html+=`<div class="nutri-row single"><span class="nutri-name">Spuntino ${k.replaceAll('_',' ')}</span><span class="nutri-unit">max/sett.</span><input type="number" data-cfg-avanzata="snackWeeklyCaps.${k}" value="${v??''}"></div>`;
+  html+=`<div class="nutri-row single"><span class="nutri-name">Frutta secca</span><span class="nutri-unit">max/giorno</span><input type="number" data-cfg-avanzata="snackDailyCaps.frutta_secca_giornaliero" value="${(cfg.snackDailyCaps||CONFIG_AVANZATA_DEFAULT.snackDailyCaps).frutta_secca_giornaliero??''}"></div>`;
+  for(const k of ['carboidrati','verdure'])html+=`<div class="nutri-row single"><span class="nutri-name">Cooldown ${k}</span><span class="nutri-unit">giorni</span><input type="number" data-cfg-avanzata="cooldownDays.${k}" value="${(cfg.cooldownDays||CONFIG_AVANZATA_DEFAULT.cooldownDays)[k]??''}"></div>`;
+  for(const k of ['pranzo','cena'])html+=`<div class="nutri-row single"><span class="nutri-name">Scadenza ${k}</span><span class="nutri-unit">ora</span><input type="time" data-cfg-avanzata="deadlines.${k}" data-cfg-testo="1" value="${(cfg.deadlines||CONFIG_AVANZATA_DEFAULT.deadlines)[k]||''}"></div>`;
   box.innerHTML=html;
   const active=new Set(a&&a.valore||[]),el=document.getElementById('configAllergeniAttivi');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>`<button type="button" data-allergene="${k}" class="${active.has(k)?'active':''}" title="${l}">${i} ${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));
-  const classi=classiRec&&classiRec.valore||{},classBox=document.getElementById('configClassiCarboidrati');classBox.innerHTML='<div class="nutri-row header"><span>Classe</span><span>Min</span><span>Max</span><span>Unità</span></div>'+rigaNumericaConfig('vincoliClassiCarboidrati.complessi','Complessi',classi.complessi&&classi.complessi.min,classi.complessi&&classi.complessi.max,'sett.')+rigaNumericaConfig('vincoliClassiCarboidrati.semplici','Semplici',classi.semplici&&classi.semplici.min,classi.semplici&&classi.semplici.max,'sett.');
+  const classi=classiRec&&classiRec.valore||{},classBox=document.getElementById('configClassiCarboidrati');classBox.innerHTML='<div class="nutri-row header"><span>Classe</span><span>Unità</span><span>Min</span><span>Max</span></div>'+rigaNumericaConfig('vincoliClassiCarboidrati.complessi','Complessi',classi.complessi&&classi.complessi.min,classi.complessi&&classi.complessi.max,'sett.')+rigaNumericaConfig('vincoliClassiCarboidrati.semplici','Semplici',classi.semplici&&classi.semplici.min,classi.semplici&&classi.semplici.max,'sett.');
   vincoliIngredientiNutrizionistaDraft=structuredClone(vincoliRec&&vincoliRec.valore||{});
   await renderVincoliIngredientiNutrizionista();
 }
@@ -1912,7 +1915,7 @@ async function renderVincoliIngredientiNutrizionista(){
   macroBox.innerHTML=gruppi.map(([key,label])=>`<div class="nutri-fieldset"><div class="nutri-section-title">${label}</div><div class="nutri-swipe">${basi.filter(b=>macroNutrizionistaIngrediente(b)===key).sort((a,b)=>a.nome.localeCompare(b.nome,'it')).map(b=>{const locked=esclusionePianoIngrediente(b,profilo),st=locked?'escluso':(vincoliIngredientiNutrizionistaDraft[b.id]&&vincoliIngredientiNutrizionistaDraft[b.id].stato||'');return `<button type="button" data-vincolo-ing="${b.id}" class="${st} ${locked?'piano':''}" ${locked?'disabled':''}>${b.nome}${locked?' · piano':''}</button>`;}).join('')}</div></div>`).join('');
   const attivi=basi.filter(b=>esclusionePianoIngrediente(b,profilo)||vincoliIngredientiNutrizionistaDraft[b.id]);
   for(const b of attivi){const v=vincoliIngredientiNutrizionistaDraft[b.id];if(v&&v.stato==='limitato'&&(v.quantita===undefined||v.quantita===null))v.quantita=quantitaRiferimentoIngrediente(b);}
-  righe.innerHTML='<div class="nutri-row header"><span>Ingrediente</span><span>Min</span><span>Max</span><span>Qtà</span></div>'+attivi.map(b=>{const locked=esclusionePianoIngrediente(b,profilo),v=vincoliIngredientiNutrizionistaDraft[b.id]||{},excluded=locked||v.stato==='escluso';return excluded?`<div class="nutri-row"><span class="nutri-name">${b.nome}${locked?' · piano':''}</span><span class="nutri-excluded">Escluso</span></div>`:`<div class="nutri-row"><span class="nutri-name">${b.nome}</span><input type="number" data-vincolo-campo="min" data-vincolo-id="${b.id}" value="${v.min??''}"><input type="number" data-vincolo-campo="max" data-vincolo-id="${b.id}" value="${v.max??''}"><label class="nutri-quantity"><input type="number" data-vincolo-campo="quantita" data-vincolo-id="${b.id}" value="${v.quantita??quantitaRiferimentoIngrediente(b)}"><span class="nutri-unit">${unitaRiferimentoIngrediente(b)}</span></label></div>`;}).join('');
+  righe.innerHTML='<div class="nutri-row nutri-vincolo header"><span>Ingrediente</span><span>Unità</span><span>Min</span><span>Max</span><span>Quantità</span></div>'+attivi.map(b=>{const locked=esclusionePianoIngrediente(b,profilo),v=vincoliIngredientiNutrizionistaDraft[b.id]||{},excluded=locked||v.stato==='escluso';return excluded?`<div class="nutri-row nutri-vincolo"><span class="nutri-name">${b.nome}${locked?' · piano':''}</span><span class="nutri-excluded">Escluso</span></div>`:`<div class="nutri-row nutri-vincolo"><span class="nutri-name">${b.nome}</span><span class="nutri-unit">sett.</span><input type="number" data-vincolo-campo="min" data-vincolo-id="${b.id}" value="${v.min??''}"><input type="number" data-vincolo-campo="max" data-vincolo-id="${b.id}" value="${v.max??''}"><label class="nutri-quantity"><input type="number" data-vincolo-campo="quantita" data-vincolo-id="${b.id}" value="${v.quantita??quantitaRiferimentoIngrediente(b)}"><span class="nutri-unit">${unitaRiferimentoIngrediente(b)}</span></label></div>`;}).join('');
   macroBox.querySelectorAll('[data-vincolo-ing]').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.dataset.vincoloIng,old=vincoliIngredientiNutrizionistaDraft[id];if(!old)vincoliIngredientiNutrizionistaDraft[id]={stato:'limitato'};else if(old.stato==='limitato')vincoliIngredientiNutrizionistaDraft[id]={stato:'escluso'};else delete vincoliIngredientiNutrizionistaDraft[id];renderVincoliIngredientiNutrizionista();}));
   righe.querySelectorAll('[data-vincolo-campo]').forEach(i=>i.addEventListener('input',()=>{const v=vincoliIngredientiNutrizionistaDraft[i.dataset.vincoloId]||(vincoliIngredientiNutrizionistaDraft[i.dataset.vincoloId]={stato:'limitato'});v[i.dataset.vincoloCampo]=i.value===''?null:Number(i.value);}));
 }
@@ -1924,7 +1927,7 @@ async function salvaConfigAvanzata(){
   if(cfg.fruit&&cfg.fruit.portionMin!==null&&cfg.fruit.portionMax!==null&&Number(cfg.fruit.portionMin)>Number(cfg.fruit.portionMax)){await avviso('La porzione minima della frutta non può superare la massima.');return;}
   for(const c of Object.values(classi)){if(c.min!==null&&c.max!==null&&Number(c.min)>Number(c.max)){await avviso('Il minimo dei carboidrati non può superare il massimo.');return;}}
   for(const v of Object.values(vincoliIngredientiNutrizionistaDraft)){if(v.stato==='limitato'&&v.min!==null&&v.max!==null&&Number(v.min)>Number(v.max)){await avviso('Il minimo non può superare il massimo.');return;}if(v.stato==='limitato'&&!(Number(v.quantita)>0)){await avviso('La quantità deve essere positiva.');return;}}
-  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene),basi=await getAll('ingredienti'),ingredientiEsclusi=basi.filter(b=>esclusionePianoIngrediente(b,cfg.dietProfile)||vincoliIngredientiNutrizionistaDraft[b.id]&&vincoliIngredientiNutrizionistaDraft[b.id].stato==='escluso').map(b=>b.id);await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:vincoliIngredientiNutrizionistaDraft});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:classi});await put('impostazioni',{chiave:'ingredientiBloccati',valore:ingredientiEsclusi});document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
+  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene),basi=await getAll('ingredienti'),ingredientiEsclusi=basi.filter(b=>esclusionePianoIngrediente(b,cfg.dietProfile)||vincoliIngredientiNutrizionistaDraft[b.id]&&vincoliIngredientiNutrizionistaDraft[b.id].stato==='escluso').map(b=>b.id);await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:vincoliIngredientiNutrizionistaDraft});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:classi});await put('impostazioni',{chiave:'ingredientiBloccati',valore:ingredientiEsclusi});await applicaQuantitaNutrizionistaAlleRicette();document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
   applicaConfigAvanzataRuntime(cfg);
 }
 
@@ -9267,6 +9270,7 @@ window.addEventListener('load', async ()=>{
     }
     aggiornaLoader(50, 'Controllo aggiornamenti ricette...');
     const esitoRicette = await controllaAggiornamentoRicetteRemote();
+    await applicaQuantitaNutrizionistaAlleRicette();
     if(esitoRicette.aggiornato){
       aggiornaLoader(60, 'Ricette aggiornate a v' + esitoRicette.versione + ': +' + esitoRicette.aggiunte + ' nuove, ' + esitoRicette.aggiornate + ' agg.');
     } else if(esitoRicette.versione > 0){
@@ -9359,8 +9363,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=82"></script>
-<script src="motor.js?v=82"></script>
+<script src="engine-core.js?v=83"></script>
+<script src="motor.js?v=83"></script>
 
 </body>
 </html>
