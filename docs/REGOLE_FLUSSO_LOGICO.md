@@ -1,5 +1,52 @@
 # DIETAPLANNER — REGOLE DEL FLUSSO LOGICO (unificato)
 
+## REGOLA OPERATIVA VINCOLANTE PER OGNI INTERVENTO
+
+Prima di qualsiasi modifica devono essere rilette integralmente le sezioni pertinenti di questo documento. Si implementa esclusivamente quanto richiesto e autorizzato: dati, valori predefiniti, ricette, ingredienti, quantità, versioni e logiche adiacenti non si modificano senza un'istruzione esplicita. Gli esempi grafici o numerici non diventano vincoli funzionali. Se durante l'implementazione emerge una modifica ulteriore ritenuta necessaria, il lavoro su quel punto si ferma e viene chiesta autorizzazione prima di applicarla.
+
+## SPECIFICA VINCOLANTE — NUOVA VISTA NUTRIZIONISTA COMPLETA
+
+Questa sezione sostituisce la disposizione precedente della configurazione avanzata. La configurazione nutrizionista resta nello stesso `index.html`, ma diventa una vista interna autonoma: in Impostazioni compare soltanto il collegamento per aprirla; non compare nella barra di navigazione; contiene un comando per tornare a Impostazioni; in futuro il suo ingresso potrà essere protetto senza cambiare database o struttura della pagina.
+
+### Ordine e completezza della vista
+
+1. **Allergeni e intolleranze** come prima sezione, usando la griglia completa degli allergeni. Ogni selezione produce un'esclusione hard e reale di tutti gli ingredienti e di tutte le ricette collegate.
+2. **Piani alimentari predefiniti** come seconda sezione. Onnivoro, vegetariano e vegano non sono etichette grafiche: selezionare un piano applica immediatamente e in modo coerente tutte le esclusioni e i vincoli corrispondenti anche alle tabelle e ai selettori sottostanti. Il vegetariano esclude carne e pesce; il vegano include tutte le restrizioni vegetariane ed esclude anche uova, latte/formaggi e ogni altro ingrediente di origine animale classificato nei dati. Le restrizioni del piano devono essere visibili e non aggirabili dai controlli sottostanti finché il piano resta attivo.
+3. **Parametri nutrizionali globali**, compresi tutti i minimi/massimi già previsti per proteine, sottotipi, frutta, spuntini, pasti speciali e gli altri parametri realmente letti dal motore.
+4. **Gestione min/max dei carboidrati complessi e dei carboidrati semplici**. I valori salvati devono essere letti dal motore e devono condizionare i corrispondenti parametri disponibili all'utente nel Set; non devono essere campi solo descrittivi.
+5. **Gestione ingredienti per macrocategoria**, che sostituisce integralmente l'attuale elenco generico “Ingredienti esclusi dalla dieta”.
+
+### Gestione ingredienti per macrocategoria
+
+- Tre swipe distinti: **Carboidrati**, **Proteine**, **Verdure**.
+- Ogni swipe contiene i selettori degli ingredienti realmente presenti nel database e appartenenti alla relativa macrocategoria.
+- Ogni ingrediente ha esattamente tre stati ciclici, comandati dal selettore stesso:
+  1. **Disponibile senza restrizioni**: stato normale; nessuna riga nella tabella delle restrizioni.
+  2. **Limitato**: primo clic, selettore giallo; compare nella tabella sottostante una riga con nome ingrediente e celle numeriche `min` e `max`.
+  3. **Escluso**: secondo clic, selettore rosso; nella stessa riga il nome resta, le celle `min/max` spariscono e vengono sostituite dalla dicitura `Escluso`.
+  4. Terzo clic: ritorno a **Disponibile senza restrizioni** e rimozione completa della riga dalla tabella.
+- Le restrizioni automatiche imposte dal piano alimentare devono riflettersi negli stessi swipe e nella tabella, ma devono essere distinguibili e non disattivabili manualmente finché quel piano è selezionato.
+- `min`, `max` ed `Escluso` sono vincoli funzionali: devono essere salvati nel database, letti dal motore, applicati alla generazione automatica, alla ricerca manuale e ai controlli dell'utente nel Set.
+- Per ogni ingrediente limitato la riga contiene **tutti e tre i parametri**: frequenza minima (`min`), frequenza massima (`max`) e quantità per singolo utilizzo (`quantità`). Non esiste un limite numerico universale imposto dall'interfaccia: i valori ammessi dipendono dal parametro e dalla configurazione nutrizionale.
+- La quantità proposta inizialmente deve essere letta dal riferimento già presente in `ingredienti.json`/database (`porzione`, `pesoPorzioneGrammi`, `pesoPezzo` e `unitaPorzione`, secondo il tipo). Non si inventa un nuovo valore quando il catalogo ne possiede già uno.
+- Gli alimenti configurati a pezzo devono restare a pezzo anche nella configurazione nutrizionista e nel Set: la UI mostra unità e quantità coerenti (`pz`, non grammi) e il motore converte in grammi soltanto quando serve per nutrizione/inventario usando il peso unitario configurato. Prima dell'implementazione va verificata la coerenza di tutte le voci count-based del catalogo.
+- **Verifica catalogo v78**: soltanto `Uova` (`porzione:2`, `unitaPorzione:'pezzi'`) e `Friselle` (`porzione:2`, `unitaPorzione:'pezzi'`, `pesoPorzioneGrammi:50`) risultano esplicitamente count-based. Tutte le altre voci, compresa `Piadina`, mantengono esattamente l'unità e la quantità già presenti nei dati; nessun valore del catalogo viene corretto o reinterpretato senza un'istruzione esplicita. Gallette, crackers e taralli restano quindi in grammi.
+- La validazione impedisce soltanto configurazioni logicamente incoerenti: `min` non può superare `max` e la quantità deve essere positiva quando la restrizione è attiva. Il riferimento `1–7` fornito da Cwe era esclusivamente un esempio grafico di numero corto, non un vincolo funzionale.
+
+### Regole grafiche
+
+- Tutti i dati e i controlli devono stare in `div`/card ben definiti, con griglie responsive coerenti.
+- Nessuna coppia di campi sfalsata, nessuna etichetta su altezze diverse e nessun testo disallineato come nell'interfaccia precedente.
+- Ogni riga `min/max` deve avere colonne stabili: nome, minimo, massimo/stato.
+- Su schermi stretti la griglia deve ridursi in modo controllato senza spezzare le etichette o produrre campi di altezze differenti.
+- Le tabelle delle frequenze proteiche e degli ingredienti devono essere **compatte su una sola riga per voce**, anche su smartphone: `Nome | Min | Max | Quantità/unità` (oppure `Nome | Escluso`).
+- I campi `min` e `max` devono avere larghezza compatta e proporzionata al contenuto; non possono occupare mezza pagina anche quando il valore normalmente contiene poche cifre. La stessa regola vale sia nella vista nutrizionista sia nelle tabelle derivate mostrate nel Set/generatore utente.
+- La riga può usare una griglia responsive con colonna nome flessibile e colonne numeriche compatte; non deve trasformarsi in due grandi colonne o in campi impilati/sfalsati come nell'interfaccia precedente.
+
+### Propagazione obbligatoria
+
+Ogni valore configurato nella vista nutrizionista è una sorgente di verità superiore al Set utente. Il Set deve mostrare e rispettare i limiti ricevuti: non può proporre valori, ingredienti, frequenze o piani incompatibili. Le preferenze dell'utente possono restringere ulteriormente quanto consentito, mai allargare i vincoli clinici o strutturali del nutrizionista.
+
 ## DECISIONE VINCOLANTE V78 — RICETTE COMPLETE E ALGEBRA DI COPERTURA
 
 - Il catalogo e il motore non usano più sughi/componenti di condimento separati. Ogni primo è una ricetta completa e valida, già condita oppure legittimamente senza condimento.

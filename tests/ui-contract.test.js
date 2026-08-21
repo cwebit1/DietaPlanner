@@ -2,7 +2,8 @@
 const assert=require('assert'),fs=require('fs');
 const html=fs.readFileSync(require('path').resolve(__dirname,'../index.html'),'utf8');
 const has=x=>assert(html.includes(x),`manca: ${x}`),not=x=>assert(!html.includes(x),`residuo vietato: ${x}`);
-for(const id of ['view-menu','view-set','view-impostazioni','configAllergeniAttivi','configIngredientiEsclusi','btnPulisciCarboidrati','btnCompletaCarboidrati','btnCasualeCarboidrati','btnSalvaCarboidrati','btnPulisciProteine','btnCompletaProteine','btnCasualeProteine','btnSalvaProteine','setCerealiGradimento','setTettiIngrediente','btnAnnullaMenu','btnResettaMenu','btnRigeneraMenu','btnSalvaMenu'])has(`id="${id}"`);
+for(const id of ['view-menu','view-set','view-impostazioni','view-nutrizionista','configAllergeniAttivi','configMacroIngredienti','configVincoliIngredienti','btnApriNutrizionista','btnTornaImpostazioni','btnPulisciCarboidrati','btnCompletaCarboidrati','btnCasualeCarboidrati','btnSalvaCarboidrati','btnPulisciProteine','btnCompletaProteine','btnCasualeProteine','btnSalvaProteine','setCerealiGradimento','setTettiIngrediente','btnAnnullaMenu','btnResettaMenu','btnRigeneraMenu','btnSalvaMenu'])has(`id="${id}"`);
+for(const marker of ['vincoliIngredientiNutrizionista','vincoliClassiCarboidrati','nutri-row','data-vincolo-ing'])has(marker);
 for(const marker of ['data-pasto-switch','data-pasto-expander','pasto-contenuto-espandibile','pasto-selettori','data-pasto-imposta'])has(marker);
 has('data-componente-editor="carb"');has('aria-pressed=');not('name="ruoloRicerca_${chiaveStato}"');
 for(const label of ['🍗 Proteine','🍝 Carboidrato','🥦 Verdure','Cerca ricetta per nome...','Pasto speciale'])has(label);
