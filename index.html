@@ -670,14 +670,16 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
         <option value="onnivoro">Onnivoro</option>
         <option value="vegetariano">Vegetariano</option>
         <option value="vegano">Vegano</option>
-        <option value="celiaco">Celiachia / senza glutine</option>
-        <option value="intollerante_lattosio">Intolleranza al lattosio</option>
       </select>
     </label>
-    <div class="meta" style="margin:6px 0 12px;">Il profilo applica esclusioni rigide. Le allergie e altre intolleranze possono essere combinate sotto.</div>
+    <div class="meta" style="margin:6px 0 12px;">Il profilo applica esclusioni rigide. Allergie e intolleranze si configurano esclusivamente dalla griglia completa sotto.</div>
     <div id="configAvanzataCampi" class="set-carb-grid"></div>
     <label style="margin-top:14px;">Profilo allergie/intolleranze</label>
     <div class="tabgroup" id="configAllergeniAttivi"></div>
+    <label style="margin-top:14px;">Ingredienti esclusi dalla dieta</label>
+    <input type="search" id="configCercaIngredienteEscluso" placeholder="Cerca ingrediente...">
+    <div class="setting-swipe" id="configIngredientiEsclusi" style="max-height:260px;overflow:auto;margin-top:8px;"></div>
+    <div class="meta" style="margin-top:6px;">Queste esclusioni sono rigide e sono modificabili solo nell'area nutrizionista.</div>
     <button class="primary" id="btnSalvaConfigAvanzata" style="margin-top:12px;">Salva configurazione</button>
     <button class="secondary" id="btnResetConfigAvanzata" style="margin-top:8px;">Ripristina valori del piano</button>
     <div class="meta" id="configAvanzataStato" style="margin-top:8px;"></div>
@@ -921,7 +923,6 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
     <div id="confrontoCarbGrassi" class="meta" style="margin-top:2px;"></div>
     <label style="margin-top:12px;">Allergeni</label>
     <div class="tabgroup" id="ingAllergeni"></div>
-    <label style="display:flex;align-items:center;gap:8px;margin-top:10px;"><input type="checkbox" id="ingBloccoManuale" style="width:auto;"> Escludi questo ingrediente da ogni proposta</label>
     <button class="primary" id="btnSalvaIngrediente" style="margin-top:14px;">Salva</button>
   </div>
 </div>
@@ -1783,6 +1784,7 @@ async function importaListaRicette(lista){
    ========================================================= */
 let giornoSelezionato = todayISO();
 let ingredienteForzato = {pranzo:null, cena:null};
+let ingredientiEsclusiNutrizionistaDraft = new Set();
 
 /* Data in formato AAAA-MM-GG usando il fuso orario LOCALE del dispositivo, mai UTC.
    toISOString() converte in UTC: vicino alla mezzanotte locale (in Italia, avanti di
@@ -1826,11 +1828,19 @@ async function renderConfigAvanzata(){
   fields.push(['maxProteinSourcesPerDay','Fonti proteiche max/giorno',cfg.maxProteinSourcesPerDay],['specialBreakfastMax','Colazioni speciali max/sett.',cfg.specialBreakfastMax],['specialMealsMax','Pasti speciali max/sett.',cfg.specialMealsMax],['oilGramsPerMeal','Olio g/pasto',cfg.oilGramsPerMeal],['fruit.min','Frutta min/giorno',cfg.fruit&&cfg.fruit.min],['fruit.max','Frutta max/giorno',cfg.fruit&&cfg.fruit.max],['fruit.portionMin','Frutta porzione min g',cfg.fruit&&cfg.fruit.portionMin],['fruit.portionMax','Frutta porzione max g',cfg.fruit&&cfg.fruit.portionMax]);
   box.innerHTML=fields.map(([k,l,v])=>`<label>${l}<input type="number" min="0" data-cfg-avanzata="${k}" value="${v}"></label>`).join('');
   const a=await getOne('impostazioni','allergeniAttivi'),active=new Set(a&&a.valore||[]),el=document.getElementById('configAllergeniAttivi');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>`<button data-allergene="${k}" class="${active.has(k)?'active':''}" title="${l}">${i} ${l}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));
+  await renderIngredientiEsclusiNutrizionista();
+}
+async function renderIngredientiEsclusiNutrizionista(){
+  const [basi,rec]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','ingredientiBloccati')]);
+  ingredientiEsclusiNutrizionistaDraft=new Set(rec&&rec.valore||[]);const attivi=ingredientiEsclusiNutrizionistaDraft,box=document.getElementById('configIngredientiEsclusi'),search=document.getElementById('configCercaIngredienteEscluso');
+  if(!box||!search)return;
+  const disegna=()=>{const q=search.value.trim().toLowerCase();box.innerHTML=basi.filter(b=>!q||b.nome.toLowerCase().includes(q)).sort((a,b)=>a.nome.localeCompare(b.nome,'it')).map(b=>`<button type="button" data-ingrediente-escluso="${b.id}" class="${attivi.has(b.id)?'active':''}">${b.nome}</button>`).join('');box.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{btn.classList.toggle('active');if(btn.classList.contains('active'))attivi.add(btn.dataset.ingredienteEscluso);else attivi.delete(btn.dataset.ingredienteEscluso);}));};
+  search.oninput=disegna;disegna();
 }
 async function salvaConfigAvanzata(){
   const old=await getOne('impostazioni','configAvanzata'),cfg=structuredClone(old&&old.valore||CONFIG_AVANZATA_DEFAULT);document.querySelectorAll('[data-cfg-avanzata]').forEach(i=>{const path=i.dataset.cfgAvanzata.split('.');let target=cfg;for(let n=0;n<path.length-1;n++)target=target[path[n]]||(target[path[n]]={});target[path[path.length-1]]=i.value===''?null:Number(i.value);});
   cfg.dietProfile=document.getElementById('configProfiloAlimentare').value||'onnivoro';
-  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene);await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
+  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene),ingredientiEsclusi=[...ingredientiEsclusiNutrizionistaDraft];await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});await put('impostazioni',{chiave:'ingredientiBloccati',valore:ingredientiEsclusi});document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
 }
 
 const NOMI_GIORNI_ESTESI = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
@@ -8084,7 +8094,6 @@ function resetFormIngrediente(){
   document.getElementById('ingGruppo').value='';
   document.getElementById('confrontoKcalProt').textContent='';
   document.getElementById('confrontoCarbGrassi').textContent='';
-  document.getElementById('ingBloccoManuale').checked=false;
   renderAllergeniIngrediente([]);
 }
 function renderAllergeniIngrediente(selezionati){const set=new Set(selezionati||[]),el=document.getElementById('ingAllergeni');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>`<button type="button" data-ing-allergene="${k}" class="${set.has(k)?'active':''}" title="${l}">${i}</button>`).join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));}
@@ -8138,7 +8147,6 @@ async function apriModalModificaVariante(varianteId){
   document.getElementById('ingProt').value = v.prot100 || '';
   document.getElementById('ingCarb').value = v.carb100 || '';
   document.getElementById('ingGrassi').value = v.grassi100 || '';
-  document.getElementById('ingBloccoManuale').checked=!!(base&&base.bloccoManuale);
   renderAllergeniIngrediente(base&&base.allergeni||[]);
 
   document.getElementById('modalIngrediente').classList.remove('hidden');
@@ -8229,7 +8237,6 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
   const carb = parseFloat(document.getElementById('ingCarb').value)||0;
   const grassi = parseFloat(document.getElementById('ingGrassi').value)||0;
   const allergeni=[...document.querySelectorAll('#ingAllergeni button.active')].map(b=>b.dataset.ingAllergene);
-  const bloccoManuale=document.getElementById('ingBloccoManuale').checked;
 
   if(!nome){ return; }
 
@@ -8241,7 +8248,7 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
     const ingredienti = await getAll('ingredienti');
     let base = ingredienti.find(x=>x.id===v.ingredienteId);
     if(base){
-      base.nome = nome; base.gruppo = gruppo; base.allergeni=allergeni; base.bloccoManuale=bloccoManuale;
+      base.nome = nome; base.gruppo = gruppo; base.allergeni=allergeni;
       await put('ingredienti', base);
     }
     v.nome = nome; v.formato = qtaIniziale || v.formato; v.categoria = categoria;
@@ -8257,7 +8264,7 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
     if(base){ baseId = base.id; }
     else{
       baseId = uid();
-      await put('ingredienti', {id:baseId, nome, gruppo, allergeni, bloccoManuale});
+      await put('ingredienti', {id:baseId, nome, gruppo, allergeni, bloccoManuale:false});
     }
     const varId = uid();
     await put('varianti', {
@@ -8279,7 +8286,7 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
 });
 
 document.getElementById('btnSalvaConfigAvanzata').addEventListener('click',salvaConfigAvanzata);
-document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{await put('impostazioni',{chiave:'configAvanzata',valore:structuredClone(CONFIG_AVANZATA_DEFAULT)});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati.';});
+document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{await put('impostazioni',{chiave:'configAvanzata',valore:structuredClone(CONFIG_AVANZATA_DEFAULT)});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await put('impostazioni',{chiave:'ingredientiBloccati',valore:[]});await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati.';});
 
 /* =========================================================
    VIEW: SPESA
@@ -8947,7 +8954,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=68').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=69').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Quando il browser rileva un nuovo SW installato, gli dice
@@ -9005,8 +9012,8 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="engine-core.js?v=68"></script>
-<script src="motor.js?v=68"></script>
+<script src="engine-core.js?v=69"></script>
+<script src="motor.js?v=69"></script>
 
 </body>
 </html>

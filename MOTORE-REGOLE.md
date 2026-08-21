@@ -19,7 +19,9 @@ Formula: SCELTE USER -> FILTRI/PREFERENZE -> COMPLETAMENTO GUIDA -> ROTAZIONE/VA
 
 - La vista **Menù** deve renderizzarsi normalmente anche quando piano, inventario e storico sono completamente vuoti: mostra gli slot vuoti e i comandi senza creare proposte implicite.
 - Il **Set** configura le preferenze dell'utente per i menù da generare.
-- **Impostazioni → Configurazione avanzata nutrizionista** è un'area separata, per ora ad accesso libero. Contiene limiti, frequenze, quantità, esclusioni e profili onnivoro, vegetariano, vegano, celiachia, intolleranza al lattosio e allergie combinabili.
+- **Impostazioni → Configurazione avanzata nutrizionista** è un'area separata, per ora ad accesso libero. Contiene limiti, frequenze, quantità, esclusioni ingredienti e profili strutturali onnivoro, vegetariano e vegano.
+- Allergie e intolleranze, inclusi glutine e latte quando pertinenti, si selezionano dalla griglia completa degli allergeni e sono combinabili; non sono profili alimentari separati.
+- L'esclusione di ingredienti dalla dieta è configurabile soltanto nell'area nutrizionista.
 - I vincoli del nutrizionista sono rigidi e prevalgono sul Set.
 
 ## 2. Principi del PDF applicabili al motore
