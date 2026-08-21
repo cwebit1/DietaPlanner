@@ -60,9 +60,15 @@ const rng=E.seeded(42);
 }
 {
   const meal={primoCereale:'riso',programmatoIl:'2026-08-21T10:00:00Z'};
-  assert.equal(E.hasMealContent({}),false);assert.equal(E.hasMealContent(meal),true);
+  assert.equal(E.hasMealContent({}),false);assert.equal(E.hasMealContent(meal),true);assert.equal(E.hasMealContent({realizzazioni:[{ricettaId:'x'}]}),true);
   assert.equal(E.automaticConsumptionAllowed(meal,Date.parse('2026-08-21T15:00:00Z')),true);
   assert.equal(E.automaticConsumptionAllowed({...meal,programmatoIl:'2026-08-21T16:00:00Z'},Date.parse('2026-08-21T15:00:00Z')),false);
+}
+{
+  const complete={copertura:'PC+C+V'},carbVeg={copertura:'C+V'},protein={copertura:'PC'};
+  assert.deepEqual(E.missingCoverage([complete],'carne'),[]);
+  assert.deepEqual(E.missingCoverage([carbVeg],'carne'),['PC']);
+  assert.equal(E.coverageSatisfies([carbVeg,protein],'carne'),true);
 }
 {
   assert.equal(E.profileAllowsRecipe({gruppoProteico:'carne_bianca'},'vegetariano'),false);

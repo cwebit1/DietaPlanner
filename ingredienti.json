@@ -1,5 +1,5 @@
 {
-  "versione": 5,
+  "versione": 6,
   "ingredienti": {
     "Riso Arborio": {
       "kcal": 332,
@@ -132,7 +132,7 @@
       "deperibilita": "bassa",
       "sottotipo": "legumi",
       "conservazione": "surgelato",
-      "porzione": 135,
+      "porzione": 120,
       "gradimento": 1,
       "stock": 1,
       "formatoRiordino": {
@@ -152,7 +152,7 @@
       "deperibilita": "bassa",
       "sottotipo": "legumi",
       "conservazione": "lunga",
-      "porzione": 135,
+      "porzione": 120,
       "gradimento": 1,
       "stock": 1,
       "formatoRiordino": {
@@ -826,7 +826,8 @@
         "glutine"
       ],
       "bloccoManuale": false,
-      "nonRichiedeInventario": false
+      "nonRichiedeInventario": false,
+      "pesoPorzioneGrammi": 50
     },
     "Spinaci freschi": {
       "kcal": 23,
@@ -2623,7 +2624,7 @@
       "carboidrati": 27.4,
       "grassi": 9.3,
       "gruppo": "speciale",
-      "deperibilita": "alta",
+      "deperibilita": "bassa",
       "porzione": 300,
       "gradimento": 1,
       "stock": 1,
@@ -2633,9 +2634,12 @@
         "unita": null
       },
       "allergeni": [
+        "glutine",
         "latte"
       ],
-      "bloccoManuale": false
+      "bloccoManuale": false,
+      "conservazione": "asporto",
+      "fonteNutrizionale": "CREA PC0001"
     },
     "Salsa di soia": {
       "kcal": 66,
@@ -2814,6 +2818,28 @@
       "conservazione": "lunga",
       "porzione": 80,
       "nonRichiedeInventario": false
+    },
+    "Pizza alle verdure": {
+      "kcal": 248,
+      "proteine": 7.6,
+      "carboidrati": 40.7,
+      "grassi": 6.6,
+      "gruppo": "speciale",
+      "deperibilita": "bassa",
+      "conservazione": "asporto",
+      "porzione": 300,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "fonteNutrizionale": "CREA 000710, proxy pizza con pomodoro"
     }
   }
 }

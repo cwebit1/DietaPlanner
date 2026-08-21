@@ -64,8 +64,13 @@ function recipeBlocked(recipe,ctx){
 function parseCoverage(recipe){
   const raw=Array.isArray(recipe&&recipe.copertura)?recipe.copertura.join('+'):(recipe&&recipe.copertura||'');
   const set=new Set(String(raw).split(/[+,\s]+/).filter(Boolean));
-  return {tokens:set,protein:[...set].find(x=>/^P[CPF UL]$/.test(x.replace(/\s/g,'')))||[...set].find(x=>['PC','PP','PF','PU','PL'].includes(x))||null,carb:set.has('C'),veg:set.has('V')};
+  const proteinTokens=[...set].filter(x=>['PC','PP','PF','PU','PL'].includes(x));
+  return {tokens:set,protein:proteinTokens[0]||null,proteinTokens,carb:set.has('C'),veg:set.has('V')};
 }
+function requiredCoverage(macro){const p=PROTEIN_CODE[macroOf(macro)];return new Set([p,'C','V'].filter(Boolean));}
+function unionCoverage(recipes){const out=new Set();for(const r of recipes||[])for(const t of parseCoverage(r).tokens)out.add(t);return out;}
+function missingCoverage(recipes,macro){const have=unionCoverage(recipes),out=[];for(const t of requiredCoverage(macro))if(!have.has(t))out.push(t);return out;}
+function coverageSatisfies(recipes,macro){return missingCoverage(recipes,macro).length===0;}
 function coverageForRecipe(recipe,ingredientMeta){
   const existing=parseCoverage(recipe);if(existing.tokens.size)return [...existing.tokens];
   const tokens=[],macro=macroOf(recipe&&recipe.gruppoProteico);if(PROTEIN_CODE[macro])tokens.push(PROTEIN_CODE[macro]);
@@ -152,12 +157,12 @@ function shoppingDeficits(requirements,inventory,variantMeta){
   const available={};for(const row of inventory||[])if(row.stato==='disponibile'&&Number(row.quantita)>0)available[row.variantId]=(available[row.variantId]||0)+Number(row.quantita);
   const rows=[];for(const [variantId,required0] of Object.entries(requirements||{})){const required=Number(required0)||0,have=available[variantId]||0,missing=Math.max(0,required-have);if(!missing)continue;const meta=variantMeta&&variantMeta[variantId]||{},format=Number(meta.formato)||0,packages=format>0?Math.ceil(missing/format):1;rows.push({variantId,required,available:have,missing,packages,purchase:format>0?packages*format:missing});}return rows;
 }
-function hasMealContent(meal){return !!(meal&&(meal.primoId||meal.secondoId||meal.contornoId||meal.ricettaId||meal.primoCereale||meal.componenti||meal.colazioneSpecialeId));}
+function hasMealContent(meal){return !!(meal&&((meal.realizzazioni&&meal.realizzazioni.length)||meal.primoId||meal.secondoId||meal.contornoId||meal.ricettaId||meal.primoCereale||meal.componenti||meal.colazioneSpecialeId));}
 function automaticConsumptionAllowed(meal,deadlineMs){if(!hasMealContent(meal)||meal.consumato)return false;const planned=Date.parse(meal.programmatoIl||'');return Number.isFinite(planned)&&planned<=Number(deadlineMs);}
 function countSpecialMeals(records){return (records||[]).filter(x=>x&&x.piattoSpeciale).length;}
 function withinWeeklyCap(current,max){return max==null||Number(current)<Number(max);}
 function profileAllowsRecipe(recipe,profile){const macro=macroOf(recipe&&recipe.gruppoProteico);if(profile==='vegano')return !['carne','pesce','formaggi','uova'].includes(macro);if(profile==='vegetariano')return !['carne','pesce'].includes(macro);return true;}
 
-const api={DEFAULTS,SUBTYPE_TO_MACRO,PROTEIN_CODE,mergeConfig,macroOf,seeded,shuffle,oldest,recipeBlocked,parseCoverage,coverageForRecipe,buildProteinGrid,validateCarbBudget,chooseCarb,inventoryUrgency,chooseRecipe,vegetableTier,chooseVegetable,composeMeal,automaticDayAllowed,buildCarbGrid,recipeIngredientKeys,applyIngredientCaps,accumulateRecipeIngredients,shoppingDeficits,hasMealContent,automaticConsumptionAllowed,countSpecialMeals,withinWeeklyCap,profileAllowsRecipe};
+const api={DEFAULTS,SUBTYPE_TO_MACRO,PROTEIN_CODE,mergeConfig,macroOf,seeded,shuffle,oldest,recipeBlocked,parseCoverage,requiredCoverage,unionCoverage,missingCoverage,coverageSatisfies,coverageForRecipe,buildProteinGrid,validateCarbBudget,chooseCarb,inventoryUrgency,chooseRecipe,vegetableTier,chooseVegetable,composeMeal,automaticDayAllowed,buildCarbGrid,recipeIngredientKeys,applyIngredientCaps,accumulateRecipeIngredients,shoppingDeficits,hasMealContent,automaticConsumptionAllowed,countSpecialMeals,withinWeeklyCap,profileAllowsRecipe};
 global.DietaPlannerEngine=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

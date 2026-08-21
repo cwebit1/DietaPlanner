@@ -1,5 +1,17 @@
 # DIETAPLANNER — REGOLE DEL FLUSSO LOGICO (unificato)
 
+## DECISIONE VINCOLANTE V78 — RICETTE COMPLETE E ALGEBRA DI COPERTURA
+
+- Il catalogo e il motore non usano più sughi/componenti di condimento separati. Ogni primo è una ricetta completa e valida, già condita oppure legittimamente senza condimento.
+- La composizione è esclusivamente insiemistica: requisito `{proteina richiesta, C, V}` meno la `copertura` già fornita (`PC`, `PP`, `PF`, `PU`, `PL`, `C`, `V`). Il motore aggiunge soltanto gli elementi mancanti.
+- Il nome della ricetta non viene mai interpretato per decidere ingredienti, coperture o cotture. Non sono ammesse euristiche testuali o eccezioni nominali.
+- Una ricetta può possedere più celle: `PC+C` richiede soltanto `V`; `C+V` richiede soltanto la proteina prevista; `P+C+V` non riceve aggiunte.
+- Il refresh è legato alla sorgente: se una ricetta copre più celle, il refresh di una delle celle sostituisce quella ricetta e ricalcola matematicamente soltanto le coperture mancanti. Le aggiunte indipendenti si cambiano senza alterare le altre sorgenti.
+- Le ricette con almeno due fonti proteiche a porzione piena sono sempre `piattoSpeciale:true` e restano fuori dalla rotazione ordinaria.
+- `Pizza Margherita` e `Pizza alle Verdure` sono piatti speciali con valori nutrizionali medi verificati e porzione esplicita nel catalogo.
+- Tutti i piatti speciali mostrano la nutrizione a scopo informativo, ma non scalano mai l'inventario e non generano fabbisogno nella lista della spesa. La regola dipende da `piattoSpeciale`, non dal nome o da una modalità scelta.
+- La UI non mostra sugo o cottura generati separatamente: fanno parte della ricetta completa. I campi legacy `primoSugoId` e `cotturaSecondo` sono soltanto migrabili e nei nuovi salvataggi valgono `null`.
+
 ## 0. SEPARAZIONE DELLE CONFIGURAZIONI E STATO VUOTO
 
 - La vista **Menù** deve renderizzarsi normalmente anche quando piano, inventario e storico sono completamente vuoti: mostra tutti gli slot vuoti e i comandi, senza creare proposte implicite.
@@ -96,6 +108,49 @@ Prima di cambiare il comportamento di sughi, cotture, analoghi o sostituzioni, o
 - Una componente già inclusa in una ricetta completa non deve essere conteggiata una seconda volta.
 - I record storici precedenti, privi della fotografia nutrizionale, restano leggibili mediante il calcolo legacy basato sugli ID ricetta.
 - Modifiche future alle ricette o il reset del piano non devono cambiare retroattivamente i valori di un consumo già registrato.
+
+---
+
+## 24. Strategia definitiva — ricette complete e algebra della copertura
+
+**Conferma esplicita di Cwe:** la strategia corretta è la prima soluzione matematica. Il motore non deve riconoscere dal nome cosa contiene una ricetta e non deve aggiungere componenti per poi tentare di eliminare duplicazioni. I campi `copertura` (`PC`, `PP`, `PF`, `PU`, `PL`, `C`, `V`) sono la fonte unica di verità per stabilire cosa è presente e cosa manca.
+
+### 24.1 Operazione fondamentale
+
+Per uno slot con macrocategoria proteica richiesta `Pₓ`:
+
+```text
+REQUISITI = {Pₓ, C, V}
+PRESENTI  = copertura della ricetta scelta
+MANCANTI  = REQUISITI − PRESENTI
+```
+
+Il motore aggiunge esclusivamente le celle contenute in `MANCANTI`. Non esistono controlli nominali del tipo “se il nome contiene…”.
+
+Esempi:
+
+- `Panino al prosciutto`, copertura `PC+C` → manca soltanto `V`; non si estrae un'altra proteina e non si aggiunge un altro carboidrato.
+- `Cous cous alle verdure`, copertura `C+V` → manca soltanto la proteina della macro richiesta.
+- `Provola alla piastra`, copertura `PF` → mancano `C` e `V`; la cottura fa parte della ricetta e non viene aggiunta nuovamente.
+- Una ricetta `PL+C+V` è già completa → non si aggiunge nulla.
+
+### 24.2 Unità di rotazione
+
+Le ricette complete presenti nel catalogo sono l'unità primaria da ruotare. Sughi, cotture e componenti modulari non devono costituire un secondo motore concorrente che ricostruisce o rinomina una ricetta completa.
+
+Se in futuro si vogliono mantenere componenti modulari, devono produrre una realizzazione strutturata con copertura dichiarata **prima** di entrare nel pool, comportandosi poi come una normale ricetta. Non devono essere assemblati tramite interpretazione del nome durante la generazione.
+
+### 24.3 Stato di conformità rilevato
+
+Alla verifica successiva alla v77, questa strategia risulta **non applicata integralmente** nel motore corrente:
+
+- `parseCoverage` esiste e legge correttamente le sigle;
+- `componiPastoModulare` usa `V` soltanto per evitare talvolta un contorno;
+- un fallback di selezione proteica controlla `C`;
+- la selezione principale non parte dalle ricette complete filtrate per `PC/PP/PF/PU/PL` e non calcola `MANCANTI = REQUISITI − PRESENTI`;
+- restano attivi il percorso separato dei sughi e l'assegnazione separata delle cotture.
+
+Questa è una mancata conformità rispetto alle regole già definite, non una nuova scelta progettuale. Prima di ulteriori correzioni puntuali occorre sostituire il percorso automatico con l'algebra della copertura descritta sopra.
 
 ---
 

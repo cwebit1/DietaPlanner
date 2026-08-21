@@ -1,4 +1,4 @@
-/* DietaPlanner — motore unico v77. Dipende da engine-core.js. */
+/* DietaPlanner — motore unico v78. Dipende da engine-core.js. */
 (function(global){
 'use strict';
 const E=global.DietaPlannerEngine;
@@ -71,7 +71,46 @@ async function registraRichiestaRicettaReview(d){const r=await getOne('impostazi
 async function sviluppaGrigliaCrossWeek(celle){return {celle,errori:[]};}
 async function motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft){if(!draft)return draft;const state=await creaStatoMotoreSettimana(),pref=await caricaPreferenzeMotoreDaSet(0);if(!draft.proteinaId){const sub=draft.sottotipoProposto||risolviSottotipoFine(draft.categoriaLarga||'legumi',{}),r=await scegliProteinaModulareMotore(sub,state,null);if(r){draft.proteinaId=r.id;draft.cottura=scegliCotturaStandard(r.gruppoProteico,r.nome);}}if(!draft.primoCereale)draft.primoCereale=await scegliCarboidratoMotore(state,false);if(!draft.contornoId){const r=await scegliContornoMotore(giorno,state,Object.assign({},pref,{_pastoCorrente:pasto}),null);draft.contornoId=r&&r.id||null;}return draft;}
 async function trovaPiattoUnicoCompatibileDraft(pasto,giorno,draft,exclude){const all=await ricetteAmmesse(false),macro=draft.categoriaLarga||motoreCategoriaDiSottotipo(draft.sottotipoProposto),pool=all.filter(r=>r.id!==exclude&&!r.piattoSpeciale&&(r.tipoPortata||'unico')==='unico'&&(!macro||motoreCategoriaDiSottotipo(r.gruppoProteico)===macro));return E.oldest(pool,{},{});}
+
+/* v78 — algebra deterministica di copertura. Le ricette sono unità complete:
+   non si deducono sughi/cotture dal nome e si aggiungono soltanto P/C/V mancanti. */
+function tokenProteinaMacro(macro){return E.PROTEIN_CODE[motoreCategoriaDiSottotipo(macro)]||null;}
+function realizzazione(r){return r?{ricettaId:r.id,copertura:[...E.parseCoverage(r).tokens]}:null;}
+async function ricetteDaRealizzazioni(items){const out=[];for(const x of items||[]){const r=x&&x.ricettaId?await getOne('ricette',x.ricettaId):null;if(r&&!out.some(y=>y.id===r.id))out.push(r);}return out;}
+function contieneProteineEstranee(r,token){return E.parseCoverage(r).proteinTokens.some(t=>t!==token);}
+async function scegliRicettaCopertura(pool,state,exclude){let p=(pool||[]).filter(r=>r&&!r.piattoSpeciale&&r.id!==exclude);p=applicaTettiIngredienti(p,state);return segnaIngredientiRicetta(E.chooseRecipe(p,state,{automatic:true,inventoryByVariant:state.inventoryByVariant}),state);}
+async function chiaveCarboRicetta(r){if(!r)return null;const vars=await getAll('varianti'),vBy=new Map(vars.map(v=>[v.id,v]));for(const k of Object.keys(CARBOIDRATI_PASTO))if(carbInRecipe(r,k,vBy))return k;return null;}
+async function scegliRiempitivoCarbo(state,quick,exclude){const [all,vars,bases]=await Promise.all([ricetteAmmesse(true),getAll('varianti'),getAll('ingredienti')]),key=await scegliCarboidratoMotore(state,quick),vBy=new Map(vars.map(v=>[v.id,v])),bBy=new Map(bases.map(b=>[b.id,b]));let pool=all.filter(r=>r.id!==exclude&&!r.piattoSpeciale&&E.parseCoverage(r).carb&&!E.parseCoverage(r).proteinTokens.length);if(key){const exact=pool.filter(r=>carbInRecipe(r,key,vBy));if(exact.length)pool=exact;}const singolo=pool.filter(r=>!ricettaDoppioCarboidrato(r,vBy,bBy));if(singolo.length)pool=singolo;const r=await scegliRicettaCopertura(pool,state,exclude);return {ricetta:r,carbKey:(await chiaveCarboRicetta(r))||key};}
+async function scegliRiempitivoVerdura(giorno,state,pref,exclude){const r=await scegliContornoMotore(giorno,state,pref||{},exclude);return r&&E.parseCoverage(r).veg?r:null;}
+async function completaRealizzazioniCopertura(items,macro,giorno,pasto,state,pref,quick,excludeByRole){
+  state=state||await creaStatoMotoreSettimana();pref=pref||{};const token=tokenProteinaMacro(macro),recipes=await ricetteDaRealizzazioni(items),excluded=excludeByRole||{};
+  let missing=E.missingCoverage(recipes,macro),carbKey=null;
+  if(missing.includes(token)){
+    const all=await ricetteAmmesse(true);let pool=all.filter(r=>E.parseCoverage(r).tokens.has(token)&&!contieneProteineEstranee(r,token));
+    const sameSubtype=pref.sottotipo?pool.filter(r=>r.gruppoProteico===pref.sottotipo):[];if(sameSubtype.length)pool=sameSubtype;
+    if(pref.sottotipo==='affettati'){const withCarb=pool.filter(r=>E.parseCoverage(r).carb);if(withCarb.length)pool=withCarb;}
+    const r=await scegliRicettaCopertura(pool,state,excluded.proteina);if(!r)return null;recipes.push(r);missing=E.missingCoverage(recipes,macro);
+  }
+  if(missing.includes('C')){const c=await scegliRiempitivoCarbo(state,quick,excluded.carb);if(!c.ricetta)return null;recipes.push(c.ricetta);carbKey=c.carbKey;missing=E.missingCoverage(recipes,macro);}
+  if(missing.includes('V')){const r=await scegliRiempitivoVerdura(giorno,state,Object.assign({},pref,{_pastoCorrente:pasto}),excluded.contorno);if(!r)return null;recipes.push(r);missing=E.missingCoverage(recipes,macro);}
+  if(missing.length)return null;
+  const unique=recipes.filter((r,i,a)=>a.findIndex(x=>x.id===r.id)===i);
+  if(!carbKey){const owner=unique.find(r=>E.parseCoverage(r).carb);carbKey=await chiaveCarboRicetta(owner);}
+  return {ricette:unique,realizzazioni:unique.map(realizzazione),primoCereale:carbKey};
+}
+async function componiPastoModulare(subtype,giorno,excludeSugo,excludeProtein,excludeVeg,quick,pref,state){
+  state=state||await creaStatoMotoreSettimana();pref=Object.assign({},pref||{},{sottotipo:subtype});const macro=motoreCategoriaDiSottotipo(subtype),x=await completaRealizzazioniCopertura([],macro,giorno,pref._pastoCorrente||'',state,pref,!!quick,{proteina:excludeProtein,contorno:excludeVeg});if(!x)return null;
+  const token=tokenProteinaMacro(macro),protein=x.ricette.find(r=>E.parseCoverage(r).tokens.has(token)),carb=x.ricette.find(r=>E.parseCoverage(r).carb),veg=x.ricette.find(r=>E.parseCoverage(r).veg);
+  return {realizzazioni:x.realizzazioni,primoRicettaRealeId:carb&&protein&&carb.id===protein.id?null:carb&&carb.id||null,primoCarboidrato:x.primoCereale,primoSugoId:null,primoEJolly:false,proteinaId:protein&&protein.id||null,cottura:null,contornoId:veg&&protein&&veg.id===protein.id?null:veg&&veg.id||null,classe:'copertura'};
+}
+async function rigeneraComponenteCopertura(realizzazioni,target,macro,giorno,pasto,subtype){
+  const token=tokenProteinaMacro(macro),role=target==='proteina'?token:(target==='contorno'?'V':'C'),recipes=await ricetteDaRealizzazioni(realizzazioni),owner=recipes.find(r=>E.parseCoverage(r).tokens.has(role)),kept=recipes.filter(r=>!owner||r.id!==owner.id),state=await creaStatoMotoreSettimana(),pref=Object.assign(await caricaPreferenzeMotoreDaSet(0),{sottotipo:subtype,_pastoCorrente:pasto});
+  return completaRealizzazioniCopertura(kept.map(realizzazione),macro,giorno,pasto,state,pref,false,{[target]:owner&&owner.id});
+}
+async function generaPortateMotore(giorno,pasto,cella,pref,state){const macro=cella.gruppoProteicoLargo,sub=await scegliSottotipoMotore(macro,state),quick=pasto==='pranzo'?pref.pocoTempoPranzo:pref.pocoTempoCena,meal=await componiPastoModulare(sub,giorno,null,null,null,quick,Object.assign({},pref,{_pastoCorrente:pasto}),state);if(!meal)return {voce:null,errore:`Nessuna combinazione completa per ${giorno} ${pasto}`};return {voce:{id:giorno+'_'+pasto,modo:'multi',fascia:'facile',porzioni:1,realizzazioni:meal.realizzazioni,primoId:meal.primoRicettaRealeId,primoCereale:meal.primoCarboidrato,primoSugoId:null,secondoId:meal.proteinaId,contornoId:meal.contornoId,cotturaSecondo:null,ricettaId:null,categoriaLargaE1:macro,sottotipoProteicoMotore:sub,origineCategoriaMotore:cella.origine,origine:'motore',programmatoIl:new Date().toISOString()},errore:null};}
+async function motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft){if(!draft)return draft;const macro=draft.categoriaLarga||motoreCategoriaDiSottotipo(draft.sottotipoProposto)||'legumi',legacy=[draft.proteinaId,draft.primoId,draft.contornoId].filter(Boolean).map(id=>({ricettaId:id})),x=await completaRealizzazioniCopertura(draft.realizzazioni&&draft.realizzazioni.length?draft.realizzazioni:legacy,macro,giorno,pasto,null,{sottotipo:draft.sottotipoProposto,_pastoCorrente:pasto},false,{});if(!x)return draft;draft.realizzazioni=x.realizzazioni;draft.primoCereale=x.primoCereale;const token=tokenProteinaMacro(macro),p=x.ricette.find(r=>E.parseCoverage(r).tokens.has(token)),c=x.ricette.find(r=>E.parseCoverage(r).carb),v=x.ricette.find(r=>E.parseCoverage(r).veg);draft.proteinaId=p&&p.id||null;draft.primoId=c&&p&&c.id===p.id?null:c&&c.id||null;draft.contornoId=v&&p&&v.id===p.id?null:v&&v.id||null;draft.primoSugoId=null;draft.cottura=null;return draft;}
+function scegliCotturaStandard(){return null;}
 global.FREQUENZE_MOTORE_BIBBIA=FREQUENZE_MOTORE_BIBBIA;global.CAP_SOTTOTIPI_MOTORE=CAP_SOTTOTIPI_MOTORE;global.COTTURE_STANDARD=COTTURE_STANDARD;global.COTTURE_PER_PROTEINA_V10=COTTURE_PER_PROTEINA_V10;
-Object.assign(global,{motoreMescola,motoreCategoriaDiSottotipo,costruisciGrigliaBase,validaGrigliaBase,costruisciStoricoConsumatiMotore,scegliMenoRecenteMotore,risolviSottotipoFine,costruisciMappaVarianti,poolDelGiorno,contorniAmmessiPerPool,calcolaPoolVerdureGiornaliero,scegliContornoMotore,scegliSugoMotore,caricaPreferenzeMotoreDaSet,creaStatoMotoreSettimana,ricetteAmmesse,registraRichiestaRicettaReview,sviluppaGrigliaCrossWeek,motoreV10CompletaDraftPerRealizzazione,motoreV10ScegliPrimoReale,motoreV10CarboidratoFattibile,filtraContorniPerVerdureAttive,componiPastoModulare,generaPianoSettimana,generaMenuDaConfigSet,scegliCotturaStandard,trovaPiattoUnicoCompatibileDraft});
-global.MOTORE_REGOLE={versione:'72',pipeline:['proteina','carboidrato','verdura'],defaults:E.DEFAULTS};
+Object.assign(global,{motoreMescola,motoreCategoriaDiSottotipo,costruisciGrigliaBase,validaGrigliaBase,costruisciStoricoConsumatiMotore,scegliMenoRecenteMotore,risolviSottotipoFine,costruisciMappaVarianti,poolDelGiorno,contorniAmmessiPerPool,calcolaPoolVerdureGiornaliero,scegliContornoMotore,caricaPreferenzeMotoreDaSet,creaStatoMotoreSettimana,ricetteAmmesse,registraRichiestaRicettaReview,sviluppaGrigliaCrossWeek,motoreV10CompletaDraftPerRealizzazione,motoreV10ScegliPrimoReale,motoreV10CarboidratoFattibile,filtraContorniPerVerdureAttive,componiPastoModulare,completaRealizzazioniCopertura,rigeneraComponenteCopertura,generaPianoSettimana,generaMenuDaConfigSet,scegliCotturaStandard,trovaPiattoUnicoCompatibileDraft});
+global.MOTORE_REGOLE={versione:'78',pipeline:['copertura_proteica','copertura_carboidrato','copertura_verdura'],defaults:E.DEFAULTS};
 })(window);

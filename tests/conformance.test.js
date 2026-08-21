@@ -2,12 +2,12 @@
 const assert=require('assert'),fs=require('fs'),path=require('path');
 const root=path.resolve(__dirname,'..'),motor=fs.readFileSync(path.join(root,'motor.js'),'utf8'),html=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 const mh=x=>assert(motor.includes(x),`motor manca ${x}`),hh=x=>assert(html.includes(x),`index manca ${x}`);
-mh("pipeline:['proteina','carboidrato','verdura']");mh("subtype==='affettati'?'pane'");mh('automaticDayAllowed(day,today)');mh('ricettaDoppioCarboidrato');mh('inventoryByVariant');mh('tettiIngredienteSettimanali');mh('cerealiNonGraditi');mh("safe.profilo==='vegetariano'");mh("safe.profilo==='vegano'");
-mh("hasPotato=carbInRecipe(protein,'patate',vBy)");mh("first=hasPotato?null:await motoreV10ScegliPrimoReale");
-mh('function ricettaHaCotturaNelNome');mh('if(ricettaHaCotturaNelNome(name)||/prosciutto|bresaola|formagg|mozzarella|ricotta|tonno in scatola/i.test(name||\'\'))return null');
+mh("pipeline:['copertura_proteica','copertura_carboidrato','copertura_verdura']");mh('completaRealizzazioniCopertura');mh('E.missingCoverage');mh('rigeneraComponenteCopertura');mh('automaticDayAllowed(day,today)');mh('inventoryByVariant');mh('tettiIngredienteSettimanali');mh('cerealiNonGraditi');mh("safe.profilo==='vegetariano'");mh("safe.profilo==='vegano'");
 hh('function cottureAmmesseProteina');hh("prosciutto|bresaola|formagg|mozzarella|ricotta|tonno in scatola/i.test(nomeProteina||'')) return []");
 hh("chiave:'allergeniAttivi'");hh("chiave:'ingredientiBloccati'");hh("chiave:'tettiIngredienteSettimanali'");hh("chiave:'cerealiNonGraditi'");hh("chiave:'configCarboidratiOrigini'");hh('commitMenuDraftAtomico');hh('propostoOriginale');hh("getAll('consumoGiorno')");hh("for(const r of await getAll('consumoGiorno')) await delKey('consumoGiorno', r.id)");
 hh("patate:        { label:'Patate',        ingrediente:'Patate',            porzione:300, gruppo:'patate',         limitato:false, haPoolSughi:false }");
+hh('if(!ricetta || ricetta.piattoSpeciale) return');hh('realizzazioni');hh('DietaPlannerEngine.coverageSatisfies');
+assert(!motor.includes("cercaComponentiModulari('sugo')".replace("('sugo')","('sugo')"))||motor.indexOf('/* v78')>motor.lastIndexOf("cercaComponentiModulari('sugo')"));
 assert(/engine-core\.js\?v=\d+/.test(html));assert(/motor\.js\?v=\d+/.test(html));assert(/CACHE_NAME/.test(sw));
 const obsolete=['motor-v9-1.js','motor-v9-2.js','motor-v9-3.js','motor-v9-4.js','motor-v10.js','DietaPlanner_COMPLETO.zip','.export_chunks'];for(const f of obsolete)assert(!fs.existsSync(path.join(root,f)),`file obsoleto presente: ${f}`);
 console.log('conformance: ok');
