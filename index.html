@@ -288,7 +288,7 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
 .nutri-config-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;width:100%;min-width:0;}
 .nutri-row{display:grid;grid-template-columns:minmax(0,1fr) 62px 46px 54px;gap:4px;align-items:center;width:100%;min-width:0;min-height:38px;padding:6px;border:1px solid var(--border);border-radius:9px;background:var(--panel-2);overflow:hidden;}
 .nutri-row.nutri-vincolo{grid-template-columns:minmax(0,1fr) 40px 42px 46px 64px;}
-.nutri-row.header{min-height:auto;background:transparent;border:0;padding:6px;color:var(--text-dim);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;}
+.nutri-row.header{min-height:auto;background:transparent;border:0;padding:6px;color:var(--text-dim);font-size:.66rem;text-transform:uppercase;letter-spacing:.03em;}\n.nutri-row.header>span:not(:first-child){text-align:center;}
 .nutri-row .nutri-name{min-width:0;font-size:.76rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .nutri-row input{display:block;width:100%;max-width:100%;min-width:0;height:32px;padding:5px 2px;text-align:center;margin:0;font-size:.78rem;}
 .nutri-row.single>input{grid-column:3/5;}
@@ -756,9 +756,9 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <button class="secondary" id="btnTornaImpostazioni" style="margin-bottom:12px;">← Torna a Impostazioni</button>
   <div class="card"><h3>Allergeni e intolleranze</h3><div class="meta">La selezione esclude in modo rigido tutti gli ingredienti e le ricette collegati.</div><div class="tabgroup" id="configAllergeniAttivi" style="margin-top:10px;"></div></div>
   <div class="card"><h3>Piano alimentare</h3><div class="meta">Le esclusioni del piano sono automatiche, visibili e non modificabili finché il piano resta selezionato.</div><select id="configProfiloAlimentare" style="margin-top:10px;"><option value="onnivoro">Onnivoro</option><option value="vegetariano">Vegetariano</option><option value="vegano">Vegano</option></select></div>
-  <div class="card"><h3>Impostazioni ingredienti</h3><div class="meta">L'elenco proviene da Ingredienti. Tocca un ingrediente: giallo = limitato, rosso = escluso, terzo tocco = senza restrizioni.</div><div id="configMacroIngredienti" style="min-width:0;margin-top:12px;"></div><div id="configVincoliIngredienti" class="nutri-config-grid" style="margin-top:12px;"></div></div>
   <div class="card"><h3>Parametri nutrizionali globali</h3><div id="configAvanzataCampi" class="nutri-config-grid" style="margin-top:10px;"></div></div>
   <div class="card"><h3>Carboidrati complessi e semplici</h3><div id="configClassiCarboidrati" class="nutri-config-grid" style="margin-top:10px;"></div></div>
+  <div class="card"><h3>Impostazioni ingredienti</h3><div class="meta">L'elenco proviene da Ingredienti. Tocca un ingrediente: giallo = limitato, rosso = escluso, terzo tocco = senza restrizioni.</div><div id="configMacroIngredienti" style="min-width:0;margin-top:12px;"></div><div id="configVincoliIngredienti" class="nutri-config-grid" style="margin-top:12px;"></div></div>
   <button class="primary" id="btnSalvaConfigAvanzata">Salva configurazione</button>
   <button class="secondary" id="btnResetConfigAvanzata" style="margin-top:8px;">Ripristina valori del piano</button>
   <div class="meta" id="configAvanzataStato" style="margin:8px 0 20px;"></div>
