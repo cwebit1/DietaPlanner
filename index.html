@@ -1899,7 +1899,7 @@ async function renderConfigAvanzata(){
   const [rec,a,vincoliRec,classiRec,basi]=await Promise.all([getOne('impostazioni','configAvanzata'),getOne('impostazioni','allergeniAttivi'),getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','vincoliClassiCarboidrati'),getAll('ingredienti')]);
   const cfg=Object.assign({},CONFIG_AVANZATA_DEFAULT,rec&&rec.valore||{}),box=document.getElementById('configAvanzataCampi');if(!box)return;
   document.getElementById('configProfiloAlimentare').value=cfg.dietProfile||'onnivoro';
-  let html='<div class="nutri-row nutri-vincolo header"><span>Voce</span><span>Frequenza</span><span>Min</span><span>Max</span><span>Quantità</span></div>';
+  let html='<div class="nutri-row nutri-vincolo header"><span>Voce</span><span>Freq</span><span>Min</span><span>Max</span><span>Quantità</span></div>';
   for(const m of ['carne','pesce','formaggi','uova','legumi']){const f=(cfg.proteinFrequencies||CONFIG_AVANZATA_DEFAULT.proteinFrequencies)[m];html+=rigaFrequenzaProteica(`proteinFrequencies.${m}`,m,f,unitaQuantitaMacroDaIngredienti(basi,m));}
   html+='<div class="nutri-row header"><span>Altri parametri</span><span>Unità</span><span>Min</span><span>Max</span></div>';
   for(const s of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+=`<div class="nutri-row single"><span class="nutri-name">${s.replaceAll('_',' ')}</span><span class="nutri-unit">max/sett.</span><input type="number" data-cfg-avanzata="subtypeCaps.${s}" value="${(cfg.subtypeCaps||CONFIG_AVANZATA_DEFAULT.subtypeCaps)[s]??''}"></div>`;
