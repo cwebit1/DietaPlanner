@@ -2809,37 +2809,6 @@ async function renderMantieniSwipe(renderFn){
   requestAnimationFrame(()=>ripristinaPosizioniSwipe(posizioni));
 }
 
-/* Cattura/ripristina la posizione di lettura della pagina (scroll verticale +
-   quali <details> erano aperti) intorno a un rendering che ricostruisce tutto
-   da zero — altrimenti ogni click che causa un re-render riporta l'utente in
-   cima alla pagina e richiude ciò che aveva aperto. Stesso pattern di
-   catturaPosizioniSwipe: match per identità (id o attributi data-*), con
-   fallback per posizione se la corrispondenza esatta non si trova più. */
-function catturaPosizionePagina(){
-  const scrollY = window.scrollY || window.pageYOffset || 0;
-  const dettagli = [...document.querySelectorAll('details[open]')].map((el,i)=>{
-    const attrs = [...el.attributes].filter(a=>a.name.startsWith('data-')).map(a=>a.name+'='+a.value).join('|');
-    return {i, attrs, id: el.id||''};
-  });
-  return {scrollY, dettagli};
-}
-function ripristinaPosizionePagina(pos){
-  if(!pos) return;
-  const tuttiDettagli = [...document.querySelectorAll('details')];
-  for(const d of pos.dettagli){
-    let el = d.id ? document.getElementById(d.id) : null;
-    if(!el && d.attrs){
-      el = tuttiDettagli.find(x=>{
-        const attrsX = [...x.attributes].filter(a=>a.name.startsWith('data-')).map(a=>a.name+'='+a.value).join('|');
-        return attrsX === d.attrs;
-      });
-    }
-    if(!el) el = tuttiDettagli[d.i]||null;
-    if(el) el.open = true;
-  }
-  window.scrollTo(0, pos.scrollY);
-}
-
 async function renderSetPreferenzeMenu(){
   const recLim=await getOne('impostazioni','setProteineLimitate');
   const salvate=recLim&&Array.isArray(recLim.valore)?recLim.valore:[];
@@ -4531,7 +4500,6 @@ async function renderGraficiConsumo(){
 }
 
 async function renderPiano(){
-  const posizionePagina = catturaPosizionePagina();
   draftPasto = {};
   resetStatoPannelli();
 
@@ -4631,8 +4599,6 @@ async function renderPiano(){
     pannelloGrafici.open = true;
     await renderGraficiConsumo();
   }
-  ripristinaPosizionePagina(posizionePagina);
-  requestAnimationFrame(()=>ripristinaPosizionePagina(posizionePagina));
 }
 
 /* B9 */
@@ -8325,7 +8291,6 @@ async function riepilogoTestualePasto(giorno, pasto){
 
 async function renderMenuSettimanale(){
   const mieGen = ++menuRenderGen;
-  const posizionePagina = catturaPosizionePagina();
   const giorni = giorniSettimana(menuSettimanaScarto);
   if(!menuDraft || menuDraft.scarto!==menuSettimanaScarto){
     menuDraft={scarto:menuSettimanaScarto,giorni:new Set(giorni),voci:new Map(),modificata:false};
@@ -8403,8 +8368,6 @@ async function renderMenuSettimanale(){
   }
   if(mieGen !== menuRenderGen) return; // idem: non allestire il footer di un rendering superato
   renderMenuFooter();
-  ripristinaPosizionePagina(posizionePagina);
-  requestAnimationFrame(()=>ripristinaPosizionePagina(posizionePagina));
 }
 
 function renderMenuFooter(){
