@@ -567,6 +567,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   transition:width 0.25s ease;
 }
 .loader-testo{ font-size:0.78rem; color:var(--text-dim); }
+.consumato-spunta{color:#fff;font-weight:700;}
 </style>
 </head>
 <body>
@@ -3542,7 +3543,9 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
   if(recVerduraRicorrente && recVerduraRicorrente.valore){
     preferenze.verdureVariantIds = [recVerduraRicorrente.valore];
   }
-  const giorni = giorniSettimana(scartoSettimane);
+  const giorniSettimanaCompleta = giorniSettimana(scartoSettimane);
+  const giorni = giorniSettimanaCompleta.filter(g=>g>todayISO());
+  if(!giorni.length) return {generati:0, motivo:'nessun giorno successivo a oggi'};
   const varianti = await getAll('varianti');
   // E1: costruisci la griglia base delle categorie proteiche (14 celle).
   // La griglia pre-assegna la categoria larga a ogni pasto con alternanza
@@ -3706,6 +3709,7 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
       // preferenzeQuestoPasto quando quell'oggetto viene costruito.
       const forzaCarboidratoJollyQuesto = !!pocoTempoQuesto;
       let voce = Object.assign({id:pianoId, modo: modoScelto, fascia:'facile', porzioni:1}, esistente||{});
+      voce.programmatoIl = voce.programmatoIl || new Date().toISOString();
 
       // MOTORE NUOVO E2: se la griglia E2 ha prodotto un candidato per questa
       // cella, usalo direttamente invece di chiamare proponiRicettaAutomatica
@@ -3793,7 +3797,7 @@ async function generaPianoSettimana(scartoSettimane, opzioni){
         const recEsclusiColazione=await getOne('impostazioni','colazioneIngredientiEsclusi');
         componenti=scegliColazioneAutomaticaCoerente(varianti,[firmaPref],recEsclusiColazione&&recEsclusiColazione.valore?recEsclusiColazione.valore:[]);
       }
-      if(componenti) await put('piano', {id:pianoIdColazione, componenti});
+      if(componenti) await put('piano', {id:pianoIdColazione, componenti, programmatoIl:new Date().toISOString()});
     }
     // Nota: NON generiamo mai spuntino1/spuntino2 in automatico qui — la guida li
     // definisce facoltativi ("uno o due spuntini o, magari, nemmeno uno"), quindi
@@ -4733,59 +4737,66 @@ async function elaboraConsumoAutomatico(){
   const tutteLeRicette = await getAll('ricette');
   const ricettePerId = {}; for(const r of tutteLeRicette) ricettePerId[r.id] = r;
   const ora = new Date();
+  const oggi = todayISO();
 
   for(const voce of tuttoIlPiano){
-    if(voce.consumato) continue;
     const sep = voce.id.indexOf('_');
     if(sep<0) continue;
     const giorno = voce.id.slice(0, sep);
     const pasto = voce.id.slice(sep+1);
+    const passato = giorno < oggi;
     const haContenutoVoce = !!((voce.realizzazioni&&voce.realizzazioni.length) || voce.primoId || voce.secondoId || voce.contornoId || voce.ricettaId || voce.primoCereale || voce.componenti || voce.colazioneSpecialeId);
-    if(!haContenutoVoce || !voce.programmatoIl) continue;
-    if(!fasciaPastoSuperata(giorno, pasto, ora)) continue;
+
+    if(!haContenutoVoce){
+      if(passato && !voce.consumato) await delKey('piano',voce.id);
+      continue;
+    }
+    if(voce.consumato) continue;
+
     const fineOra=FASCE_ORARIE_PASTO[pasto]?.[1];
-    if(fineOra!==undefined){const deadline=new Date(giorno+'T00:00:00');deadline.setHours(fineOra,0,0,0);if(Date.parse(voce.programmatoIl)>deadline.getTime())continue;}
+    const deadline=fineOra===undefined?null:new Date(giorno+'T00:00:00');
+    if(deadline) deadline.setHours(fineOra,0,0,0);
+    const programmatoMs=voce.programmatoIl?Date.parse(voce.programmatoIl):NaN;
+
+    // Record automatici retroattivi privi di una programmazione valida: non sono pasti.
+    if(passato && voce.origine!=='utente' && (!Number.isFinite(programmatoMs) || (deadline && programmatoMs>deadline.getTime()))){
+      await delKey('piano',voce.id);
+      continue;
+    }
+    if(!passato && !Number.isFinite(programmatoMs)) continue;
+    if(deadline && Number.isFinite(programmatoMs) && programmatoMs>deadline.getTime()) continue;
+    if(!fasciaPastoSuperata(giorno,pasto,ora)) continue;
 
     if(pasto==='colazione'){
-      // G: composizione a gruppi, mai scala l'inventario (comportamento invariato) —
-      // qui solo per completare lo storico/statistiche future
-      if(!voce.componenti && !voce.colazioneSpecialeId) continue;
-      voce.consumato = true;
-      voce.dataConsumato = todayISO();
-      await put('piano', voce);
+      voce.consumato=true;
+      voce.dataConsumato=giorno;
+      await put('piano',voce);
       await registraConsumoStorico(voce,'auto');
-      // Premio costanza: aggiorna il contatore delle colazioni morigerate
-      const recContatorePremio = await getOne('impostazioni', 'contatoreColazioniMorigerate');
-      let contatorePremio = recContatorePremio ? recContatorePremio.valore : 0;
-      if(voce.componenti && !voce.colazioneSpecialeId){
-        contatorePremio++;
-      } else if(voce.colazioneSpecialeId){
-        contatorePremio = 0;
-      }
-      await put('impostazioni', {chiave:'contatoreColazioniMorigerate', valore: contatorePremio});
+      const recContatorePremio=await getOne('impostazioni','contatoreColazioniMorigerate');
+      let contatorePremio=recContatorePremio?recContatorePremio.valore:0;
+      if(voce.componenti&&!voce.colazioneSpecialeId)contatorePremio++;
+      else if(voce.colazioneSpecialeId)contatorePremio=0;
+      await put('impostazioni',{chiave:'contatoreColazioniMorigerate',valore:contatorePremio});
       continue;
     }
 
-    const idRicette = voce.modo==='multi'
-      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
+    const idRicette=voce.modo==='multi'
+      ? [...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId,voce.secondoId,voce.contornoId]).filter(Boolean))]
       : [voce.ricettaId].filter(Boolean);
-    const isSpuntino = pasto.startsWith('spuntino');
-    if(!idRicette.length) continue;
-
-    const speciale = idRicette.length===1 ? ricettePerId[idRicette[0]] : null;
-    if(!(speciale && speciale.piattoSpeciale)){
-      for(const rid of idRicette){
-        const ricetta = ricettePerId[rid];
-        if(ricetta) await scalaInventarioPerRicetta(ricetta, voce.porzioni);
-      }
+    if(!idRicette.length){
+      if(passato) await delKey('piano',voce.id);
+      continue;
     }
-    voce.consumato = true;
-    voce.dataConsumato = todayISO();
-    await put('piano', voce);
-      await registraConsumoStorico(voce,'auto');
+    const speciale=idRicette.length===1?ricettePerId[idRicette[0]]:null;
+    if(!(speciale&&speciale.piattoSpeciale)){
+      for(const rid of idRicette){const ricetta=ricettePerId[rid];if(ricetta)await scalaInventarioPerRicetta(ricetta,voce.porzioni);}
+    }
+    voce.consumato=true;
+    voce.dataConsumato=giorno;
+    await put('piano',voce);
+    await registraConsumoStorico(voce,'auto');
   }
 }
-
 /* =========================================================
    G — COLAZIONE A GRUPPI COMPONIBILI
    -------------------------------------------------------
@@ -4920,6 +4931,10 @@ async function renderColazione(giorno, elementId){
     el.innerHTML='<div class="meta">Nessuna colazione programmata.</div>';
     return;
   }
+  if(giorno < todayISO() && !haContenutoColazione){
+    el.innerHTML='<div class="pasto-header">'+ICONA_PASTO.colazione+' Colazione</div><div class="meta">Nessuna colazione registrata.</div>';
+    return;
+  }
 
   const recContatorePremioRender = await getOne('impostazioni', 'contatoreColazioniMorigerate');
   const contatorePremioRender = recContatorePremioRender ? recContatorePremioRender.valore : 0;
@@ -4969,13 +4984,11 @@ async function renderColazione(giorno, elementId){
   const descrizioneAttuale = await descrizioneColazione(voce.componenti, voce.colazioneSpecialeId, varianti);
   let html = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
 
-  if(voce.consumato || colazioneScaduta){
-    const mostraEditorColazione = colazioneScaduta && !voce.consumato && !voce.componenti && !voce.colazioneSpecialeId;
-    const btnEditorColazione = mostraEditorColazione ? `<button class="small accent" data-editor-colazione="${giorno}" style="margin-bottom:8px;">✏️ Cosa hai mangiato a colazione?</button>` : '';
+  if(voce.consumato){
     const riepilogoScaduto = (voce.componenti || voce.colazioneSpecialeId)
       ? await htmlRiepilogoColazione(voce.componenti,voce.colazioneSpecialeId,varianti,'data-info-colazione="1"')
-      : '<div class="meta">✓ Nessuna colazione</div>';
-    el.innerHTML = html + btnEditorColazione + `<div style="opacity:0.7;">${riepilogoScaduto}</div>`;
+      : '<div class="meta">Nessuna colazione</div>';
+    el.innerHTML = html + `<div style="opacity:0.7;"><span class="consumato-spunta">✓</span> ${riepilogoScaduto}</div>`;
     el.querySelector('[data-editor-colazione]')?.addEventListener('click', async ()=>{ await apriModalEditorColazione(giorno); });
     el.querySelector('[data-info-colazione]')?.addEventListener('click', ()=>apriModalInfoColazione(voce.componenti,voce.colazioneSpecialeId));
     return;
@@ -5217,7 +5230,7 @@ async function renderBloccoSemplice(pasto, giorno, elementId){
   // è nell'applicarlo"
   const haContenutoSpuntino = !!voce.ricettaId;
   const scaduto = haContenutoSpuntino && fasciaPastoSuperata(giorno, pasto);
-  if(voce.consumato || scaduto){
+  if(voce.consumato){
     const ricettaConsumata = voce.ricettaId ? await getOne('ricette', voce.ricettaId) : null;
     const nutriCons = ricettaConsumata ? await nutrizionePerPersona(ricettaConsumata) : null;
     const etichettaCons = ricettaConsumata ? await etichettaOpzioneSpuntino(ricettaConsumata, await getAll('varianti')) : null;
@@ -5234,7 +5247,7 @@ async function renderBloccoSemplice(pasto, giorno, elementId){
     const btnMatitaSpuntino3 = (entroFinestraSpuntino3 && voce.consumato) ? `<button data-editor-spuntino="${giorno}|${pasto}" title="Aggiungi o correggi questo spuntino" style="background:none;border:none;cursor:pointer;font-size:0.95rem;line-height:1;padding:2px 4px;color:var(--text-dim);vertical-align:middle;">✏️</button>` : '';
     el.innerHTML = corpoHtmlIniziale + btnEditorSpuntino + (ricettaConsumata ? `
       <div style="opacity:0.7;">
-        <div style="font-weight:700;font-size:0.9rem;">✓ ${etichettaCons} ${btnMatitaSpuntino3}</div>
+        <div style="font-weight:700;font-size:0.9rem;"><span class="consumato-spunta">✓</span> ${etichettaCons} ${btnMatitaSpuntino3}</div>
         <div class="meta">${Math.round(nutriCons ? nutriCons.kcal : 0)} kcal (per 1 persona)</div>
       </div>` : `<div class="meta" style="opacity:0.7;">✓ Nessuno spuntino</div>`);
     el.querySelector('[data-editor-spuntino]')?.addEventListener('click', async ()=>{
@@ -5527,7 +5540,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
   // I pasti già consumati o ormai trascorsi restano immutabili.
   const haContenutoBlocco = !!((voce.realizzazioni&&voce.realizzazioni.length) || voce.primoId || voce.secondoId || voce.contornoId || voce.ricettaId || voce.primoCereale);
   const scaduto = haContenutoBlocco && fasciaPastoSuperata(giorno, pasto);
-  if(voce.consumato || scaduto){
+  if(voce.consumato){
     const idRicetteCons = voce.modo==='multi'
       ? [...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId, voce.secondoId, voce.contornoId]).filter(Boolean))]
       : [voce.ricettaId].filter(Boolean);
@@ -5538,10 +5551,9 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
       if(!r) continue;
       const n = await nutrizionePerPersona(r);
       kcalTot += n.kcal;
-      righeCons += `<div style="font-weight:700;font-size:0.9rem;">✓ ${r.nome}</div>`;
+      righeCons += `<div style="font-weight:700;font-size:0.9rem;"><span class="consumato-spunta">✓</span> ${r.nome}</div>`;
     }
-    const mostraEditor = scaduto && !voce.consumato && !voce.ricettaId && !voce.primoId;
-    const btnEditor = mostraEditor ? `<button class="small accent" data-editor-pasto="${giorno}|${pasto}" style="margin-bottom:8px;">✏️ Cosa hai mangiato?</button>` : '';
+    const btnEditor = '';
     const btnMatitaConsumato = voce.consumato ? `<button data-editor-pasto="${giorno}|${pasto}" title="Correggi questo pasto" style="background:none;border:none;cursor:pointer;font-size:0.95rem;line-height:1;padding:2px 4px;color:var(--text-dim);vertical-align:middle;">✏️</button>` : '';
     el.innerHTML = `
       <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
@@ -5563,12 +5575,24 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
   // solo se l'utente lo chiede esplicitamente.
   const vuotoSenzaPianificazione = !(voce.realizzazioni&&voce.realizzazioni.length) && !voce.primoId && !voce.secondoId && !voce.contornoId && !voce.ricettaId;
   if(vuotoSenzaPianificazione && !draftPasto[chiaveStato+'_forzaGenera']){
+    if(giorno < todayISO()){
+      el.innerHTML = `
+        <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
+        </div>
+        <div class="meta">Nessun pasto registrato.</div>`;
+      return;
+    }
     el.innerHTML = `
       <div class="pasto-header" style="display:flex;justify-content:space-between;align-items:center;">
         <span>${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}</span>
       </div>
-      <div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div>
-      <button class="small accent" data-genera-singolo style="width:100%;">Genera questo pasto</button>`;
+      <div style="display:grid;gap:8px;margin-bottom:10px;">
+        <div><span class="meta">🍝 CARBOIDRATO</span><div>Seleziona pasto</div></div>
+        <div><span class="meta">🍗 PROTEINA</span><div>Seleziona pasto</div></div>
+        <div><span class="meta">🥦 VERDURA</span><div>Seleziona pasto</div></div>
+      </div>
+      <button class="small accent" data-genera-singolo style="width:100%;">Configura pasto</button>`;
     el.querySelector('[data-genera-singolo]')?.addEventListener('click', ()=>{
       draftPasto[chiaveStato+'_forzaGenera'] = true;
       renderBloccoCompleto(pasto, giorno, elementId);
@@ -8216,7 +8240,7 @@ async function riepilogoTestualePasto(giorno, pasto){
   if(!voce) return testoVuoto;
   // G1: icona di stato del pasto
   let iconaStato = '';
-  if(voce.consumato) iconaStato = '✓ ';
+  if(voce.consumato) iconaStato = '<span class="consumato-spunta">✓</span> ';
   else if(voce.bloccata) iconaStato = '🔒 ';
   // G2: icona di origine — ⭐ se il pasto è stato confermato manualmente dall'utente
   let iconaOrigine = '';
@@ -8288,7 +8312,7 @@ async function renderMenuSettimanale(){
       if(pasto !== 'colazione'){
         const voceBlocco = await getOne('piano', g+'_'+pasto);
         const bloccataOra = !!(voceBlocco && voceBlocco.bloccata);
-        if(voceBlocco && voceBlocco.consumato) iconaStatoMenu = ' <span style="color:var(--accent);font-weight:700;">✓</span>';
+        if(voceBlocco && voceBlocco.consumato) iconaStatoMenu = '';
         iconaBloccoMenu = `<button data-blocca-menu="${g}|${pasto}" title="${bloccataOra?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
           style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;flex-shrink:0;margin-left:auto;">${iconaBloccoGlifo(bloccataOra)}</button>`;
       }
@@ -8343,14 +8367,19 @@ function renderMenuFooter(){
     '<button class="secondary" id="btnRigeneraMenu">Rigenera</button><button class="primary" id="btnSalvaMenu">Salva</button></div>'+
     '<button class="secondary" id="btnVaiSpesaFooter">🛒 Vai alla spesa</button>';
   menu.parentNode.insertBefore(f,menu.nextSibling);
+  const settimanaModificabile=giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO());
+  f.querySelector('#btnResettaMenu').disabled=!settimanaModificabile;
+  f.querySelector('#btnRigeneraMenu').disabled=!settimanaModificabile;
+  f.querySelector('#btnSalvaMenu').disabled=!settimanaModificabile;
   f.querySelector('#btnAnnullaMenu').addEventListener('click',()=>{menuDraft=null;mostraVista('piano');});
   f.querySelector('#btnResettaMenu').addEventListener('click',async()=>{
-    const giorni=giorniSettimana(menuSettimanaScarto);
+    const giorni=giorniSettimana(menuSettimanaScarto).filter(g=>g>todayISO());
+    if(!giorni.length){await avviso('I giorni passati sono in sola lettura.');return;}
     for(const g of giorni)for(const p of ['colazione','pranzo','cena'])await delKey('piano',g+'_'+p);
     await generaPianoSettimana(menuSettimanaScarto,{forza:true});
     renderMenuSettimanale();
   });
-  f.querySelector('#btnRigeneraMenu').addEventListener('click',async()=>{await generaPianoSettimana(menuSettimanaScarto,{forza:true});renderMenuSettimanale();});
+  f.querySelector('#btnRigeneraMenu').addEventListener('click',async()=>{if(!giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO())){await avviso('I giorni passati sono in sola lettura.');return;}await generaPianoSettimana(menuSettimanaScarto,{forza:true});renderMenuSettimanale();});
   f.querySelector('#btnSalvaMenu').addEventListener('click',async()=>{
     if(!menuDraft)return;
     await commitMenuDraftAtomico();
