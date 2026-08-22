@@ -1724,7 +1724,11 @@ async function controllaAggiornamentoRicetteRemote(){
     const versioneRemota = dati.versione || 0;
     const lista = Array.isArray(dati) ? dati : (dati.ricette || []);
     if(!lista.length) return {aggiornato:false, motivo:'file vuoto', versione:versioneRemota};
-    if(versioneRemota <= versioneLocale) return {aggiornato:false, motivo:'già aggiornato (v' + versioneLocale + ')', versione:versioneRemota};
+    // Riparazione una tantum: il 22/08/2026 la versione ricette locale è stata
+    // erroneamente portata a 82 mentre il catalogo corretto è rimasto alla v11.
+    // Si limita esclusivamente a questa coppia di valori e non tocca altri dati locali.
+    const ripristinoVersione82Errata = versioneLocale === 82 && versioneRemota === 11;
+    if(versioneRemota <= versioneLocale && !ripristinoVersione82Errata) return {aggiornato:false, motivo:'già aggiornato (v' + versioneLocale + ')', versione:versioneRemota};
     const esito = await importaListaRicette(lista);
     // v78: rimuove dal DB locale i vecchi template/composti a sugo che non fanno
     // più parte del catalogo di ricette complete.
