@@ -8362,7 +8362,12 @@ async function renderMenuSettimanale(){
         if(!voce) voce = {id:pianoId};
         voce.bloccata = !voce.bloccata;
         await put('piano', voce);
-        renderMenuSettimanale();
+        // Aggiorno solo questo pulsante: un rebuild completo della vista
+        // (renderMenuSettimanale) qui non serve a nulla per un singolo lucchetto,
+        // e riapre/ricarica da capo qualsiasi altro pannello fosse aperto altrove
+        // nella pagina — causando un flash visibile senza motivo.
+        btn.innerHTML = iconaBloccoGlifo(voce.bloccata);
+        btn.title = voce.bloccata ? 'Sblocca questo pasto (tornerà rigenerabile)' : 'Blocca questo pasto (non verrà sostituito alla rigenerazione)';
       });
     });
   }
