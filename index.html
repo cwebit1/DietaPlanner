@@ -8202,6 +8202,11 @@ document.getElementById('btnConfermaAssegnazione').addEventListener('click', asy
    la stessa fonte da cui viene calcolata la lista della spesa
    ========================================================= */
 let menuSettimanaScarto = 0;
+/* Guardia anti-sovrapposizione: se renderMenuSettimanale() viene richiamata
+   mentre un'esecuzione precedente è ancora a metà (attese asincrone in corso),
+   quella vecchia deve smettere di scrivere nel DOM — altrimenti i giorni
+   possono comparire mescolati invece che in ordine cronologico Lun→Dom. */
+let menuRenderGen = 0;
 /* Sequenza di scelte alla generazione del menù (punti 2 e 3 richiesti da Enrico):
    1) chiede se pensare a una nuova spesa (ignora cosa c'è già) o usare quella esistente
    2) genera di conseguenza, rispettando comunque sempre i criteri della dieta
@@ -8285,6 +8290,7 @@ async function riepilogoTestualePasto(giorno, pasto){
 }
 
 async function renderMenuSettimanale(){
+  const mieGen = ++menuRenderGen;
   const giorni = giorniSettimana(menuSettimanaScarto);
   if(!menuDraft || menuDraft.scarto!==menuSettimanaScarto){
     menuDraft={scarto:menuSettimanaScarto,giorni:new Set(giorni),voci:new Map(),modificata:false};
@@ -8325,6 +8331,7 @@ async function renderMenuSettimanale(){
         <div class="contenuto" id="menuBloc_${g}_${pasto}"></div>
       </details>`;
     }
+    if(mieGen !== menuRenderGen) return; // un rendering più recente è già partito: mi fermo qui
     giornoDiv.innerHTML = html;
     el.appendChild(giornoDiv);
 
@@ -8359,6 +8366,7 @@ async function renderMenuSettimanale(){
       });
     });
   }
+  if(mieGen !== menuRenderGen) return; // idem: non allestire il footer di un rendering superato
   renderMenuFooter();
 }
 
