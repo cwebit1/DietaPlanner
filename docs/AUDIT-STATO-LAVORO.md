@@ -90,10 +90,32 @@ stato trovato, in attesa di valutazione e priorità da parte di Cwe.
   correttamente solo l'ingrediente della colazione, coerente con quanto
   già sappiamo.
 
+### Verificato — profilo dieta vegetariano/vegano (nuovo)
+
+Cambio profilo testato dal vivo (selezione in UI + salvataggio +
+rigenerazione reale di settimane pulite):
+
+- **Vegano**: generazione riuscita (14/14, 0 errori), nessuna fuga di
+  carne/pesce/formaggi/uova — l'esclusione funziona. **Nota di design da
+  confermare con Cwe, non un bug**: per costruzione (`adattaConfigProfilo`
+  in motor.js) il profilo vegano forza `legumi` a `target:14`, cioè
+  **tutti e 14 gli slot della settimana risultano macrocategoria
+  "legumi"**, sempre, senza eccezioni — la varietà nella settimana generata
+  arriva solo dalla ricetta specifica (tofu, ceci, lenticchie, fagioli,
+  ecc. — su questo la varietà osservata è comunque buona, 13 nomi diversi
+  su 14 pasti). Vale la pena chiedere a Cwe se è il comportamento voluto o
+  se in futuro si vuole introdotta più struttura (es. sotto-categorie
+  dentro "legumi" per distinguere legumi-da-zuppa da legumi-con-cereali,
+  tofu, ecc., set già presenti come SOTTOTIPI_MOTORE ma con `legumi` che
+  oggi ha un solo sottotipo unico: `legumi`).
+- **Vegetariano**: generazione riuscita (14/14, 0 errori), distribuzione
+  osservata legumi 6 / formaggi 5 / uova 3 — coerente con i target
+  hardcoded per questo profilo (`min:5,target:6` legumi;
+  `min:3,max:6,target:5` formaggi; `min:2,max:4,target:3` uova). Nessuna
+  fuga di carne/pesce. **Nessuna anomalia trovata qui.**
+
 ### Ancora da testare (non toccato in questa sessione — vedi "Prossimi passi")
 
-- Comportamento con profilo dieta vegetariano/vegano (cambio profilo e
-  rigenerazione).
 - Marcatura manuale "pasto consumato" ed effetto su inventario/storico.
 - Roll manuale di un componente del pasto (sostituzione proteina/carbo/contorno).
 - Effetto reale di "verdure preferite", "verdure disattivate", "verdura
@@ -106,6 +128,8 @@ stato trovato, in attesa di valutazione e priorità da parte di Cwe.
 - Ricette "solo manuali" — verificare il bypass criteri.
 - Pasto speciale (limite settimanale, comportamento).
 - Verifica aritmetica dettagliata della lista Spesa (vedi sopra).
+- Chiarire con Cwe se "100% legumi" per il profilo vegano è voluto (vedi
+  sopra) — non è un bug, ma una domanda di prodotto aperta.
 
 ## Prossimi passi consigliati (in ordine di priorità suggerito)
 
