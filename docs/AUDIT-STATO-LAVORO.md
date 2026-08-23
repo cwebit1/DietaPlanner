@@ -74,13 +74,24 @@ stato trovato, in attesa di valutazione e priorità da parte di Cwe.
 | Cosa sembrava | Perché non è un bug |
 |---|---|
 | Selettore giorni nel Piano mostrava "Maggio" invece di "Agosto" | Verificato via query diretta sul DOM (`[data-g]`): i pulsanti reali sono tutti corretti (23 ago = DomenicaAgosto, 24 ago = LunedìAgosto, ecc., con `oggi:true` sul giorno giusto). L'apparente errore veniva da un selettore CSS troppo generico nel MIO script di test, che pescava elementi non ancora scrollati nella striscia di 181 giorni. **Non è un problema dell'app.** |
+| Il lucchetto sembrava perdere lo stato "bloccata" dopo una rigenerazione forzata, facendo riscrivere un pasto bloccato | Riprodotto una volta, poi **non più riproducibile** in 4 retest puliti successivi (blocco+rigenerazione nella stessa sessione, blocco+chiusura processo+riapertura+rigenerazione, sequenza identica al test originale passo-passo con checkpoint). In tutti i retest il blocco ha protetto correttamente il pasto. Il codice (`if(old&&(old.consumato||old.bloccata))continue;` in `generaPianoSettimana`, motor.js) è corretto e coerente con quanto osservato nei retest. Il singolo caso anomalo è quasi certamente un artefatto del mio ambiente di test (persistenza IndexedDB tra chiusura/riapertura del processo browser), non un bug dell'app. **Non classificato come anomalia confermata**, ma segnalato per completezza: se Cwe osserva mai un pasto bloccato che viene riscritto durante l'uso reale, vale la pena riaprire il caso con log più dettagliati. |
+
+### Verificato, funzionante, non approfondito oltre
+
+- **Vista "Spesa"**: dopo la generazione della settimana 24-30 agosto, la
+  lista spesa risulta popolata correttamente, categorizzata per reparto
+  (Carne, Pesce, Formaggi, Uova, Verdure, Carboidrati, Grassi, Proteine,
+  Altro), con quantità e formato confezione per riga e pulsante "Segna come
+  comprato". Non presenta errori evidenti. **Non è stata verificata la
+  correttezza aritmetica esatta** (somma ingredienti per ricetta, arrotondamento
+  a formato confezione, netto da inventario) — dato il numero di variabili in
+  gioco meriterebbe un audit dedicato a parte se Cwe lo ritiene prioritario.
+  La settimana 17-23 (senza pranzo/cena, per l'anomalia A1) mostra
+  correttamente solo l'ingrediente della colazione, coerente con quanto
+  già sappiamo.
 
 ### Ancora da testare (non toccato in questa sessione — vedi "Prossimi passi")
 
-- Lucchetto/blocco pasto nel Piano e nel Menù (area degli ultimi 3 commit del
-  repo — potenzialmente ancora fragile, priorità di verifica alta proprio
-  perché è la zona più di recente modificata).
-- Vista "Spesa" dopo una generazione reale (solo vista a vuoto finora).
 - Comportamento con profilo dieta vegetariano/vegano (cambio profilo e
   rigenerazione).
 - Marcatura manuale "pasto consumato" ed effetto su inventario/storico.
@@ -94,6 +105,7 @@ stato trovato, in attesa di valutazione e priorità da parte di Cwe.
   di REGOLE_FLUSSO_LOGICO) sia rispettata anche nel codice attivo.
 - Ricette "solo manuali" — verificare il bypass criteri.
 - Pasto speciale (limite settimanale, comportamento).
+- Verifica aritmetica dettagliata della lista Spesa (vedi sopra).
 
 ## Prossimi passi consigliati (in ordine di priorità suggerito)
 
