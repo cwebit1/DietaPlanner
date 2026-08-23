@@ -1116,14 +1116,14 @@ function aggiornaStoricoSlot(chiaveSlot, nomeRicetta){
 async function seedIfEmpty(){
   const baseData = [
     // ---- CARBOIDRATI ----
-    {nome:'Riso Arborio', gruppo:'carboidrati', varianti:[
-      {nome:'Riso Arborio', formato:1000, consistenza:'da_cuocere', congelabile:'no', zona:'dispensa', kcal:332,prot:6.7,carb:75,grassi:0.6, qta:300}
+    {nome:'Riso Originario', gruppo:'carboidrati', varianti:[
+      {nome:'Riso Originario', formato:1000, consistenza:'da_cuocere', congelabile:'no', zona:'dispensa', kcal:332,prot:6.7,carb:75,grassi:0.6, qta:300}
     ]},
     {nome:'Pasta corta', gruppo:'carboidrati', varianti:[
       {nome:'Pasta corta', formato:500, consistenza:'da_cuocere', congelabile:'no', zona:'dispensa', kcal:350,prot:12,carb:71,grassi:1.5, qta:250}
     ]},
     {nome:'Pane', gruppo:'carboidrati', varianti:[
-      {nome:'Pane fresco', formato:500, consistenza:'gia_cotto', congelabile:'si', zona:'dispensa', kcal:275,prot:9,carb:56,grassi:1.2, qta:250}
+      {nome:'Panino', formato:500, consistenza:'gia_cotto', congelabile:'si', zona:'dispensa', kcal:275,prot:9,carb:56,grassi:1.2, qta:250}
     ]},
     {nome:'Patate', gruppo:'carboidrati', varianti:[
       {nome:'Patate', formato:0, consistenza:'da_cuocere', congelabile:'no', zona:'dispensa', kcal:77,prot:2,carb:17,grassi:0.1, qta:400}
@@ -1508,7 +1508,7 @@ async function seedIfEmpty(){
   // invece di essere una "ricetta" fissa. Idempotente, corregge anche chi ha già i dati.
   const TAG_COLAZIONE = {
     'cereali da colazione': {gruppo:'carboidrati', porzione:30},
-    'pane fresco': {gruppo:'carboidrati', porzione:50},
+    'panino': {gruppo:'carboidrati', porzione:50},
     'pane integrale': {gruppo:'carboidrati', porzione:50},
     'fette biscottate': {gruppo:'carboidrati', porzione:30},
     'biscotti secchi': {gruppo:'carboidrati', porzione:25},
@@ -1558,7 +1558,7 @@ async function seedIfEmpty(){
     'petto di pollo':'fresco', 'petto di tacchino':'fresco', 'fettina di manzo':'fresco',
     'nodino di maiale':'fresco', 'pancetta a cubetti':'fresco', 'sgombro fresco':'fresco',
     'bresaola':'fresco', 'prosciutto crudo':'fresco', 'prosciutto cotto':'fresco',
-    'uova':'fresco', 'tofu':'fresco', 'pane fresco':'fresco', 'pane integrale':'fresco',
+    'uova':'fresco', 'tofu':'fresco', 'panino':'fresco', 'pane integrale':'fresco',
     // ---- SURGELATO ----
     'piselli surgelati':'surgelato', 'gamberetti surgelati':'surgelato',
     'filetto di nasello surgelato':'surgelato', 'orata surgelata':'surgelato',
@@ -1566,7 +1566,7 @@ async function seedIfEmpty(){
     // ---- CONF (sottovuoto o barattolo, lunga conservazione) ----
     'olio extravergine oliva':'conf', 'burro':'conf', 'maionese':'conf', 'miele':'conf',
     'marmellata':'conf', 'cioccolato fondente':'conf', 'noci e mandorle':'conf',
-    'pasta corta':'conf', 'pasta integrale':'conf', 'riso arborio':'conf', 'riso integrale':'conf',
+    'pasta corta':'conf', 'pasta integrale':'conf', 'riso originario':'conf', 'riso integrale':'conf',
     'cous cous':'conf', 'orzo perlato':'conf', 'farro perlato':'conf', 'noodles per ramen':'conf',
     'farina per polenta':'conf', 'patate':'conf', 'fette biscottate':'conf',
     'farina 00':'conf', 'sfoglie di lasagna':'conf', 'burro di arachidi':'conf', 'crema di nocciole e cacao':'conf', 'salmone affumicato':'fresco', 'granita fatta in casa':'surgelato',
@@ -2077,20 +2077,20 @@ const COLAZIONI_AUTOMATICHE_COHERENTI = [
   {nome:'Yogurt con frutta secca', proteine:'Yogurt bianco', grassi:'Noci e mandorle'},
   {nome:'Yogurt con cioccolato fondente', proteine:'Yogurt bianco', grassi:'Cioccolato fondente'},
   {nome:'Yogurt, cereali e miele', proteine:'Yogurt bianco', carboidrati:'Cereali da colazione', carboidrati_semplici:'Miele'},
-  {nome:'Pane fresco e marmellata', carboidrati:'Pane fresco', carboidrati_semplici:'Marmellata'},
+  {nome:'Panino e marmellata', carboidrati:'Panino', carboidrati_semplici:'Marmellata'},
   {nome:'Pane integrale e marmellata', carboidrati:'Pane integrale', carboidrati_semplici:'Marmellata'},
   {nome:'Fette biscottate e marmellata', carboidrati:'Fette biscottate', carboidrati_semplici:'Marmellata'},
-  {nome:'Pane fresco e miele', carboidrati:'Pane fresco', carboidrati_semplici:'Miele'},
+  {nome:'Panino e miele', carboidrati:'Panino', carboidrati_semplici:'Miele'},
   {nome:'Pane integrale e miele', carboidrati:'Pane integrale', carboidrati_semplici:'Miele'},
   {nome:'Fette biscottate e miele', carboidrati:'Fette biscottate', carboidrati_semplici:'Miele'},
-  {nome:'Pane fresco e cioccolato', carboidrati:'Pane fresco', grassi:'Cioccolato fondente'},
+  {nome:'Panino e cioccolato', carboidrati:'Panino', grassi:'Cioccolato fondente'},
   {nome:'Pane integrale e cioccolato', carboidrati:'Pane integrale', grassi:'Cioccolato fondente'},
-  {nome:'Pane fresco, burro e marmellata', carboidrati:'Pane fresco', grassi:'Burro', carboidrati_semplici:'Marmellata'},
+  {nome:'Panino, burro e marmellata', carboidrati:'Panino', grassi:'Burro', carboidrati_semplici:'Marmellata'},
   {nome:'Pane integrale, burro e marmellata', carboidrati:'Pane integrale', grassi:'Burro', carboidrati_semplici:'Marmellata'},
   {nome:'Fette biscottate, burro e marmellata', carboidrati:'Fette biscottate', grassi:'Burro', carboidrati_semplici:'Marmellata'},
-  {nome:'Uova e pane fresco', proteine:'Uova', carboidrati:'Pane fresco'},
+  {nome:'Uova e panino', proteine:'Uova', carboidrati:'Panino'},
   {nome:'Uova e pane integrale', proteine:'Uova', carboidrati:'Pane integrale'},
-  {nome:'Uova, pane fresco e avocado', proteine:'Uova', carboidrati:'Pane fresco', grassi:'Avocado'},
+  {nome:'Uova, panino e avocado', proteine:'Uova', carboidrati:'Panino', grassi:'Avocado'},
   {nome:'Uova, pane integrale e avocado', proteine:'Uova', carboidrati:'Pane integrale', grassi:'Avocado'}
 ];
 function firmaComponentiColazione(componenti){
@@ -2141,7 +2141,7 @@ function scegliColazioneAutomaticaCoerente(varianti, firmeDaEvitare, ingredienti
    ========================================================= */
 const CEREALI_PRIMI = {
   pasta:     { label:'Pasta',     ingrediente:'Pasta corta',   porzione:80 },
-  riso:      { label:'Riso',      ingrediente:'Riso Arborio',  porzione:80 },
+  riso:      { label:'Riso',      ingrediente:'Riso Originario',  porzione:80 },
   farro:     { label:'Farro',     ingrediente:'Farro perlato', porzione:80 },
   orzo:      { label:'Orzo',      ingrediente:'Orzo perlato',  porzione:80 },
   cous_cous: { label:'Cous cous', ingrediente:'Cous cous',     porzione:80 }
@@ -2205,18 +2205,18 @@ const CARBOIDRATI_PASTO = {
   // --- Cereali in chicco (rotazione libera, con pool sughi) ---
   pasta:         { label:'Pasta',         ingrediente:'Pasta corta',       porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   pasta_fresca:  { label:'Pasta fresca',  ingrediente:'Pasta corta',       porzione:90,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
-  riso:          { label:'Riso',          ingrediente:'Riso Arborio',      porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
+  riso:          { label:'Riso',          ingrediente:'Riso Originario',   porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   farro:         { label:'Farro',         ingrediente:'Farro perlato',     porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   orzo:          { label:'Orzo',          ingrediente:'Orzo perlato',      porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   cous_cous:     { label:'Cous cous',     ingrediente:'Cous cous',         porzione:70,  gruppo:'cereali_chicco', limitato:false, haPoolSughi:true },
   // --- Pane e derivati (sostituiscono il primo, niente sugo) ---
-  pane:          { label:'Pane',          ingrediente:'Pane fresco',       porzione:100, gruppo:'pane',           limitato:false, haPoolSughi:false },
+  pane:          { label:'Pane',          ingrediente:'Panino',            porzione:100, gruppo:'pane',           limitato:false, haPoolSughi:false },
   friselle:      { label:'Friselle',      ingrediente:'Friselle',          porzione:50,  gruppo:'pane',           limitato:true,  tettoSettimanale:2, haPoolSughi:false },
   // --- Tuberi e altri ---
   patate:        { label:'Patate',        ingrediente:'Patate',            porzione:300, gruppo:'patate',         limitato:false, haPoolSughi:false },
   polenta:       { label:'Polenta',       ingrediente:'Farina per polenta', porzione:70, gruppo:'polenta',       limitato:false, haPoolSughi:false },
   // --- Frequenza limitata (0-2/sett dal PDF) ---
-  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi di patate', porzione:150, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
+  gnocchi:       { label:'Gnocchi',       ingrediente:'Gnocchi',           porzione:150, gruppo:'limitati',      limitato:true, tettoSettimanale:2, haPoolSughi:false },
   pasta_ripiena: { label:'Pasta ripiena', ingrediente:'Ravioli ricotta e spinaci', porzione:125, gruppo:'limitati', limitato:true, tettoSettimanale:2, haPoolSughi:false },
   gallette:      { label:'Gallette',      ingrediente:'Gallette di riso',  porzione:50,  gruppo:'pane',           limitato:false, haPoolSughi:false },
   crackers:      { label:'Crackers',      ingrediente:'Crackers',          porzione:30,  gruppo:'pane',           limitato:false, haPoolSughi:false },
@@ -6686,7 +6686,7 @@ async function scegliPrimoVelocePaneFriselle(){
   const pool=tutte.filter(r=>{
     if(r.esclusa || r.piattoSpeciale || (r.tipoPortata||'unico')!=='primo') return false;
     const nome=(r.nome||'').toLowerCase();
-    return nome.includes('bruschett') || nome.includes('frisell') || (r.ingredienti||[]).some(i=>i.nomeLibero==='Pane fresco' || i.nomeLibero==='Friselle');
+    return nome.includes('bruschett') || nome.includes('frisell') || (r.ingredienti||[]).some(i=>i.nomeLibero==='Panino' || i.nomeLibero==='Friselle');
   });
   if(!pool.length) return null;
   pool.sort((a,b)=>(a.ultimoUsato||0)-(b.ultimoUsato||0));

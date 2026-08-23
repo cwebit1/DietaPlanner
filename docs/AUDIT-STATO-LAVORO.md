@@ -79,6 +79,51 @@ propria.
 `motor.js?v=84`→`?v=85` per invalidare la cache browser, nessuna riga di
 logica toccata in index.html).
 
+### A12 — Rename base cereali per il futuro sistema "carboidrati compatibili
+a sughi" — PRONTO, NON ANCORA PUBBLICATO (in attesa di token GitHub)
+
+**Contesto:** primo passo di un lavoro più ampio (vedi "Lavoro prioritario"
+sotto) per permettere a un condimento/sugo di essere abbinato a più
+cereali diversi invece di uno fisso. Prima di poterlo fare serviva
+sistemare i nomi degli ingredienti cereale di base, alcuni condivisi
+impropriamente tra usi diversi.
+
+**Rename applicati (decisi da Cwe):**
+- "Riso Arborio" → **"Riso Originario"**
+- "Pane fresco" → **"Panino"** ("Pane integrale" lasciato invariato)
+- "Gnocchi di patate" → **"Gnocchi"**
+
+**File toccati:**
+- `ingredienti.json`: chiavi rinominate (versione 6→7)
+- `ricette.json`: aggiornati i riferimenti negli ingredienti di 24 ricette
+  (Riso Arborio), 28 ricette (Pane fresco), 2 ricette (Gnocchi di patate)
+  (versione 11→12)
+- `index.html`: `CARBOIDRATI_PASTO` (riso/pane/gnocchi), più altri 5 punti
+  trovati con una verifica case-insensitive completa (non ovvi a un primo
+  giro): seed iniziale DB (`seedIfEmpty`), tabella tag colazione
+  (`TAG_COLAZIONE`), tabella categorizzazione (`CATEGORIA_ALIMENTI`,
+  chiave minuscola), tabella legacy `CEREALI_PRIMI` (motore autonomo primi,
+  probabilmente dead code ma sistemata comunque per non lasciare
+  riferimenti rotti), controllo bruschette/friselle (`nomeLibero==='Pane
+  fresco'`), nomi combo colazione ("Pane fresco e marmellata" → "Panino e
+  marmellata", ecc., 6 combo).
+
+**Verificato:** `git diff` pulito (3 file, 136 righe +/-), zero riferimenti
+residui ai 3 nomi vecchi in nessuno dei 5 file del repo (`grep`
+case-insensitive), sintassi JSON valida su entrambi i file dati, sintassi
+JS valida sul blocco script inline di `index.html`.
+
+**⚠️ Costo operativo per Cwe, non evitabile:** il match ingrediente↔DB è
+per nome, non per id fisso — al prossimo aggiornamento dati sul
+dispositivo, i 3 nomi nuovi verranno creati come ingredienti **nuovi**
+nell'IndexedDB locale; i vecchi ("Riso Arborio"/"Pane fresco"/"Gnocchi di
+patate") restano come voci orfane con l'eventuale scorta inventario che
+avevano — Cwe dovrà reinserire manualmente quella scorta sotto i nomi
+nuovi, una tantum.
+
+**NON ancora pubblicato:** manca il token GitHub per il push (richiesto
+ogni sessione, mai salvato).
+
 ### Confermato con evidenza diretta (riprodotto ed isolata la causa nel codice)
 
 | ID | Titolo breve | Gravità | Dettaglio |
@@ -287,9 +332,13 @@ aggiunto C, ma non è una decisione definitiva.
 1. Decidere con Cwe se completare prima la verifica sistematica
    nome-vs-sigla su tutte le ~326 ricette (compresi colazione/spuntino) —
    oppure applicare subito le 15 già pronte e proseguire la revisione a
-   seguire.
-2. Applicare le correzioni a `ricette.json` (bump versione da 11 a 12,
-   prassi già in uso nel repo).
+   seguire. **Nota 23/8: la classificazione/revisione delle ricette la fa
+   Cwe direttamente con l'editor HTML (vedi sezione "Editor ricette"
+   sotto) — questo punto non è più in carico a Claude.**
+2. Applicare le correzioni a `ricette.json` (bump versione — **attenzione:
+   la versione è già passata da 11 a 12 il 23/8 per il rename cereali
+   [A12], non per queste 15 correzioni: se/quando queste verranno
+   applicate, il prossimo bump sarà 12→13**).
 3. Solo dopo: scrivere il codice per A4 (regola affettati→pane, nel punto
    dove si cerca il carboidrato mancante — non serve toccare ricette.json
    per questa parte, i 4 piatti "affettati" composti restano com'erano) e
@@ -322,3 +371,98 @@ una decisione di prodotto da parte di Cwe prima di poter essere chiusi.
    rincorrere bug uno alla volta.
 4. Nessuna correzione va fatta senza autorizzazione esplicita di Cwe per il
    singolo intervento (regola già in `AGENTS.md`).
+
+## Editor ricette (`tools/editor-ricette.html`, nel repo)
+
+Cwe usa un file HTML standalone per la classificazione/revisione delle 326
+ricette: nome editabile, chip cliccabili per la sigla di copertura (PC/PP/
+PF/PU/PL/C/V), checkbox elimina. Legge/scrive `ricette.json` **direttamente
+su GitHub** via Contents API (token incollato a mano nel tool, mai salvato,
+richiesto ogni volta che lo si apre — separato dal token che serve a
+Claude per i push). Bump automatico versione ad ogni salvataggio. La
+classificazione/revisione ricetta-per-ricetta è **in carico a Cwe**, non a
+Claude. Il file va aperto scaricato in un browser vero (non nell'anteprima
+file dell'app Claude, che sandboxa le richieste di rete verso api.github.com).
+
+## Lavoro pianificato — "carboidrati compatibili a sughi" (elaborato,
+non ancora iniziato oltre al rename base — vedi A12 sopra)
+
+Obiettivo: un condimento/sugo (es. "ai piselli") possa essere abbinato a
+più cereali diversi invece di uno fisso, scelto in automatico (rotazione)
+o dall'utente, con budget Set rispettato e nutrizione/allergeni ricalcolati
+al momento giusto invece che congelati sulla ricetta. Nasce da un'analisi
+del codice attivo (motor.js, `completaRealizzazioniCopertura`): oggi, se
+la ricetta-proteina scelta ha già `C` nella sigla (es. "Pasta con
+zucchine" → `PC+C`), il budget cereali del Set non viene mai consultato —
+il cereale scritto nella ricetta vince sempre. Root cause della stessa
+famiglia di A2/S5.
+
+**Lista base cereali (decisa da Cwe, con marcatura sugo/secondi):**
+
+| Codice | Nome | Uso | Stato |
+|---|---|---|---|
+| `pastauovo` | Pasta all'uovo | sugo | da creare (nuovo ingrediente) |
+| `pastaduro` | Pasta di grano duro | sugo | ⏳ decisione aperta: rinominare "Pasta corta" esistente o creare nuovo distinto? |
+| `pastainteg` | Pasta integrale | sugo | esiste già, riuso diretto |
+| `riso` | Riso Originario | sugo | ✅ fatto (A12) |
+| `farro` | Farro Perlato | sugo | esiste già ("Farro perlato"), riuso diretto |
+| `orzo` | Orzo Perlato | sugo | esiste già ("Orzo perlato"), riuso diretto |
+| `couscous` | Cous Cous | sugo | esiste già ("Cous cous"), riuso diretto |
+| `pane` | Panino | **secondi** (non sugo — regola affettati→pane) | ✅ fatto (A12) |
+| `gnocchi` | Gnocchi | sugo | ✅ fatto (A12) |
+| `ravioli` | Ravioli | sugo | ⏳ decisione aperta: rinominare "Ravioli ricotta e spinaci" esistente (genericizzandolo) o tenerlo separato e creare "Ravioli" a parte? |
+| `tortelli` | Tortellini | sugo | da creare (nuovo ingrediente) |
+
+**Verificato durante l'analisi:** tutti i 17 cereali del budget Set
+(`CARBOIDRATI_PASTO`) risolvono già a un record nutrizionale/allergeni
+completo in `ingredienti.json` — l'infrastruttura dati nutrizione/allergeni
+esiste già, non va costruita da zero. Trovato però un buco reale: "pasta"
+e "pasta_fresca" nel budget Set puntavano allo stesso record ingrediente
+(nutrizione/allergeni identici, incluso mancanza di "uova" come allergene
+per la pasta fresca) — da sistemare quando si decide `pastauovo`.
+
+**Decisioni prese finora (da Cwe):**
+- Le istruzioni di cottura vanno sui **dati dell'ingrediente cereale**
+  (non duplicate in ogni ricetta) — schema proposto: campo
+  `istruzioniCottura: {tempoMinuti, procedimento:[...]}` su ciascuno dei
+  cereali "sugo". Non ancora scritto, in attesa di chiudere la lista
+  cereali sopra.
+- Ponte ricetta↔cereali compatibili: valori binari 0/1 per cereale su ogni
+  ricetta-sugo (stesso meccanismo dei chip già nell'editor, da attivare
+  quando i cereali sono pronti). Esempio dato da Cwe: "ai piselli"
+  abilitato solo su riso+farro → il motore userà quel sugo solo con quei
+  due cereali.
+- Cooldown: il sugo/condimento va in cooldown dopo l'uso e viene escluso
+  dal pasto successivo finché non scade — Cwe ha proposto di riusare
+  `cooldownDays.carboidrati` (default 7gg), già presente in Impostazioni
+  ma **oggi morto/senza effetto sul motore (A8/S8)** — questo lavoro lo
+  renderebbe finalmente vivo.
+- Criterio di scelta automatica del cereale tra i compatibili: proposto da
+  Claude riuso di `E.chooseCarb` (stesso criterio già usato altrove,
+  pesato su meno-usato/meno-recente) — non ancora confermato esplicitamente
+  da Cwe.
+
+**Non ancora deciso / da chiudere prima di scrivere codice:**
+- `pastaduro` e `ravioli`: rinominare l'esistente o creare nuovo separato
+  (vedi tabella sopra).
+- Contenuto esatto di `istruzioniCottura` per ciascuno dei 7 cereali sugo
+  (tempi e procedimento) — Claude ha proposto valori di massima (pasta
+  ~10min, farro ~30-40min, cous cous ~5min a fuoco spento, orzo ~40-50min,
+  gnocchi ~2-3min) da far rivedere a Cwe prima che vadano in produzione.
+- Split del procedimento ricetta in "cottura cereale" (standard, da
+  ingrediente) + "preparazione condimento" (specifico della ricetta) — non
+  ancora progettato nel dettaglio.
+- Nome piatto dinamico (es. "Farro con zucchine" quando il motore assegna
+  farro invece di pasta) — template da definire.
+- La parte di motore vera e propria (`motor.js`): sostituzione dinamica
+  del cereale, ricalcolo nutrizione/allergeni, scalo inventario/spesa sul
+  cereale realmente assegnato — non iniziata, dipende da tutti i punti
+  sopra.
+
+**Nota architetturale da NON perdere:** esiste già nel codice un
+meccanismo simile (`sottoCategoriaModulare:'sugo'` + `carboidratiCompatibili`
++ `CARBOIDRATI_PASTO[k].haPoolSughi`), ma appartiene alla pipeline **v10
+morta** (STRUTTURA §1, `componiPastoModulare` riga 66, mai eseguita a
+runtime). Va integrato nella pipeline attiva (algebra di copertura v78,
+`completaRealizzazioniCopertura`) senza mescolare i due modelli — rischio
+già segnalato in STRUTTURA §1.

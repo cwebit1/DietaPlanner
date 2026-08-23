@@ -1,5 +1,5 @@
 {
-  "versione": 11,
+  "versione": 13,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -120,7 +120,7 @@
         "Aggiungi le zucchine e cuoci altri 5 minuti a fuoco medio-alto, poi unisci i pomodorini negli ultimi 2 minuti.",
         "Scola la pasta al dente conservando un mestolo di acqua di cottura, versala in padella e manteca a fuoco vivace per un minuto, allungando con acqua di cottura se risulta asciutta."
       ],
-      "copertura": "PC+C",
+      "copertura": "PC+C+V",
       "richiedeCottura": true,
       "soloManuale": false,
       "allergeniPresenti": [
@@ -159,7 +159,7 @@
         "Nella stessa padella salta le zucchine a rondelle con l'olio rimasto per 4-5 minuti a fuoco medio-alto, finché dorate.",
         "Componi il piatto con pollo, zucchine e insalata condita a crudo con olio."
       ],
-      "copertura": "PC",
+      "copertura": "PC+V",
       "richiedeCottura": false,
       "soloManuale": false,
       "allergeniPresenti": [],
@@ -290,7 +290,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -327,7 +327,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -421,7 +421,7 @@
           100
         ],
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -639,7 +639,7 @@
           25
         ],
         [
-          "Pane fresco",
+          "Panino",
           100
         ],
         [
@@ -682,7 +682,7 @@
           100
         ],
         [
-          "Pane fresco",
+          "Panino",
           100
         ],
         [
@@ -883,7 +883,7 @@
           120
         ],
         [
-          "Pane fresco",
+          "Panino",
           100
         ],
         [
@@ -967,7 +967,7 @@
           200
         ],
         [
-          "Pane fresco",
+          "Panino",
           100
         ]
       ],
@@ -1040,7 +1040,7 @@
           165
         ],
         [
-          "Pane fresco",
+          "Panino",
           100
         ],
         [
@@ -1233,7 +1233,7 @@
           200
         ],
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -1262,7 +1262,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -1332,7 +1332,7 @@
           60
         ],
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -1431,7 +1431,7 @@
       "sottotipoSpuntino": "pane_marmellata_spuntino",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           25
         ],
         [
@@ -1536,7 +1536,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -1694,7 +1694,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -3119,7 +3119,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -3228,7 +3228,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -3259,7 +3259,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -3326,7 +3326,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -3447,7 +3447,7 @@
       "tipoPortata": "spuntino",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           20
         ],
         [
@@ -3620,7 +3620,7 @@
       "tipoPortata": "spuntino",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           25
         ],
         [
@@ -3709,7 +3709,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -3775,7 +3775,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -3842,7 +3842,7 @@
       "tipoPortata": "colazione",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -3875,7 +3875,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -3993,7 +3993,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -4235,7 +4235,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -4317,7 +4317,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -4394,7 +4394,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -4515,7 +4515,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -4591,7 +4591,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -5266,7 +5266,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           100
         ],
         [
@@ -5300,7 +5300,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -5455,7 +5455,7 @@
       "tipoPortata": "secondo",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           100
         ],
         [
@@ -5575,7 +5575,7 @@
       "tipoPortata": "secondo",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           80
         ],
         [
@@ -5838,7 +5838,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -5879,7 +5879,7 @@
           80
         ],
         [
-          "Pane fresco",
+          "Panino",
           50
         ],
         [
@@ -6032,7 +6032,7 @@
       "tipoPortata": "secondo",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           80
         ],
         [
@@ -6067,7 +6067,7 @@
       "tipoPortata": "secondo",
       "ingredienti": [
         [
-          "Pane fresco",
+          "Panino",
           75
         ],
         [
@@ -6272,7 +6272,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -6616,7 +6616,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -6880,7 +6880,7 @@
           125
         ],
         [
-          "Pane fresco",
+          "Panino",
           80
         ],
         [
@@ -6981,7 +6981,7 @@
           125
         ],
         [
-          "Pane fresco",
+          "Panino",
           80
         ],
         [
@@ -7186,7 +7186,7 @@
           125
         ],
         [
-          "Pane fresco",
+          "Panino",
           80
         ],
         [
@@ -7455,7 +7455,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -7497,7 +7497,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -7539,7 +7539,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -7657,7 +7657,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Gnocchi di patate",
+          "Gnocchi",
           175
         ],
         [
@@ -7695,7 +7695,7 @@
       "tipoPortata": "primo",
       "ingredienti": [
         [
-          "Gnocchi di patate",
+          "Gnocchi",
           175
         ],
         [
@@ -7971,7 +7971,7 @@
           25
         ],
         [
-          "Pane fresco",
+          "Panino",
           15
         ],
         [
@@ -8006,7 +8006,7 @@
           125
         ],
         [
-          "Pane fresco",
+          "Panino",
           15
         ],
         [
@@ -8604,7 +8604,7 @@
           10
         ],
         [
-          "Pane fresco",
+          "Panino",
           15
         ]
       ],
@@ -8631,7 +8631,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -8997,7 +8997,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [
@@ -9078,7 +9078,7 @@
       "tipoPortata": "unico",
       "ingredienti": [
         [
-          "Riso Arborio",
+          "Riso Originario",
           75
         ],
         [

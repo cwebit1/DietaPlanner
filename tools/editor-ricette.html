@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisione ricette — DietaPlanner</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --border:#2a2f3a; --text:#e6e8ec; --muted:#8b92a3;
+    --accent:#4f8cff; --danger:#e5484d; --ok:#3fb950;
+    --chip-off:#232733; --chip-off-b:#333947;
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:12px;}
+  h1{font-size:18px;margin:0 0 4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:14px;}
+  .toolbar{position:sticky;top:0;background:var(--bg);padding:8px 0 12px;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--border);margin-bottom:10px;}
+  .toolbar input[type=text],.toolbar input[type=password]{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:14px;}
+  #ghToken{flex:1;min-width:160px;}
+  #ghRepo{width:190px;}
+  #ghPath{width:110px;}
+  #ghBranch{width:80px;}
+  .status{font-size:12px;color:var(--muted);width:100%;min-height:16px;}
+  .status.err{color:var(--danger);}
+  .status.ok{color:var(--ok);}
+  select{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:7px 8px;border-radius:8px;font-size:13px;}
+  button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:14px;cursor:pointer;font-weight:600;}
+  button.secondary{background:var(--panel);border:1px solid var(--border);color:var(--text);font-weight:500;}
+  button:disabled{opacity:.4;cursor:default;}
+  .stats{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 10px;}
+  .stats b{color:var(--text);}
+  .empty{color:var(--muted);text-align:center;padding:60px 10px;font-size:14px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{background:var(--bg);text-align:left;padding:6px 6px;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--border);}
+  tbody tr.deleted{opacity:.35;}
+  tbody tr.edited td.nome-cell{box-shadow:inset 3px 0 0 var(--accent);}
+  td{padding:8px 6px;vertical-align:top;}
+  .idx{color:var(--muted);width:34px;}
+  .nome-cell input{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 8px;border-radius:6px;font-size:13px;}
+  .chips{display:flex;flex-wrap:wrap;gap:4px;min-width:190px;}
+  .chip{background:var(--chip-off);border:1px solid var(--chip-off-b);color:var(--muted);padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;user-select:none;}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .chip.on.veg{background:var(--ok);border-color:var(--ok);}
+  .del-cell{text-align:center;}
+  .del-cell input{width:18px;height:18px;accent-color:var(--danger);cursor:pointer;}
+  .tag{display:inline-block;background:var(--chip-off);border-radius:5px;padding:1px 6px;margin-right:3px;}
+  footer{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--border);padding:12px 0 4px;margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+
+<h1>Revisione ricette — copertura P/C/V</h1>
+<div class="sub">Carica <code>ricette.json</code>, correggi nome e sigla di copertura, flagga da eliminare, poi scarica il file aggiornato.</div>
+
+<div class="toolbar" id="toolbar">
+  <input type="password" id="ghToken" placeholder="Token GitHub (mai salvato)">
+  <input type="text" id="ghRepo" placeholder="owner/repo" value="cwebit1/DietaPlanner">
+  <input type="text" id="ghPath" placeholder="path" value="ricette.json">
+  <input type="text" id="ghBranch" placeholder="branch" value="main">
+  <button id="btnLoad">Carica da GitHub</button>
+  <input type="text" id="searchBox" placeholder="Cerca per nome…" disabled style="flex:1;min-width:140px;">
+  <select id="filterTipo" disabled>
+    <option value="">Tutti i tipi</option>
+  </select>
+  <select id="filterStato" disabled>
+    <option value="">Tutte</option>
+    <option value="edited">Solo modificate</option>
+    <option value="deleted">Solo da eliminare</option>
+  </select>
+  <div class="status" id="ghStatus"></div>
+</div>
+
+<div class="stats" id="stats" style="display:none;">
+  <span>Totale: <b id="statTot">0</b></span>
+  <span>Modificate: <b id="statEdited">0</b></span>
+  <span>Da eliminare: <b id="statDeleted">0</b></span>
+  <span>Visualizzate: <b id="statShown">0</b></span>
+</div>
+
+<div id="emptyMsg" class="empty">Carica un file ricette.json per iniziare.</div>
+<div style="overflow-x:auto;">
+<table id="tbl" style="display:none;">
+  <thead>
+    <tr>
+      <th class="idx">#</th>
+      <th style="min-width:220px;">Nome ricetta</th>
+      <th>Copertura</th>
+      <th class="del-cell">Elimina</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+</div>
+
+<footer id="footer" style="display:none;">
+  <button id="btnSave">Salva su GitHub (commit + push)</button>
+  <button class="secondary" id="btnReset">Annulla tutte le modifiche</button>
+  <span class="sub" style="margin:0;">Nessuna modifica viene applicata finché non premi Salva.</span>
+</footer>
+
+<script>
+const P_TOKENS = ['PC','PP','PF','PU','PL'];
+const ALL_TOKENS = [...P_TOKENS, 'C', 'V'];
+const CARB_KEYS = [
+  {k:'pasta', l:'Pasta'}, {k:'pasta_fresca', l:'P.fresca'}, {k:'riso', l:'Riso'},
+  {k:'farro', l:'Farro'}, {k:'orzo', l:'Orzo'}, {k:'cous_cous', l:'C.cous'},
+  {k:'pane', l:'Pane'}, {k:'patate', l:'Patate'}, {k:'polenta', l:'Polenta'},
+  {k:'gnocchi', l:'Gnocchi'}, {k:'pasta_ripiena', l:'P.ripiena'}, {k:'gallette', l:'Gallette'},
+  {k:'crackers', l:'Crackers'}, {k:'friselle', l:'Friselle'}, {k:'taralli', l:'Taralli'},
+  {k:'piadina', l:'Piadina'}, {k:'pasta_sfoglia', l:'P.sfoglia'}
+];
+const CARB_ORDER = CARB_KEYS.map(c=>c.k);
+
+let data = null;          // { versione, ricette: [...] } — originale, mai mutato direttamente
+let rows = [];            // stato di lavoro: { orig, nome, copertura:Set, deleted:bool, index }
+let ghSha = null;         // sha del blob corrente su GitHub, richiesto per il commit di aggiornamento
+
+function b64EncodeUtf8(str){
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_,p1)=>String.fromCharCode('0x'+p1)));
+}
+function b64DecodeUtf8(str){
+  return decodeURIComponent(atob(str.replace(/\n/g,'')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+function ghApiUrl(){
+  const repo = document.getElementById('ghRepo').value.trim();
+  const path = document.getElementById('ghPath').value.trim();
+  return `https://api.github.com/repos/${repo}/contents/${path}`;
+}
+function setStatus(msg, kind){
+  const el = document.getElementById('ghStatus');
+  el.textContent = msg;
+  el.className = 'status' + (kind ? ' '+kind : '');
+}
+
+
+function parseCoverage(str){
+  const set = new Set();
+  String(str||'').split('+').map(s=>s.trim()).filter(Boolean).forEach(t=>set.add(t));
+  return set;
+}
+function buildCoverage(set){
+  const parts = [];
+  P_TOKENS.forEach(t=>{ if(set.has(t)) parts.push(t); });
+  if(set.has('C')) parts.push('C');
+  if(set.has('V')) parts.push('V');
+  return parts.join('+');
+}
+
+async function loadFromGithub(){
+  const token = document.getElementById('ghToken').value.trim();
+  if(!token){ setStatus('Inserisci il token GitHub.', 'err'); return; }
+  setStatus('Carico da GitHub…');
+  document.getElementById('btnLoad').disabled = true;
+  try{
+    const branch = document.getElementById('ghBranch').value.trim() || 'main';
+    const res = await fetch(ghApiUrl() + `?ref=${encodeURIComponent(branch)}`, {
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' }
+    });
+    if(!res.ok) throw new Error(`GitHub GET ${res.status}: ${(await res.json()).message || res.statusText}`);
+    const meta = await res.json();
+    ghSha = meta.sha;
+    const json = JSON.parse(b64DecodeUtf8(meta.content));
+    if(!json || !Array.isArray(json.ricette)) throw new Error('Il file non contiene un array "ricette".');
+    data = json;
+    rows = json.ricette.map((r, idx)=>({
+      orig: r,
+      index: idx,
+      nome: r.nome || '',
+      copertura: parseCoverage(r.copertura),
+      deleted: false
+    }));
+    initFilters();
+    render();
+    setStatus(`Caricato: ${rows.length} ricette (versione ${json.versione}, sha ${ghSha.slice(0,7)}).`, 'ok');
+  }catch(err){
+    setStatus('Errore: ' + err.message, 'err');
+  }finally{
+    document.getElementById('btnLoad').disabled = false;
+  }
+}
+
+function initFilters(){
+  const tipi = [...new Set(rows.map(r=>r.orig.tipoPortata || '—'))].sort();
+  const sel = document.getElementById('filterTipo');
+  sel.innerHTML = '<option value="">Tutti i tipi</option>' + tipi.map(t=>`<option value="${t}">${t}</option>`).join('');
+  document.getElementById('searchBox').disabled = false;
+  document.getElementById('filterTipo').disabled = false;
+  document.getElementById('filterStato').disabled = false;
+  document.getElementById('emptyMsg').style.display = 'none';
+  document.getElementById('tbl').style.display = 'table';
+  document.getElementById('stats').style.display = 'flex';
+  document.getElementById('footer').style.display = 'flex';
+}
+
+function isEdited(row){
+  return row.nome !== (row.orig.nome || '') || buildCoverage(row.copertura) !== (row.orig.copertura || '');
+}
+
+function currentFilters(){
+  return {
+    q: document.getElementById('searchBox').value.trim().toLowerCase(),
+    tipo: document.getElementById('filterTipo').value,
+    stato: document.getElementById('filterStato').value
+  };
+}
+
+function render(){
+  const { q, tipo, stato } = currentFilters();
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  let shown = 0, editedCount = 0, deletedCount = 0;
+
+  rows.forEach(row=>{
+    if(isEdited(row)) editedCount++;
+    if(row.deleted) deletedCount++;
+
+    if(q && !row.nome.toLowerCase().includes(q) && !(row.orig.nome||'').toLowerCase().includes(q)) return;
+    if(tipo && (row.orig.tipoPortata||'—') !== tipo) return;
+    if(stato==='edited' && !isEdited(row)) return;
+    if(stato==='deleted' && !row.deleted) return;
+
+    shown++;
+    const tr = document.createElement('tr');
+    tr.className = (row.deleted?'deleted ':'') + (isEdited(row)?'edited':'');
+
+    const tdIdx = document.createElement('td');
+    tdIdx.className = 'idx';
+    tdIdx.textContent = row.index + 1;
+
+    const tdNome = document.createElement('td');
+    tdNome.className = 'nome-cell';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = row.nome;
+    inp.addEventListener('input', ()=>{ row.nome = inp.value; updateRowClasses(tr, row); updateStats(); });
+    tdNome.appendChild(inp);
+
+    const tdCop = document.createElement('td');
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    ALL_TOKENS.forEach(tok=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (row.copertura.has(tok)?' on':'') + (tok==='V'?' veg':'');
+      chip.textContent = tok;
+      chip.addEventListener('click', ()=>{
+        if(row.copertura.has(tok)) row.copertura.delete(tok); else row.copertura.add(tok);
+        chip.classList.toggle('on');
+        updateRowClasses(tr, row);
+        updateStats();
+      });
+      chips.appendChild(chip);
+    });
+    tdCop.appendChild(chips);
+
+    const tdDel = document.createElement('td');
+    tdDel.className = 'del-cell';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = row.deleted;
+    cb.addEventListener('change', ()=>{
+      row.deleted = cb.checked;
+      tr.classList.toggle('deleted', row.deleted);
+      updateStats();
+    });
+    tdDel.appendChild(cb);
+
+    tr.append(tdIdx, tdNome, tdCop, tdDel);
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('statTot').textContent = rows.length;
+  document.getElementById('statEdited').textContent = editedCount;
+  document.getElementById('statDeleted').textContent = deletedCount;
+  document.getElementById('statShown').textContent = shown;
+}
+
+function updateRowClasses(tr, row){
+  tr.classList.toggle('edited', isEdited(row));
+}
+
+function updateStats(){
+  const editedCount = rows.filter(isEdited).length;
+  const deletedCount = rows.filter(r=>r.deleted).length;
+  document.getElementById('statEdited').textContent = editedCount;
+  document.getElementById('statDeleted').textContent = deletedCount;
+}
+
+document.getElementById('btnLoad').addEventListener('click', loadFromGithub);
+document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('filterTipo').addEventListener('change', render);
+document.getElementById('filterStato').addEventListener('change', render);
+
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  if(!data) return;
+  if(!confirm('Annullare tutte le modifiche non salvate?')) return;
+  rows = data.ricette.map((r, idx)=>({
+    orig: r, index: idx, nome: r.nome||'', copertura: parseCoverage(r.copertura), deleted:false
+  }));
+  render();
+});
+
+document.getElementById('btnSave').addEventListener('click', async ()=>{
+  if(!data || !ghSha) return;
+  const token = document.getElementById('ghToken').value.trim();
+  if(!token){ setStatus('Inserisci il token GitHub.', 'err'); return; }
+  const editedCount = rows.filter(isEdited).length;
+  const deletedCount = rows.filter(r=>r.deleted).length;
+  if(!confirm(`Salvare su GitHub: ${editedCount} ricette modificate, ${deletedCount} eliminate?`)) return;
+
+  const rimaste = rows.filter(r=>!r.deleted);
+  const nuoveRicette = rimaste.map(r=>{
+    const out = Object.assign({}, r.orig);
+    out.nome = r.nome;
+    out.copertura = buildCoverage(r.copertura);
+    return out;
+  });
+  const nuovaVersione = (typeof data.versione === 'number') ? data.versione + 1 : data.versione;
+  const output = Object.assign({}, data, { versione: nuovaVersione, ricette: nuoveRicette });
+  const contentB64 = b64EncodeUtf8(JSON.stringify(output, null, 2));
+  const branch = document.getElementById('ghBranch').value.trim() || 'main';
+
+  setStatus('Salvo su GitHub…');
+  document.getElementById('btnSave').disabled = true;
+  try{
+    const res = await fetch(ghApiUrl(), {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `Revisione ricette: ${editedCount} modificate, ${deletedCount} eliminate (v${nuovaVersione})`,
+        content: contentB64,
+        sha: ghSha,
+        branch: branch
+      })
+    });
+    const resJson = await res.json();
+    if(!res.ok) throw new Error(`GitHub PUT ${res.status}: ${resJson.message || res.statusText}`);
+    ghSha = resJson.content.sha;
+    data = output;
+    rows = output.ricette.map((r, idx)=>({ orig:r, index:idx, nome:r.nome||'', copertura:parseCoverage(r.copertura), deleted:false }));
+    render();
+    setStatus(`Salvato — commit ${resJson.commit.sha.slice(0,7)}, versione ${nuovaVersione}.`, 'ok');
+  }catch(err){
+    setStatus('Errore nel salvataggio: ' + err.message, 'err');
+  }finally{
+    document.getElementById('btnSave').disabled = false;
+  }
+});
+</script>
+</body>
+</html>

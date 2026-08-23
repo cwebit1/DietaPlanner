@@ -1,25 +1,6 @@
 {
-  "versione": 6,
+  "versione": 7,
   "ingredienti": {
-    "Riso Arborio": {
-      "kcal": 332,
-      "proteine": 6.7,
-      "carboidrati": 75,
-      "grassi": 0.6,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Pasta corta": {
       "kcal": 350,
       "proteine": 12,
@@ -29,27 +10,6 @@
       "deperibilita": "bassa",
       "conservazione": "lunga",
       "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Pane fresco": {
-      "kcal": 275,
-      "proteine": 9,
-      "carboidrati": 56,
-      "grassi": 1.2,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 100,
       "gradimento": 1,
       "stock": 1,
       "formatoRiordino": {
@@ -2575,27 +2535,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Gnocchi di patate": {
-      "kcal": 140,
-      "proteine": 3.1,
-      "carboidrati": 30,
-      "grassi": 0.5,
-      "gruppo": "carboidrati",
-      "deperibilita": "media",
-      "conservazione": "fresco",
-      "porzione": 175,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Gorgonzola": {
       "kcal": 330,
       "proteine": 19,
@@ -2840,6 +2779,67 @@
       ],
       "bloccoManuale": false,
       "fonteNutrizionale": "CREA 000710, proxy pizza con pomodoro"
+    },
+    "Riso Originario": {
+      "kcal": 332,
+      "proteine": 6.7,
+      "carboidrati": 75,
+      "grassi": 0.6,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Panino": {
+      "kcal": 275,
+      "proteine": 9,
+      "carboidrati": 56,
+      "grassi": 1.2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Gnocchi": {
+      "kcal": 140,
+      "proteine": 3.1,
+      "carboidrati": 30,
+      "grassi": 0.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
     }
   }
 }
