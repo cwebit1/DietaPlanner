@@ -1,5 +1,5 @@
 {
-  "versione": 11,
+  "versione": 12,
   "ricette": [
     {
       "nome": "Uova strapazzate con zucchine e parmigiano",
@@ -120,7 +120,7 @@
         "Aggiungi le zucchine e cuoci altri 5 minuti a fuoco medio-alto, poi unisci i pomodorini negli ultimi 2 minuti.",
         "Scola la pasta al dente conservando un mestolo di acqua di cottura, versala in padella e manteca a fuoco vivace per un minuto, allungando con acqua di cottura se risulta asciutta."
       ],
-      "copertura": "PC+C",
+      "copertura": "PC+C+V",
       "richiedeCottura": true,
       "soloManuale": false,
       "allergeniPresenti": [
@@ -159,7 +159,7 @@
         "Nella stessa padella salta le zucchine a rondelle con l'olio rimasto per 4-5 minuti a fuoco medio-alto, finché dorate.",
         "Componi il piatto con pollo, zucchine e insalata condita a crudo con olio."
       ],
-      "copertura": "PC",
+      "copertura": "PC+V",
       "richiedeCottura": false,
       "soloManuale": false,
       "allergeniPresenti": [],
