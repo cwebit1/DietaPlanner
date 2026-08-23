@@ -195,73 +195,110 @@ rigenerazione reale di settimane pulite):
 > ricetta coerente con la sigla matematica. Da leggere sempre prima di
 > proporre o applicare una correzione.
 
-## Lavoro in corso ADESSO (non ancora applicato — riprendere da qui)
+## Lavoro prioritario in corso ADESSO (non ancora applicato — riprendere da qui)
 
-**Punto attivo: A4 (affettati→pane) + A5 (patate→piatto unico), insieme.**
+**Punto attivo: revisione e adeguamento standardizzato di TUTTE le ricette
+al sistema di copertura matematico C / V / PC / PP / PF / PU / PL, più
+correzione dei nomi ricetta incoerenti con la sigla.**
 
-Analisi completata, **in attesa di conferma finale di Cwe prima di
-applicare**. Stato preciso:
+Questo è il lavoro prioritario **in sé**, non un dettaglio dentro un altro
+task. È nato mentre si analizzava A4+A5, ma lo scope reale è più ampio: lo
+`ricette.json` attuale è — parole di Cwe — **"un mix di più versioni mai
+standardizzato ad una sola"**, e l'obiettivo è renderlo un sistema
+matematico coerente, dove:
+- la sigla `copertura` di ogni ricetta riflette esattamente e per intero
+  cosa la ricetta copre davvero (nessun carboidrato "nascosto" senza C,
+  nessuna verdura sotto soglia contata come V, nessuna proteina persa);
+- il **nome** della ricetta non promette mai più di quanto la sigla
+  riconosce (niente "... con verdure" se la verdura reale non raggiunge la
+  soglia V) — vedi regole 3 e 4 di `METODOLOGIA-LAVORO.md`.
 
-1. **A4**: confermato che non serve toccare `ricette.json`. Le 4 ricette
-   "affettati" composte (Pasta con pancetta, Risotto con pancetta, Pasta
-   con bresaola, Farro con prosciutto) hanno già copertura coerente (C da
-   un carboidrato vero, non da pane) — sono piatti completi legittimi. Il
-   fix resta tutto nel codice (vedi STRUTTURA §3), da implementare nel
-   punto dove si cerca il carboidrato mancante, così da non toccare mai
-   questi 4 piatti (non ci passano perché già completi sul fronte C).
+**A4 e A5 (le due anomalie originarie) restano il motivo per cui si è
+aperto questo lavoro, e la parte di codice che le riguarda (regola
+affettati→pane, regola patate→piatto unico) va scritta DOPO aver
+completato/consolidato questa revisione dati**, non prima — altrimenti si
+rischia di scrivere codice sulla base di dati ancora incoerenti.
 
-2. **A5**: servono due interventi sincronizzati (dati + codice):
-   - **Dati — 15 ricette da correggere in `ricette.json`, non ancora
-     applicato:**
-     - 8 ricette con patate 150g (Branzino al forno con patate, Sovracosce
-       di pollo al forno con patate, Costine di maiale con patate al forno,
-       Hamburger di suino/pollo/vitello con patate ×3, Seppie in umido con
-       patate, Insalata di polpo e patate) → aggiungere "C" alla copertura
-       (oggi manca, le analoghe da 325g ce l'hanno già).
-     - **Rinomina + aggiunta C, 4 ricette "hamburger al pane"** (nome
-       italiano scorretto + copertura incompleta):
-       - "Hamburger di suino al pane" → **"Panino con hamburger di suino"**
-       - "Hamburger di pollo al pane con verdure" → **"Panino con hamburger
-         di pollo"** (tolto "e verdure": la verdura reale [insalata 40g +
-         peperoni 50g] non raggiunge la soglia V, resta come ingrediente ma
-         il nome non deve promettere una copertura che la sigla non
-         riconosce — regola 4 di `METODOLOGIA-LAVORO.md`)
-       - "Hamburger di tacchino al pane integrale" → **"Panino integrale
-         con hamburger di tacchino"**
-       - "Hamburger di vitello al pane con radicchio" → **"Panino con
-         hamburger di vitello"** (tolto "e radicchio", stesso motivo:
-         radicchio 40g sotto soglia)
-     - **Solo aggiunta C** (nomi già corretti, nessuna verdura promessa nel
-       nome da correggere): Cous cous con sovracosce di pollo, Zuppa
-       cereali e legumi in brodo, Friselle con pomodori/cetrioli/fagioli
-       cannellini, Lasagna di verdure con besciamella (quest'ultima ha già
-       V corretto, 200g zucchine+melanzane — resta C+PF+V).
-     - **Verificato**: nessuno di questi nomi è referenziato altrove nel
-       codice (le ricette si agganciano sempre per `id`), rinominare è
-       sicuro.
-     - **Lasciate esplicitamente fuori** (in attesa di eventuale
-       correzione diversa da Cwe): 6 ricette "impanate/gratinate" (Provola
-       impanata, Tomini in carrozza, Cotoletta di pollo con emmental,
-       Scaloppine al taleggio, Alici gratinate al forno, Sardine al forno
-       con pangrattato) — il pangrattato non è considerato una vera
-       porzione di carboidrato, quindi non gli si aggiunge C.
-   - **Codice — non ancora scritto**: caso speciale a runtime per "patate
-     nel secondo → non cercare nemmeno un contorno" (la V non può essere
-     rappresentata nella sigla statica per patate, per una regola già
-     nota — vedi STRUTTURA §4). Da scrivere DOPO aver applicato la
-     correzione dati sopra, sulla base dei dati corretti.
+### Cosa è già stato fatto in questa direzione (analisi, non ancora applicato)
 
-**Domanda aperta a Cwe, ancora senza risposta**: estendere subito il
-controllo "nome vs sigla coerente" (quello che ha fatto emergere il caso
-hamburger) a **tutte le altre ~310 ricette** del database (finora
-verificato sistematicamente solo il gruppo di 38 mismatch copertura
-individuato in precedenza, non un controllo testuale nome-per-nome su
-tutte), o tenerlo come task separato dopo aver chiuso A4/A5.
+Un primo confronto sistematico sigla-salvata vs sigla-ricalcolata dagli
+ingredienti reali (`E.coverageForRecipe`, forzando il ricalcolo — vedi
+`AUDIT-STRUTTURA-LOGICA.md` per il dettaglio del metodo, che ha anche
+scoperto un bug nella funzione di ricalcolo stessa, dead code su nomi
+ingrediente in formato oggetto) ha già isolato un primo gruppo di **15
+ricette su 326** con sigla da correggere (manca C, o nome incoerente con
+la V reale). Elenco completo, con i nomi già decisi da Cwe, più sotto in
+questa sezione. Questo primo gruppo **non è ancora stato applicato a
+`ricette.json`**.
 
-**Prossimo passo appena Cwe conferma**: applicare le 15 modifiche a
-`ricette.json` (bump versione da 11 a 12, seguendo la prassi già in uso nel
-repo), poi scrivere il codice per A4+A5, poi verificare dal vivo, poi
-push.
+### Cosa manca per completare la revisione (non ancora fatto)
+
+Il controllo finora è stato **mirato** (patate, affettati, e i 38
+mismatch emersi dal ricalcolo automatico) — non è ancora stata fatta una
+verifica **sistematica e completa** su tutte le ~326 ricette, in
+particolare:
+- Un controllo testuale nome-vs-sigla su tutte le ricette (non solo quelle
+  capitate nell'analisi mirata) per trovare altri casi come "hamburger al
+  pane"/"con verdure" fuorvianti.
+- Estendere il controllo sigla anche alle ricette di colazione e spuntino
+  (finora il confronto ha riguardato solo pranzo/cena: unico/primo/
+  secondo/contorno/modulare).
+- Decidere il caso delle 6 ricette "impanate/gratinate" (pangrattato conta
+  come C oppure no — lasciate fuori dal primo giro in attesa di risposta
+  di Cwe, vedi sotto).
+
+### Le 15 correzioni già decise da Cwe (primo gruppo, pronte per essere applicate)
+
+**Rinomina + aggiunta C (4 ricette "hamburger al pane" — nome scorretto in
+italiano + copertura incompleta + nome che promette una V inesistente):**
+- "Hamburger di suino al pane" → **"Panino con hamburger di suino"**
+- "Hamburger di pollo al pane con verdure" → **"Panino con hamburger di
+  pollo"** (tolto "e verdure": la verdura reale [insalata 40g + peperoni
+  50g] non raggiunge la soglia V — resta come ingrediente per il conteggio
+  nutrienti, ma il nome non deve promettere una copertura che la sigla non
+  riconosce)
+- "Hamburger di tacchino al pane integrale" → **"Panino integrale con
+  hamburger di tacchino"**
+- "Hamburger di vitello al pane con radicchio" → **"Panino con hamburger
+  di vitello"** (tolto "e radicchio", stesso motivo: 40g sotto soglia)
+
+**Solo aggiunta C, nome già corretto (11 ricette):**
+- 8 con patate 150g: Branzino al forno con patate, Sovracosce di pollo al
+  forno con patate, Costine di maiale con patate al forno, Hamburger di
+  suino/pollo/vitello alla piastra/al forno con patate (×3), Seppie in
+  umido con patate, Insalata di polpo e patate.
+- Cous cous con sovracosce di pollo, Zuppa cereali e legumi in brodo,
+  Friselle con pomodori/cetrioli/fagioli cannellini, Lasagna di verdure
+  con besciamella (quest'ultima ha già V corretta, 200g zucchine+melanzane
+  — resta C+PF+V).
+
+**Verificato**: nessuno di questi nomi è referenziato altrove nel codice
+(le ricette si agganciano sempre per `id`), rinominare è sicuro.
+
+**Lasciate esplicitamente fuori dal primo giro** (in attesa di decisione
+di Cwe): 6 ricette "impanate/gratinate" (Provola impanata, Tomini in
+carrozza, Cotoletta di pollo con emmental, Scaloppine al taleggio, Alici
+gratinate al forno, Sardine al forno con pangrattato) — il pangrattato non
+è stato considerato una vera porzione di carboidrato, quindi non gli si è
+aggiunto C, ma non è una decisione definitiva.
+
+### Prossimo passo appena si riprende
+
+1. Decidere con Cwe se completare prima la verifica sistematica
+   nome-vs-sigla su tutte le ~326 ricette (compresi colazione/spuntino) —
+   oppure applicare subito le 15 già pronte e proseguire la revisione a
+   seguire.
+2. Applicare le correzioni a `ricette.json` (bump versione da 11 a 12,
+   prassi già in uso nel repo).
+3. Solo dopo: scrivere il codice per A4 (regola affettati→pane, nel punto
+   dove si cerca il carboidrato mancante — non serve toccare ricette.json
+   per questa parte, i 4 piatti "affettati" composti restano com'erano) e
+   A5 (caso runtime "patate nel secondo → non cercare un contorno", la V
+   non è rappresentabile nella sigla statica per patate — vedi STRUTTURA
+   §4).
+4. Verificare dal vivo, `git diff`, commit, push, aggiornare questi
+   documenti.
+
 
 ## Stato: prima passata di audit completa
 
