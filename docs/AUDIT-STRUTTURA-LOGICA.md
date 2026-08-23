@@ -483,7 +483,165 @@ morte" senza dover leggere tutto §8.
 
 ---
 
-## §10. `E.buildProteinGrid` può concentrare la stessa macro su un solo giorno
+## §11. Selezione contorno: il filtro "fresco prioritario" collassa a un solo candidato quando gli altri articoli "fresco" scarseggiano o sono esclusi — causa dominante di A7
+
+**Questa è la causa radice più precisa e dominante dell'anomalia A7** (più
+specifica di quanto scritto in §8, che resta comunque valida come causa
+concorrente per la parte "cooldown mai letto").
+
+**File:** `engine-core.js`, `vegetableTier()` e `chooseVegetable()`.
+
+`vegetableTier(meta)` classifica ogni variante verdura in 4 livelli, in
+base a due soli campi (`categoria` e `deperibilita` sulla variante/base
+ingrediente):
+```js
+function vegetableTier(meta){
+  if(!meta)return 'surgelato';
+  if(meta.categoria==='surgelato'||meta.zona==='freezer')return 'surgelato';
+  if(meta.categoria==='fresco'&&meta.deperibilita==='alta')return 'fresco';
+  if(meta.categoria==='fresco'||meta.deperibilita==='media')return 'fresco_duraturo';
+  return 'confezionato';
+}
+```
+`chooseVegetable()` poi **impone una precedenza assoluta e non sfumata** al
+tier più alto disponibile con scorta sufficiente:
+```js
+const stockedFresh=pool.filter(x=>x.inStock&&x.tier==='fresco');
+if(stockedFresh.length)pool=stockedFresh;   // <-- se anche 1 solo elemento, diventa TUTTO il pool
+else{ ... }
+```
+Se in un dato momento **un solo** articolo soddisfa `tier==='fresco' &&
+scorta≥porzione`, quell'articolo diventa l'**intero pool di scelta**, anche
+se altri 10+ articoli con tier più basso hanno scorte abbondanti. Non è un
+bug di "rotazione" mancante — è un filtro a cascata che, quando il livello
+più alto si restringe a 1, **elimina ogni alternativa dal pool prima
+ancora che la rotazione/`oldest()` entri in gioco**.
+
+**Verificato empiricamente il perché questo si verifica facilmente con i
+dati di partenza:** su 26 varianti "verdura" nel database, solo 11 sono
+classificate `categoria:'fresco'` (le altre 15 sono `'conf'`, anche quando
+si tratta di verdure fresche generiche come Broccoli, Carote, Peperoni,
+Melanzane, Cavolfiore — finiscono nel tier `fresco_duraturo`, un gradino
+sotto). Delle 11 in tier "fresco", **le scorte di default sono quasi
+sempre uguali o inferiori alla singola porzione richiesta** (200g per la
+maggior parte, 70g per le insalate):
+```
+Spinaci freschi:  200g in scorta, porzione 200g → esattamente al limite (inStock true)
+Zucchine:         200g in scorta, porzione 200g → esattamente al limite (inStock true)
+Insalata mista:    80g in scorta, porzione  70g → di poco sopra (inStock true)
+Pomodoro fresco:  150g in scorta, porzione 200g → SOTTO soglia (inStock false)
+Radicchio:        100g in scorta, porzione 200g → SOTTO soglia (inStock false)
+Funghi champignon: non presente in inventario di default → inStock false
+```
+Con un margine così risicato, basta che **un solo** articolo del tier
+"fresco" venga escluso (verdura disattivata dall'utente) o esaurito (uso
+precedente nella stessa finestra, o mai rifornito abbastanza) perché il
+pool `stockedFresh` collassi a **un singolo elemento rimasto**, che a
+quel punto viene riproposto ad ogni chiamata successiva **senza eccezioni**,
+per l'intera durata della finestra di scorte (l'inventario non viene mai
+decrementato durante la sola "generazione" — solo al consumo reale, quindi
+lo stesso identico stato di magazzino vale per tutti e 14 gli slot della
+settimana generata in un colpo solo).
+
+**Riprodotto live, deterministicamente:** disattivando le due verdure più
+usate ("Zucchine" già esaurita da un test precedente, "Insalata mista"
+disattivata a mano) e rigenerando una settimana pulita, il contorno
+proposto è risultato **"Spinaci saltati" in 13 casi su 13** (100%), perché
+era rimasto l'unico articolo del tier "fresco" ancora con scorta
+sufficiente — nonostante altri 15+ contorni con verdure ben rifornite
+(Broccoli 300g, Carote 200g, Melanzane 200g, Peperoni 150g) fossero
+disponibili un gradino sotto.
+
+**Target di funzionamento:** `REGOLE_FLUSSO_LOGICO.md` §6 dice: *"Finché
+c'è verdura fresca con quantità ≥ porzione, niente verdure cotte di
+default; il fresco **si alterna** per non ripetere lo stesso contorno."*
+La parola chiave è "si alterna": la regola presuppone che ci sia più di
+un'opzione fresca tra cui alternare. Il codice fa esattamente ciò che dice
+la regola quando c'è più di un'opzione — il problema è che, con i dati di
+partenza attuali, spesso non c'è.
+
+**Peculiarità da rispettare se si interviene — due livelli distinti, come
+già visto per §4:**
+1. **Livello dati**: rivedere la classificazione `categoria` delle 15
+   varianti verdura oggi marcate `'conf'` (specialmente quelle
+   genuinamente fresche come Broccoli, Carote, Peperoni, Melanzane,
+   Cavolfiore) e/o alzare le scorte di default per lasciare margine reale
+   sopra la porzione richiesta — **da concordare con Cwe voce per voce**,
+   perché "conf" potrebbe essere una scelta consapevole per alcune (es.
+   Carote "conf" può riflettere davvero l'abitudine di comprarle
+   confezionate) e non va cambiata in blocco senza conferma.
+2. **Livello codice**: valutare se il salto "fresco → fresco_duraturo →
+   confezionato" debba restare un cut-off assoluto (`if(stockedFresh.length)
+   pool=stockedFresh`) o diventare più permissivo quando il tier più alto
+   ha **pochissime alternative** (es. includere anche il tier successivo
+   quando il pool si riduce sotto una soglia minima di varietà, non solo
+   quando è a zero). Qualunque soglia si scelga, **va decisa con Cwe** (non
+   è specificata da nessuna parte in `REGOLE_FLUSSO_LOGICO.md`) e poi
+   documentata lì, perché tocca una regola di business, non solo
+   l'implementazione.
+- **Non toccare la logica del tier "surgelato"/fallback stagionale** senza
+  verificare anche quella: usa lo stesso pool `c` e le stesse
+  `disabledVariantIds`, un cambiamento alla soglia "fresco" può avere
+  effetti a cascata anche lì.
+- Questa causa è **indipendente** da quella già in §8 (cooldown mai letto):
+  anche implementando un vero cooldown a livello di `usedWeek`/`lastVegetable`,
+  se il pool "fresco" resta a 1 solo elemento il cooldown non avrebbe
+  comunque nulla su cui operare. Vanno risolte entrambe per una vera
+  varietà di contorni.
+
+---
+
+## §12. Deadline di consumo automatico: valore mostrato in UI diverso da quello realmente applicato
+
+**File:** `index.html`. Due costanti indipendenti, mai collegate tra loro:
+
+```js
+// riga ~1893, mostrata e modificabile in Configurazione avanzata nutrizionista:
+deadlines:{pranzo:'15:00',cena:'22:00'}
+
+// riga ~4712, REALMENTE usata per decidere quando un pasto passa a "consumato"
+// e scala l'inventario:
+const FASCE_ORARIE_PASTO = {
+  colazione: [6,9], spuntino1: [9,12], pranzo: [12,14],
+  spuntino2: [14,18], cena: [18,20], spuntino3: [20,24]
+};
+```
+
+**Verificato dal vivo:** un pasto "pranzo" di oggi, con contenuto reale,
+programmato la mattina, viene marcato `consumato:true` e scala
+l'inventario **appena passano le 14:00**, non le 15:00 mostrate/modificabili
+in Configurazione avanzata. Stesso discorso per la cena: taglio reale alle
+20:00, non 22:00. Il commento nel codice sorgente stesso chiarisce che
+questi orari sono stati **"definiti da Enrico"** come fasce fisse
+copri-giornata, indipendenti dal campo `deadlines` esposto in UI.
+
+**Impatto pratico:** se Cwe (o un futuro nutrizionista) imposta "Scadenza
+pranzo: 15:00" pensando di posticipare la finestra entro cui un pranzo può
+ancora essere modificato/consumato manualmente, **non succede nulla**: lo
+scalo automatico dell'inventario e la marcatura "consumato" scattano comunque
+alle 14:00 in punto, un'ora prima di quanto l'interfaccia fa credere.
+
+**Target di funzionamento:** il valore mostrato/modificabile in
+Configurazione avanzata dovrebbe essere l'unica fonte di verità per la
+fascia oraria, oppure — se `FASCE_ORARIE_PASTO` deve restare fissa per
+scelta di design (coprire l'intera giornata senza buchi, come dice il
+commento) — il campo "Scadenza pranzo/cena" andrebbe tolto dall'interfaccia
+modificabile per non promettere un controllo che non esiste.
+
+**Peculiarità da rispettare se si interviene:**
+- `FASCE_ORARIE_PASTO` copre **l'intera giornata senza sovrapposizioni né
+  buchi** (6-9-12-14-18-20-24): se si rende configurabile il taglio di
+  pranzo/cena, bisogna decidere cosa succede alle fasce adiacenti
+  (spuntino1 e spuntino2) per non lasciare buchi orari scoperti — non è
+  banale come spostare due sole cifre.
+- Il commento nel codice segnala esplicitamente che questi orari sono un
+  requisito di **Enrico** (presumibilmente il nutrizionista/consulente
+  esterno del progetto, non Cwe): prima di cambiare i valori, confermare
+  con Cwe se è ancora un vincolo esterno da rispettare così com'è.
+
+---
+
+## §13. `E.buildProteinGrid` può concentrare la stessa macro su un solo giorno
 
 **File:** `engine-core.js`, `buildProteinGrid()`. Riempie le celle
 giorno×pasto in ordine fisso (lunedì→domenica, pranzo poi cena),

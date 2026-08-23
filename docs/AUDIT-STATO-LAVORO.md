@@ -62,10 +62,11 @@ stato trovato, in attesa di valutazione e priorità da parte di Cwe.
 | A4/S3 | Regola "affettati → pane obbligatorio" non applicata nel codice attivo | 🔴 Alta | ANOMALIE §4, STRUTTURA §3 |
 | A5/S4 | Regola "patate nel secondo → piatto unico" non applicata nel codice attivo | 🔴 Alta | ANOMALIE §5, STRUTTURA §4 |
 | A6/S7 | Tetto "carne rossa/affettati/pesce grande/pesce conservato ≤1 a settimana" non rispettato entro una singola generazione | 🔴 Alta | ANOMALIE §6, STRUTTURA §7 |
-| A7/S8 | Contorni fortemente ripetitivi (stesso contorno 3 giorni di fila) nonostante "cooldown verdure" configurato | 🟠 Medio-alta | ANOMALIE §7, STRUTTURA §8 |
+| A7/S11 | Contorni fortemente ripetitivi (stesso contorno fino al 100% delle occasioni) — causa isolata con precisione: il filtro "verdura fresca prioritaria" collassa a un solo candidato quando le alternative dello stesso livello scarseggiano | 🟠 Medio-alta | ANOMALIE §7, STRUTTURA §11 |
 | A8/S8 | Parametri "Cooldown", "Fonti proteiche/giorno", "Frutta" in Impostazioni Nutrizionista non hanno alcun effetto sul motore | 🟠 Medio-alta | ANOMALIE §8, STRUTTURA §8 |
-| A9 | Tabella proteica "Completa" può mettere la stessa macrocategoria sia a pranzo che a cena nello stesso giorno | 🟢 Bassa | ANOMALIE §9, STRUTTURA §10 |
+| A9 | Tabella proteica "Completa" può mettere la stessa macrocategoria sia a pranzo che a cena nello stesso giorno | 🟢 Bassa | ANOMALIE §9, STRUTTURA §13 |
 | A10 | Campo "Quantità" precompilato in Impostazioni Nutrizionista anche per ingredienti non limitati, senza indicare che è inattivo | 🟢 Bassa (UX/chiarezza) | ANOMALIE §10 |
+| A11/S12 | Scadenza pranzo/cena mostrata in Impostazioni (15:00/22:00) diversa da quella realmente applicata (14:00/20:00) | 🟠 Medio-alta | ANOMALIE §11, STRUTTURA §12 |
 | S1 | motor.js contiene funzioni duplicate (stesso nome dichiarato due volte); vince sempre l'ultima, la prima è codice morto | 🔴 Alta (causa radice di A4, A5) | STRUTTURA §1 |
 | S9 | ~10 funzioni pubbliche di engine-core.js mai richiamate da nessuna parte dell'app reale | 🟡 Media (rischio manutenzione/falsa sicurezza dai test) | STRUTTURA §9 |
 
@@ -114,22 +115,58 @@ rigenerazione reale di settimane pulite):
   `min:3,max:6,target:5` formaggi; `min:2,max:4,target:3` uova). Nessuna
   fuga di carne/pesce. **Nessuna anomalia trovata qui.**
 
-### Ancora da testare (non toccato in questa sessione — vedi "Prossimi passi")
+### Verificato in questa sessione (nuovo)
 
-- Marcatura manuale "pasto consumato" ed effetto su inventario/storico.
-- Roll manuale di un componente del pasto (sostituzione proteina/carbo/contorno).
-- Effetto reale di "verdure preferite", "verdure disattivate", "verdura
-  ricorrente" sulla selezione contorni.
-- Contenuto/varietà delle 7 colazioni generate automaticamente per la
-  settimana (creato con successo, non ispezionato nel dettaglio).
-- Comportamento con inventario azzerato ("Reset frigo") — verificare che
-  "tutti i piatti sono estraibili a prescindere da inventario" (regola §3
-  di REGOLE_FLUSSO_LOGICO) sia rispettata anche nel codice attivo.
-- Ricette "solo manuali" — verificare il bypass criteri.
-- Pasto speciale (limite settimanale, comportamento).
-- Verifica aritmetica dettagliata della lista Spesa (vedi sopra).
+- **Marcatura consumo automatico + scalo inventario**: verificato dal vivo
+  con orari reali — funziona e l'aritmetica di scalo è esatta. Trovata
+  però un'anomalia nuova: la scadenza mostrata/modificabile in
+  Impostazioni (15:00/22:00) **non corrisponde** a quella realmente
+  applicata (14:00/20:00, costante fissa indipendente). Vedi A11.
+- **Verdure disattivate**: funziona correttamente (0 fughe su 13
+  occasioni testate). Il test ha però isolato con precisione la causa
+  radice di A7 (contorni ripetitivi) — vedi STRUTTURA §11: il filtro
+  "verdura fresca prioritaria" collassa a un solo candidato quando le
+  alternative dello stesso livello scarseggiano di scorta o vengono
+  escluse, arrivando fino al 100% di ripetizione in un test dedicato.
+- **Colazioni**: varietà accettabile su carboidrato/topping, ma diversi
+  giorni della settimana testata risultano senza alcuna fonte proteica
+  (né latte né yogurt) — nessuna regola trovata in REGOLE_FLUSSO_LOGICO
+  che imponga una proteina ogni giorno, quindi non classificato come bug,
+  solo annotato come osservazione per Cwe.
+- **Reset frigo**: confermato — generazione di una settimana completa
+  riuscita (14/14) anche con inventario totalmente azzerato, coerente con
+  la regola "tutti i piatti sono estraibili a prescindere da inventario".
+- **Ricette "solo manuali"**: bypass criteri confermato — esclusa da ogni
+  generazione automatica, ma resta trovabile in ricerca manuale.
+
+### Non completato (limiti di complessità UI o servono chiarimenti da Cwe)
+
+- Roll manuale di un componente del pasto: legato a uno stato editor UI
+  complesso (`draft`), solo letto staticamente nel codice.
+- Limite settimanale "pasto speciale": trovato un controllo nel codice ma
+  non confermato con certezza che sia l'unico punto che scrive
+  `modalitaSpeciale` — da testare dal vivo con un'interazione UI guidata.
+- Verifica aritmetica dettagliata della lista Spesa (arrotondamento a
+  formato confezione, netto da inventario) — vista confermata funzionale
+  a colpo d'occhio, non verificata voce per voce.
 - Chiarire con Cwe se "100% legumi" per il profilo vegano è voluto (vedi
   sopra) — non è un bug, ma una domanda di prodotto aperta.
+- Chiarire con Cwe se gli orari fissi "Enrico" (`FASCE_ORARIE_PASTO`,
+  pranzo 12-14/cena 18-20) sono ancora un vincolo esterno valido, dato che
+  il campo "Scadenza" in Configurazione avanzata promette (senza
+  mantenerlo) un controllo diverso — vedi A11.
+- Chiarire con Cwe la soglia/criterio con cui ammorbidire il filtro
+  "verdura fresca prioritaria" di STRUTTURA §11, che oggi collassa a un
+  solo candidato troppo facilmente.
+
+## Stato: prima passata di audit completa
+
+Con questa sessione si chiude una prima passata comprensiva. Il nucleo
+duro — le 11 anomalie A1-A11 con causa radice isolata in
+`AUDIT-STRUTTURA-LOGICA.md` §1-§13 — è la base solida su cui Cwe può
+decidere le priorità di correzione. Restano 5 punti minori sopra elencati
+che richiedono o un'interazione UI più complessa da guidare dal vivo, o
+una decisione di prodotto da parte di Cwe prima di poter essere chiusi.
 
 ## Prossimi passi consigliati (in ordine di priorità suggerito)
 

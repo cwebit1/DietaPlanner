@@ -181,8 +181,21 @@ Solo **4 ricette-contorno distinte** usate su 13 occasioni. In particolare
 "Spinaci saltati" compare **3 giorni consecutivi di fila** (27, 28, 29,
 sempre a cena) — l'opposto esatto di un cooldown di 2 giorni.
 
-**Causa radice:** vedi `AUDIT-STRUTTURA-LOGICA.md` §8 (il parametro
-"cooldown" non è collegato a nessuna logica reale).
+**Approfondimento (nuovo test):** disattivando manualmente le due verdure
+più usate (Zucchine, Insalata mista) e rigenerando una settimana pulita,
+il contorno proposto è risultato **lo stesso identico piatto
+("Spinaci saltati") in 13 casi su 13 (100%)**, nonostante altri 15+
+contorni con ingredienti ben riforniti in inventario (Broccoli 300g,
+Carote 200g, Melanzane 200g, Peperoni 150g) fossero teoricamente
+disponibili. Non è quindi un problema di sola "rotazione debole" — è
+sistematico e ha una causa precisa e isolata.
+
+**Causa radice:** vedi `AUDIT-STRUTTURA-LOGICA.md` §11 (nuova sezione
+dedicata, più precisa di quanto scritto in precedenza in §8) — il filtro
+che dà priorità assoluta alle verdure "fresche" collassa a un solo
+candidato quando gli altri articoli dello stesso livello scarseggiano di
+scorta o vengono esclusi, escludendo di fatto ogni alternativa con scorte
+comunque abbondanti ma di categoria diversa.
 
 ---
 
@@ -248,6 +261,71 @@ numero già scritto nel campo, può sembrare che il limite sia già impostato.
 Non incide sul comportamento del motore (verificato: se lo stato non è
 "limitato" il valore non viene applicato), è un potenziale equivoco per
 chi usa l'interfaccia, non un bug funzionale.
+
+---
+
+## §11. Scadenza pranzo/cena mostrata in Impostazioni non corrisponde a quella reale
+
+In Configurazione avanzata nutrizionista, "Scadenza pranzo" mostra 15:00 e
+"Scadenza cena" mostra 22:00, editabili. **Verificato dal vivo:** un pranzo
+di oggi, con contenuto reale, viene marcato consumato e scala l'inventario
+già **alle 14:00**, non alle 15:00 mostrate; la cena scatta alle **20:00**,
+non alle 22:00. Il valore in Impostazioni non ha alcun collegamento con il
+comportamento reale (che usa una costante fissa separata nel codice,
+commentata come richiesta specifica di "Enrico").
+
+**Causa radice:** vedi `AUDIT-STRUTTURA-LOGICA.md` §12.
+
+---
+
+## §12. Verifiche completate senza anomalie (per completezza)
+
+Durante l'audit sono stati testati anche questi comportamenti, **senza
+trovare anomalie**:
+
+- **Profilo vegetariano**: generazione corretta, nessuna fuga di carne/pesce,
+  distribuzione legumi/formaggi/uova coerente con i target attesi.
+- **Profilo vegano**: generazione corretta, nessuna fuga di
+  carne/pesce/formaggi/uova. Nota di design (non un bug): tutti i 14 pasti
+  risultano sempre macrocategoria "legumi" per costruzione — vedi
+  `AUDIT-STATO-LAVORO.md` per la domanda aperta a Cwe su questo punto.
+- **Ricette "solo manuali"**: una ricetta marcata `soloManuale` è stata
+  correttamente esclusa da 14/14 generazioni automatiche successive, pur
+  restando trovabile tramite la ricerca manuale (bypass criteri
+  funzionante come da `REGOLE_FLUSSO_LOGICO.md` §17).
+- **Verdure disattivate**: le verdure disattivate in Set non sono mai
+  comparse nei contorni generati (0 su 13 occasioni in un test dedicato) —
+  il filtro di esclusione funziona correttamente (l'effetto collaterale di
+  questo stesso test, però, ha isolato l'anomalia §7/struttura §11).
+- **Reset frigo** (inventario azzerato): generazione di una settimana
+  completa comunque riuscita (14/14, 0 errori) con **zero righe di
+  inventario presenti** — confermata la regola "tutti i piatti possono
+  essere estratti a prescindere da inventario" (`REGOLE_FLUSSO_LOGICO.md`
+  §3).
+- **Scalo inventario al consumo**: verificato che il consumo automatico
+  per scadenza oraria decrementa correttamente e con l'aritmetica esatta
+  le scorte dell'ingrediente usato (verificato con "Zucchine grigliate":
+  200g richiesti, 200g disponibili → 0g dopo il consumo).
+
+## §13. Non verificato in questa sessione (limite di tempo/complessità)
+
+- **Roll manuale di un singolo componente** (sostituzione proteina/carbo/
+  contorno dentro un pasto già proposto): la logica esiste nel codice
+  (`cambiaCellaDraft`, righe ~6070+ di index.html) ma è legata a uno stato
+  di editor UI complesso (`draft`) che non è stato guidato dal vivo tramite
+  interazione reale in questa sessione — solo letto staticamente.
+- **Limite settimanale "pasto speciale"** (max 2/settimana dichiarato):
+  trovato un controllo esplicito nel codice (index.html riga ~6082,
+  `if(...length>=max){avviso(...);return;}`), ma **non verificato con
+  certezza che sia l'unico punto in cui `modalitaSpeciale` viene scritto**
+  — un punto di salvataggio diverso (riga ~6291) imposta il campo senza
+  ripetere lo stesso controllo. Da testare dal vivo (3 pasti speciali nella
+  stessa settimana) prima di considerarlo confermato in un senso o
+  nell'altro.
+- **Verifica aritmetica dettagliata della lista Spesa**: la vista risulta
+  popolata e coerente a colpo d'occhio (vedi `AUDIT-STATO-LAVORO.md`), ma
+  non è stata verificata voce per voce la matematica di arrotondamento a
+  formato confezione e netto da inventario.
 
 ---
 
