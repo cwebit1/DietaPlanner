@@ -23,7 +23,12 @@ riuscita nei test, usata come base per le analisi seguenti.
 
 ---
 
-## §1. "Genera menù" non produce nulla, senza alcun avviso
+## §1. "Genera menù" non produce nulla, senza alcun avviso — ✅ RISOLTO
+
+> **Stato: corretto il 2026-08-23, commit `22fe067`.** Vedi
+> `AUDIT-STATO-LAVORO.md` → "Correzioni applicate" per il dettaglio
+> dell'intervento e della verifica. Testo originale del problema lasciato
+> sotto per riferimento storico.
 
 **Come riprodurlo:** al primo avvio dell'app (o comunque quando la
 settimana visualizzata in "Piano"/"Menù" è quella che contiene la data di

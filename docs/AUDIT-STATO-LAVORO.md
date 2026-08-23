@@ -49,14 +49,41 @@ che dovrebbe succedere" da "cosa succede davvero quando si usa l'app".
 
 ## Stato generale
 
-**Nessuna correzione è stata applicata.** Questo è l'elenco di ciò che è
-stato trovato, in attesa di valutazione e priorità da parte di Cwe.
+Correzioni applicate finora: **1 (A1)**. Le altre restano com'erano,
+in attesa di valutazione e priorità da parte di Cwe.
+
+## Correzioni applicate
+
+### A1 — "Genera menù" silenzioso — RISOLTO (commit `22fe067`, motor.js)
+
+**Cosa è cambiato:** in `generaPianoSettimana` (motor.js), calcolato un
+flag `nessunGiornoFuturo` (vero quando NESSUN giorno della settimana
+richiesta supera `automaticDayAllowed`). Se vero, e non ci sono altri
+errori da segnalare, viene mostrato un avviso esplicito ("Questa settimana
+non ha giorni futuri da generare: passa alla settimana successiva.")
+invece del silenzio totale. Il risultato della funzione ora include anche
+questo flag (`{generati, errori, griglia, nessunGiornoFuturo}`).
+
+**Cosa NON è cambiato:** la regola "giorno > oggi" resta identica; il
+pulsante "Rigenera" in Menù (già protetto da un controllo suo proprio) non
+è stato toccato; nessuna modifica alla logica di generazione vera e
+propria.
+
+**Verificato dal vivo (Playwright, profilo pulito) prima del push:**
+- Click su "Genera menù" con la settimana corrente priva di giorni futuri
+  → compare correttamente il modale con il nuovo messaggio.
+- Generazione sulla settimana successiva (tutti giorni futuri) → invariata:
+  14/14 generati, 0 errori, nessun avviso spurio, `nessunGiornoFuturo:false`.
+
+**File toccati:** `motor.js` (la funzione), `index.html` (solo bump
+`motor.js?v=84`→`?v=85` per invalidare la cache browser, nessuna riga di
+logica toccata in index.html).
 
 ### Confermato con evidenza diretta (riprodotto ed isolata la causa nel codice)
 
 | ID | Titolo breve | Gravità | Dettaglio |
 |---|---|---|---|
-| A1/S2 | "Genera menù" non fa nulla, senza avviso, se la settimana visualizzata contiene/termina con oggi | 🔴 Alta (blocca il flusso principale) | ANOMALIE §1, STRUTTURA §2 |
+| ~~A1/S2~~ | ~~"Genera menù" non fa nulla, senza avviso, se la settimana visualizzata contiene/termina con oggi~~ | ✅ **RISOLTO** (commit `22fe067`) | ANOMALIE §1, STRUTTURA §2 |
 | A2/S5 | Budget carboidrati settimanale (14 caselle) non rispettato nella distribuzione reale | 🔴 Alta | ANOMALIE §2, STRUTTURA §5 |
 | A3/S6 | "Pasta fresca" strutturalmente invisibile, sempre etichettata "Pasta" | 🟡 Media | ANOMALIE §3, STRUTTURA §6 |
 | A4/S3 | Regola "affettati → pane obbligatorio" non applicata nel codice attivo | 🔴 Alta | ANOMALIE §4, STRUTTURA §3 |
