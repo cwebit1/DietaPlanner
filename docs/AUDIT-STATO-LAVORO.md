@@ -1,0 +1,110 @@
+# AUDIT DIETAPLANNER — STATO LAVORO (documento indice)
+
+> **Leggere questo file per primo**, prima di qualunque intervento sul codice.
+> Se stai leggendo questo file da una chat nuova: qui trovi cosa è stato
+> verificato, cosa è confermato come anomalia reale, cosa è ancora da
+> testare, e — per ogni punto — cosa NON toccare/rompere se si interviene.
+> Nessuna riga di codice dell'app è stata modificata finora: questo è un
+> lavoro di **sola analisi**, su richiesta esplicita di Cwe ("non fare
+> coding", "non prendere iniziative").
+
+Data avvio audit: 2026-08-23. Ultimo aggiornamento: 2026-08-23.
+Autore: Claude (istanza di sessione chat), su commissione di Cwe.
+
+## Metodologia (importante per riprodurre/estendere i test)
+
+Non è un'analisi solo statica: l'app è stata **eseguita realmente** in un
+browser headless (Chromium via Playwright) puntato su un server HTTP locale
+che serve la cartella del repo, con un profilo persistente (IndexedDB vera,
+non simulata). Questo permette di distinguere "cosa dice la documentazione
+che dovrebbe succedere" da "cosa succede davvero quando si usa l'app".
+
+- Ambiente di test: `/home/claude/DietaPlanner` (clone del repo), server
+  `python3 -m http.server` sulla porta 8765, browser Chromium headless via
+  Playwright con profilo persistente in `/home/claude/qa/profile`.
+- Data/ora di sistema nel browser al momento dei test: **domenica 23 agosto
+  2026** (coincide con la data reale della sessione).
+- Stato iniziale: database fresco, primo avvio (nessun dato precedente).
+  Ricette v11 e ingredienti v6 importati automaticamente al primo carico
+  (comportamento corretto, nessuna anomalia qui).
+- Configurazione applicata durante i test (via UI, pulsanti "Completa" in
+  Set): vedi dettagli in `AUDIT-ANOMALIE-UTENTE.md` §0.
+- Tutti i log console del browser sono stati catturati per l'intera sessione:
+  **zero errori JS non gestiti, zero richieste di rete fallite** in tutti i
+  test eseguiti finora (questo è un dato positivo, non un'anomalia).
+- Ogni dump di dati (configurazioni salvate, piano generato, dettaglio
+  ricette) è stato estratto direttamente dalla vera IndexedDB dell'app via
+  `getAll()`/`getOne()`, non ricostruito a mano — quindi è terreno, non
+  un'ipotesi.
+
+## Documenti dell'audit
+
+| File | Contenuto |
+|---|---|
+| `AUDIT-STATO-LAVORO.md` (questo file) | Indice, stato generale, cosa fare dopo |
+| `AUDIT-ANOMALIE-UTENTE.md` | Report 1: anomalie osservate usando l'app come utente reale (input configurato → output ottenuto) |
+| `AUDIT-STRUTTURA-LOGICA.md` | Report 2: analisi funzione-per-funzione del motore (cosa dovrebbe fare vs cosa fa), con causa radice di ogni anomalia del Report 1 |
+| `CLAUDE-REFERENCE.md` | Mappa tecnica generale del repo (file, DB, viste) — scritta in una sessione precedente, ancora valida |
+| `REGOLE_FLUSSO_LOGICO.md` | Fonte di verità delle regole funzionali decise da Cwe (preesistente, non toccato) |
+
+## Stato generale
+
+**Nessuna correzione è stata applicata.** Questo è l'elenco di ciò che è
+stato trovato, in attesa di valutazione e priorità da parte di Cwe.
+
+### Confermato con evidenza diretta (riprodotto ed isolata la causa nel codice)
+
+| ID | Titolo breve | Gravità | Dettaglio |
+|---|---|---|---|
+| A1/S2 | "Genera menù" non fa nulla, senza avviso, se la settimana visualizzata contiene/termina con oggi | 🔴 Alta (blocca il flusso principale) | ANOMALIE §1, STRUTTURA §2 |
+| A2/S5 | Budget carboidrati settimanale (14 caselle) non rispettato nella distribuzione reale | 🔴 Alta | ANOMALIE §2, STRUTTURA §5 |
+| A3/S6 | "Pasta fresca" strutturalmente invisibile, sempre etichettata "Pasta" | 🟡 Media | ANOMALIE §3, STRUTTURA §6 |
+| A4/S3 | Regola "affettati → pane obbligatorio" non applicata nel codice attivo | 🔴 Alta | ANOMALIE §4, STRUTTURA §3 |
+| A5/S4 | Regola "patate nel secondo → piatto unico" non applicata nel codice attivo | 🔴 Alta | ANOMALIE §5, STRUTTURA §4 |
+| A6/S7 | Tetto "carne rossa/affettati/pesce grande/pesce conservato ≤1 a settimana" non rispettato entro una singola generazione | 🔴 Alta | ANOMALIE §6, STRUTTURA §7 |
+| A7/S8 | Contorni fortemente ripetitivi (stesso contorno 3 giorni di fila) nonostante "cooldown verdure" configurato | 🟠 Medio-alta | ANOMALIE §7, STRUTTURA §8 |
+| A8/S8 | Parametri "Cooldown", "Fonti proteiche/giorno", "Frutta" in Impostazioni Nutrizionista non hanno alcun effetto sul motore | 🟠 Medio-alta | ANOMALIE §8, STRUTTURA §8 |
+| A9 | Tabella proteica "Completa" può mettere la stessa macrocategoria sia a pranzo che a cena nello stesso giorno | 🟢 Bassa | ANOMALIE §9, STRUTTURA §10 |
+| A10 | Campo "Quantità" precompilato in Impostazioni Nutrizionista anche per ingredienti non limitati, senza indicare che è inattivo | 🟢 Bassa (UX/chiarezza) | ANOMALIE §10 |
+| S1 | motor.js contiene funzioni duplicate (stesso nome dichiarato due volte); vince sempre l'ultima, la prima è codice morto | 🔴 Alta (causa radice di A4, A5) | STRUTTURA §1 |
+| S9 | ~10 funzioni pubbliche di engine-core.js mai richiamate da nessuna parte dell'app reale | 🟡 Media (rischio manutenzione/falsa sicurezza dai test) | STRUTTURA §9 |
+
+### Verificato e escluso (falso allarme, per trasparenza)
+
+| Cosa sembrava | Perché non è un bug |
+|---|---|
+| Selettore giorni nel Piano mostrava "Maggio" invece di "Agosto" | Verificato via query diretta sul DOM (`[data-g]`): i pulsanti reali sono tutti corretti (23 ago = DomenicaAgosto, 24 ago = LunedìAgosto, ecc., con `oggi:true` sul giorno giusto). L'apparente errore veniva da un selettore CSS troppo generico nel MIO script di test, che pescava elementi non ancora scrollati nella striscia di 181 giorni. **Non è un problema dell'app.** |
+
+### Ancora da testare (non toccato in questa sessione — vedi "Prossimi passi")
+
+- Lucchetto/blocco pasto nel Piano e nel Menù (area degli ultimi 3 commit del
+  repo — potenzialmente ancora fragile, priorità di verifica alta proprio
+  perché è la zona più di recente modificata).
+- Vista "Spesa" dopo una generazione reale (solo vista a vuoto finora).
+- Comportamento con profilo dieta vegetariano/vegano (cambio profilo e
+  rigenerazione).
+- Marcatura manuale "pasto consumato" ed effetto su inventario/storico.
+- Roll manuale di un componente del pasto (sostituzione proteina/carbo/contorno).
+- Effetto reale di "verdure preferite", "verdure disattivate", "verdura
+  ricorrente" sulla selezione contorni.
+- Contenuto/varietà delle 7 colazioni generate automaticamente per la
+  settimana (creato con successo, non ispezionato nel dettaglio).
+- Comportamento con inventario azzerato ("Reset frigo") — verificare che
+  "tutti i piatti sono estraibili a prescindere da inventario" (regola §3
+  di REGOLE_FLUSSO_LOGICO) sia rispettata anche nel codice attivo.
+- Ricette "solo manuali" — verificare il bypass criteri.
+- Pasto speciale (limite settimanale, comportamento).
+
+## Prossimi passi consigliati (in ordine di priorità suggerito)
+
+1. Cwe valuta l'elenco "Confermato" e decide priorità/quali correggere.
+2. Per ogni correzione: **rileggere la sezione corrispondente di
+   `AUDIT-STRUTTURA-LOGICA.md`** (contiene già causa radice, file e riga, e
+   le "peculiarità da rispettare" per non rompere altro) prima di scrivere
+   codice.
+3. Completare i test ancora aperti elencati sopra, stessa metodologia
+   (browser reale, non solo lettura del codice), possibilmente PRIMA di
+   correggere qualunque cosa — per avere un quadro completo invece di
+   rincorrere bug uno alla volta.
+4. Nessuna correzione va fatta senza autorizzazione esplicita di Cwe per il
+   singolo intervento (regola già in `AGENTS.md`).
