@@ -186,6 +186,83 @@ rigenerazione reale di settimane pulite):
   "verdura fresca prioritaria" di STRUTTURA §11, che oggi collassa a un
   solo candidato troppo facilmente.
 
+## Metodologia e istruzioni di lavoro
+
+> **Vedi anche `METODOLOGIA-LAVORO.md`** — raccoglie le regole di lavoro
+> che Cwe ha dato durante le sessioni di correzione (dopo l'audit
+> iniziale): ottimizzare-ma-segnalare-sempre, sincronia dati↔logica,
+> riconoscere i piatti già completi P+C senza forzare un primo sopra, nome
+> ricetta coerente con la sigla matematica. Da leggere sempre prima di
+> proporre o applicare una correzione.
+
+## Lavoro in corso ADESSO (non ancora applicato — riprendere da qui)
+
+**Punto attivo: A4 (affettati→pane) + A5 (patate→piatto unico), insieme.**
+
+Analisi completata, **in attesa di conferma finale di Cwe prima di
+applicare**. Stato preciso:
+
+1. **A4**: confermato che non serve toccare `ricette.json`. Le 4 ricette
+   "affettati" composte (Pasta con pancetta, Risotto con pancetta, Pasta
+   con bresaola, Farro con prosciutto) hanno già copertura coerente (C da
+   un carboidrato vero, non da pane) — sono piatti completi legittimi. Il
+   fix resta tutto nel codice (vedi STRUTTURA §3), da implementare nel
+   punto dove si cerca il carboidrato mancante, così da non toccare mai
+   questi 4 piatti (non ci passano perché già completi sul fronte C).
+
+2. **A5**: servono due interventi sincronizzati (dati + codice):
+   - **Dati — 15 ricette da correggere in `ricette.json`, non ancora
+     applicato:**
+     - 8 ricette con patate 150g (Branzino al forno con patate, Sovracosce
+       di pollo al forno con patate, Costine di maiale con patate al forno,
+       Hamburger di suino/pollo/vitello con patate ×3, Seppie in umido con
+       patate, Insalata di polpo e patate) → aggiungere "C" alla copertura
+       (oggi manca, le analoghe da 325g ce l'hanno già).
+     - **Rinomina + aggiunta C, 4 ricette "hamburger al pane"** (nome
+       italiano scorretto + copertura incompleta):
+       - "Hamburger di suino al pane" → **"Panino con hamburger di suino"**
+       - "Hamburger di pollo al pane con verdure" → **"Panino con hamburger
+         di pollo"** (tolto "e verdure": la verdura reale [insalata 40g +
+         peperoni 50g] non raggiunge la soglia V, resta come ingrediente ma
+         il nome non deve promettere una copertura che la sigla non
+         riconosce — regola 4 di `METODOLOGIA-LAVORO.md`)
+       - "Hamburger di tacchino al pane integrale" → **"Panino integrale
+         con hamburger di tacchino"**
+       - "Hamburger di vitello al pane con radicchio" → **"Panino con
+         hamburger di vitello"** (tolto "e radicchio", stesso motivo:
+         radicchio 40g sotto soglia)
+     - **Solo aggiunta C** (nomi già corretti, nessuna verdura promessa nel
+       nome da correggere): Cous cous con sovracosce di pollo, Zuppa
+       cereali e legumi in brodo, Friselle con pomodori/cetrioli/fagioli
+       cannellini, Lasagna di verdure con besciamella (quest'ultima ha già
+       V corretto, 200g zucchine+melanzane — resta C+PF+V).
+     - **Verificato**: nessuno di questi nomi è referenziato altrove nel
+       codice (le ricette si agganciano sempre per `id`), rinominare è
+       sicuro.
+     - **Lasciate esplicitamente fuori** (in attesa di eventuale
+       correzione diversa da Cwe): 6 ricette "impanate/gratinate" (Provola
+       impanata, Tomini in carrozza, Cotoletta di pollo con emmental,
+       Scaloppine al taleggio, Alici gratinate al forno, Sardine al forno
+       con pangrattato) — il pangrattato non è considerato una vera
+       porzione di carboidrato, quindi non gli si aggiunge C.
+   - **Codice — non ancora scritto**: caso speciale a runtime per "patate
+     nel secondo → non cercare nemmeno un contorno" (la V non può essere
+     rappresentata nella sigla statica per patate, per una regola già
+     nota — vedi STRUTTURA §4). Da scrivere DOPO aver applicato la
+     correzione dati sopra, sulla base dei dati corretti.
+
+**Domanda aperta a Cwe, ancora senza risposta**: estendere subito il
+controllo "nome vs sigla coerente" (quello che ha fatto emergere il caso
+hamburger) a **tutte le altre ~310 ricette** del database (finora
+verificato sistematicamente solo il gruppo di 38 mismatch copertura
+individuato in precedenza, non un controllo testuale nome-per-nome su
+tutte), o tenerlo come task separato dopo aver chiuso A4/A5.
+
+**Prossimo passo appena Cwe conferma**: applicare le 15 modifiche a
+`ricette.json` (bump versione da 11 a 12, seguendo la prassi già in uso nel
+repo), poi scrivere il codice per A4+A5, poi verificare dal vivo, poi
+push.
+
 ## Stato: prima passata di audit completa
 
 Con questa sessione si chiude una prima passata comprensiva. Il nucleo
