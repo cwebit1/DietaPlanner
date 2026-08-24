@@ -34,9 +34,24 @@ per una categoria fissa.
 ### 1. Preferenza "numero di portate" — nuova, in Set, permanente
 
 Nuovo parametro in Set, **globale e permanente** (non per singolo pasto,
-non per singolo giorno): quante portate deve avere ogni pasto generato —
-`1` (piatto unico), `2`, o `3`. Non esiste ancora nel sistema, va creato
-(tabella `impostazioni`, nuova chiave).
+non per singolo giorno): quante portate deve avere ogni pasto generato.
+Non esiste ancora nel sistema, va creato (tabella `impostazioni`, nuova
+chiave). **Selettore a 4 stati**: `1` (piatto unico), `2`, `3`, o
+`casuale`.
+
+Con `casuale`, il valore permanente memorizzato è il sentinel "casuale"
+stesso (la scelta di essere in modalità casuale è ciò che è permanente),
+non un numero fisso. Ad ogni pasto generato, **prima** di entrare
+nell'algoritmo di ricerca pool, il sistema estrae N a caso tra 1/2/3.
+L'estrazione è **indipendente per pranzo e per cena dello stesso giorno**
+(coerente con il resto del modello: proteina e cereale sono già assegnati
+per pasto, non per giorno) — **da confermare con Cwe**, non ancora dato
+per definitivo.
+
+Da lì in poi l'algoritmo (sezione 3) e la scaletta di adattamento
+(sezione 4) sono **identici e invariati** rispetto al caso N fisso: la
+modalità "casuale" cambia solo la provenienza del valore N iniziale, non
+la logica che lo usa.
 
 ### 2. Requisiti del giorno — invariato, dalle tabelle Set esistenti
 
