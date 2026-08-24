@@ -1,5 +1,5 @@
 {
-  "versione": 7,
+  "versione": 8,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -988,6 +988,211 @@
       "procedimentoComune": [
         "Condisci il carboidrato scelto, ancora caldo, con un filo d'olio e una spolverata di parmigiano grattugiato.",
         "Mescola bene finché il formaggio si scioglie leggermente nel calore."
+      ]
+    },
+    {
+      "nome": "con verdure saltate",
+      "classe": [
+        "C",
+        "V"
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "p.corta",
+          "procedimento": [
+            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
+          ]
+        },
+        {
+          "nome": "p.uovo",
+          "procedimento": [
+            "Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."
+          ]
+        },
+        {
+          "nome": "p.integrale",
+          "procedimento": [
+            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
+          ]
+        },
+        {
+          "nome": "riso",
+          "procedimento": [
+            "Cuoci in acqua salata, scola."
+          ]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola."
+          ]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": [
+            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta."
+          ]
+        },
+        {
+          "nome": "ravioli",
+          "procedimento": [
+            "Cuoci in acqua salata a fuoco dolce finché salgono a galla, pochi minuti: sono delicati, scola con una schiumarola."
+          ]
+        },
+        {
+          "nome": "gnocchi",
+          "procedimento": [
+            "Cuoci in acqua salata finché salgono a galla, scola subito con una schiumarola."
+          ]
+        }
+      ],
+      "verdureCompatibili": [
+        {
+          "nome": "zucchine e melanzane",
+          "composizioneFissa": [
+            {
+              "nome": "zucchine",
+              "procedimento": [
+                "Taglia a dadini e salta in padella con olio 6-8 minuti."
+              ]
+            },
+            {
+              "nome": "melanzane",
+              "procedimento": [
+                "Taglia a dadini e salta in padella con olio 8-10 minuti finché dorate."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci le due verdure a fine cottura e ripassa insieme un minuto."
+          ]
+        },
+        {
+          "nome": "zucchine e carote",
+          "composizioneFissa": [
+            {
+              "nome": "zucchine",
+              "procedimento": [
+                "Taglia a dadini e salta in padella con olio 6-8 minuti."
+              ]
+            },
+            {
+              "nome": "carote",
+              "procedimento": [
+                "Taglia a dadini o julienne e salta in padella con olio 8-10 minuti."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci le due verdure a fine cottura e ripassa insieme un minuto."
+          ]
+        },
+        {
+          "nome": "zucchine e pomodoro",
+          "composizioneFissa": [
+            {
+              "nome": "zucchine",
+              "procedimento": [
+                "Taglia a dadini e salta in padella con olio 6-8 minuti."
+              ]
+            },
+            {
+              "nome": "pomodoro",
+              "procedimento": [
+                "Taglia a pezzi e aggiungi in padella, cuoci 5 minuti."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Cuoci insieme finché il pomodoro si sfalda leggermente."
+          ]
+        },
+        {
+          "nome": "pomodoro e melanzane",
+          "composizioneFissa": [
+            {
+              "nome": "pomodoro",
+              "procedimento": [
+                "Taglia a pezzi."
+              ]
+            },
+            {
+              "nome": "melanzane",
+              "procedimento": [
+                "Taglia a dadini e salta in padella con olio 8-10 minuti finché dorate."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Aggiungi il pomodoro alle melanzane e cuoci insieme altri 5 minuti."
+          ]
+        },
+        {
+          "nome": "piselli e carote",
+          "composizioneFissa": [
+            {
+              "nome": "piselli",
+              "procedimento": [
+                "Cuoci in padella con un filo d'olio e un mestolo d'acqua per 8-10 minuti."
+              ]
+            },
+            {
+              "nome": "carote",
+              "procedimento": [
+                "Taglia a dadini e salta in padella con olio 8-10 minuti."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci le due verdure a fine cottura e ripassa insieme un minuto."
+          ]
+        },
+        {
+          "nome": "piselli e pomodoro fresco",
+          "composizioneFissa": [
+            {
+              "nome": "piselli",
+              "procedimento": [
+                "Cuoci in padella con un filo d'olio e un mestolo d'acqua per 8-10 minuti."
+              ]
+            },
+            {
+              "nome": "pomodoro fresco",
+              "procedimento": [
+                "Taglia a pezzi e aggiungi in padella, cuoci 5 minuti."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Cuoci insieme finché il pomodoro si sfalda leggermente."
+          ]
+        },
+        {
+          "nome": "pomodoro e basilico",
+          "composizioneFissa": [
+            {
+              "nome": "pomodoro",
+              "procedimento": [
+                "Taglia a pezzi e scalda in padella con olio 8-10 minuti, schiacciando leggermente."
+              ]
+            },
+            {
+              "nome": "basilico fresco",
+              "procedimento": [
+                "Aggiungi le foglie intere a fine cottura, spezzettandole a mano."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Manteca il carboidrato scelto nel condimento a fuoco vivace."
+          ]
+        }
       ]
     }
   ]

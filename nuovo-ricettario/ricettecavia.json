@@ -1720,84 +1720,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Riso integrale con verdure",
-      "fascia": "medio",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Riso integrale",
-          75
-        ],
-        [
-          "Zucchine",
-          75
-        ],
-        [
-          "Carote",
-          50
-        ],
-        [
-          "Olio extravergine oliva",
-          10
-        ]
-      ],
-      "procedimento": [
-        "Cuoci il riso integrale in acqua salata (tempi più lunghi del riso bianco, circa 35-40 minuti), poi scolalo.",
-        "Taglia zucchine e carote a dadini piccoli e saltale in padella con l'olio a fuoco medio-alto 7-8 minuti, finché morbide.",
-        "Unisci il riso scolato in padella e manteca a fuoco vivace un paio di minuti."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Cous cous alle verdure",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Cous cous",
-          75
-        ],
-        [
-          "Zucchine",
-          75
-        ],
-        [
-          "Pomodoro fresco",
-          50
-        ],
-        [
-          "Olio extravergine oliva",
-          10
-        ]
-      ],
-      "procedimento": [
-        "Metti il cous cous in una ciotola, copri con pari volume di acqua bollente salata, copri con un coperchio e lascia riposare 5 minuti.",
-        "Sgrana il cous cous con una forchetta.",
-        "Taglia le zucchine a dadini e saltale in padella con l'olio a fuoco alto 5 minuti, finché dorate.",
-        "Aggiungi i pomodorini a metà e cuoci altri 2 minuti.",
-        "Versa il condimento sul cous cous e mescola bene."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "glutine"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Tonno condito",
       "fascia": "facile",
       "porzioni": 1,
@@ -2761,45 +2683,6 @@
       "richiedeCottura": false,
       "soloManuale": false,
       "allergeniPresenti": [],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Farro con verdure miste",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Farro perlato",
-          75
-        ],
-        [
-          "Zucchine",
-          50
-        ],
-        [
-          "Carote",
-          50
-        ],
-        [
-          "Olio extravergine oliva",
-          10
-        ]
-      ],
-      "procedimento": [
-        "Cuoci il farro in acqua salata per il tempo indicato, scolalo.",
-        "Taglia zucchine e carote a dadini piccoli e saltale in padella con l'olio a fuoco medio-alto 6-7 minuti, finché morbide.",
-        "Unisci il farro scolato in padella e manteca a fuoco vivace un paio di minuti."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "glutine"
-      ],
       "piattoSpeciale": false,
       "carboidratiCompatibili": [],
       "tipiCotturaCompatibili": []
