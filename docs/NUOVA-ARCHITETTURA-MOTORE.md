@@ -128,6 +128,23 @@ da quanti altri requisiti la ricetta copre insieme a C (piatto unico, 2
 portate, 3 portate — nessuna distinzione tra "C isolato" e "C combinato"),
 e identico in programmazione e in manuale.
 
+### 2bis. Ricette "solo preparazione" (es. "alla mugnaia") — serve una compatibilità anche per la proteina
+
+Alcune ricette sono solo un nome di preparazione con un codice proteico
+sotto (es. "alla mugnaia" → `PP`). Il codice da solo non basta: `PP`
+prenderebbe qualsiasi pesce, anche uno che con quella preparazione non ha
+senso (es. tonno in scatola "alla mugnaia").
+
+Serve quindi un campo nuovo, stesso principio di `carboidratiCompatibili`
+ma per la proteina: una lista di proteine/ingredienti compatibili con
+quella preparazione (es. "alla mugnaia" → sogliola, nasello, platessa...).
+Nome provvisorio: `proteineCompatibili`.
+
+Meccanismo finale: il sistema pesca a caso una proteina compatibile,
+mette il suo nome davanti, aggiunge il nome della preparazione dopo.
+Esempio: pesca "sogliola" → "Sogliola alla mugnaia". Stesso meccanismo già
+deciso per i cereali/sughi, applicato ora anche alle proteine.
+
 ### 3. L'algoritmo — una sola funzione, generalizzata su N
 
 Non tre logiche diverse per unico/due/tre — **una funzione unica**: "trova
