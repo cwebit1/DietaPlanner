@@ -1720,41 +1720,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Riso in bianco con parmigiano",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Riso Originario",
-          75
-        ],
-        [
-          "Parmigiano grattugiato",
-          10
-        ],
-        [
-          "Olio extravergine oliva",
-          5
-        ]
-      ],
-      "procedimento": [
-        "Cuoci il riso in abbondante acqua salata per il tempo indicato, scolandolo al dente.",
-        "Rimettilo in pentola, spegni il fuoco e manteca con l'olio e il parmigiano grattugiato.",
-        "Mescola bene finché il parmigiano si scioglie leggermente amalgamandosi al riso."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Riso integrale con verdure",
       "fascia": "medio",
       "porzioni": 1,

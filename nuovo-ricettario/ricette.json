@@ -1,5 +1,5 @@
 {
-  "versione": 6,
+  "versione": 7,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -948,6 +948,46 @@
       "procedimentoComune": [
         "In una ciotola capiente unisci il cereale scelto raffreddato con la verdura cotta scelta, ormai tiepida.",
         "Condisci con un filo d'olio e mescola bene."
+      ]
+    },
+    {
+      "nome": "in bianco con parmigiano",
+      "classe": "C",
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": [
+            "Cuoci in acqua salata, scola."
+          ]
+        },
+        {
+          "nome": "p.dura",
+          "procedimento": [
+            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
+          ]
+        },
+        {
+          "nome": "p.integrale",
+          "procedimento": [
+            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
+          ]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola."
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "Condisci il carboidrato scelto, ancora caldo, con un filo d'olio e una spolverata di parmigiano grattugiato.",
+        "Mescola bene finché il formaggio si scioglie leggermente nel calore."
       ]
     }
   ]
