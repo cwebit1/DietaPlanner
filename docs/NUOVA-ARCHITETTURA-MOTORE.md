@@ -492,6 +492,29 @@ nuove funzioni, dove si innesta `carboidratiCompatibili`/
 documento tecnico separato, da produrre e sottoporre a revisione di Cwe
 prima di toccare motor.js.
 
+## Priorità nei giorni della settimana — deperibilità ingredienti
+
+**Deciso il 2026-08-24.** Scopo: evitare che verdure molto deperibili
+comprate a inizio settimana (es. insalata, radicchio) restino in
+frigo fino a marcire perché il piano le programma tardi, mentre
+ingredienti che si conservano bene (finocchi, carote, zucchine,
+melanzane) finiscono usati prima per puro caso.
+
+**Non serve un campo nuovo**: si riusa `deperibilita` (alta/media/bassa),
+già presente su ogni ingrediente in `ingredienti.json`.
+
+**Regola**: la priorità di collocazione nei primi giorni della settimana
+di una ricetta è determinata dall'ingrediente **più deperibile** tra i
+suoi (non una somma/media — basta un solo ingrediente ad alta
+deperibilità per spingere avanti tutta la ricetta). Ricette con solo
+ingredienti a bassa deperibilità possono slittare più avanti nella
+settimana senza rischio.
+
+Questo è un criterio **distinto** da stack/roll (quello è rotazione nel
+tempo tra settimane diverse, questo è ordine **dentro** la stessa
+settimana) e distinto dalla preferenza cereale (quello è su cosa scegliere,
+questo è su quando collocarlo).
+
 ## Domande ancora aperte (non bloccanti per iniziare il documento tecnico, ma da chiudere prima del codice)
 
 - Dettaglio esatto della nuova preferenza "numero di portate" in Set: UI,
