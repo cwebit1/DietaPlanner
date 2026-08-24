@@ -1,5 +1,5 @@
 {
-  "versione": 9,
+  "versione": 10,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -1307,6 +1307,208 @@
         "Cuoci a fuoco basso finché il cereale è morbido (tempi secondo il tipo scelto).",
         "Aggiungi il legume scelto negli ultimi 5-10 minuti di cottura, giusto per scaldarlo insieme.",
         "Regola di sale e completa con un filo d'olio a crudo."
+      ]
+    },
+    {
+      "nome": "Insalata di",
+      "classe": "V",
+      "verdureCompatibili": [
+        {
+          "nome": "lattuga",
+          "procedimento": [
+            "Lava le foglie e asciugale bene, spezzetta a mano."
+          ]
+        },
+        {
+          "nome": "rucola",
+          "procedimento": [
+            "Lava e asciuga bene le foglie."
+          ]
+        },
+        {
+          "nome": "valeriana",
+          "procedimento": [
+            "Lava con cura (trattiene terra), asciuga bene."
+          ]
+        },
+        {
+          "nome": "radicchio",
+          "procedimento": [
+            "Lava e taglia a listarelle sottili."
+          ]
+        },
+        {
+          "nome": "carote",
+          "procedimento": [
+            "Lava, pela e taglia a julienne o grattugia."
+          ]
+        },
+        {
+          "nome": "cetriolo",
+          "procedimento": [
+            "Lava, pela se preferito, taglia a rondelle o dadini."
+          ]
+        },
+        {
+          "nome": "finocchi",
+          "procedimento": [
+            "Lava e taglia sottile, anche con la mandolina."
+          ]
+        },
+        {
+          "nome": "pomodoro fresco",
+          "procedimento": [
+            "Lava e taglia a spicchi o cubetti."
+          ]
+        },
+        {
+          "nome": "pomodorini",
+          "procedimento": [
+            "Lava e taglia a metà."
+          ]
+        },
+        {
+          "nome": "peperoni",
+          "procedimento": [
+            "Lava, elimina semi e filamenti, taglia a listarelle sottili."
+          ]
+        },
+        {
+          "nome": "cipolla",
+          "procedimento": [
+            "Affetta sottile, anche in acqua fredda per ammorbidire il sapore."
+          ]
+        },
+        {
+          "nome": "spinaci freschi",
+          "procedimento": [
+            "Lava bene le foglie piccole e asciugale."
+          ]
+        },
+        {
+          "nome": "zucchine",
+          "procedimento": [
+            "Lava e taglia a carpaccio sottile con la mandolina o un pelapatate."
+          ]
+        },
+        {
+          "nome": "pomodori, cetrioli e cipolla",
+          "composizioneFissa": [
+            {
+              "nome": "pomodori",
+              "procedimento": [
+                "Lava e taglia a spicchi."
+              ]
+            },
+            {
+              "nome": "cetrioli",
+              "procedimento": [
+                "Lava e taglia a rondelle."
+              ]
+            },
+            {
+              "nome": "cipolla",
+              "procedimento": [
+                "Affetta sottile."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci in una ciotola e condisci con olio."
+          ]
+        },
+        {
+          "nome": "carote e finocchi",
+          "composizioneFissa": [
+            {
+              "nome": "carote",
+              "procedimento": [
+                "Lava, pela e taglia a julienne."
+              ]
+            },
+            {
+              "nome": "finocchi",
+              "procedimento": [
+                "Lava e taglia sottile."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci in una ciotola e condisci con olio e succo di limone."
+          ]
+        },
+        {
+          "nome": "rucola e pomodorini",
+          "composizioneFissa": [
+            {
+              "nome": "rucola",
+              "procedimento": [
+                "Lava e asciuga bene le foglie."
+              ]
+            },
+            {
+              "nome": "pomodorini",
+              "procedimento": [
+                "Lava e taglia a metà."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci in una ciotola e condisci con olio."
+          ]
+        },
+        {
+          "nome": "radicchio, carote e finocchi",
+          "composizioneFissa": [
+            {
+              "nome": "radicchio",
+              "procedimento": [
+                "Lava e taglia a listarelle sottili."
+              ]
+            },
+            {
+              "nome": "carote",
+              "procedimento": [
+                "Lava, pela e taglia a julienne."
+              ]
+            },
+            {
+              "nome": "finocchi",
+              "procedimento": [
+                "Lava e taglia sottile."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci in una ciotola e condisci con olio."
+          ]
+        },
+        {
+          "nome": "misticanza (lattuga, radicchio e rucola)",
+          "composizioneFissa": [
+            {
+              "nome": "lattuga",
+              "procedimento": [
+                "Lava le foglie e asciugale bene, spezzetta a mano."
+              ]
+            },
+            {
+              "nome": "radicchio",
+              "procedimento": [
+                "Lava e taglia a listarelle sottili."
+              ]
+            },
+            {
+              "nome": "rucola",
+              "procedimento": [
+                "Lava e asciuga bene le foglie."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci in una ciotola e condisci con olio."
+          ]
+        }
       ]
     }
   ]
