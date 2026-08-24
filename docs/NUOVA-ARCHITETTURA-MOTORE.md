@@ -44,14 +44,38 @@ stesso (la scelta di essere in modalità casuale è ciò che è permanente),
 non un numero fisso. Ad ogni pasto generato, **prima** di entrare
 nell'algoritmo di ricerca pool, il sistema estrae N a caso tra 1/2/3.
 L'estrazione è **indipendente per pranzo e per cena dello stesso giorno**
-(coerente con il resto del modello: proteina e cereale sono già assegnati
-per pasto, non per giorno) — **da confermare con Cwe**, non ancora dato
-per definitivo.
+(confermato da Cwe).
 
 Da lì in poi l'algoritmo (sezione 3) e la scaletta di adattamento
 (sezione 4) sono **identici e invariati** rispetto al caso N fisso: la
 modalità "casuale" cambia solo la provenienza del valore N iniziale, non
 la logica che lo usa.
+
+**N (qualunque sia l'origine: setting fisso, estrazione casuale, o
+override manuale per quel giorno) si fissa al momento della generazione e
+si salva sul pasto** (nuovo campo sul record piano, es.
+`numeroPortateEffettivo`) — da quel momento è un dato del pasto, non
+un'estrazione da rifare ad ogni interazione.
+
+**Due modi distinti di cambiare N per un pasto già generato, da non
+confondere:**
+- **Roll di un singolo componente** (es. cambio solo il contorno): non
+  tocca mai N. Cerca un'alternativa nello stesso pool/stesso ruolo che quel
+  pezzo stava già coprendo, lascia invariati gli altri pezzi e il numero di
+  portate. Coerente con la regola già esistente ("i vincoli automatici
+  valgono solo per la generazione automatica, il roll manuale tocca solo
+  il pezzo specifico").
+- **Cambio esplicito del selettore portate per quel giorno/pasto**
+  (ambiente manuale, vedi esempio più sotto): l'utente sceglie
+  deliberatamente un N diverso per quel pasto specifico → si rinterroga da
+  capo con la fonte proteica del giorno ferma, ma con il nuovo N. Questo
+  **è** un cambio di N intenzionale, diverso dal roll di un componente.
+
+Resta da confermare con Cwe: un eventuale pulsante "rigenera tutto il
+pasto" (diverso dal roll di un singolo componente e diverso dal cambio
+esplicito di N) — con setting="casuale", deve ri-estrarre un nuovo N
+casuale, o N resta bloccato a quanto già assegnato finché non si passa
+dalla generazione settimanale vera e propria? Non ancora deciso.
 
 ### 2. Requisiti del giorno — invariato, dalle tabelle Set esistenti
 
@@ -158,6 +182,73 @@ sono un dato nutrizionale/di frequenza, non una classificazione di ruolo.
 La correzione di A6 (il contatore che non si aggiorna durante la
 generazione in corso, S7) resta un intervento a parte, indipendente da
 questa architettura.
+
+## Due ambienti, due livelli di rigore
+
+- **Programmazione** (generazione settimanale, automatica): rispetta
+  scrupolosamente **tutti** i parametri di setting, senza eccezioni.
+- **Manuale** (l'utente tocca un pasto del giorno, roll/cambia): l'unico
+  vincolo che resta fisso è la **fonte proteica del giorno** (quella già
+  assegnata dalla griglia proteica per quel pasto) — tutto il resto
+  (portate, cereale, ecc.) è negoziabile lì per lì, per quel singolo pasto,
+  senza alterare la programmazione salvata degli altri giorni.
+
+## Parametri di Set — quali sono obbligatori e quali no
+
+- **Cereale del giorno**: facoltativo. Se l'utente non lo imposta, un
+  criterio in meno nella ricerca del pool C → pool più grande. Nessun
+  fallback speciale necessario.
+- **Fonte proteica del giorno**: facoltativo lato utente, ma **mai assente
+  nei fatti**: se l'utente non personalizza la griglia proteica, resta
+  comunque attivo il meccanismo automatico già esistente
+  (`E.buildProteinGrid`, target/min/max settimanali per macrocategoria) che
+  assegna comunque qualcosa per mantenere il piano entro i criteri
+  nutrizionali. Nessuna modifica a questo meccanismo — resta quello di
+  oggi.
+- **Verdure preferite**: indicate dall'utente (meccanismo già esistente,
+  invariato).
+- **Portate (1/2/3/Casuale)**: è il default generale che l'utente
+  preferisce "di solito" (es. 2), impostato in Set — **ma va esposto anche
+  giorno per giorno dentro la vista di programmazione settimanale**
+  (Menù), con la stessa logica della griglia proteica che già oggi si può
+  sovrascrivere giorno per giorno/pasto per pasto. Non è quindi solo un
+  default globale: è anche un override puntuale disponibile in
+  programmazione.
+
+## Meccanica di roll — flag 0/1 per candidato nel pool
+
+Quando si genera o si rigenera un componente del pasto (in programmazione
+per rifinire, o in manuale per il pasto del giorno), il pool di ricette
+candidate per quel requisito porta con sé uno stato "roll" **per
+candidato**, scoped alla sessione di modifica di quello specifico slot:
+
+- `0` = non ancora mostrato in questo ciclo.
+- `1` = già mostrato.
+
+Il candidato attualmente visualizzato è marcato `1`. Click su "cambia" →
+la nuova estrazione avviene **solo** tra i candidati ancora a `0`. Quando
+l'utente ha visto l'ultimo candidato disponibile (tutti a `1`), i flag si
+azzerano tutti e il ciclo riparte da capo. Garantisce che, cliccando
+ripetutamente "cambia", l'utente veda ogni alternativa del pool prima di
+rivedere la stessa una seconda volta.
+
+**Il lucchetto per fissare la scelta finale è quello già esistente**,
+verificato robusto durante l'audit (`AUDIT-STATO-LAVORO.md` → sezione
+lucchetto) — nessuna modifica necessaria lì, si riusa così com'è.
+
+Questa meccanica di roll è la stessa sia in programmazione (per rifinire
+un piano già generato) sia nel pasto del giorno (manuale) — un solo
+meccanismo, due punti d'uso.
+
+## Esempio concreto (per riferimento futuro, dal flusso descritto da Cwe)
+
+Mercoledì la programmazione ha assegnato "Pasta con cozze e vongole"
+(pesce, 2 portate, combinazione che copre PP+C in un piatto solo).
+L'utente non lo vuole, preferisce un secondo di pesce puro. Cambia il
+selettore portate **di quel giorno/pasto** a 3 → si rinterroga con la
+fonte proteica del giorno ferma (pesce) → pool "solo PP" per il ruolo
+secondo, con flag roll come sopra → l'utente cicla con "cambia" finché non
+trova quello che vuole → lucchetto per fissarlo.
 
 ## Stato: da implementare
 
