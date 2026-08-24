@@ -284,11 +284,28 @@ questa architettura.
 
 ## Meccanica stack + roll — due variabili binarie sulla ricetta, due scopi diversi
 
-**Precisato da Cwe il 2026-08-24, sostituisce/completa la sezione roll
-scritta prima (che descriveva solo metà del meccanismo).** Per gestire la
-rotazione in modo matematico servono **due variabili binarie, entrambe
-sulla ricetta** (non solo stato di sessione): `stack` e `roll`. Fanno cose
-diverse, su scale di tempo diverse.
+**Precisazione importante (2026-08-24, dopo un errore di Claude scoperto
+testando lo script di prova): lo stack non vive sul nome finale composto
+(ricetta+cereale+tutto insieme) — vive sul `condimento`/protagonista.**
+Il cereale scelto per accompagnarlo è indipendente e non deve diluire il
+conteggio. Esempio concreto che ha fatto emergere l'errore: "Farro con
+taleggio e speck" e "Orzo con taleggio e speck" **sono lo stesso
+condimento** (taleggio e speck) con due cereali diversi — devono
+condividere **un solo** stack, non uno ciascuno. Se stack fosse tenuto sul
+nome finale completo, il condimento "taleggio e speck" potrebbe ripresentarsi
+più volte nella stessa settimana semplicemente cambiando il cereale
+abbinato — esattamente il bug trovato.
+
+**La ricetta-template resta sempre valida** (es. "con taleggio e speck"
+come contenitore, o il template con un qualunque array-protagonista
+C/PC/PP/PL ecc.) — è la **combinazione specifica di condimento/proteina/
+verdura scelta dall'array**, indipendente dal cereale abbinato, che va a
+stack quando selezionata, e non ricompare per 15 giorni.
+
+Per gestire la rotazione in modo matematico servono **due variabili
+binarie**, entrambe legate al condimento/protagonista selezionato (non al
+nome finale composto col cereale): `stack` e `roll`. Fanno cose diverse,
+su scale di tempo diverse.
 
 ### Sequenza completa, dalla query al pasto scritto
 
@@ -333,12 +350,20 @@ solo meccanismo, due punti d'uso.
 
 **Deciso**: il periodo di ripristino per `stack` è **15 giorni** dalla
 selezione. Più una seconda condizione di ripristino, indipendente dal
-tempo: se una ricetta è l'**ultima rimasta a `stack=1`** nel suo pool (tutte
-le altre già a 0) e viene selezionata, a quel punto **tutto il pool si
-ripristina a 1** (stessa logica del ciclo di reset già usata per il roll —
-il pool non deve mai restare completamente vuoto per le estrazioni
-future). I due meccanismi di reset (tempo/15gg e pool-esaurito) convivono:
-vale il primo dei due che scatta.
+tempo: se un condimento/protagonista è l'**ultimo rimasto a `stack=1`**
+nel suo array condiviso (tutti gli altri già a 0) e viene selezionato, a
+quel punto **tutto quell'array si ripristina a 1** (stessa logica del
+ciclo di reset già usata per il roll — il pool non deve mai restare
+completamente vuoto per le estrazioni future). I due meccanismi di reset
+(tempo/15gg e array-esaurito) convivono: vale il primo dei due che scatta.
+
+**Nota sul reset array-esaurito**: siccome uno stesso condimento/array può
+essere condiviso da più ricette-template (es. lo stesso array verdure
+usato sia in "con verdure saltate" sia altrove), **finché esistono altre
+ricette che attingono allo stesso array con alternative ancora a
+`stack=1`, quell'array non si esaurisce e non scatta il reset** — più
+ricette condividono un array, più raramente il reset-per-esaurimento
+interviene, e il periodo di 15 giorni resta il meccanismo dominante.
 
 ## Esempio concreto (per riferimento futuro, dal flusso descritto da Cwe)
 
