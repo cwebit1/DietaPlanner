@@ -341,6 +341,29 @@ un elenco di "cose da fare" nell'ordine — è solo il conteggio di cosa non
 **Regole emerse finora, valide per ogni ricetta salvata nel nuovo
 ricettario:**
 
+- **Ogni voce di un array che rappresenta più di un ingrediente insieme
+  deve usare `composizioneFissa` (scomposta ingrediente per ingrediente,
+  ciascuno col suo procedimento), mai una frase unica con un procedimento
+  generico.** Es. dentro `verdureCompatibili`, una voce come "radicchio,
+  pomodori e cipolle" non si scrive come un nome + un procedimento
+  riassuntivo: si scompone in tre ingredienti separati (ciascuno con la
+  propria preparazione) dentro `composizioneFissa`, più un
+  `procedimentoComune` per il passaggio finale di unione. Stesso principio
+  già usato per ricette intere come "insalata fredda con uovo, emmental e
+  pomodoro" — vale identico anche quando la combinazione è solo una voce
+  dentro un array più grande, non l'intera ricetta.
+- **`classe` deve sempre contenere anche le classi dei pool allegati
+  obbligatori**, non solo la classe "principale" della ricetta. Se una
+  ricetta richiede sempre un carboidrato e una verdura per essere completa
+  (anche se scelti da un array, non fissi), quelle classi (C, V) vanno
+  incluse in `classe` insieme a quella di partenza — altrimenti il motore
+  non troverebbe mai quella ricetta quando cerca un pool che deve coprire
+  anche C o V. Non conta se il pool è obbligatorio ma variabile (scelto da
+  un array) o fisso (`composizioneFissa`): se è obbligatorio, la sua
+  classe entra in `classe`. Non entrano invece le classi di pool
+  puramente facoltativi (se la ricetta resta valida anche senza quella
+  scelta).
+
 - Le dosi finali (quanto pesa una porzione di ciascun ingrediente) non si
   scrivono nella ricetta: dipendono da un setting nutrizionista in
   Impostazioni, quindi sono scalabili/modificabili senza toccare le
