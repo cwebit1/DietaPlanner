@@ -180,6 +180,69 @@
           "procedimento": ["Unisci il legume scelto alle verdure fresche scelte e condisci con olio."]
         }
       ]
+    },
+    {
+      "classe": "PC",
+      "proteineCompatibili": [
+        {
+          "nome": "petto di pollo",
+          "sottotipo": "carne_bianca",
+          "procedimento": ["Taglia a fette di circa 1,5 cm, così cuoce in modo uniforme."]
+        },
+        {
+          "nome": "petto di tacchino",
+          "sottotipo": "carne_bianca",
+          "procedimento": ["Taglia a fette regolari, cuoce leggermente più in fretta del pollo."]
+        },
+        {
+          "nome": "fettina di vitello",
+          "sottotipo": "carne_bianca",
+          "procedimento": ["Carne magra e sottile: cuoce in pochi minuti, attenzione a non seccarla."]
+        },
+        {
+          "nome": "fettina di manzo",
+          "sottotipo": "carne_rossa",
+          "procedimento": ["Porta a temperatura ambiente prima di cuocere, cottura breve per restare morbida."]
+        },
+        {
+          "nome": "nodino di maiale",
+          "sottotipo": "carne_rossa",
+          "procedimento": ["Taglio più spesso: allunga leggermente i tempi rispetto alla fettina sottile."]
+        }
+      ],
+      "tipiCotturaCompatibili": [
+        {
+          "nome": "alla piastra",
+          "procedimento": [
+            "Scalda una piastra o padella antiaderente a fuoco alto con un filo d'olio.",
+            "Cuoci 4-5 minuti per lato, senza muovere troppo, finché si forma una leggera crosta dorata.",
+            "Sala solo a fine cottura, lascia riposare 2 minuti prima di servire."
+          ]
+        },
+        {
+          "nome": "al forno",
+          "procedimento": [
+            "Preriscalda il forno a 200°C.",
+            "Disponi in teglia con un filo d'olio.",
+            "Inforna 15-20 minuti a seconda dello spessore, finché ben cotto al centro."
+          ]
+        },
+        {
+          "nome": "in padella",
+          "procedimento": [
+            "Scalda l'olio in padella a fuoco medio-alto.",
+            "Cuoci girando a metà cottura, finché dorato fuori e cotto dentro."
+          ]
+        },
+        {
+          "nome": "ai ferri",
+          "procedimento": [
+            "Scalda bene la griglia o la bistecchiera.",
+            "Cuoci senza aggiungere grassi, girando una sola volta.",
+            "Condisci a crudo con olio una volta servito."
+          ]
+        }
+      ]
     }
   ]
 }
