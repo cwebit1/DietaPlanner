@@ -350,6 +350,17 @@ ricettario:**
   soglie V trovato nell'audit** (STRUTTURA §11): non serve più decidere se
   una quantità "conta" o no come V, ogni quantità contribuisce
   proporzionalmente.
+- **Ogni array che compone una ricetta (`carboidratiCompatibili`,
+  `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
+  procedimento per ogni singola voce**, non solo il nome — altrimenti non
+  è definito come usare quell'ingrediente/variante nella descrizione della
+  ricetta finale mostrata all'utente. Es. non basta
+  `"carboidratiCompatibili": ["p.dura", "orzo"]`, serve
+  `[{"nome":"p.dura","procedimento":[...]}, {"nome":"orzo","procedimento":[...]}]`.
+  **Quello che conta ora è la struttura/logica, non il contenuto esatto
+  dei singoli procedimenti** — i testi si smussano e correggono strada
+  facendo (stesso principio già valido per copertura/nomi nel vecchio
+  ricettario), non serve che siano perfetti al primo giro.
 
 ## Ricette a template — la ricetta diventa una combinazione di array, non un testo fisso
 
