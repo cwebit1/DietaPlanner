@@ -7,22 +7,13 @@
       "carboidratiCompatibili": [
         {
           "nome": "Pasta corta",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata secondo i tempi di confezione (in genere 10-12 minuti), scola al dente."
-          ],
           "nomeVisualizzato": "Pasta"
         },
         {
-          "nome": "Pasta integrale",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
-          ]
+          "nome": "Pasta integrale"
         },
         {
           "nome": "Tagliolini all'uovo",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."
-          ],
           "nomeVisualizzato": "Tagliolini"
         }
       ],
@@ -58,29 +49,17 @@
       "carboidratiCompatibili": [
         {
           "nome": "Pasta corta",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
-          ],
           "nomeVisualizzato": "Pasta"
         },
         {
-          "nome": "Pasta integrale",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
-          ]
+          "nome": "Pasta integrale"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata per circa 15-18 minuti, scola tenendo da parte un po' di acqua di cottura."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata per circa 15-20 minuti (o secondo tempi di confezione se perlato), scola bene."
-          ],
           "nomeVisualizzato": "Farro"
         }
       ]
@@ -100,16 +79,10 @@
       "carboidratiCompatibili": [
         {
           "nome": "Pasta corta",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
-          ],
           "nomeVisualizzato": "Pasta"
         },
         {
-          "nome": "Pasta integrale",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
-          ]
+          "nome": "Pasta integrale"
         }
       ]
     },
@@ -243,30 +216,18 @@
       "carboidratiCompatibili": [
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Farro"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
-          "nome": "Cous cous",
-          "procedimento": [
-            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
-          ]
+          "nome": "Cous cous"
         }
       ],
       "procedimentoComune": [
@@ -574,22 +535,13 @@
       ],
       "carboidratiCompatibili": [
         {
-          "nome": "Taralli",
-          "procedimento": [
-            "Servi così come sono, senza preparazione."
-          ]
+          "nome": "Taralli"
         },
         {
-          "nome": "Crackers",
-          "procedimento": [
-            "Servi così come sono, senza preparazione."
-          ]
+          "nome": "Crackers"
         },
         {
           "nome": "Gallette di riso",
-          "procedimento": [
-            "Servi così come sono, senza preparazione."
-          ],
           "nomeVisualizzato": "Gallette"
         }
       ],
@@ -755,30 +707,18 @@
       "carboidratiCompatibili": [
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola e lascia raffreddare (anche sciacquando sotto acqua fredda)."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Farro"
         },
         {
-          "nome": "Cous cous",
-          "procedimento": [
-            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
-          ]
+          "nome": "Cous cous"
         }
       ],
       "verdureCompatibili": [
@@ -822,30 +762,18 @@
       "carboidratiCompatibili": [
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola e lascia raffreddare (anche sciacquando sotto acqua fredda)."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Farro"
         },
         {
-          "nome": "Cous cous",
-          "procedimento": [
-            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
-          ]
+          "nome": "Cous cous"
         }
       ],
       "proteineCompatibili": [
@@ -918,30 +846,18 @@
       "carboidratiCompatibili": [
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola e lascia raffreddare (anche sciacquando sotto acqua fredda)."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
-          ],
           "nomeVisualizzato": "Farro"
         },
         {
-          "nome": "Cous cous",
-          "procedimento": [
-            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
-          ]
+          "nome": "Cous cous"
         }
       ],
       "verdureCompatibili": [
@@ -975,36 +891,21 @@
       "carboidratiCompatibili": [
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Pasta corta",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
-          ],
           "nomeVisualizzato": "Pasta"
         },
         {
-          "nome": "Pasta integrale",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
-          ]
+          "nome": "Pasta integrale"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola."
-          ],
           "nomeVisualizzato": "Farro"
         }
       ],
@@ -1022,63 +923,36 @@
       "carboidratiCompatibili": [
         {
           "nome": "Pasta corta",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
-          ],
           "nomeVisualizzato": "Pasta"
         },
         {
           "nome": "Tagliolini all'uovo",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."
-          ],
           "nomeVisualizzato": "Tagliolini"
         },
         {
-          "nome": "Pasta integrale",
-          "procedimento": [
-            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
-          ]
+          "nome": "Pasta integrale"
         },
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola."
-          ],
           "nomeVisualizzato": "Farro"
         },
         {
-          "nome": "Cous cous",
-          "procedimento": [
-            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta."
-          ]
+          "nome": "Cous cous"
         },
         {
           "nome": "Ravioli ricotta e spinaci",
-          "procedimento": [
-            "Cuoci in acqua salata a fuoco dolce finché salgono a galla, pochi minuti: sono delicati, scola con una schiumarola."
-          ],
           "nomeVisualizzato": "Ravioli"
         },
         {
-          "nome": "Gnocchi",
-          "procedimento": [
-            "Cuoci in acqua salata finché salgono a galla, scola subito con una schiumarola."
-          ]
+          "nome": "Gnocchi"
         }
       ],
       "verdureCompatibili": [
@@ -1261,30 +1135,18 @@
       "carboidratiCompatibili": [
         {
           "nome": "Riso Originario",
-          "procedimento": [
-            "Cuoci in acqua salata, scola."
-          ],
           "nomeVisualizzato": "Riso"
         },
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-18 minuti, scola."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Cuoci in acqua salata circa 15-20 minuti, scola."
-          ],
           "nomeVisualizzato": "Farro"
         },
         {
-          "nome": "Cous cous",
-          "procedimento": [
-            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta."
-          ]
+          "nome": "Cous cous"
         }
       ],
       "procedimentoComune": [
@@ -1300,16 +1162,10 @@
       "carboidratiCompatibili": [
         {
           "nome": "Orzo perlato",
-          "procedimento": [
-            "Sciacqua bene prima di cuocere."
-          ],
           "nomeVisualizzato": "Orzo"
         },
         {
           "nome": "Farro perlato",
-          "procedimento": [
-            "Sciacqua bene prima di cuocere."
-          ],
           "nomeVisualizzato": "Farro"
         }
       ],
