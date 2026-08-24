@@ -139,11 +139,11 @@ function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
 // invece di inventarlo.
 function componiNome(r, c, p, k, v) {
   const pezzi = [];
-  if (c) pezzi.push(cap(c.nome) || '[MANCANTE]');
-  if (p) pezzi.push(p.nome || '[MANCANTE]');
+  if (c) pezzi.push(cap(c.nomeVisualizzato || c.nome) || '[MANCANTE]');
+  if (p) pezzi.push(p.nomeVisualizzato || p.nome || '[MANCANTE]');
   if (r.nome) pezzi.push(r.nome);
-  if (k) pezzi.push(k.nome || '[MANCANTE]');
-  if (v) pezzi.push(v.nome || '[MANCANTE]');
+  if (k) pezzi.push(k.nomeVisualizzato || k.nome || '[MANCANTE]');
+  if (v) pezzi.push(v.nomeVisualizzato || v.nome || '[MANCANTE]');
   return pezzi.filter(Boolean).join(' ').trim() || '[SENZA NOME NEI DATI]';
 }
 
