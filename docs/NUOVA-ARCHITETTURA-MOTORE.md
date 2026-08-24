@@ -361,6 +361,17 @@ ricettario:**
   dei singoli procedimenti** — i testi si smussano e correggono strada
   facendo (stesso principio già valido per copertura/nomi nel vecchio
   ricettario), non serve che siano perfetti al primo giro.
+- **`classe` con più valori (es. `["PF","PC"]`) NON significa che la
+  ricetta fonde o copre entrambe le classi contemporaneamente in un solo
+  pasto.** Significa che la ricetta **appartiene** a più classi come
+  membro valido di ciascuna, separatamente: se il motore cerca "chi copre
+  PF" (giorno formaggi) la trova, se cerca "chi copre PC" (giorno carne)
+  la trova anche lì. Non serve né implica un giorno che sia
+  contemporaneamente formaggi-e-carne, e non conta doppio sulle quote
+  settimanali di entrambe le macrocategorie — è appartenenza a due pool
+  distinti, non fusione. (Chiarito su "con taleggio e speck", che aveva
+  `classe:["C","PF","PC"]` — resta valida come scritta, era solo la
+  lettura di Claude ad essere ambigua, non la struttura dati.)
 
 ## Ricette a template — la ricetta diventa una combinazione di array, non un testo fisso
 
