@@ -156,6 +156,41 @@
       ]
     },
     {
+      "classe": "PU",
+      "tipiCotturaCompatibili": [
+        {
+          "nome": "sode",
+          "procedimento": [
+            "Metti le uova in un pentolino con acqua fredda che le copra di 2 cm.",
+            "Porta a bollore, poi abbassa a fuoco medio e cuoci 9 minuti da quando l'acqua bolle.",
+            "Scola e trasferisci subito in acqua fredda per fermare la cottura, poi sguscia."
+          ]
+        },
+        {
+          "nome": "strapazzate",
+          "procedimento": [
+            "Sbatti le uova in una ciotola con un pizzico di sale.",
+            "Versa in padella con un filo d'olio a fuoco medio-basso, mescolando di continuo finché rapprese ma ancora morbide."
+          ]
+        },
+        {
+          "nome": "in camicia",
+          "procedimento": [
+            "Porta a bollore acqua con un cucchiaio di aceto, crea un vortice con un cucchiaio.",
+            "Rompi l'uovo al centro e cuoci 2-3 minuti finché l'albume è rappreso e il tuorlo resta morbido.",
+            "Scola con una schiumarola."
+          ]
+        },
+        {
+          "nome": "al tegamino",
+          "procedimento": [
+            "Scalda un filo d'olio in padella antiaderente.",
+            "Rompi l'uovo direttamente in padella, cuoci a fuoco basso finché l'albume è rappreso."
+          ]
+        }
+      ]
+    },
+    {
       "classe": "PL",
       "proteineCompatibili": [
         {
