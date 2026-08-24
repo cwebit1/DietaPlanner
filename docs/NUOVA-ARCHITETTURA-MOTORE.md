@@ -318,6 +318,50 @@ con flag roll come sopra → l'utente cicla con "cambia" finché non trova
 quello che vuole → lucchetto per fissarlo. N1 resta 2 per tutti gli altri
 giorni, invariato.
 
+## Ricette a template — la ricetta diventa una combinazione di array, non un testo fisso
+
+**Decisione grossa, presa il 2026-08-24, che generalizza e sostituisce
+l'idea di correggere 400 ricette una per una.** `carboidratiCompatibili`
+(sezione sughi), `proteineCompatibili` (sezione 2bis) e
+`tipiCotturaCompatibili` non sono tre eccezioni isolate — sono i primi tre
+casi di **un solo principio**, che ora si applica a ogni ricetta, non solo
+a sughi e preparazioni.
+
+Una ricetta diventa un **template**: un nome-base più una o più "caselle"
+che si riempiono da array condivisi (vocabolari), invece di un testo
+fisso e completo. Esempi dati da Cwe:
+
+```
+"Uova" + [array: tipo di cottura uova]      + [array: verdure compatibili con le uova]
+"in bianco" + [array: cereali compatibili]  + [array: formaggi compatibili]
+"polenta"   + [array: formaggi compatibili]
+```
+
+**Perché conviene**: pochi array condivisi, riusati da tante ricette
+diverse, generano combinatoriamente migliaia di combinazioni sensate — non
+serve più scrivere/correggere una voce per ogni variante possibile (es.
+non serve più "Frittata con zucchine", "Frittata con peperoni", "Frittata
+con zucchine e formaggio" come voci separate: basta un template Frittata +
+verdure compatibili + eventuale formaggio compatibile). Le ricette
+esistenti che sono già "complete e fisse" (es. un risotto specifico,
+dove il cereale è parte dell'identità del piatto) restano ricette normali,
+non tutto deve diventare template.
+
+**Il vero lavoro da fare non è più "correggere 400 ricette"**: è definire
+bene gli array/vocabolari condivisi (cereali compatibili, formaggi
+compatibili, verdure compatibili per ogni contesto, proteine compatibili,
+cotture compatibili, ecc.) — fatto quello, il pool di ricette disponibili
+si moltiplica da solo.
+
+**Non ancora deciso, da chiarire prima del documento tecnico**:
+- Quanti e quali array/vocabolari servono in totale (cereali, formaggi,
+  verdure — forse più di uno a seconda del contesto, proteine, cotture...).
+- Come si distingue nei dati una ricetta-template da una ricetta fissa
+  (nuovo campo? convenzione sul nome? tipoPortata dedicato?).
+- Come si compone il nome finale a video quando più caselle sono
+  template contemporaneamente (es. "Uova" + cottura + verdura — che ordine,
+  che punteggiatura).
+
 ## Stato: da implementare
 
 Nessuna riga di codice scritta ancora per questa architettura. Prossimo
