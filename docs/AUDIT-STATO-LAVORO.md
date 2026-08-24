@@ -42,6 +42,7 @@ che dovrebbe succedere" da "cosa succede davvero quando si usa l'app".
 | File | Contenuto |
 |---|---|
 | `AUDIT-STATO-LAVORO.md` (questo file) | Indice, stato generale, cosa fare dopo |
+| `NUOVA-ARCHITETTURA-MOTORE.md` | **Precede in autorità le sezioni sotto quando in conflitto.** Decisione strategica presa il 2026-08-23/24: sostituisce l'intero modello di generazione pasto (pool per requisiti di copertura invece di classificazione fissa primo/secondo/contorno). Leggerlo PRIMA di intervenire su A4/A5, tipoPortata, o il progetto sughi/cotture — sono confluiti tutti lì. |
 | `AUDIT-ANOMALIE-UTENTE.md` | Report 1: anomalie osservate usando l'app come utente reale (input configurato → output ottenuto) |
 | `AUDIT-STRUTTURA-LOGICA.md` | Report 2: analisi funzione-per-funzione del motore (cosa dovrebbe fare vs cosa fa), con causa radice di ogni anomalia del Report 1 |
 | `CLAUDE-REFERENCE.md` | Mappa tecnica generale del repo (file, DB, viste) — scritta in una sessione precedente, ancora valida |

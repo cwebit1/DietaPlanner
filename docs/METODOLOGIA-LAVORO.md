@@ -56,6 +56,17 @@ verificabile, non solo il singolo punto toccato.
    tocca solo il nome, non gli ingredienti, quando la correzione è di
    questo tipo.
 
+5. **Salvare sempre, subito, quello che si analizza e si decide — non solo
+   a fine sessione.** Regola data esplicitamente da Cwe: "l'incoerenza si
+   risolve con la logica" — cioè con la documentazione scritta, non con la
+   memoria della conversazione. Ogni volta che una discussione porta a una
+   decisione architetturale o di merito (non solo un fix puntuale), va
+   salvata in un file nel repo **appena la decisione è presa**, non
+   rimandata a "quando è tutto pronto". Se la decisione è ampia (cambia il
+   modello, non solo un dettaglio), merita un documento dedicato — vedi
+   `NUOVA-ARCHITETTURA-MOTORE.md` come esempio di come è stato fatto per
+   la riprogettazione del motore di generazione deciso il 2026-08-23/24.
+
 ## Metodo di verifica (eredità dell'audit iniziale, resta valido)
 
 Ogni correzione va verificata **dal vivo**, non solo letta nel codice:
