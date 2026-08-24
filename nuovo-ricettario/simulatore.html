@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulatore motore nuovo — 10 giorni</title>
+<style>
+  :root{--bg:#141a12;--card:#1c2419;--card2:#222b1e;--border:#2f3b29;--text:#e9efe4;--dim:#9fae94;--accent:#8fce55;--warn:#e0954a;--bad:#e0594a;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,sans-serif;font-size:14px;padding-bottom:40px;}
+  h1{font-size:1.1rem;margin:0;padding:12px;border-bottom:1px solid var(--border);}
+  h2{font-size:0.95rem;color:var(--accent);margin:0 0 8px;}
+  section{padding:12px;border-bottom:1px solid var(--border);}
+  label{display:block;font-size:0.78rem;color:var(--dim);margin-top:8px;margin-bottom:2px;}
+  input[type=text],input[type=number],select,textarea{
+    width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:6px 8px;font-size:0.85rem;
+  }
+  textarea{font-family:monospace;font-size:0.72rem;min-height:70px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:6px;}
+  th,td{border:1px solid var(--border);padding:4px 6px;text-align:left;vertical-align:top;}
+  th{background:var(--card2);}
+  button{background:var(--accent);color:#12220a;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-top:10px;}
+  .esito{margin-top:12px;}
+  .giorno-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;}
+  .pasto{margin-top:6px;padding:6px;background:var(--card2);border-radius:6px;}
+  .pezzo{font-size:0.82rem;margin:2px 0;}
+  .meta{color:var(--dim);font-size:0.7rem;}
+  .fail{color:var(--bad);font-weight:700;}
+  .adatt{color:var(--warn);}
+  .mancante{color:var(--bad);font-style:italic;}
+  #fileInput{width:100%;}
+  .riepilogo{background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:10px;margin-top:10px;font-size:0.8rem;}
+</style>
+</head>
+<body>
+
+<h1>🧪 Simulatore motore nuovo — estrazione 10 giorni</h1>
+
+<section>
+  <h2>0. Ricettario</h2>
+  <label>Carica nuovo-ricettario/ricette.json</label>
+  <input type="file" id="fileInput" accept="application/json">
+  <div class="meta" id="statoRicettario">Nessun file caricato.</div>
+</section>
+
+<section>
+  <h2>1. Setting nutrizionista</h2>
+  <div class="grid">
+    <div><label>Soglia V insalata (g)</label><input type="number" id="sogliaInsalata" value="70"></div>
+    <div><label>Soglia V altre verdure (g)</label><input type="number" id="sogliaAltro" value="200"></div>
+  </div>
+  <label>Allergeni attivi (separati da virgola, es. glutine,uova)</label>
+  <input type="text" id="allergeniAttivi" value="">
+  <label>Ingredienti bloccati (separati da virgola)</label>
+  <input type="text" id="ingredientiBloccati" value="">
+  <label>Periodo ripristino stack (giorni)</label>
+  <input type="number" id="stackGiorni" value="15">
+</section>
+
+<section>
+  <h2>2. Setting user — portate</h2>
+  <div class="grid">
+    <div><label>N1 (default permanente)</label>
+      <select id="n1"><option value="1">1 — piatto unico</option><option value="2" selected>2</option><option value="3">3</option><option value="casuale">Casuale</option></select>
+    </div>
+    <div><label>N2 override (vuoto = usa N1)</label><input type="text" id="n2" placeholder="es. giorno3_cena:3"></div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Setting user — griglia proteica e cereale (10 giorni)</h2>
+  <div class="meta">Un cella per pasto: token proteina (PC/PP/PF/PU/PL) e cereale preferito facoltativo (nome esatto o vuoto = slot machine).</div>
+  <table id="tabellaGiorni"></table>
+</section>
+
+<section>
+  <h2>4. Setting user — altro</h2>
+  <label>Verdure disattivate (separate da virgola)</label>
+  <input type="text" id="verdureDisattivate" value="">
+  <label>Ingredienti "concessi ma non ideali" (separati da virgola — riduce probabilità estrazione)</label>
+  <input type="text" id="ingredientiConcessi" value="">
+</section>
+
+<button id="btnGenera">Genera 10 giorni</button>
+
+<div class="esito" id="esito"></div>
+
+<script>
+const GIORNI_LABEL = ['Giorno 1','Giorno 2','Giorno 3','Giorno 4','Giorno 5','Giorno 6','Giorno 7','Giorno 8','Giorno 9','Giorno 10'];
+const TOKEN_PROTEINA = ['PC','PP','PF','PU','PL'];
+
+// costruisco la tabella 10 giorni x 2 pasti con select proteina + input cereale
+const tab = document.getElementById('tabellaGiorni');
+let html = '<tr><th>Giorno</th><th>Pranzo: proteina</th><th>Pranzo: cereale pref.</th><th>Cena: proteina</th><th>Cena: cereale pref.</th></tr>';
+const DEFAULT_ROTAZIONE = ['PC','PP','PF','PU','PL','PC','PP','PF','PU','PL'];
+for (let i = 0; i < 10; i++) {
+  const p1 = DEFAULT_ROTAZIONE[i % 5], p2 = DEFAULT_ROTAZIONE[(i+2) % 5];
+  html += `<tr><td>${GIORNI_LABEL[i]}</td>
+    <td><select id="prot_p_${i}">${TOKEN_PROTEINA.map(t=>`<option ${t===p1?'selected':''}>${t}</option>`).join('')}</select></td>
+    <td><input type="text" id="cer_p_${i}" placeholder="es. Farro perlato"></td>
+    <td><select id="prot_c_${i}">${TOKEN_PROTEINA.map(t=>`<option ${t===p2?'selected':''}>${t}</option>`).join('')}</select></td>
+    <td><input type="text" id="cer_c_${i}" placeholder="es. Riso Originario"></td>
+    </tr>`;
+}
+tab.innerHTML = html;
+
+let RICETTE = null;
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const testo = await file.text();
+    const d = JSON.parse(testo);
+    RICETTE = d.ricette;
+    document.getElementById('statoRicettario').textContent = `Caricato: ${RICETTE.length} voci (versione ${d.versione}).`;
+  } catch (err) {
+    document.getElementById('statoRicettario').textContent = 'Errore: ' + err.message;
+  }
+});
+
+// ============== MOTORE (identico al test-settimana.js corretto) ==============
+function normalizzaClasse(c) { return Array.isArray(c) ? c : [c]; }
+function prodottoCartesiano(arrays) {
+  return arrays.reduce((acc, arr) => {
+    const lista = arr && arr.length ? arr : [null];
+    const out = [];
+    for (const combo of acc) for (const voce of lista) out.push([...combo, voce]);
+    return out;
+  }, [[]]);
+}
+function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+// Compone il nome SOLO da dati realmente presenti. Se un pezzo previsto
+// dalla struttura manca un procedimento/nome, lo segnala come MANCANTE
+// invece di inventarlo.
+function componiNome(r, c, p, k, v) {
+  const pezzi = [];
+  if (c) pezzi.push(cap(c.nome) || '[MANCANTE]');
+  if (p) pezzi.push(p.nome || '[MANCANTE]');
+  if (r.nome) pezzi.push(r.nome);
+  if (k) pezzi.push(k.nome || '[MANCANTE]');
+  if (v) pezzi.push(v.nome || '[MANCANTE]');
+  return pezzi.filter(Boolean).join(' ').trim() || '[SENZA NOME NEI DATI]';
+}
+
+function espandiRicetta(r) {
+  const carb = r.carboidratiCompatibili || [];
+  const prot = r.proteineCompatibili || [];
+  const cott = r.tipiCotturaCompatibili || [];
+  const verd = r.verdureCompatibili || [];
+  const combinazioni = prodottoCartesiano([carb, prot, cott, verd]);
+  return combinazioni.map(([c, p, k, v]) => ({
+    classe: normalizzaClasse(r.classe), carboidrato: c,
+    nomeFinale: componiNome(r, c, p, k, v),
+    stackKey: componiNome(r, null, p, k, v),
+    haProcedimento: !!(r.procedimentoComune || r.composizioneFissa || (c&&c.procedimento) || (p&&p.procedimento) || (k&&k.procedimento) || (v&&v.procedimento)),
+  }));
+}
+
+function haQualcheProteina(classe) { return TOKEN_PROTEINA.some(t => classe.includes(t)); }
+
+function creaMotore(tutteBase) {
+  const stack = new Map(tutteBase.map(i => [i.stackKey, true]));
+  function vivi(lista) { return lista.filter(i => stack.get(i.stackKey) !== false); }
+  function scegliCasuale(lista) { return lista.length ? lista[Math.floor(Math.random()*lista.length)] : null; }
+  function consuma(i) { stack.set(i.stackKey, false); }
+
+  function poolUnico(t) { return vivi(tutteBase.filter(i => { const s=new Set(i.classe); return s.has(t)&&s.has('C')&&s.has('V'); })); }
+  function poolDuePortate(t) {
+    return vivi(tutteBase.filter(i => {
+      const s = new Set(i.classe);
+      const proteinePresenti = TOKEN_PROTEINA.filter(x => s.has(x));
+      if (proteinePresenti.some(x => x !== t)) return false;
+      const haProt = s.has(t), haC = s.has('C'), haV = s.has('V');
+      if (haProt && ((haC&&!haV)||(haV&&!haC))) return true;
+      if (!haProt && haC && haV) return true;
+      return false;
+    }));
+  }
+  function poolProteinaDaSola(t) { return vivi(tutteBase.filter(i => { const s=new Set(i.classe); return s.has(t)&&!s.has('C')&&!s.has('V'); })); }
+  function poolCarboDaSolo() { return vivi(tutteBase.filter(i => { const s=new Set(i.classe); return s.has('C')&&!s.has('V')&&!haQualcheProteina(i.classe); })); }
+  function poolVerduraDaSola() { return vivi(tutteBase.filter(i => { const s=new Set(i.classe); return s.has('V')&&!s.has('C')&&!haQualcheProteina(i.classe); })); }
+  function applicaCereale(pool, cereale) {
+    if (!cereale) return pool;
+    const con = pool.filter(i => i.carboidrato && i.carboidrato.nome === cereale);
+    return con.length ? con : pool;
+  }
+
+  function generaPasto(nScelto, token, cereale) {
+    const seq = [nScelto, ...[1,2,3].filter(x=>x!==nScelto)];
+    for (const n of seq) {
+      if (n === 1) {
+        const s = scegliCasuale(applicaCereale(poolUnico(token), cereale));
+        if (s) { consuma(s); return { nTrovato:1, pezzi:[s] }; }
+      }
+      if (n === 2) {
+        const pool = applicaCereale(poolDuePortate(token), cereale);
+        const primo = scegliCasuale(pool);
+        if (primo) {
+          const s = new Set(primo.classe);
+          const mancaProt = !s.has(token), mancaC = !s.has('C'), mancaV = !s.has('V');
+          let secondo = null;
+          if (mancaProt) secondo = scegliCasuale(poolProteinaDaSola(token));
+          else if (mancaC) secondo = scegliCasuale(applicaCereale(poolCarboDaSolo(), cereale));
+          else if (mancaV) secondo = scegliCasuale(poolVerduraDaSola());
+          if (secondo) { consuma(primo); consuma(secondo); return { nTrovato:2, pezzi:[primo, secondo] }; }
+        }
+      }
+      if (n === 3) {
+        const p1 = scegliCasuale(poolProteinaDaSola(token));
+        const p2 = scegliCasuale(applicaCereale(poolCarboDaSolo(), cereale));
+        const p3 = scegliCasuale(poolVerduraDaSola());
+        if (p1 && p2 && p3) { consuma(p1); consuma(p2); consuma(p3); return { nTrovato:3, pezzi:[p1,p2,p3] }; }
+      }
+    }
+    return null;
+  }
+  return { generaPasto };
+}
+
+document.getElementById('btnGenera').addEventListener('click', () => {
+  const esito = document.getElementById('esito');
+  if (!RICETTE) { esito.innerHTML = '<div class="fail">Carica prima ricette.json.</div>'; return; }
+
+  const n1 = document.getElementById('n1').value;
+  const tutteBase = RICETTE.flatMap(espandiRicetta);
+  const motore = creaMotore(tutteBase);
+
+  let successi = 0, fallimenti = 0;
+  let mancanti = 0;
+  let out = '';
+  for (let i = 0; i < 10; i++) {
+    out += `<div class="giorno-card"><b>${GIORNI_LABEL[i]}</b>`;
+    for (const pasto of ['p','c']) {
+      const label = pasto === 'p' ? 'Pranzo' : 'Cena';
+      const token = document.getElementById(`prot_${pasto}_${i}`).value;
+      const cereale = document.getElementById(`cer_${pasto}_${i}`).value.trim() || null;
+      const nScelto = n1 === 'casuale' ? [1,2,3][Math.floor(Math.random()*3)] : Number(n1);
+      const r = motore.generaPasto(nScelto, token, cereale);
+      out += `<div class="pasto"><span class="meta">${label} — proteina richiesta: ${token}${cereale?', cereale pref.: '+cereale:''}</span><br>`;
+      if (!r) {
+        out += `<span class="fail">❌ Nessuna combinazione trovata (pool esaurito)</span>`;
+        fallimenti++;
+      } else {
+        if (r.nTrovato !== nScelto) out += `<span class="adatt">[adattato da ${nScelto} a ${r.nTrovato} portate]</span><br>`;
+        for (const pezzo of r.pezzi) {
+          const flagMancante = pezzo.nomeFinale.includes('MANCANTE') || pezzo.nomeFinale.includes('SENZA NOME');
+          if (flagMancante) mancanti++;
+          out += `<div class="pezzo ${flagMancante?'mancante':''}">• ${pezzo.nomeFinale} <span class="meta">(classe ${pezzo.classe.join('+')}${pezzo.haProcedimento?'':' — ⚠️ nessun procedimento nei dati'})</span></div>`;
+        }
+        successi++;
+      }
+      out += `</div>`;
+    }
+    out += `</div>`;
+  }
+
+  out = `<div class="riepilogo"><b>Totale:</b> ${successi} pasti generati, ${fallimenti} falliti su 20.
+    ${mancanti ? `<br><span class="fail">${mancanti} pezzi con nome/procedimento mancante nei dati (segnalati, non inventati).</span>` : ''}
+    </div>` + out;
+
+  esito.innerHTML = out;
+});
+</script>
+
+</body>
+</html>
