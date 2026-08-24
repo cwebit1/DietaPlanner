@@ -282,30 +282,58 @@ questa architettura.
   default globale: è anche un override puntuale disponibile in
   programmazione.
 
-## Meccanica di roll — flag 0/1 per candidato nel pool
+## Meccanica stack + roll — due variabili binarie sulla ricetta, due scopi diversi
 
-Quando si genera o si rigenera un componente del pasto (in programmazione
-per rifinire, o in manuale per il pasto del giorno), il pool di ricette
-candidate per quel requisito porta con sé uno stato "roll" **per
-candidato**, scoped alla sessione di modifica di quello specifico slot:
+**Precisato da Cwe il 2026-08-24, sostituisce/completa la sezione roll
+scritta prima (che descriveva solo metà del meccanismo).** Per gestire la
+rotazione in modo matematico servono **due variabili binarie, entrambe
+sulla ricetta** (non solo stato di sessione): `stack` e `roll`. Fanno cose
+diverse, su scale di tempo diverse.
 
-- `0` = non ancora mostrato in questo ciclo.
-- `1` = già mostrato.
+### Sequenza completa, dalla query al pasto scritto
 
-Il candidato attualmente visualizzato è marcato `1`. Click su "cambia" →
-la nuova estrazione avviene **solo** tra i candidati ancora a `0`. Quando
-l'utente ha visto l'ultimo candidato disponibile (tutti a `1`), i flag si
-azzerano tutti e il ciclo riparte da capo. Garantisce che, cliccando
-ripetutamente "cambia", l'utente veda ogni alternativa del pool prima di
-rivedere la stessa una seconda volta.
+1. **Query candidati vivi**: dal pool grezzo si filtra per — ingredienti
+   proibiti (allergie/esclusioni), limitazioni raggiunte (tetti
+   settimanali), e **`stack == 0`** (ricette già usate di recente,
+   escluse). Quello che resta è il pool vivo.
+2. **Roll** (esclusione temporanea, per la UX del "cambia"): tra i
+   candidati vivi, quello mostrato ha `roll` a un valore, gli altri
+   restano disponibili. Click su "cambia" → esclude temporaneamente
+   l'estratto corrente, mostra il prossimo tra quelli non ancora visti.
+   Arrivati all'ultimo, **tutti i `roll` si ripristinano a 1** e il ciclo
+   riparte da capo. Il roll **non tocca mai lo stack** — è solo
+   visualizzazione, non consumo.
+3. **Stack** (esclusione reale, per la rotazione): quando una ricetta
+   viene **effettivamente selezionata** per un pasto (non solo mostrata —
+   confermata), il suo `stack` passa a **0** e la ricetta **esce dal pool
+   di estrazione futuro** finché non si ripristina. Il ripristino
+   (`stack` torna a 1) avviene dopo un periodo configurabile — non ancora
+   deciso il valore esatto (giorni? settimane? dipende dalla categoria?),
+   ma il meccanismo è: più ricette esistono in una classe, più raramente
+   serve aspettare perché il pool si esaurisca, quindi il periodo di
+   ripristino può essere regolato in base a quante alternative ci sono
+   già.
+
+### Riepilogo differenze
+
+| | `stack` | `roll` |
+|---|---|---|
+| Scatta quando | la ricetta è **selezionata/confermata** per un pasto | la ricetta è solo **mostrata** come candidato/alternativa |
+| Effetto | esce dal pool di estrazione **futuro** (rotazione reale) | esclusa solo **temporaneamente** dal ciclo di visualizzazione in corso |
+| Si ripristina | dopo un periodo configurabile (da decidere) | appena si arriva in fondo al ciclo delle alternative, subito |
+| Dove vive | sulla ricetta, persistente tra le generazioni | sulla ricetta, scoped alla sessione di un singolo slot in modifica |
 
 **Il lucchetto per fissare la scelta finale è quello già esistente**,
 verificato robusto durante l'audit (`AUDIT-STATO-LAVORO.md` → sezione
 lucchetto) — nessuna modifica necessaria lì, si riusa così com'è.
 
-Questa meccanica di roll è la stessa sia in programmazione (per rifinire
-un piano già generato) sia nel pasto del giorno (manuale) — un solo
-meccanismo, due punti d'uso.
+Questa meccanica (stack + roll) è la stessa sia in programmazione (per
+rifinire un piano già generato) sia nel pasto del giorno (manuale) — un
+solo meccanismo, due punti d'uso.
+
+**Non ancora deciso**: il valore esatto del periodo di ripristino per
+`stack` (quanti giorni/settimane prima che una ricetta usata ridiventi
+estraibile), ed eventualmente se varia per categoria/classe.
 
 ## Esempio concreto (per riferimento futuro, dal flusso descritto da Cwe)
 
