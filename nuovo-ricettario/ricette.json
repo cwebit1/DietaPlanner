@@ -1,5 +1,5 @@
 {
-  "versione": 2,
+  "versione": 3,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -11,21 +11,31 @@
       "carboidratiCompatibili": [
         {
           "nome": "p.dura",
-          "procedimento": ["Cuoci in abbondante acqua salata secondo i tempi di confezione (in genere 10-12 minuti), scola al dente."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata secondo i tempi di confezione (in genere 10-12 minuti), scola al dente."
+          ]
         },
         {
           "nome": "p.integrale",
-          "procedimento": ["Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
+          ]
         },
         {
           "nome": "p.uovo",
-          "procedimento": ["Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."
+          ]
         }
       ]
     },
     {
       "nome": "con taleggio e speck",
-      "classe": ["C", "PF", "PC"],
+      "classe": [
+        "C",
+        "PF",
+        "PC"
+      ],
       "procedimentoComune": [
         "Scalda in padella lo speck tagliato a striscioline finché leggermente croccante.",
         "Aggiungi la panna e il taleggio a pezzetti, mescolando finché il formaggio si scioglie in una crema.",
@@ -34,25 +44,36 @@
       "carboidratiCompatibili": [
         {
           "nome": "p.dura",
-          "procedimento": ["Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
+          ]
         },
         {
           "nome": "p.integrale",
-          "procedimento": ["Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
+          ]
         },
         {
           "nome": "orzo",
-          "procedimento": ["Cuoci in acqua salata per circa 15-18 minuti, scola tenendo da parte un po' di acqua di cottura."]
+          "procedimento": [
+            "Cuoci in acqua salata per circa 15-18 minuti, scola tenendo da parte un po' di acqua di cottura."
+          ]
         },
         {
           "nome": "farro",
-          "procedimento": ["Cuoci in acqua salata per circa 15-20 minuti (o secondo tempi di confezione se perlato), scola bene."]
+          "procedimento": [
+            "Cuoci in acqua salata per circa 15-20 minuti (o secondo tempi di confezione se perlato), scola bene."
+          ]
         }
       ]
     },
     {
       "nome": "alla Norma",
-      "classe": ["C", "V"],
+      "classe": [
+        "C",
+        "V"
+      ],
       "verduraGrammiInclusi": 100,
       "procedimentoComune": [
         "Taglia le melanzane a dadini e saltale in padella con metà dell'olio a fuoco medio-alto per 8-10 minuti, finché dorate.",
@@ -62,11 +83,15 @@
       "carboidratiCompatibili": [
         {
           "nome": "p.dura",
-          "procedimento": ["Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."
+          ]
         },
         {
           "nome": "p.integrale",
-          "procedimento": ["Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."]
+          "procedimento": [
+            "Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."
+          ]
         }
       ]
     },
@@ -75,23 +100,33 @@
       "proteineCompatibili": [
         {
           "nome": "sogliola",
-          "procedimento": ["Filetti sottili: cuociono in fretta, pronti quando la carne è opaca e si stacca facilmente."]
+          "procedimento": [
+            "Filetti sottili: cuociono in fretta, pronti quando la carne è opaca e si stacca facilmente."
+          ]
         },
         {
           "nome": "nasello",
-          "procedimento": ["Filetto un po' più spesso della sogliola: aggiungi qualche minuto di cottura rispetto ai tempi base."]
+          "procedimento": [
+            "Filetto un po' più spesso della sogliola: aggiungi qualche minuto di cottura rispetto ai tempi base."
+          ]
         },
         {
           "nome": "orata",
-          "procedimento": ["Se in filetto con pelle, cuoci qualche minuto in più dal lato pelle per renderla croccante."]
+          "procedimento": [
+            "Se in filetto con pelle, cuoci qualche minuto in più dal lato pelle per renderla croccante."
+          ]
         },
         {
           "nome": "branzino",
-          "procedimento": ["Filetto sodo: rispetta i tempi base della cottura scelta senza bisogno di aggiustamenti."]
+          "procedimento": [
+            "Filetto sodo: rispetta i tempi base della cottura scelta senza bisogno di aggiustamenti."
+          ]
         },
         {
           "nome": "platessa",
-          "procedimento": ["Filetto molto sottile: riduci leggermente i tempi di cottura per non seccarlo."]
+          "procedimento": [
+            "Filetto molto sottile: riduci leggermente i tempi di cottura per non seccarlo."
+          ]
         }
       ],
       "tipiCotturaCompatibili": [
@@ -136,12 +171,16 @@
         {
           "nome": "salsiccia di maiale",
           "sottotipo": "carne_rossa",
-          "procedimento": ["Buca leggermente la pelle con una forchetta prima di cuocere, per evitare che scoppi."]
+          "procedimento": [
+            "Buca leggermente la pelle con una forchetta prima di cuocere, per evitare che scoppi."
+          ]
         },
         {
           "nome": "salsiccia di tacchino",
           "sottotipo": "carne_bianca",
-          "procedimento": ["Più magra della salsiccia di maiale: controlla la cottura per non seccarla."]
+          "procedimento": [
+            "Più magra della salsiccia di maiale: controlla la cottura per non seccarla."
+          ]
         }
       ],
       "tipiCotturaCompatibili": [
@@ -157,91 +196,60 @@
     },
     {
       "nome": "insalata fredda con uovo, emmental e pomodoro",
-      "classe": ["C", "PU", "PF", "V"],
+      "classe": [
+        "C",
+        "PU",
+        "PF",
+        "V"
+      ],
       "composizioneFissa": [
         {
           "nome": "uovo sodo",
-          "procedimento": ["Cuoci sode (9 minuti da bollore), raffredda, sguscia e taglia a spicchi."]
+          "procedimento": [
+            "Cuoci sode (9 minuti da bollore), raffredda, sguscia e taglia a spicchi."
+          ]
         },
         {
           "nome": "emmental a cubetti",
-          "procedimento": ["Taglia a cubetti piccoli prima di unire al resto."]
+          "procedimento": [
+            "Taglia a cubetti piccoli prima di unire al resto."
+          ]
         },
         {
           "nome": "pomodori freschi",
-          "procedimento": ["Taglia a pezzi prima di unire al resto."]
+          "procedimento": [
+            "Taglia a pezzi prima di unire al resto."
+          ]
         }
       ],
       "carboidratiCompatibili": [
         {
           "nome": "riso",
-          "procedimento": ["Cuoci in acqua salata, scola e lascia raffreddare."]
+          "procedimento": [
+            "Cuoci in acqua salata, scola e lascia raffreddare."
+          ]
         },
         {
           "nome": "farro",
-          "procedimento": ["Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."]
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
+          ]
         },
         {
           "nome": "orzo",
-          "procedimento": ["Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."]
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
+          ]
         },
         {
           "nome": "cous cous",
-          "procedimento": ["Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."]
+          "procedimento": [
+            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
+          ]
         }
       ],
       "procedimentoComune": [
         "In una ciotola capiente unisci il cereale scelto raffreddato con uovo sodo, emmental e pomodoro.",
-        "Condisci con olio e mescola bene.",
-        "Lascia riposare qualche minuto in frigorifero prima di servire, se il tempo lo consente."
-      ]
-    },
-    {
-      "nome": "fredda di riso",
-      "classe": "C",
-      "verduraGrammiInclusi": 125,
-      "carboidratiCompatibili": [
-        {
-          "nome": "riso",
-          "procedimento": ["Cuoci in acqua salata, scola e lascia raffreddare (per fare in fretta, sciacqua sotto acqua fredda)."]
-        },
-        {
-          "nome": "cous cous",
-          "procedimento": ["Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."]
-        },
-        {
-          "nome": "orzo",
-          "procedimento": ["Cuoci in acqua salata, scola e lascia raffreddare."]
-        }
-      ],
-      "proteineCompatibili": [
-        {
-          "nome": "tonno",
-          "classe": "PP",
-          "sottotipo": "pesce_conservato",
-          "procedimento": ["Sgocciola bene e sminuzza prima di unire al resto."]
-        },
-        {
-          "nome": "uova sode",
-          "classe": "PU",
-          "procedimento": ["Cuoci sode (9 minuti da bollore), raffredda, sguscia e taglia a spicchi."]
-        },
-        {
-          "nome": "formaggio a cubetti",
-          "classe": "PF",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": ["Taglia a cubetti piccoli prima di unire al resto."]
-        },
-        {
-          "nome": "prosciutto cotto a dadini",
-          "classe": "PC",
-          "sottotipo": "affettati",
-          "procedimento": ["Taglia a dadini piccoli prima di unire al resto."]
-        }
-      ],
-      "procedimentoComune": [
-        "Taglia pomodoro e cetriolo a pezzi piccoli.",
-        "In una ciotola capiente unisci il carboidrato scelto raffreddato, le verdure e la proteina scelta.",
         "Condisci con olio e mescola bene.",
         "Lascia riposare qualche minuto in frigorifero prima di servire, se il tempo lo consente."
       ]
@@ -286,49 +294,71 @@
       "proteineCompatibili": [
         {
           "nome": "ceci",
-          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+          ]
         },
         {
           "nome": "fagioli borlotti",
-          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+          ]
         },
         {
           "nome": "fagioli cannellini",
-          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+          ]
         },
         {
           "nome": "lenticchie",
-          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+          ]
         },
         {
           "nome": "tofu",
-          "procedimento": ["Tampona bene con carta assorbente per togliere l'acqua in eccesso prima di condire o saltare."]
+          "procedimento": [
+            "Tampona bene con carta assorbente per togliere l'acqua in eccesso prima di condire o saltare."
+          ]
         }
       ],
       "tipiCotturaCompatibili": [
         {
           "nome": "all'olio e rosmarino",
-          "procedimento": ["Condisci il legume scelto con olio e rosmarino tritato fresco."]
+          "procedimento": [
+            "Condisci il legume scelto con olio e rosmarino tritato fresco."
+          ]
         },
         {
           "nome": "olio piccante e sesamo",
-          "procedimento": ["Condisci il legume scelto con olio, peperoncino a piacere e semi di sesamo."]
+          "procedimento": [
+            "Condisci il legume scelto con olio, peperoncino a piacere e semi di sesamo."
+          ]
         },
         {
           "nome": "aglio olio e peperoncino",
-          "procedimento": ["Ripassa il legume scelto in padella con aglio, olio e peperoncino per qualche minuto."]
+          "procedimento": [
+            "Ripassa il legume scelto in padella con aglio, olio e peperoncino per qualche minuto."
+          ]
         },
         {
           "nome": "al pepe",
-          "procedimento": ["Condisci il legume scelto con olio e una generosa macinata di pepe nero."]
+          "procedimento": [
+            "Condisci il legume scelto con olio e una generosa macinata di pepe nero."
+          ]
         },
         {
           "nome": "saltati",
-          "procedimento": ["Salta il legume scelto in padella con olio a fuoco vivace per 3-4 minuti."]
+          "procedimento": [
+            "Salta il legume scelto in padella con olio a fuoco vivace per 3-4 minuti."
+          ]
         },
         {
           "nome": "in insalata",
-          "procedimento": ["Unisci il legume scelto alle verdure fresche scelte e condisci con olio."]
+          "procedimento": [
+            "Unisci il legume scelto alle verdure fresche scelte e condisci con olio."
+          ]
         }
       ]
     },
@@ -338,32 +368,44 @@
         {
           "nome": "petto di pollo",
           "sottotipo": "carne_bianca",
-          "procedimento": ["Taglia a fette di circa 1,5 cm, così cuoce in modo uniforme."]
+          "procedimento": [
+            "Taglia a fette di circa 1,5 cm, così cuoce in modo uniforme."
+          ]
         },
         {
           "nome": "sovracosce di pollo",
           "sottotipo": "carne_bianca",
-          "procedimento": ["Carne più grassa e saporita del petto: allunga leggermente i tempi rispetto alla fetta sottile."]
+          "procedimento": [
+            "Carne più grassa e saporita del petto: allunga leggermente i tempi rispetto alla fetta sottile."
+          ]
         },
         {
           "nome": "petto di tacchino",
           "sottotipo": "carne_bianca",
-          "procedimento": ["Taglia a fette regolari, cuoce leggermente più in fretta del pollo."]
+          "procedimento": [
+            "Taglia a fette regolari, cuoce leggermente più in fretta del pollo."
+          ]
         },
         {
           "nome": "fettina di vitello",
           "sottotipo": "carne_bianca",
-          "procedimento": ["Carne magra e sottile: cuoce in pochi minuti, attenzione a non seccarla."]
+          "procedimento": [
+            "Carne magra e sottile: cuoce in pochi minuti, attenzione a non seccarla."
+          ]
         },
         {
           "nome": "fettina di manzo",
           "sottotipo": "carne_rossa",
-          "procedimento": ["Porta a temperatura ambiente prima di cuocere, cottura breve per restare morbida."]
+          "procedimento": [
+            "Porta a temperatura ambiente prima di cuocere, cottura breve per restare morbida."
+          ]
         },
         {
           "nome": "nodino di maiale",
           "sottotipo": "carne_rossa",
-          "procedimento": ["Taglio più spesso: allunga leggermente i tempi rispetto alla fettina sottile."]
+          "procedimento": [
+            "Taglio più spesso: allunga leggermente i tempi rispetto alla fettina sottile."
+          ]
         }
       ],
       "tipiCotturaCompatibili": [
