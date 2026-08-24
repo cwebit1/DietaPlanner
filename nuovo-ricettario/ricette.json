@@ -1014,7 +1014,7 @@
       ]
     },
     {
-      "nome": "con verdure saltate",
+      "nome": "con verdure",
       "classe": [
         "C",
         "V"
@@ -1088,18 +1088,18 @@
             {
               "nome": "zucchine",
               "procedimento": [
-                "Taglia a dadini e salta in padella con olio 6-8 minuti."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "melanzane",
               "procedimento": [
-                "Taglia a dadini e salta in padella con olio 8-10 minuti finché dorate."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci le due verdure a fine cottura e ripassa insieme un minuto."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1108,18 +1108,18 @@
             {
               "nome": "zucchine",
               "procedimento": [
-                "Taglia a dadini e salta in padella con olio 6-8 minuti."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "carote",
               "procedimento": [
-                "Taglia a dadini o julienne e salta in padella con olio 8-10 minuti."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci le due verdure a fine cottura e ripassa insieme un minuto."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1128,18 +1128,18 @@
             {
               "nome": "zucchine",
               "procedimento": [
-                "Taglia a dadini e salta in padella con olio 6-8 minuti."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "pomodoro",
               "procedimento": [
-                "Taglia a pezzi e aggiungi in padella, cuoci 5 minuti."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Cuoci insieme finché il pomodoro si sfalda leggermente."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1148,18 +1148,18 @@
             {
               "nome": "pomodoro",
               "procedimento": [
-                "Taglia a pezzi."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "melanzane",
               "procedimento": [
-                "Taglia a dadini e salta in padella con olio 8-10 minuti finché dorate."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Aggiungi il pomodoro alle melanzane e cuoci insieme altri 5 minuti."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1168,18 +1168,18 @@
             {
               "nome": "piselli",
               "procedimento": [
-                "Cuoci in padella con un filo d'olio e un mestolo d'acqua per 8-10 minuti."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "carote",
               "procedimento": [
-                "Taglia a dadini e salta in padella con olio 8-10 minuti."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci le due verdure a fine cottura e ripassa insieme un minuto."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1188,18 +1188,18 @@
             {
               "nome": "piselli",
               "procedimento": [
-                "Cuoci in padella con un filo d'olio e un mestolo d'acqua per 8-10 minuti."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "pomodoro fresco",
               "procedimento": [
-                "Taglia a pezzi e aggiungi in padella, cuoci 5 minuti."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Cuoci insieme finché il pomodoro si sfalda leggermente."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1208,18 +1208,18 @@
             {
               "nome": "pomodoro",
               "procedimento": [
-                "Taglia a pezzi e scalda in padella con olio 8-10 minuti, schiacciando leggermente."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "basilico fresco",
               "procedimento": [
-                "Aggiungi le foglie intere a fine cottura, spezzettandole a mano."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Manteca il carboidrato scelto nel condimento a fuoco vivace."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1228,18 +1228,18 @@
             {
               "nome": "aglio",
               "procedimento": [
-                "Rosola intero o a lamelle in olio caldo, poi elimina se preferito."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "pomodorini",
               "procedimento": [
-                "Taglia a metà e aggiungi in padella, cuoci 5 minuti."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Manteca il carboidrato scelto nel condimento a fuoco vivace."
+            "DA_DEFINIRE"
           ]
         }
       ]
