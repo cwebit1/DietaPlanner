@@ -331,9 +331,14 @@ Questa meccanica (stack + roll) è la stessa sia in programmazione (per
 rifinire un piano già generato) sia nel pasto del giorno (manuale) — un
 solo meccanismo, due punti d'uso.
 
-**Non ancora deciso**: il valore esatto del periodo di ripristino per
-`stack` (quanti giorni/settimane prima che una ricetta usata ridiventi
-estraibile), ed eventualmente se varia per categoria/classe.
+**Deciso**: il periodo di ripristino per `stack` è **15 giorni** dalla
+selezione. Più una seconda condizione di ripristino, indipendente dal
+tempo: se una ricetta è l'**ultima rimasta a `stack=1`** nel suo pool (tutte
+le altre già a 0) e viene selezionata, a quel punto **tutto il pool si
+ripristina a 1** (stessa logica del ciclo di reset già usata per il roll —
+il pool non deve mai restare completamente vuoto per le estrazioni
+future). I due meccanismi di reset (tempo/15gg e pool-esaurito) convivono:
+vale il primo dei due che scatta.
 
 ## Esempio concreto (per riferimento futuro, dal flusso descritto da Cwe)
 
