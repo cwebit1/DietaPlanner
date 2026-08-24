@@ -1,25 +1,99 @@
 {
-  "versione": 1,
+  "versione": 2,
   "ricette": [
     {
       "nome": "al pomodoro",
       "classe": "C",
-      "carboidratiCompatibili": ["p.dura", "p.integrale", "p.uovo"]
+      "procedimentoComune": [
+        "Taglia il pomodoro a pezzi e scaldalo in padella con l'olio a fuoco medio per 8-10 minuti, schiacciandolo leggermente per creare un sughetto.",
+        "Manteca il carboidrato scelto nel sugo a fuoco vivace, aggiungendo un po' di acqua di cottura se risulta asciutto."
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "p.dura",
+          "procedimento": ["Cuoci in abbondante acqua salata secondo i tempi di confezione (in genere 10-12 minuti), scola al dente."]
+        },
+        {
+          "nome": "p.integrale",
+          "procedimento": ["Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."]
+        },
+        {
+          "nome": "p.uovo",
+          "procedimento": ["Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."]
+        }
+      ]
     },
     {
       "nome": "con taleggio e speck",
       "classe": ["C", "PF", "PC"],
-      "carboidratiCompatibili": ["p.dura", "p.integrale", "orzo", "farro"]
+      "procedimentoComune": [
+        "Scalda in padella lo speck tagliato a striscioline finché leggermente croccante.",
+        "Aggiungi la panna e il taleggio a pezzetti, mescolando finché il formaggio si scioglie in una crema.",
+        "Manteca il carboidrato scelto, scolato al dente, nella padella con il condimento."
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "p.dura",
+          "procedimento": ["Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."]
+        },
+        {
+          "nome": "p.integrale",
+          "procedimento": ["Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": ["Cuoci in acqua salata per circa 15-18 minuti, scola tenendo da parte un po' di acqua di cottura."]
+        },
+        {
+          "nome": "farro",
+          "procedimento": ["Cuoci in acqua salata per circa 15-20 minuti (o secondo tempi di confezione se perlato), scola bene."]
+        }
+      ]
     },
     {
       "nome": "alla Norma",
       "classe": ["C", "V"],
       "verduraGrammiInclusi": 100,
-      "carboidratiCompatibili": ["p.dura", "p.integrale"]
+      "procedimentoComune": [
+        "Taglia le melanzane a dadini e saltale in padella con metà dell'olio a fuoco medio-alto per 8-10 minuti, finché dorate.",
+        "Aggiungi il pomodoro a pezzi e cuoci altri 5 minuti.",
+        "Manteca il carboidrato scelto, scolato al dente, nel condimento con l'olio rimasto e basilico fresco."
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "p.dura",
+          "procedimento": ["Cuoci in abbondante acqua salata secondo i tempi di confezione, scola al dente."]
+        },
+        {
+          "nome": "p.integrale",
+          "procedimento": ["Cuoci in abbondante acqua salata, qualche minuto in più della pasta di semola, scola al dente."]
+        }
+      ]
     },
     {
       "classe": "PP",
-      "proteineCompatibili": ["sogliola", "nasello", "orata", "branzino", "platessa"],
+      "proteineCompatibili": [
+        {
+          "nome": "sogliola",
+          "procedimento": ["Filetti sottili: cuociono in fretta, pronti quando la carne è opaca e si stacca facilmente."]
+        },
+        {
+          "nome": "nasello",
+          "procedimento": ["Filetto un po' più spesso della sogliola: aggiungi qualche minuto di cottura rispetto ai tempi base."]
+        },
+        {
+          "nome": "orata",
+          "procedimento": ["Se in filetto con pelle, cuoci qualche minuto in più dal lato pelle per renderla croccante."]
+        },
+        {
+          "nome": "branzino",
+          "procedimento": ["Filetto sodo: rispetta i tempi base della cottura scelta senza bisogno di aggiustamenti."]
+        },
+        {
+          "nome": "platessa",
+          "procedimento": ["Filetto molto sottile: riduci leggermente i tempi di cottura per non seccarlo."]
+        }
+      ],
       "tipiCotturaCompatibili": [
         {
           "nome": "al forno",
@@ -58,49 +132,52 @@
     },
     {
       "classe": "PL",
-      "proteineCompatibili": ["ceci", "fagioli borlotti", "fagioli cannellini", "lenticchie", "tofu"],
+      "proteineCompatibili": [
+        {
+          "nome": "ceci",
+          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+        },
+        {
+          "nome": "fagioli borlotti",
+          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+        },
+        {
+          "nome": "fagioli cannellini",
+          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+        },
+        {
+          "nome": "lenticchie",
+          "procedimento": ["Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."]
+        },
+        {
+          "nome": "tofu",
+          "procedimento": ["Tampona bene con carta assorbente per togliere l'acqua in eccesso prima di condire o saltare."]
+        }
+      ],
       "tipiCotturaCompatibili": [
         {
           "nome": "all'olio e rosmarino",
-          "procedimento": [
-            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
-            "Condisci con olio e rosmarino tritato fresco."
-          ]
+          "procedimento": ["Condisci il legume scelto con olio e rosmarino tritato fresco."]
         },
         {
           "nome": "olio piccante e sesamo",
-          "procedimento": [
-            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
-            "Condisci con olio, peperoncino a piacere e semi di sesamo."
-          ]
+          "procedimento": ["Condisci il legume scelto con olio, peperoncino a piacere e semi di sesamo."]
         },
         {
           "nome": "aglio olio e peperoncino",
-          "procedimento": [
-            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
-            "Ripassa in padella con aglio, olio e peperoncino per qualche minuto."
-          ]
+          "procedimento": ["Ripassa il legume scelto in padella con aglio, olio e peperoncino per qualche minuto."]
         },
         {
           "nome": "al pepe",
-          "procedimento": [
-            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
-            "Condisci con olio e una generosa macinata di pepe nero."
-          ]
+          "procedimento": ["Condisci il legume scelto con olio e una generosa macinata di pepe nero."]
         },
         {
           "nome": "saltati",
-          "procedimento": [
-            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
-            "Salta in padella con olio a fuoco vivace per 3-4 minuti."
-          ]
+          "procedimento": ["Salta il legume scelto in padella con olio a fuoco vivace per 3-4 minuti."]
         },
         {
           "nome": "in insalata",
-          "procedimento": [
-            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
-            "Unisci alle verdure fresche scelte e condisci con olio."
-          ]
+          "procedimento": ["Unisci il legume scelto alle verdure fresche scelte e condisci con olio."]
         }
       ]
     }
