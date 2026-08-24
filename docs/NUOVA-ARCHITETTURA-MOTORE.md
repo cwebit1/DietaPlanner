@@ -163,9 +163,15 @@ portate impostato e si adatta se non trova una combinazione esatta.
 - **2 portate**: pool = ricette ammissibili che coprono **esattamente 2**
   requisiti qualsiasi tra i 3 (non una coppia fissata a priori — la
   disponibilità reale nel database decide quale coppia), con lo stesso
-  filtro/fallback sul cereale quando la coppia include C. Trovata la
-  prima, resta 1 solo requisito scoperto → si applica lo stesso meccanismo
-  con pool a requisito singolo per completarlo.
+  filtro/fallback sul cereale quando la coppia include C. **Attenzione a
+  non implementarlo come "proteina sempre obbligatoria"**: C+V insieme,
+  senza nessuna proteina, è una coppia valida quanto proteina+C o
+  proteina+V — la proteina mancante si completa dopo, come le altre.
+  L'unico caso da escludere è una **proteina sbagliata** (presente ma
+  diversa da quella del giorno) — quello sì non è mai ammissibile, a
+  nessun livello. Trovata la prima, resta 1 solo requisito scoperto → si
+  applica lo stesso meccanismo con pool a requisito singolo per
+  completarlo (che può essere la proteina stessa, non solo C o V).
 - **3 portate**: tre pool indipendenti, uno per requisito (C con
   filtro/fallback su cereale-di-oggi; proteina-del-giorno; V) — nessuna
   intersezione da cercare.
