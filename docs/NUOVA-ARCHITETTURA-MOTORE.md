@@ -86,11 +86,13 @@ non confondere:**
   posto di N1. Nessun "ripristino" da fare per tornare al default: basta
   non impostare N2 la volta successiva.
 
-Resta da confermare con Cwe: un eventuale pulsante "rigenera tutto il
-pasto" (diverso dal roll di un singolo componente e diverso dal cambio
-esplicito di N) — con setting="casuale", deve ri-estrarre un nuovo N
-casuale, o N resta bloccato a quanto già assegnato finché non si passa
-dalla generazione settimanale vera e propria? Non ancora deciso.
+**Deciso**: un pulsante "rigenera tutto il pasto" (diverso dal roll di un
+singolo componente e diverso dall'impostare N2), quando l'N effettivo
+risolto è `casuale`, **ri-estrae sempre un nuovo N** ad ogni rigenerazione
+— è la slot machine che l'utente ha scelto impostando "casuale", non ha
+senso congelarla al primo risultato. Se invece l'N effettivo è un valore
+fisso (1/2/3, da N1 o N2), "rigenera tutto" mantiene quello stesso N e
+ripete solo la ricerca del pool.
 
 ### 2. Requisiti del giorno — invariato, dalle tabelle Set esistenti
 
