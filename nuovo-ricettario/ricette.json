@@ -1192,6 +1192,26 @@
           "procedimentoComune": [
             "Manteca il carboidrato scelto nel condimento a fuoco vivace."
           ]
+        },
+        {
+          "nome": "aglio, olio e pomodorini",
+          "composizioneFissa": [
+            {
+              "nome": "aglio",
+              "procedimento": [
+                "Rosola intero o a lamelle in olio caldo, poi elimina se preferito."
+              ]
+            },
+            {
+              "nome": "pomodorini",
+              "procedimento": [
+                "Taglia a metà e aggiungi in padella, cuoci 5 minuti."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Manteca il carboidrato scelto nel condimento a fuoco vivace."
+          ]
         }
       ]
     }

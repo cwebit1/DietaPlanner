@@ -2688,41 +2688,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Pasta aglio, olio e pomodorini",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Pasta corta",
-          75
-        ],
-        [
-          "Pomodoro fresco",
-          75
-        ],
-        [
-          "Olio extravergine oliva",
-          10
-        ]
-      ],
-      "procedimento": [
-        "Cuoci la pasta in acqua bollente salata.",
-        "Scalda l'olio in padella a fuoco medio, aggiungi i pomodorini a metà e cuoci 4-5 minuti, schiacciandoli leggermente.",
-        "Scola la pasta al dente e mantecala in padella con il condimento, aggiungendo un goccio di acqua di cottura se serve."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "glutine"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Riso con piselli",
       "fascia": "facile",
       "porzioni": 1,
