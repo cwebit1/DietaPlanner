@@ -2766,47 +2766,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Risotto alla zucchina",
-      "fascia": "medio",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Riso Originario",
-          75
-        ],
-        [
-          "Zucchine",
-          100
-        ],
-        [
-          "Parmigiano grattugiato",
-          10
-        ],
-        [
-          "Olio extravergine oliva",
-          8
-        ]
-      ],
-      "procedimento": [
-        "Taglia le zucchine a dadini piccoli.",
-        "In una casseruola scalda metà dell'olio e tosta il riso 2 minuti a fuoco medio, mescolando continuamente.",
-        "Aggiungi le zucchine e inizia a versare acqua calda un mestolo alla volta, mescolando spesso e aggiungendo altro liquido solo quando il precedente è assorbito.",
-        "Continua la cottura 16-18 minuti finché il riso è al dente al cuore.",
-        "Spegni il fuoco, manteca con il parmigiano e l'olio rimasto; lascia riposare 2 minuti prima di servire."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Farro con verdure miste",
       "fascia": "facile",
       "porzioni": 1,
