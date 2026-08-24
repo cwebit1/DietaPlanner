@@ -2688,39 +2688,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Riso con piselli",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Riso Originario",
-          75
-        ],
-        [
-          "Piselli surgelati",
-          75
-        ],
-        [
-          "Olio extravergine oliva",
-          8
-        ]
-      ],
-      "procedimento": [
-        "Cuoci il riso in acqua salata secondo i tempi indicati.",
-        "Scalda l'olio in un tegame e cuoci i piselli surgelati a fuoco medio 6-7 minuti, aggiungendo un goccio d'acqua se necessario.",
-        "Scola il riso, uniscilo ai piselli e manteca insieme un paio di minuti."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Pane con burro di arachidi e frutta",
       "fascia": "facile",
       "porzioni": 1,
@@ -4269,47 +4236,6 @@
       "soloManuale": false,
       "allergeniPresenti": [
         "uova"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Pasta con panna e piselli",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "",
-      "tipoPortata": "primo",
-      "ingredienti": [
-        [
-          "Pasta corta",
-          75
-        ],
-        [
-          "Panna da cucina",
-          50
-        ],
-        [
-          "Piselli surgelati",
-          50
-        ],
-        [
-          "Olio extravergine oliva",
-          5
-        ]
-      ],
-      "procedimento": [
-        "Cuoci la pasta in acqua bollente salata.",
-        "In una padella scalda l'olio e cuoci i piselli surgelati a fuoco medio 5-6 minuti.",
-        "Aggiungi la panna e scalda a fuoco basso 2-3 minuti, senza far bollire (altrimenti si stacca).",
-        "Scola la pasta al dente e mantecala nella crema di panna e piselli."
-      ],
-      "copertura": "C",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "glutine",
-        "latte"
       ],
       "piattoSpeciale": false,
       "carboidratiCompatibili": [],

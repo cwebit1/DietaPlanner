@@ -1,5 +1,5 @@
 {
-  "versione": 8,
+  "versione": 9,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -1213,6 +1213,100 @@
             "Manteca il carboidrato scelto nel condimento a fuoco vivace."
           ]
         }
+      ]
+    },
+    {
+      "nome": "con piselli",
+      "classe": [
+        "C",
+        "PL"
+      ],
+      "composizioneFissa": [
+        {
+          "nome": "piselli",
+          "procedimento": [
+            "Cuoci in padella con un filo d'olio e un mestolo d'acqua per 8-10 minuti."
+          ]
+        }
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": [
+            "Cuoci in acqua salata, scola."
+          ]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola."
+          ]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": [
+            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta."
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "Manteca il carboidrato scelto con i piselli a fuoco vivace."
+      ]
+    },
+    {
+      "nome": "zuppa di cereali e legumi",
+      "classe": [
+        "C",
+        "PL"
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Sciacqua bene prima di cuocere."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Sciacqua bene prima di cuocere."
+          ]
+        }
+      ],
+      "proteineCompatibili": [
+        {
+          "nome": "ceci",
+          "sottotipo": "legumi",
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene."
+          ]
+        },
+        {
+          "nome": "fagioli borlotti",
+          "sottotipo": "legumi",
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene."
+          ]
+        },
+        {
+          "nome": "lenticchie",
+          "sottotipo": "legumi",
+          "procedimento": [
+            "Scola dal liquido di conservazione e sciacqua bene."
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "Metti il cereale scelto in una pentola con brodo vegetale o acqua a coprire abbondantemente.",
+        "Cuoci a fuoco basso finché il cereale è morbido (tempi secondo il tipo scelto).",
+        "Aggiungi il legume scelto negli ultimi 5-10 minuti di cottura, giusto per scaldarlo insieme.",
+        "Regola di sale e completa con un filo d'olio a crudo."
       ]
     }
   ]
