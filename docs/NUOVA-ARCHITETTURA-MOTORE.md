@@ -98,7 +98,8 @@ ripete solo la ricerca del pool.
 
 Per ogni pasto, i requisiti restano quelli già derivati dalle tabelle Set
 esistenti: la macrocategoria proteica del giorno (dalla griglia proteica)
-e, se applicabile, il cereale del giorno (dal budget carboidrati). La
+e, se applicabile, il cereale del giorno (dal budget carboidrati — **ma
+solo come vincolo per la ricerca di un C isolato, vedi sezione 3**). La
 verdura non ha un "assegnato del giorno" — è sempre un requisito aperto
 (V), coerente con come funziona oggi.
 
@@ -108,18 +109,32 @@ Non tre logiche diverse per unico/due/tre — **una funzione unica**: "trova
 ricette che coprono N requisiti dei richiesti", dove N parte dal numero di
 portate impostato e si adatta se non trova una combinazione esatta.
 
-- Requisiti possibili in un pasto: proteina-del-giorno, C (con vincolo di
-  compatibilità cereale-del-giorno se applicabile), V.
+- Requisiti possibili in un pasto: proteina-del-giorno, C, V.
+- **Il vincolo di compatibilità col cereale-del-giorno si applica SOLO
+  quando C viene cercato da solo, isolato** (il caso "3 portate": una
+  ricetta dedicata esclusivamente al carboidrato, dove ha senso
+  controllare la distribuzione settimanale dei cereali). **Non si applica
+  quando C viene coperto insieme ad altro** (piatto unico, o la parte "2
+  requisiti insieme" del caso 2 portate): lì si accetta il carboidrato che
+  la ricetta porta con sé, qualunque esso sia — non si scarta un risotto
+  solo perché oggi il budget assegnava farro. La coerenza richiesta in
+  quei casi è solo con la proteina-del-giorno, non col cereale. (Non
+  confligge con A2/S5 — il bug del budget carboidrati non tracciato
+  quando il carbo è "nascosto" dentro un secondo: quello resta un problema
+  di conteggio del budget, non di ammissibilità della ricetta, e va
+  risolto comunque separatamente.)
 - **Piatto unico (N=1 nel senso "1 ricetta copre tutto")**: pool = ricette
-  che coprono tutti e 3 i requisiti insieme.
+  che coprono tutti e 3 i requisiti insieme, nessun vincolo cereale.
 - **2 portate**: pool = ricette che coprono **esattamente 2** requisiti
   qualsiasi tra i 3 (non una coppia fissata a priori — la disponibilità
-  reale nel database decide quale coppia). Trovata la prima, resta 1 solo
-  requisito scoperto → si applica lo stesso meccanismo con pool a
-  requisito singolo per completarlo.
-- **3 portate**: tre pool indipendenti, uno per requisito (C con
-  compatibilità cereale se assegnato, proteina-del-giorno, V) — nessuna
-  intersezione da cercare.
+  reale nel database decide quale coppia), nessun vincolo cereale su
+  questa prima scelta. Trovata la prima, resta 1 solo requisito scoperto →
+  si applica lo stesso meccanismo con pool a requisito singolo per
+  completarlo — **se il requisito rimasto è C isolato, lì sì scatta il
+  vincolo cereale**, essendo esattamente il caso "C cercato da solo".
+- **3 portate**: tre pool indipendenti, uno per requisito (C con vincolo
+  cereale se assegnato — è il caso "C isolato" — proteina-del-giorno, V) —
+  nessuna intersezione da cercare.
 
 ### 4. Priorità/scaletta di adattamento quando la combinazione esatta non esiste
 
