@@ -1,5 +1,5 @@
 {
-  "versione": 3,
+  "versione": 4,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -438,6 +438,254 @@
             "Scalda bene la griglia o la bistecchiera.",
             "Cuoci senza aggiungere grassi, girando una sola volta.",
             "Condisci a crudo con olio una volta servito."
+          ]
+        }
+      ]
+    },
+    {
+      "classe": [
+        "PF",
+        "C",
+        "V"
+      ],
+      "proteineCompatibili": [
+        {
+          "nome": "grana o parmigiano",
+          "sottotipo": "formaggio_stagionato",
+          "procedimento": [
+            "Nessuna preparazione particolare, si serve così com'è."
+          ]
+        },
+        {
+          "nome": "mozzarella",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Scola dal liquido di governo prima di servire."
+          ]
+        },
+        {
+          "nome": "crescenza",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Consistenza morbida e spalmabile."
+          ]
+        },
+        {
+          "nome": "ricotta",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Scola dall'eventuale siero in eccesso."
+          ]
+        },
+        {
+          "nome": "pecorino",
+          "sottotipo": "formaggio_stagionato",
+          "procedimento": [
+            "Nessuna preparazione particolare, si serve così com'è."
+          ]
+        },
+        {
+          "nome": "stracchino",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Consistenza cremosa, si preleva con un cucchiaio."
+          ]
+        },
+        {
+          "nome": "brie",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Estrai dal frigo almeno 15 minuti prima: a temperatura ambiente il sapore è migliore."
+          ]
+        },
+        {
+          "nome": "feta",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Scola dal liquido di conservazione prima di servire."
+          ]
+        },
+        {
+          "nome": "provola",
+          "sottotipo": "formaggio_stagionato",
+          "procedimento": [
+            "Adatta anche alla cottura, non solo al naturale."
+          ]
+        }
+      ],
+      "tipiCotturaCompatibili": [
+        {
+          "nome": "a fette",
+          "procedimento": [
+            "Taglia a fette regolari di circa 1 cm."
+          ]
+        },
+        {
+          "nome": "a scaglie",
+          "procedimento": [
+            "Ricava scaglie sottili con un coltello o un pelapatate."
+          ]
+        },
+        {
+          "nome": "a cubetti",
+          "procedimento": [
+            "Taglia a cubetti regolari."
+          ]
+        },
+        {
+          "nome": "a cucchiaiate",
+          "procedimento": [
+            "Preleva direttamente dalla confezione con un cucchiaio."
+          ]
+        },
+        {
+          "nome": "al naturale",
+          "procedimento": [
+            "Servi così com'è, in una ciotolina."
+          ]
+        },
+        {
+          "nome": "alla piastra",
+          "procedimento": [
+            "Scalda una piastra ben calda senza grassi, cuoci un minuto per lato finché dorato fuori e filante dentro."
+          ]
+        }
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "taralli",
+          "procedimento": [
+            "Servi così come sono, senza preparazione."
+          ]
+        },
+        {
+          "nome": "crackers",
+          "procedimento": [
+            "Servi così come sono, senza preparazione."
+          ]
+        },
+        {
+          "nome": "gallette",
+          "procedimento": [
+            "Servi così come sono, senza preparazione."
+          ]
+        }
+      ],
+      "verdureCompatibili": [
+        {
+          "nome": "pomodorini",
+          "procedimento": [
+            "Lava e taglia a metà, condisci con un filo d'olio."
+          ]
+        },
+        {
+          "nome": "rucola",
+          "procedimento": [
+            "Lava e servi cruda, condisci con un filo d'olio."
+          ]
+        },
+        {
+          "nome": "radicchio",
+          "procedimento": [
+            "Lava, taglia a listarelle sottili e servi crudo."
+          ]
+        },
+        {
+          "nome": "finocchi",
+          "procedimento": [
+            "Lava, taglia sottile e servi crudo."
+          ]
+        },
+        {
+          "nome": "radicchio, pomodori e cipolle",
+          "composizioneFissa": [
+            {
+              "nome": "radicchio",
+              "procedimento": [
+                "Lava e taglia a listarelle sottili."
+              ]
+            },
+            {
+              "nome": "pomodori",
+              "procedimento": [
+                "Lava e taglia a spicchi."
+              ]
+            },
+            {
+              "nome": "cipolle",
+              "procedimento": [
+                "Affetta sottile, anche in acqua fredda per ammorbidire il sapore se serve."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci tutto in una ciotola e condisci con un filo d'olio."
+          ]
+        },
+        {
+          "nome": "insalata, peperoni e carote",
+          "composizioneFissa": [
+            {
+              "nome": "insalata",
+              "procedimento": [
+                "Lava e asciuga bene le foglie."
+              ]
+            },
+            {
+              "nome": "peperoni",
+              "procedimento": [
+                "Lava e taglia a listarelle sottili."
+              ]
+            },
+            {
+              "nome": "carote",
+              "procedimento": [
+                "Lava, pela e taglia a julienne o grattugia."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci tutto in una ciotola e condisci con un filo d'olio."
+          ]
+        },
+        {
+          "nome": "finocchio all'arancio",
+          "composizioneFissa": [
+            {
+              "nome": "finocchio",
+              "procedimento": [
+                "Lava e taglia sottile, anche con la mandolina."
+              ]
+            },
+            {
+              "nome": "arancia",
+              "procedimento": [
+                "Pela al vivo e taglia a spicchi, raccogliendo il succo che cola."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci finocchio e spicchi d'arancia, condisci con il succo raccolto e un filo d'olio."
+          ]
+        },
+        {
+          "nome": "spinaci freschi con ananas",
+          "composizioneFissa": [
+            {
+              "nome": "spinaci freschi",
+              "procedimento": [
+                "Lava bene le foglie e asciugale."
+              ]
+            },
+            {
+              "nome": "ananas",
+              "procedimento": [
+                "Taglia la polpa a tocchetti, eliminando il torsolo centrale."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci spinaci e ananas in una ciotola, condisci con un filo d'olio."
           ]
         }
       ]

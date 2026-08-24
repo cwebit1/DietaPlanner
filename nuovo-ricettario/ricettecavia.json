@@ -1517,32 +1517,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Grana o parmigiano a cubetti",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_stagionato",
-      "tipoPortata": "spuntino",
-      "sottotipoSpuntino": "grana_spuntino",
-      "ingredienti": [
-        [
-          "Parmigiano grattugiato",
-          20
-        ]
-      ],
-      "procedimento": [
-        "Taglia il parmigiano a cubetti regolari con un coltello robusto.",
-        "Disponili in una ciotolina e servi a temperatura ambiente."
-      ],
-      "copertura": "PF",
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Pane con marmellata (spuntino)",
       "fascia": "facile",
       "porzioni": 1,
@@ -2260,64 +2234,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Formaggio fresco a fette",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_fresco",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Mozzarella",
-          90
-        ]
-      ],
-      "procedimento": [
-        "Scola la mozzarella dal liquido di governo.",
-        "Tagliala a fette regolari di circa 1 cm.",
-        "Servila a temperatura ambiente, non fredda di frigo: il sapore risulta più pieno."
-      ],
-      "componente": "proteina",
-      "preparazione": "a fette",
-      "copertura": "PF",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Formaggio stagionato a scaglie",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_stagionato",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Parmigiano grattugiato",
-          40
-        ]
-      ],
-      "procedimento": [
-        "Con un coltello o un pelapatate, ricava scaglie sottili dal parmigiano.",
-        "Disponile su un piatto.",
-        "A piacere, completa con una macinata di pepe nero."
-      ],
-      "componente": "proteina",
-      "preparazione": "a scaglie",
-      "copertura": "PF",
-      "richiedeCottura": false,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Insalata mista condita",
       "fascia": "facile",
       "porzioni": 1,
@@ -2963,91 +2879,6 @@
       "soloManuale": false,
       "allergeniPresenti": [
         "molluschi"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Crescenza a fette",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_fresco",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Crescenza",
-          90
-        ]
-      ],
-      "procedimento": [
-        "Preleva la crescenza dalla confezione con un cucchiaio o tagliala a fette: ha una consistenza morbida e spalmabile.",
-        "Servila a temperatura ambiente, magari con un filo d'olio."
-      ],
-      "componente": "proteina",
-      "preparazione": "a fette",
-      "copertura": "PF",
-      "richiedeCottura": false,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Ricotta al naturale",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_fresco",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Ricotta",
-          90
-        ]
-      ],
-      "procedimento": [
-        "Scola la ricotta dall'eventuale siero in eccesso.",
-        "Servila in una ciotolina.",
-        "A piacere, completa con un filo d'olio, erbe fresche tritate o una macinata di pepe."
-      ],
-      "componente": "proteina",
-      "preparazione": "al naturale",
-      "copertura": "PF",
-      "richiedeCottura": false,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Pecorino a scaglie",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_stagionato",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Pecorino",
-          40
-        ]
-      ],
-      "procedimento": [
-        "Con un coltello o un pelapatate, ricava scaglie sottili dal pecorino.",
-        "Disponile su un piatto, a piacere con qualche goccia di miele che ne esalta il sapore."
-      ],
-      "componente": "proteina",
-      "preparazione": "a scaglie",
-      "copertura": "PF",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
       ],
       "piattoSpeciale": false,
       "carboidratiCompatibili": [],
@@ -5336,34 +5167,6 @@
       "tipiCotturaCompatibili": []
     },
     {
-      "nome": "Stracchino a cucchiaiate",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_fresco",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Stracchino",
-          90
-        ]
-      ],
-      "procedimento": [
-        "Preleva lo stracchino dalla confezione con un cucchiaio.",
-        "Servilo a temperatura ambiente in una ciotolina: la consistenza cremosa risulta più gradevole."
-      ],
-      "componente": "proteina",
-      "preparazione": "a cucchiaiate",
-      "copertura": "PF",
-      "richiedeCottura": false,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
       "nome": "Fagioli borlotti conditi",
       "fascia": "facile",
       "porzioni": 1,
@@ -5386,63 +5189,6 @@
       "richiedeCottura": false,
       "soloManuale": false,
       "allergeniPresenti": [],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Brie a fette",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_fresco",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Brie",
-          90
-        ]
-      ],
-      "procedimento": [
-        "Estrai il brie dal frigorifero almeno 15 minuti prima di servirlo: a temperatura ambiente sprigiona meglio il sapore.",
-        "Taglialo a fette o spicchi con un coltello a lama liscia."
-      ],
-      "componente": "proteina",
-      "preparazione": "a fette",
-      "copertura": "PF",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Feta a cubetti",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_fresco",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Feta",
-          90
-        ]
-      ],
-      "procedimento": [
-        "Scola la feta dal liquido di conservazione.",
-        "Tagliala a cubetti regolari.",
-        "Condisci con un filo d'olio e, a piacere, origano secco."
-      ],
-      "componente": "proteina",
-      "preparazione": "a cubetti",
-      "copertura": "PF",
-      "richiedeCottura": false,
-      "soloManuale": false,
-      "allergeniPresenti": [
-        "latte"
-      ],
       "piattoSpeciale": false,
       "carboidratiCompatibili": [],
       "tipiCotturaCompatibili": []
@@ -5872,36 +5618,6 @@
       "soloManuale": false,
       "allergeniPresenti": [
         "glutine",
-        "latte"
-      ],
-      "piattoSpeciale": false,
-      "carboidratiCompatibili": [],
-      "tipiCotturaCompatibili": []
-    },
-    {
-      "nome": "Provola alla piastra",
-      "fascia": "facile",
-      "porzioni": 1,
-      "gruppoProteico": "formaggio_stagionato",
-      "tipoPortata": "secondo",
-      "ingredienti": [
-        [
-          "Provola",
-          75
-        ]
-      ],
-      "procedimento": [
-        "Taglia la provola a fette spesse circa un centimetro.",
-        "Scalda una piastra o padella antiaderente ben calda, senza aggiungere altro grasso.",
-        "Cuoci le fette di provola un minuto per lato, finché dorate fuori e filanti dentro.",
-        "Servi immediatamente, un filo d'olio a piacere."
-      ],
-      "componente": "proteina",
-      "preparazione": "alla piastra",
-      "copertura": "PF",
-      "richiedeCottura": true,
-      "soloManuale": false,
-      "allergeniPresenti": [
         "latte"
       ],
       "piattoSpeciale": false,
