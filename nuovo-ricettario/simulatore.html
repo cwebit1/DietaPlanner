@@ -116,11 +116,25 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
     const testo = await file.text();
     const d = JSON.parse(testo);
     RICETTE = d.ricette;
-    document.getElementById('statoRicettario').textContent = `Caricato: ${RICETTE.length} voci (versione ${d.versione}).`;
+    document.getElementById('statoRicettario').textContent = `Caricato da file: ${RICETTE.length} voci (versione ${d.versione}).`;
   } catch (err) {
     document.getElementById('statoRicettario').textContent = 'Errore: ' + err.message;
   }
 });
+
+// Caricamento automatico da percorso diretto (stessa cartella su GitHub Pages) —
+// niente upload manuale, il file input resta solo come alternativa/fallback.
+(async () => {
+  try {
+    const res = await fetch('ricette.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    RICETTE = d.ricette;
+    document.getElementById('statoRicettario').textContent = `Caricato automaticamente da nuovo-ricettario/ricette.json: ${RICETTE.length} voci (versione ${d.versione}).`;
+  } catch (err) {
+    document.getElementById('statoRicettario').textContent = 'Caricamento automatico non riuscito (' + err.message + ') — usa "Carica ricette.json" qui sopra.';
+  }
+})();
 
 // ============== MOTORE (identico al test-settimana.js corretto) ==============
 function normalizzaClasse(c) { return Array.isArray(c) ? c : [c]; }
