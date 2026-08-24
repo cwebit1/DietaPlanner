@@ -1,5 +1,5 @@
 {
-  "versione": 7,
+  "versione": 8,
   "ingredienti": {
     "Pasta corta": {
       "kcal": 350,
@@ -2838,6 +2838,122 @@
       "allergeni": [
         "glutine"
       ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sedano": {
+      "kcal": 16,
+      "proteine": 0.7,
+      "carboidrati": 3.0,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "sedano"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Rucola": {
+      "kcal": 19,
+      "proteine": 2.0,
+      "carboidrati": 1.6,
+      "grassi": 0.5,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Lattuga": {
+      "kcal": 15,
+      "proteine": 1.4,
+      "carboidrati": 2.9,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Valeriana": {
+      "kcal": 16,
+      "proteine": 1.5,
+      "carboidrati": 2.7,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Songino": {
+      "kcal": 16,
+      "proteine": 1.5,
+      "carboidrati": 2.7,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Ravanelli": {
+      "kcal": 16,
+      "proteine": 0.7,
+      "carboidrati": 3.4,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     }
