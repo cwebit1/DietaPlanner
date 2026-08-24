@@ -99,9 +99,20 @@ ripete solo la ricerca del pool.
 Per ogni pasto, i requisiti restano quelli già derivati dalle tabelle Set
 esistenti: la macrocategoria proteica del giorno (dalla griglia proteica)
 e, se applicabile, il cereale del giorno (dal budget carboidrati — **ma
-solo come vincolo per la ricerca di un C isolato, vedi sezione 3**). La
-verdura non ha un "assegnato del giorno" — è sempre un requisito aperto
-(V), coerente con come funziona oggi.
+solo come vincolo per la ricerca di un C isolato, vedi sezione 3, e solo
+in programmazione, vedi nota sotto**). La verdura non ha un "assegnato del
+giorno" — è sempre un requisito aperto (V), coerente con come funziona
+oggi.
+
+**Il filtro sullo stesso carboidrato scatta solo da programmazione, e
+solo per i giorni dove la tabella carbo ha effettivamente un valore
+assegnato** (es. martedì=riso è un vincolo definito solo se quel giorno ha
+davvero un valore in tabella — coerente con la regola già scritta: se
+l'utente non imposta il carbo per un giorno, un criterio in meno, nessun
+vincolo). **In manuale non scatta mai**, nemmeno nel caso "C isolato": in
+manuale l'unico vincolo che resta è la fonte proteica del giorno (vedi
+sezione "Due ambienti"), il cereale è sempre negoziabile lì, anche
+quando si sta cercando un carboidrato puro.
 
 ### 3. L'algoritmo — una sola funzione, generalizzata su N
 
@@ -113,7 +124,10 @@ portate impostato e si adatta se non trova una combinazione esatta.
 - **Il vincolo di compatibilità col cereale-del-giorno si applica SOLO
   quando C viene cercato da solo, isolato** (il caso "3 portate": una
   ricetta dedicata esclusivamente al carboidrato, dove ha senso
-  controllare la distribuzione settimanale dei cereali). **Non si applica
+  controllare la distribuzione settimanale dei cereali) **E solo in
+  programmazione, per i giorni dove la tabella carbo ha un valore
+  assegnato** (vedi sezione 2). In manuale non scatta mai, nemmeno per un
+  C isolato. **Non si applica
   quando C viene coperto insieme ad altro** (piatto unico, o la parte "2
   requisiti insieme" del caso 2 portate): lì si accetta il carboidrato che
   la ricetta porta con sé, qualunque esso sia — non si scarta un risotto
