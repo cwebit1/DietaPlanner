@@ -1,5 +1,5 @@
 {
-  "versione": 10,
+  "versione": 11,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -1312,6 +1312,7 @@
     {
       "nome": "Insalata di",
       "classe": "V",
+      "porzioneRiferimentoGrammi": 70,
       "verdureCompatibili": [
         {
           "nome": "lattuga",
@@ -1320,9 +1321,9 @@
           ]
         },
         {
-          "nome": "rucola",
+          "nome": "radicchio",
           "procedimento": [
-            "Lava e asciuga bene le foglie."
+            "Lava e taglia a listarelle sottili."
           ]
         },
         {
@@ -1332,9 +1333,62 @@
           ]
         },
         {
-          "nome": "radicchio",
+          "nome": "songino",
           "procedimento": [
-            "Lava e taglia a listarelle sottili."
+            "Lava con cura (trattiene terra), asciuga bene."
+          ]
+        },
+        {
+          "nome": "misticanza (lattuga, radicchio, valeriana e songino)",
+          "composizioneFissa": [
+            {
+              "nome": "lattuga",
+              "procedimento": [
+                "Lava le foglie e asciugale bene, spezzetta a mano."
+              ]
+            },
+            {
+              "nome": "radicchio",
+              "procedimento": [
+                "Lava e taglia a listarelle sottili."
+              ]
+            },
+            {
+              "nome": "valeriana",
+              "procedimento": [
+                "Lava con cura, asciuga bene."
+              ]
+            },
+            {
+              "nome": "songino",
+              "procedimento": [
+                "Lava con cura, asciuga bene."
+              ]
+            }
+          ],
+          "procedimentoComune": [
+            "Unisci tutte le foglie in una ciotola."
+          ]
+        }
+      ],
+      "condimentoCompatibili": [
+        {
+          "nome": "al limone",
+          "procedimento": [
+            "Condisci con olio e succo di limone fresco."
+          ]
+        }
+      ]
+    },
+    {
+      "nome": "Insalata di",
+      "classe": "V",
+      "porzioneRiferimentoGrammi": 200,
+      "verdureCompatibili": [
+        {
+          "nome": "rucola",
+          "procedimento": [
+            "Lava e asciuga bene le foglie."
           ]
         },
         {
@@ -1414,7 +1468,7 @@
             }
           ],
           "procedimentoComune": [
-            "Unisci in una ciotola e condisci con olio."
+            "Unisci in una ciotola."
           ]
         },
         {
@@ -1434,7 +1488,7 @@
             }
           ],
           "procedimentoComune": [
-            "Unisci in una ciotola e condisci con olio e succo di limone."
+            "Unisci in una ciotola."
           ]
         },
         {
@@ -1454,59 +1508,15 @@
             }
           ],
           "procedimentoComune": [
-            "Unisci in una ciotola e condisci con olio."
+            "Unisci in una ciotola."
           ]
-        },
+        }
+      ],
+      "condimentoCompatibili": [
         {
-          "nome": "radicchio, carote e finocchi",
-          "composizioneFissa": [
-            {
-              "nome": "radicchio",
-              "procedimento": [
-                "Lava e taglia a listarelle sottili."
-              ]
-            },
-            {
-              "nome": "carote",
-              "procedimento": [
-                "Lava, pela e taglia a julienne."
-              ]
-            },
-            {
-              "nome": "finocchi",
-              "procedimento": [
-                "Lava e taglia sottile."
-              ]
-            }
-          ],
-          "procedimentoComune": [
-            "Unisci in una ciotola e condisci con olio."
-          ]
-        },
-        {
-          "nome": "misticanza (lattuga, radicchio e rucola)",
-          "composizioneFissa": [
-            {
-              "nome": "lattuga",
-              "procedimento": [
-                "Lava le foglie e asciugale bene, spezzetta a mano."
-              ]
-            },
-            {
-              "nome": "radicchio",
-              "procedimento": [
-                "Lava e taglia a listarelle sottili."
-              ]
-            },
-            {
-              "nome": "rucola",
-              "procedimento": [
-                "Lava e asciuga bene le foglie."
-              ]
-            }
-          ],
-          "procedimentoComune": [
-            "Unisci in una ciotola e condisci con olio."
+          "nome": "al limone",
+          "procedimento": [
+            "Condisci con olio e succo di limone fresco."
           ]
         }
       ]
