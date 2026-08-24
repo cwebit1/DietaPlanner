@@ -31,13 +31,28 @@ per una categoria fissa.
 
 ## Il modello, in sintesi
 
-### 1. Preferenza "numero di portate" — nuova, in Set, permanente
+### 1. Preferenza "numero di portate" — due variabili separate, non una con override
 
-Nuovo parametro in Set, **globale e permanente** (non per singolo pasto,
-non per singolo giorno): quante portate deve avere ogni pasto generato.
-Non esiste ancora nel sistema, va creato (tabella `impostazioni`, nuova
-chiave). **Selettore a 4 stati**: `1` (piatto unico), `2`, `3`, o
-`casuale`.
+**N1 — il default di Set.** Globale e permanente, uno solo per tutta
+l'app. Selettore a 4 stati: `1` (piatto unico), `2`, `3`, o `casuale`.
+
+**N2 — il valore per singolo giorno/pasto**, opzionale. Assente di
+default (nessuna collisione possibile con N1: sono due variabili
+distinte, non la stessa variabile sovrascritta). Se l'utente imposta un
+N2 per un giorno/pasto specifico dentro la programmazione, quel
+giorno/pasto usa N2; se N2 non è impostato, si usa N1. Ogni giorno può
+avere un N2 diverso dagli altri, o nessuno, senza che questo intacchi N1
+o gli altri giorni.
+
+**Risoluzione: `N_effettivo = N2 se presente, altrimenti N1`.** Punto —
+non serve altro meccanismo di override/ripristino: non essendo la stessa
+variabile, non c'è nulla da "annullare" per tornare al default, basta che
+N2 non sia impostato per quel giorno.
+
+Se il valore risolto (N1 o N2) è `casuale`, si applica quanto già
+descritto sotto: estrazione di un N numerico (1/2/3) al momento della
+generazione, indipendente per pranzo e cena, poi invariato da lì in poi
+(vedi sotto).
 
 Con `casuale`, il valore permanente memorizzato è il sentinel "casuale"
 stesso (la scelta di essere in modalità casuale è ciò che è permanente),
@@ -51,25 +66,25 @@ Da lì in poi l'algoritmo (sezione 3) e la scaletta di adattamento
 modalità "casuale" cambia solo la provenienza del valore N iniziale, non
 la logica che lo usa.
 
-**N (qualunque sia l'origine: setting fisso, estrazione casuale, o
-override manuale per quel giorno) si fissa al momento della generazione e
-si salva sul pasto** (nuovo campo sul record piano, es.
-`numeroPortateEffettivo`) — da quel momento è un dato del pasto, non
-un'estrazione da rifare ad ogni interazione.
+**N effettivo (risolto da N1/N2 come sopra, poi eventualmente estratto se
+"casuale") si fissa al momento della generazione e si salva sul pasto**
+(nuovo campo sul record piano, es. `numeroPortateEffettivo`) — da quel
+momento è un dato del pasto, non un'estrazione da rifare ad ogni
+interazione.
 
-**Due modi distinti di cambiare N per un pasto già generato, da non
-confondere:**
+**Due modi distinti di cambiare l'N effettivo di un pasto già generato, da
+non confondere:**
 - **Roll di un singolo componente** (es. cambio solo il contorno): non
-  tocca mai N. Cerca un'alternativa nello stesso pool/stesso ruolo che quel
-  pezzo stava già coprendo, lascia invariati gli altri pezzi e il numero di
-  portate. Coerente con la regola già esistente ("i vincoli automatici
-  valgono solo per la generazione automatica, il roll manuale tocca solo
-  il pezzo specifico").
-- **Cambio esplicito del selettore portate per quel giorno/pasto**
-  (ambiente manuale, vedi esempio più sotto): l'utente sceglie
-  deliberatamente un N diverso per quel pasto specifico → si rinterroga da
-  capo con la fonte proteica del giorno ferma, ma con il nuovo N. Questo
-  **è** un cambio di N intenzionale, diverso dal roll di un componente.
+  tocca mai N1 né N2. Cerca un'alternativa nello stesso pool/stesso ruolo
+  che quel pezzo stava già coprendo, lascia invariati gli altri pezzi e il
+  numero di portate. Coerente con la regola già esistente ("i vincoli
+  automatici valgono solo per la generazione automatica, il roll manuale
+  tocca solo il pezzo specifico").
+- **Impostare N2 per quel giorno/pasto** (ambiente manuale, vedi esempio
+  più sotto): l'utente imposta un N2 per quel pasto specifico → si
+  rinterroga da capo con la fonte proteica del giorno ferma, ma con N2 al
+  posto di N1. Nessun "ripristino" da fare per tornare al default: basta
+  non impostare N2 la volta successiva.
 
 Resta da confermare con Cwe: un eventuale pulsante "rigenera tutto il
 pasto" (diverso dal roll di un singolo componente e diverso dal cambio
@@ -244,11 +259,12 @@ meccanismo, due punti d'uso.
 
 Mercoledì la programmazione ha assegnato "Pasta con cozze e vongole"
 (pesce, 2 portate, combinazione che copre PP+C in un piatto solo).
-L'utente non lo vuole, preferisce un secondo di pesce puro. Cambia il
-selettore portate **di quel giorno/pasto** a 3 → si rinterroga con la
-fonte proteica del giorno ferma (pesce) → pool "solo PP" per il ruolo
-secondo, con flag roll come sopra → l'utente cicla con "cambia" finché non
-trova quello che vuole → lucchetto per fissarlo.
+L'utente non lo vuole, preferisce un secondo di pesce puro. Imposta N2=3
+**per quel giorno/pasto** → si rinterroga con la fonte proteica del giorno
+ferma (pesce) e N2 al posto di N1 → pool "solo PP" per il ruolo secondo,
+con flag roll come sopra → l'utente cicla con "cambia" finché non trova
+quello che vuole → lucchetto per fissarlo. N1 resta 2 per tutti gli altri
+giorni, invariato.
 
 ## Stato: da implementare
 
