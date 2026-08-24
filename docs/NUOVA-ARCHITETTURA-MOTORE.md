@@ -318,6 +318,39 @@ con flag roll come sopra → l'utente cicla con "cambia" finché non trova
 quello che vuole → lucchetto per fissarlo. N1 resta 2 per tutti gli altri
 giorni, invariato.
 
+## Nuovo ricettario — lavoro in corso, file separato
+
+Dal 2026-08-24 si costruisce un ricettario nuovo da zero, insieme, passo
+per passo (non conversione automatica del vecchio): `nuovo-ricettario/ricette.json`
+nella repo. Cwe guida ogni ricetta, Claude estrae uno spunto dal vecchio
+`ricette.json` come riferimento, la modella con la nuova logica, la salva,
+Cwe corregge se serve. Il vecchio `ricette.json` resta intatto e l'app
+continua a funzionare con quello finché non si fa lo swap con il motore
+nuovo.
+
+**Regole emerse finora, valide per ogni ricetta salvata nel nuovo
+ricettario:**
+
+- Le dosi finali (quanto pesa una porzione di ciascun ingrediente) non si
+  scrivono nella ricetta: dipendono da un setting nutrizionista in
+  Impostazioni, quindi sono scalabili/modificabili senza toccare le
+  ricette.
+- **Due fonti proteiche nella stessa ricetta**: il motore dimezza la dose
+  di ciascuna per ottenere lo stesso apporto proteico complessivo di una
+  sola. Non si scrive nella ricetta, è comportamento del motore.
+- **Verdura già presente in una ricetta C (es. melanzane in "alla
+  Norma")**: il pool contorno, quando serve completare V, eroga **per
+  differenza**: `residuo = porzione piena V − quanto già presente nella
+  ricetta`, minimo zero. Non una frazione fissa — la formula generale
+  funziona per qualunque quantità già presente (0g → contorno intero, un
+  valore intermedio → contorno parziale, ≥ porzione piena → contorno
+  azzerato). La ricetta registra solo il dato grezzo (grammi di verdura
+  già inclusi), il calcolo del residuo è responsabilità del motore al
+  momento della generazione. **Risolve alla radice il problema delle
+  soglie V trovato nell'audit** (STRUTTURA §11): non serve più decidere se
+  una quantità "conta" o no come V, ogni quantità contribuisce
+  proporzionalmente.
+
 ## Ricette a template — la ricetta diventa una combinazione di array, non un testo fisso
 
 **Decisione grossa, presa il 2026-08-24, che generalizza e sostituisce

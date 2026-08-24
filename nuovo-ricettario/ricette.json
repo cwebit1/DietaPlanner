@@ -1,0 +1,21 @@
+{
+  "versione": 1,
+  "ricette": [
+    {
+      "nome": "al pomodoro",
+      "classe": "C",
+      "carboidratiCompatibili": ["p.dura", "p.integrale", "p.uovo"]
+    },
+    {
+      "nome": "con taleggio e speck",
+      "classe": ["C", "PF", "PC"],
+      "carboidratiCompatibili": ["p.dura", "p.integrale", "orzo", "farro"]
+    },
+    {
+      "nome": "alla Norma",
+      "classe": ["C", "V"],
+      "verduraGrammiInclusi": 100,
+      "carboidratiCompatibili": ["p.dura", "p.integrale"]
+    }
+  ]
+}
