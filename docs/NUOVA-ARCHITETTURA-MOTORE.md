@@ -328,6 +328,16 @@ Cwe corregge se serve. Il vecchio `ricette.json` resta intatto e l'app
 continua a funzionare con quello finché non si fa lo swap con il motore
 nuovo.
 
+**Meccanismo di tracciamento — `nuovo-ricettario/ricettecavia.json`**:
+copia di lavoro del vecchio `ricette.json` (326 voci all'inizio), che si
+consuma mano a mano. Ogni volta che una ricetta viene esaminata, si
+rimuove dalla cavia — **sia se viene sviluppata come nuovo template, sia
+se si scopre che è già coperta da uno sviluppo esistente** (in quel caso
+non si sviluppa di nuovo, si toglie e basta). Il numero di voci rimaste in
+`ricettecavia.json` è la misura diretta di quanto lavoro resta. Non è
+un elenco di "cose da fare" nell'ordine — è solo il conteggio di cosa non
+è stato ancora toccato.
+
 **Regole emerse finora, valide per ogni ricetta salvata nel nuovo
 ricettario:**
 
