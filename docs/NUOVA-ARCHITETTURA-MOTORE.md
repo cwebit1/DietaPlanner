@@ -98,21 +98,23 @@ ripete solo la ricerca del pool.
 
 Per ogni pasto, i requisiti restano quelli già derivati dalle tabelle Set
 esistenti: la macrocategoria proteica del giorno (dalla griglia proteica)
-e, se applicabile, il cereale del giorno (dal budget carboidrati — **ma
-solo come vincolo per la ricerca di un C isolato, vedi sezione 3, e solo
-in programmazione, vedi nota sotto**). La verdura non ha un "assegnato del
-giorno" — è sempre un requisito aperto (V), coerente con come funziona
+e la verdura, sempre un requisito aperto (V), coerente con come funziona
 oggi.
 
-**Il filtro sullo stesso carboidrato scatta solo da programmazione, e
-solo per i giorni dove la tabella carbo ha effettivamente un valore
-assegnato** (es. martedì=riso è un vincolo definito solo se quel giorno ha
-davvero un valore in tabella — coerente con la regola già scritta: se
-l'utente non imposta il carbo per un giorno, un criterio in meno, nessun
-vincolo). **In manuale non scatta mai**, nemmeno nel caso "C isolato": in
-manuale l'unico vincolo che resta è la fonte proteica del giorno (vedi
-sezione "Due ambienti"), il cereale è sempre negoziabile lì, anche
-quando si sta cercando un carboidrato puro.
+**Il cereale NON è un requisito che esclude nulla — non esiste un
+"cereale del giorno" vincolante.** La tabella Set carboidrati è un
+budget/quota settimanale il cui scopo è organizzativo e di gusto (es.
+programmare riso martedì e giovedì per cucinarlo una volta sola e
+riusarlo) — non un vincolo nutrizionale né un filtro di ammissibilità:
+**nessun pool basato su compatibilità cereale si azzera mai per questo
+motivo.** Funziona come **criterio di preferenza**, allo stesso livello di
+salvafrigo/rotazione/meno-usato-di-recente già esistenti: a parità di
+ammissibilità (proteina del giorno, `carboidratiCompatibili` della
+ricetta), il motore preferisce il cereale indicato in tabella per quel
+giorno; se non è disponibile/compatibile in quel pool, si sceglie comunque
+tra gli altri ammissibili, senza bloccarsi. **Vale identico in
+programmazione e in manuale — nessuna distinzione tra ambienti su questo
+punto.**
 
 ### 3. L'algoritmo — una sola funzione, generalizzata su N
 
@@ -120,35 +122,29 @@ Non tre logiche diverse per unico/due/tre — **una funzione unica**: "trova
 ricette che coprono N requisiti dei richiesti", dove N parte dal numero di
 portate impostato e si adatta se non trova una combinazione esatta.
 
-- Requisiti possibili in un pasto: proteina-del-giorno, C, V.
-- **Il vincolo di compatibilità col cereale-del-giorno si applica SOLO
-  quando C viene cercato da solo, isolato** (il caso "3 portate": una
-  ricetta dedicata esclusivamente al carboidrato, dove ha senso
-  controllare la distribuzione settimanale dei cereali) **E solo in
-  programmazione, per i giorni dove la tabella carbo ha un valore
-  assegnato** (vedi sezione 2). In manuale non scatta mai, nemmeno per un
-  C isolato. **Non si applica
-  quando C viene coperto insieme ad altro** (piatto unico, o la parte "2
-  requisiti insieme" del caso 2 portate): lì si accetta il carboidrato che
-  la ricetta porta con sé, qualunque esso sia — non si scarta un risotto
-  solo perché oggi il budget assegnava farro. La coerenza richiesta in
-  quei casi è solo con la proteina-del-giorno, non col cereale. (Non
-  confligge con A2/S5 — il bug del budget carboidrati non tracciato
-  quando il carbo è "nascosto" dentro un secondo: quello resta un problema
-  di conteggio del budget, non di ammissibilità della ricetta, e va
-  risolto comunque separatamente.)
+- Requisiti di ammissibilità in un pasto (definiscono se una ricetta entra
+  o no nel pool): proteina-del-giorno, C, V. **Il cereale preferito da
+  tabella NON è tra questi** — non è un requisito di ammissibilità, è un
+  criterio di preferenza applicato *dentro* un pool già ammissibile (vedi
+  sezione 2): a parità di ammissibilità, il motore preferisce le ricette
+  compatibili col cereale di oggi, ma sceglie comunque tra le altre se
+  quello non c'è. Stesso trattamento in piatto unico, 2 portate e 3
+  portate — nessuna differenza tra "C isolato" e "C combinato" su questo
+  punto (a differenza di quanto scritto qui in una versione precedente di
+  questo documento: quella distinzione era basata su un presupposto
+  sbagliato, il cereale come vincolo/esclusione, e non vale più).
 - **Piatto unico (N=1 nel senso "1 ricetta copre tutto")**: pool = ricette
-  che coprono tutti e 3 i requisiti insieme, nessun vincolo cereale.
-- **2 portate**: pool = ricette che coprono **esattamente 2** requisiti
-  qualsiasi tra i 3 (non una coppia fissata a priori — la disponibilità
-  reale nel database decide quale coppia), nessun vincolo cereale su
-  questa prima scelta. Trovata la prima, resta 1 solo requisito scoperto →
-  si applica lo stesso meccanismo con pool a requisito singolo per
-  completarlo — **se il requisito rimasto è C isolato, lì sì scatta il
-  vincolo cereale**, essendo esattamente il caso "C cercato da solo".
-- **3 portate**: tre pool indipendenti, uno per requisito (C con vincolo
-  cereale se assegnato — è il caso "C isolato" — proteina-del-giorno, V) —
-  nessuna intersezione da cercare.
+  ammissibili per proteina-del-giorno + coprono anche C e V da sole. Tra
+  queste, preferenza al cereale di oggi se presente tra le compatibili.
+- **2 portate**: pool = ricette ammissibili che coprono **esattamente 2**
+  requisiti qualsiasi tra i 3 (non una coppia fissata a priori — la
+  disponibilità reale nel database decide quale coppia), con la stessa
+  preferenza di cereale applicata quando la coppia include C. Trovata la
+  prima, resta 1 solo requisito scoperto → si applica lo stesso meccanismo
+  con pool a requisito singolo per completarlo.
+- **3 portate**: tre pool indipendenti, uno per requisito (C, con
+  preferenza — non vincolo — verso il cereale di oggi; proteina-del-
+  giorno; V) — nessuna intersezione da cercare.
 
 ### 4. Priorità/scaletta di adattamento quando la combinazione esatta non esiste
 
