@@ -101,20 +101,32 @@ esistenti: la macrocategoria proteica del giorno (dalla griglia proteica)
 e la verdura, sempre un requisito aperto (V), coerente con come funziona
 oggi.
 
-**Il cereale NON è un requisito che esclude nulla — non esiste un
-"cereale del giorno" vincolante.** La tabella Set carboidrati è un
-budget/quota settimanale il cui scopo è organizzativo e di gusto (es.
-programmare riso martedì e giovedì per cucinarlo una volta sola e
-riusarlo) — non un vincolo nutrizionale né un filtro di ammissibilità:
-**nessun pool basato su compatibilità cereale si azzera mai per questo
-motivo.** Funziona come **criterio di preferenza**, allo stesso livello di
-salvafrigo/rotazione/meno-usato-di-recente già esistenti: a parità di
-ammissibilità (proteina del giorno, `carboidratiCompatibili` della
-ricetta), il motore preferisce il cereale indicato in tabella per quel
-giorno; se non è disponibile/compatibile in quel pool, si sceglie comunque
-tra gli altri ammissibili, senza bloccarsi. **Vale identico in
-programmazione e in manuale — nessuna distinzione tra ambienti su questo
-punto.**
+**Il cereale è un vincolo reale ma "leggero", non una preferenza
+cosmetica, e non è un vincolo nutrizionale.** La tabella Set carboidrati
+esiste per motivi organizzativi e di gusto (es. programmare riso martedì
+e giovedì per cucinarlo una volta sola e riusarlo) — violarla non rompe
+nessun criterio nutrizionale (i cereali non hanno un "budget" in senso
+dietetico, si può mangiare pane a ogni pasto restando pienamente dentro i
+criteri). Il meccanismo esatto:
+
+- **Se la tabella ha un valore impostato per quel giorno/pasto**: è un
+  **vincolo reale** — il pool si filtra per compatibilità col cereale di
+  quel giorno (`carboidratiCompatibili` della ricetta). È "leggero" in un
+  senso preciso, non nel senso di "facoltativo": se il filtro produce un
+  pool vuoto, si allarga automaticamente alla categoria intera (mai un
+  fallimento silenzioso o un pool vuoto per questo motivo) — con l'ordine
+  di grandezza di ricette che si sta classificando (~400) questo fallback
+  scatterà raramente in pratica; se scatta spesso in futuro, si
+  interverrà con simulazioni dedicate per colmare le carenze, non è un
+  problema da risolvere ora.
+- **Se la tabella NON ha un valore impostato per quel giorno/pasto**:
+  nessun filtro, nessuna preferenza guidata — scelta casuale ("slot
+  machine") tra tutti i cereali/ricette ammissibili per quel requisito C.
+
+Questo comportamento è **uniforme**: si applica identico indipendentemente
+da quanti altri requisiti la ricetta copre insieme a C (piatto unico, 2
+portate, 3 portate — nessuna distinzione tra "C isolato" e "C combinato"),
+e identico in programmazione e in manuale.
 
 ### 3. L'algoritmo — una sola funzione, generalizzata su N
 
@@ -123,28 +135,23 @@ ricette che coprono N requisiti dei richiesti", dove N parte dal numero di
 portate impostato e si adatta se non trova una combinazione esatta.
 
 - Requisiti di ammissibilità in un pasto (definiscono se una ricetta entra
-  o no nel pool): proteina-del-giorno, C, V. **Il cereale preferito da
-  tabella NON è tra questi** — non è un requisito di ammissibilità, è un
-  criterio di preferenza applicato *dentro* un pool già ammissibile (vedi
-  sezione 2): a parità di ammissibilità, il motore preferisce le ricette
-  compatibili col cereale di oggi, ma sceglie comunque tra le altre se
-  quello non c'è. Stesso trattamento in piatto unico, 2 portate e 3
-  portate — nessuna differenza tra "C isolato" e "C combinato" su questo
-  punto (a differenza di quanto scritto qui in una versione precedente di
-  questo documento: quella distinzione era basata su un presupposto
-  sbagliato, il cereale come vincolo/esclusione, e non vale più).
+  o no nel pool): proteina-del-giorno, C, V. **Il cereale segue il
+  meccanismo descritto in sezione 2** (vincolo reale con fallback se
+  impostato, slot machine se non impostato) — uniforme in piatto unico, 2
+  portate e 3 portate, nessuna differenza tra "C isolato" e "C combinato".
 - **Piatto unico (N=1 nel senso "1 ricetta copre tutto")**: pool = ricette
-  ammissibili per proteina-del-giorno + coprono anche C e V da sole. Tra
-  queste, preferenza al cereale di oggi se presente tra le compatibili.
+  ammissibili per proteina-del-giorno + coprono anche C e V da sole,
+  filtrate per cereale-di-oggi se impostato (con fallback a categoria
+  intera se il filtro svuota il pool).
 - **2 portate**: pool = ricette ammissibili che coprono **esattamente 2**
   requisiti qualsiasi tra i 3 (non una coppia fissata a priori — la
-  disponibilità reale nel database decide quale coppia), con la stessa
-  preferenza di cereale applicata quando la coppia include C. Trovata la
+  disponibilità reale nel database decide quale coppia), con lo stesso
+  filtro/fallback sul cereale quando la coppia include C. Trovata la
   prima, resta 1 solo requisito scoperto → si applica lo stesso meccanismo
   con pool a requisito singolo per completarlo.
-- **3 portate**: tre pool indipendenti, uno per requisito (C, con
-  preferenza — non vincolo — verso il cereale di oggi; proteina-del-
-  giorno; V) — nessuna intersezione da cercare.
+- **3 portate**: tre pool indipendenti, uno per requisito (C con
+  filtro/fallback su cereale-di-oggi; proteina-del-giorno; V) — nessuna
+  intersezione da cercare.
 
 ### 4. Priorità/scaletta di adattamento quando la combinazione esatta non esiste
 
@@ -237,9 +244,10 @@ questa architettura.
 
 ## Parametri di Set — quali sono obbligatori e quali no
 
-- **Cereale del giorno**: facoltativo. Se l'utente non lo imposta, un
-  criterio in meno nella ricerca del pool C → pool più grande. Nessun
-  fallback speciale necessario.
+- **Cereale del giorno**: facoltativo — l'utente può non impostarlo per un
+  dato giorno/pasto. Se impostato: vincolo reale con fallback (vedi
+  sezione 2/3). Se non impostato: nessun filtro, scelta casuale tra i C
+  ammissibili ("slot machine").
 - **Fonte proteica del giorno**: facoltativo lato utente, ma **mai assente
   nei fatti**: se l'utente non personalizza la griglia proteica, resta
   comunque attivo il meccanismo automatico già esistente
