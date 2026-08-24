@@ -131,6 +131,31 @@
       ]
     },
     {
+      "classe": "PC",
+      "proteineCompatibili": [
+        {
+          "nome": "salsiccia di maiale",
+          "sottotipo": "carne_rossa",
+          "procedimento": ["Buca leggermente la pelle con una forchetta prima di cuocere, per evitare che scoppi."]
+        },
+        {
+          "nome": "salsiccia di tacchino",
+          "sottotipo": "carne_bianca",
+          "procedimento": ["Più magra della salsiccia di maiale: controlla la cottura per non seccarla."]
+        }
+      ],
+      "tipiCotturaCompatibili": [
+        {
+          "nome": "al forno",
+          "procedimento": [
+            "Preriscalda il forno a 200°C.",
+            "Disponi in teglia con un filo d'olio.",
+            "Inforna 20-25 minuti, girando a metà cottura, finché ben dorata e cotta all'interno."
+          ]
+        }
+      ]
+    },
+    {
       "classe": "PL",
       "proteineCompatibili": [
         {
@@ -188,6 +213,11 @@
           "nome": "petto di pollo",
           "sottotipo": "carne_bianca",
           "procedimento": ["Taglia a fette di circa 1,5 cm, così cuoce in modo uniforme."]
+        },
+        {
+          "nome": "sovracosce di pollo",
+          "sottotipo": "carne_bianca",
+          "procedimento": ["Carne più grassa e saporita del petto: allunga leggermente i tempi rispetto alla fetta sottile."]
         },
         {
           "nome": "petto di tacchino",
