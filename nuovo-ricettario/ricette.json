@@ -1,13 +1,9 @@
 {
-  "versione": 4,
+  "versione": 6,
   "ricette": [
     {
       "nome": "al pomodoro",
       "classe": "C",
-      "procedimentoComune": [
-        "Taglia il pomodoro a pezzi e scaldalo in padella con l'olio a fuoco medio per 8-10 minuti, schiacciandolo leggermente per creare un sughetto.",
-        "Manteca il carboidrato scelto nel sugo a fuoco vivace, aggiungendo un po' di acqua di cottura se risulta asciutto."
-      ],
       "carboidratiCompatibili": [
         {
           "nome": "p.dura",
@@ -25,6 +21,22 @@
           "nome": "p.uovo",
           "procedimento": [
             "Cuoci in abbondante acqua salata per pochi minuti (3-5), è più delicata e cuoce più in fretta."
+          ]
+        }
+      ],
+      "preparazioneCompatibili": [
+        {
+          "nome": "pomodoro cotto",
+          "procedimento": [
+            "Taglia il pomodoro a pezzi e scaldalo in padella con l'olio a fuoco medio per 8-10 minuti, schiacciandolo leggermente per creare un sughetto.",
+            "Manteca il carboidrato scelto nel sugo a fuoco vivace, aggiungendo un po' di acqua di cottura se risulta asciutto."
+          ]
+        },
+        {
+          "nome": "pomodorini e olio a crudo",
+          "procedimento": [
+            "Taglia i pomodorini freschi a pezzetti.",
+            "Condisci il carboidrato scelto, scolato, con i pomodorini crudi e un filo d'olio, senza cottura del condimento."
           ]
         }
       ]
@@ -688,6 +700,254 @@
             "Unisci spinaci e ananas in una ciotola, condisci con un filo d'olio."
           ]
         }
+      ]
+    },
+    {
+      "nome": "Polenta con",
+      "classe": [
+        "C",
+        "PF"
+      ],
+      "proteineCompatibili": [
+        {
+          "nome": "taleggio",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Taglia a pezzetti e mescola nella polenta calda finché fuso."
+          ]
+        },
+        {
+          "nome": "gorgonzola",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": [
+            "Sbriciola e mescola nella polenta calda finché fuso e cremoso."
+          ]
+        },
+        {
+          "nome": "parmigiano",
+          "sottotipo": "formaggio_stagionato",
+          "procedimento": [
+            "Grattugia e mescola nella polenta calda finché ben amalgamato."
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "Cuoci la polenta in acqua salata secondo i tempi di confezione, mescolando di tanto in tanto.",
+        "A cottura ultimata, incorpora il formaggio scelto mescolando finché sciolto e ben distribuito."
+      ]
+    },
+    {
+      "nome": "fredda di cereali con verdure crude",
+      "classe": [
+        "C",
+        "V"
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": [
+            "Cuoci in acqua salata, scola e lascia raffreddare (anche sciacquando sotto acqua fredda)."
+          ]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
+          ]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": [
+            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
+          ]
+        }
+      ],
+      "verdureCompatibili": [
+        {
+          "nome": "pomodorini",
+          "procedimento": [
+            "Lava e taglia a metà."
+          ]
+        },
+        {
+          "nome": "cetriolo",
+          "procedimento": [
+            "Lava, pela se preferito, taglia a dadini."
+          ]
+        },
+        {
+          "nome": "carote",
+          "procedimento": [
+            "Lava, pela e taglia a dadini o julienne."
+          ]
+        },
+        {
+          "nome": "peperoni",
+          "procedimento": [
+            "Lava, elimina semi e filamenti, taglia a dadini."
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "In una ciotola capiente unisci il cereale scelto raffreddato con la verdura scelta.",
+        "Condisci con un filo d'olio e mescola bene."
+      ]
+    },
+    {
+      "nome": "fredda di cereali con tonno o salmone",
+      "classe": [
+        "C",
+        "PP",
+        "V"
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": [
+            "Cuoci in acqua salata, scola e lascia raffreddare (anche sciacquando sotto acqua fredda)."
+          ]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
+          ]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": [
+            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
+          ]
+        }
+      ],
+      "proteineCompatibili": [
+        {
+          "nome": "tonno",
+          "sottotipo": "pesce_conservato",
+          "procedimento": [
+            "Sgocciola bene e sminuzza prima di unire al resto."
+          ],
+          "verdureCompatibili": [
+            {
+              "nome": "olive",
+              "procedimento": [
+                "Snocciola se necessario, unisci intere o a rondelle."
+              ]
+            },
+            {
+              "nome": "capperi",
+              "procedimento": [
+                "Sciacqua bene se sotto sale, unisci interi."
+              ]
+            },
+            {
+              "nome": "pomodorini",
+              "procedimento": [
+                "Lava e taglia a metà."
+              ]
+            }
+          ]
+        },
+        {
+          "nome": "salmone",
+          "sottotipo": "pesce_grande",
+          "procedimento": [
+            "Se affumicato, taglia a listarelle; se fresco cotto, sfalda a pezzi grossi."
+          ],
+          "verdureCompatibili": [
+            {
+              "nome": "avocado",
+              "procedimento": [
+                "Sbuccia, elimina il nocciolo e taglia a fette o dadini."
+              ]
+            },
+            {
+              "nome": "cetriolo",
+              "procedimento": [
+                "Lava e taglia a dadini sottili."
+              ]
+            },
+            {
+              "nome": "aneto fresco",
+              "procedimento": [
+                "Trita finemente e cospargi sul piatto finito."
+              ]
+            }
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "In una ciotola capiente unisci il cereale scelto raffreddato, la proteina scelta e la sua verdura abbinata.",
+        "Condisci con un filo d'olio e mescola bene."
+      ]
+    },
+    {
+      "nome": "fredda di cereali con verdure cotte",
+      "classe": [
+        "C",
+        "V"
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": [
+            "Cuoci in acqua salata, scola e lascia raffreddare (anche sciacquando sotto acqua fredda)."
+          ]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."
+          ]
+        },
+        {
+          "nome": "farro",
+          "procedimento": [
+            "Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."
+          ]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": [
+            "Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."
+          ]
+        }
+      ],
+      "verdureCompatibili": [
+        {
+          "nome": "melanzane",
+          "procedimento": [
+            "Taglia a dadini e salta in padella con olio 8-10 minuti finché dorate, lascia intiepidire."
+          ]
+        },
+        {
+          "nome": "zucchine",
+          "procedimento": [
+            "Taglia a dadini e salta in padella con olio 6-8 minuti finché morbide, lascia intiepidire."
+          ]
+        },
+        {
+          "nome": "zucca",
+          "procedimento": [
+            "Taglia a dadini e cuoci in padella o al forno finché morbida, lascia intiepidire."
+          ]
+        }
+      ],
+      "procedimentoComune": [
+        "In una ciotola capiente unisci il cereale scelto raffreddato con la verdura cotta scelta, ormai tiepida.",
+        "Condisci con un filo d'olio e mescola bene."
       ]
     }
   ]
