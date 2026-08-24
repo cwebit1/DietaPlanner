@@ -515,6 +515,27 @@ tempo tra settimane diverse, questo è ordine **dentro** la stessa
 settimana) e distinto dalla preferenza cereale (quello è su cosa scegliere,
 questo è su quando collocarlo).
 
+## Peso ingrediente "concesso ma non ideale" — riduce la probabilità di estrazione, non la esclude
+
+**Deciso il 2026-08-24.** Distinto da `deperibilita` (quello decide
+*quando* nella settimana) e da `stack`/`roll` (quelli decidono
+esclusione/rotazione binaria). Questo è un terzo criterio, per
+ingredienti che la nutrizionista ha concesso ma che è meglio non
+compaiano spesso — es. concessi ma non ideali per il piano.
+
+**Meccanismo**: un peso sull'ingrediente che **riduce la probabilità**
+che una ricetta contenente quell'ingrediente venga estratta, senza mai
+escluderla del tutto dal pool — resta candidata, perde più spesso il
+sorteggio. Quando viene comunque selezionata, **lo stack si comporta
+normalmente**: si ripristina dopo gli stessi 15 giorni di tutte le altre
+ricette, nessun periodo più lungo. La difficoltà è solo *in entrata*
+(probabilità di essere scelta), non *in uscita* (tempo prima di
+ripresentarsi).
+
+Non ancora deciso: nome esatto del campo e scala del peso (es. un
+moltiplicatore 0-1 sulla probabilità, o un valore intero comparato agli
+altri candidati) — dettaglio da chiudere nel documento tecnico.
+
 ## Domande ancora aperte (non bloccanti per iniziare il documento tecnico, ma da chiudere prima del codice)
 
 - Dettaglio esatto della nuova preferenza "numero di portate" in Set: UI,
