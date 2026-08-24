@@ -16,6 +16,93 @@
       "classe": ["C", "V"],
       "verduraGrammiInclusi": 100,
       "carboidratiCompatibili": ["p.dura", "p.integrale"]
+    },
+    {
+      "classe": "PP",
+      "proteineCompatibili": ["sogliola", "nasello", "orata", "branzino", "platessa"],
+      "tipiCotturaCompatibili": [
+        {
+          "nome": "al forno",
+          "procedimento": [
+            "Preriscalda il forno a 200°C.",
+            "Disponi il filetto in una teglia con carta forno.",
+            "Condisci con olio e sale.",
+            "Inforna 12-15 minuti, finché la carne è opaca e si stacca facilmente."
+          ]
+        },
+        {
+          "nome": "al limone",
+          "procedimento": [
+            "Scalda l'olio in padella a fuoco medio.",
+            "Cuoci il filetto 3-4 minuti per lato.",
+            "Sfuma con succo di limone a fine cottura e lascia insaporire un minuto."
+          ]
+        },
+        {
+          "nome": "al cartoccio",
+          "procedimento": [
+            "Preriscalda il forno a 180°C.",
+            "Avvolgi il filetto in carta forno con olio e le verdure scelte.",
+            "Chiudi bene il cartoccio e inforna 15-18 minuti."
+          ]
+        },
+        {
+          "nome": "ai ferri",
+          "procedimento": [
+            "Scalda bene la griglia o la bistecchiera.",
+            "Cuoci il filetto 3-4 minuti per lato senza aggiungere grassi.",
+            "Condisci a crudo con olio una volta servito."
+          ]
+        }
+      ]
+    },
+    {
+      "classe": "PL",
+      "proteineCompatibili": ["ceci", "fagioli borlotti", "fagioli cannellini", "lenticchie", "tofu"],
+      "tipiCotturaCompatibili": [
+        {
+          "nome": "all'olio e rosmarino",
+          "procedimento": [
+            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
+            "Condisci con olio e rosmarino tritato fresco."
+          ]
+        },
+        {
+          "nome": "olio piccante e sesamo",
+          "procedimento": [
+            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
+            "Condisci con olio, peperoncino a piacere e semi di sesamo."
+          ]
+        },
+        {
+          "nome": "aglio olio e peperoncino",
+          "procedimento": [
+            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
+            "Ripassa in padella con aglio, olio e peperoncino per qualche minuto."
+          ]
+        },
+        {
+          "nome": "al pepe",
+          "procedimento": [
+            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
+            "Condisci con olio e una generosa macinata di pepe nero."
+          ]
+        },
+        {
+          "nome": "saltati",
+          "procedimento": [
+            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
+            "Salta in padella con olio a fuoco vivace per 3-4 minuti."
+          ]
+        },
+        {
+          "nome": "in insalata",
+          "procedimento": [
+            "Scola i legumi dal liquido di conservazione e sciacquali bene.",
+            "Unisci alle verdure fresche scelte e condisci con olio."
+          ]
+        }
+      ]
     }
   ]
 }
