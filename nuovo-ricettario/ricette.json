@@ -156,6 +156,47 @@
       ]
     },
     {
+      "nome": "insalata fredda con uovo, emmental e pomodoro",
+      "classe": ["C", "PU", "PF", "V"],
+      "composizioneFissa": [
+        {
+          "nome": "uovo sodo",
+          "procedimento": ["Cuoci sode (9 minuti da bollore), raffredda, sguscia e taglia a spicchi."]
+        },
+        {
+          "nome": "emmental a cubetti",
+          "procedimento": ["Taglia a cubetti piccoli prima di unire al resto."]
+        },
+        {
+          "nome": "pomodori freschi",
+          "procedimento": ["Taglia a pezzi prima di unire al resto."]
+        }
+      ],
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": ["Cuoci in acqua salata, scola e lascia raffreddare."]
+        },
+        {
+          "nome": "farro",
+          "procedimento": ["Cuoci in acqua salata circa 15-20 minuti, scola e lascia raffreddare."]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": ["Cuoci in acqua salata circa 15-18 minuti, scola e lascia raffreddare."]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": ["Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."]
+        }
+      ],
+      "procedimentoComune": [
+        "In una ciotola capiente unisci il cereale scelto raffreddato con uovo sodo, emmental e pomodoro.",
+        "Condisci con olio e mescola bene.",
+        "Lascia riposare qualche minuto in frigorifero prima di servire, se il tempo lo consente."
+      ]
+    },
+    {
       "nome": "fredda di riso",
       "classe": "C",
       "verduraGrammiInclusi": 125,
