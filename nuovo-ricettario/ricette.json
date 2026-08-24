@@ -156,6 +156,56 @@
       ]
     },
     {
+      "nome": "fredda di riso",
+      "classe": "C",
+      "verduraGrammiInclusi": 125,
+      "carboidratiCompatibili": [
+        {
+          "nome": "riso",
+          "procedimento": ["Cuoci in acqua salata, scola e lascia raffreddare (per fare in fretta, sciacqua sotto acqua fredda)."]
+        },
+        {
+          "nome": "cous cous",
+          "procedimento": ["Reidrata in acqua bollente secondo i tempi di confezione, sgrana con una forchetta e lascia raffreddare."]
+        },
+        {
+          "nome": "orzo",
+          "procedimento": ["Cuoci in acqua salata, scola e lascia raffreddare."]
+        }
+      ],
+      "proteineCompatibili": [
+        {
+          "nome": "tonno",
+          "classe": "PP",
+          "sottotipo": "pesce_conservato",
+          "procedimento": ["Sgocciola bene e sminuzza prima di unire al resto."]
+        },
+        {
+          "nome": "uova sode",
+          "classe": "PU",
+          "procedimento": ["Cuoci sode (9 minuti da bollore), raffredda, sguscia e taglia a spicchi."]
+        },
+        {
+          "nome": "formaggio a cubetti",
+          "classe": "PF",
+          "sottotipo": "formaggio_fresco",
+          "procedimento": ["Taglia a cubetti piccoli prima di unire al resto."]
+        },
+        {
+          "nome": "prosciutto cotto a dadini",
+          "classe": "PC",
+          "sottotipo": "affettati",
+          "procedimento": ["Taglia a dadini piccoli prima di unire al resto."]
+        }
+      ],
+      "procedimentoComune": [
+        "Taglia pomodoro e cetriolo a pezzi piccoli.",
+        "In una ciotola capiente unisci il carboidrato scelto raffreddato, le verdure e la proteina scelta.",
+        "Condisci con olio e mescola bene.",
+        "Lascia riposare qualche minuto in frigorifero prima di servire, se il tempo lo consente."
+      ]
+    },
+    {
       "classe": "PU",
       "tipiCotturaCompatibili": [
         {
