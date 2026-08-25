@@ -1,5 +1,5 @@
 {
-  "versione": 12,
+  "versione": 13,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -264,28 +264,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Burro di arachidi": {
-      "kcal": 588,
-      "proteine": 25,
-      "carboidrati": 20,
-      "grassi": 50,
-      "gruppo": "grassi",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 15,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "latte",
-        "arachidi"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Carciofi": {
       "kcal": 47,
       "proteine": 3.3,
@@ -343,7 +321,7 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Ceci in barattolo": {
+    "Ceci": {
       "kcal": 139,
       "proteine": 7.3,
       "carboidrati": 16,
@@ -565,7 +543,7 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Crauti in barattolo": {
+    "Crauti": {
       "kcal": 19,
       "proteine": 0.9,
       "carboidrati": 4.3,
