@@ -1,5 +1,5 @@
 {
-  "versione": 13,
+  "versione": 14,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -21,15 +21,13 @@
         {
           "nome": "pomodoro cotto",
           "procedimento": [
-            "Taglia il pomodoro a pezzi e scaldalo in padella con l'olio a fuoco medio per 8-10 minuti, schiacciandolo leggermente per creare un sughetto.",
-            "Manteca il carboidrato scelto nel sugo a fuoco vivace, aggiungendo un po' di acqua di cottura se risulta asciutto."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pomodorini e olio a crudo",
           "procedimento": [
-            "Taglia i pomodorini freschi a pezzetti.",
-            "Condisci il carboidrato scelto, scolato, con i pomodorini crudi e un filo d'olio, senza cottura del condimento."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -42,9 +40,7 @@
         "PC"
       ],
       "procedimentoComune": [
-        "Scalda in padella lo speck tagliato a striscioline finché leggermente croccante.",
-        "Aggiungi la panna e il taleggio a pezzetti, mescolando finché il formaggio si scioglie in una crema.",
-        "Manteca il carboidrato scelto, scolato al dente, nella padella con il condimento."
+        "DA_DEFINIRE"
       ],
       "carboidratiCompatibili": [
         {
@@ -72,9 +68,7 @@
       ],
       "verduraGrammiInclusi": 100,
       "procedimentoComune": [
-        "Taglia le melanzane a dadini e saltale in padella con metà dell'olio a fuoco medio-alto per 8-10 minuti, finché dorate.",
-        "Aggiungi il pomodoro a pezzi e cuoci altri 5 minuti.",
-        "Manteca il carboidrato scelto, scolato al dente, nel condimento con l'olio rimasto e basilico fresco."
+        "DA_DEFINIRE"
       ],
       "carboidratiCompatibili": [
         {
@@ -92,31 +86,31 @@
         {
           "nome": "sogliola",
           "procedimento": [
-            "Filetti sottili: cuociono in fretta, pronti quando la carne è opaca e si stacca facilmente."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "nasello",
           "procedimento": [
-            "Filetto un po' più spesso della sogliola: aggiungi qualche minuto di cottura rispetto ai tempi base."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "orata",
           "procedimento": [
-            "Se in filetto con pelle, cuoci qualche minuto in più dal lato pelle per renderla croccante."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "branzino",
           "procedimento": [
-            "Filetto sodo: rispetta i tempi base della cottura scelta senza bisogno di aggiustamenti."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "platessa",
           "procedimento": [
-            "Filetto molto sottile: riduci leggermente i tempi di cottura per non seccarlo."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -124,34 +118,25 @@
         {
           "nome": "al forno",
           "procedimento": [
-            "Preriscalda il forno a 200°C.",
-            "Disponi il filetto in una teglia con carta forno.",
-            "Condisci con olio e sale.",
-            "Inforna 12-15 minuti, finché la carne è opaca e si stacca facilmente."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "al limone",
           "procedimento": [
-            "Scalda l'olio in padella a fuoco medio.",
-            "Cuoci il filetto 3-4 minuti per lato.",
-            "Sfuma con succo di limone a fine cottura e lascia insaporire un minuto."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "al cartoccio",
           "procedimento": [
-            "Preriscalda il forno a 180°C.",
-            "Avvolgi il filetto in carta forno con olio e le verdure scelte.",
-            "Chiudi bene il cartoccio e inforna 15-18 minuti."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "ai ferri",
           "procedimento": [
-            "Scalda bene la griglia o la bistecchiera.",
-            "Cuoci il filetto 3-4 minuti per lato senza aggiungere grassi.",
-            "Condisci a crudo con olio una volta servito."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -163,14 +148,14 @@
           "nome": "salsiccia di maiale",
           "sottotipo": "carne_rossa",
           "procedimento": [
-            "Buca leggermente la pelle con una forchetta prima di cuocere, per evitare che scoppi."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "salsiccia di tacchino",
           "sottotipo": "carne_bianca",
           "procedimento": [
-            "Più magra della salsiccia di maiale: controlla la cottura per non seccarla."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -178,9 +163,7 @@
         {
           "nome": "al forno",
           "procedimento": [
-            "Preriscalda il forno a 200°C.",
-            "Disponi in teglia con un filo d'olio.",
-            "Inforna 20-25 minuti, girando a metà cottura, finché ben dorata e cotta all'interno."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -197,19 +180,19 @@
         {
           "nome": "uovo sodo",
           "procedimento": [
-            "Cuoci sode (9 minuti da bollore), raffredda, sguscia e taglia a spicchi."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "emmental a cubetti",
           "procedimento": [
-            "Taglia a cubetti piccoli prima di unire al resto."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pomodori freschi",
           "procedimento": [
-            "Taglia a pezzi prima di unire al resto."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -231,9 +214,7 @@
         }
       ],
       "procedimentoComune": [
-        "In una ciotola capiente unisci il cereale scelto raffreddato con uovo sodo, emmental e pomodoro.",
-        "Condisci con olio e mescola bene.",
-        "Lascia riposare qualche minuto in frigorifero prima di servire, se il tempo lo consente."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -242,31 +223,25 @@
         {
           "nome": "sode",
           "procedimento": [
-            "Metti le uova in un pentolino con acqua fredda che le copra di 2 cm.",
-            "Porta a bollore, poi abbassa a fuoco medio e cuoci 9 minuti da quando l'acqua bolle.",
-            "Scola e trasferisci subito in acqua fredda per fermare la cottura, poi sguscia."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "strapazzate",
           "procedimento": [
-            "Sbatti le uova in una ciotola con un pizzico di sale.",
-            "Versa in padella con un filo d'olio a fuoco medio-basso, mescolando di continuo finché rapprese ma ancora morbide."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "in camicia",
           "procedimento": [
-            "Porta a bollore acqua con un cucchiaio di aceto, crea un vortice con un cucchiaio.",
-            "Rompi l'uovo al centro e cuoci 2-3 minuti finché l'albume è rappreso e il tuorlo resta morbido.",
-            "Scola con una schiumarola."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "al tegamino",
           "procedimento": [
-            "Scalda un filo d'olio in padella antiaderente.",
-            "Rompi l'uovo direttamente in padella, cuoci a fuoco basso finché l'albume è rappreso."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -277,31 +252,31 @@
         {
           "nome": "ceci",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "fagioli borlotti",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "fagioli cannellini",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "lenticchie",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene sotto acqua corrente."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "tofu",
           "procedimento": [
-            "Tampona bene con carta assorbente per togliere l'acqua in eccesso prima di condire o saltare."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -309,37 +284,37 @@
         {
           "nome": "all'olio e rosmarino",
           "procedimento": [
-            "Condisci il legume scelto con olio e rosmarino tritato fresco."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "olio piccante e sesamo",
           "procedimento": [
-            "Condisci il legume scelto con olio, peperoncino a piacere e semi di sesamo."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "aglio olio e peperoncino",
           "procedimento": [
-            "Ripassa il legume scelto in padella con aglio, olio e peperoncino per qualche minuto."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "al pepe",
           "procedimento": [
-            "Condisci il legume scelto con olio e una generosa macinata di pepe nero."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "saltati",
           "procedimento": [
-            "Salta il legume scelto in padella con olio a fuoco vivace per 3-4 minuti."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "in insalata",
           "procedimento": [
-            "Unisci il legume scelto alle verdure fresche scelte e condisci con olio."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -351,42 +326,42 @@
           "nome": "petto di pollo",
           "sottotipo": "carne_bianca",
           "procedimento": [
-            "Taglia a fette di circa 1,5 cm, così cuoce in modo uniforme."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "sovracosce di pollo",
           "sottotipo": "carne_bianca",
           "procedimento": [
-            "Carne più grassa e saporita del petto: allunga leggermente i tempi rispetto alla fetta sottile."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "petto di tacchino",
           "sottotipo": "carne_bianca",
           "procedimento": [
-            "Taglia a fette regolari, cuoce leggermente più in fretta del pollo."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "fettina di vitello",
           "sottotipo": "carne_bianca",
           "procedimento": [
-            "Carne magra e sottile: cuoce in pochi minuti, attenzione a non seccarla."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "fettina di manzo",
           "sottotipo": "carne_rossa",
           "procedimento": [
-            "Porta a temperatura ambiente prima di cuocere, cottura breve per restare morbida."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "nodino di maiale",
           "sottotipo": "carne_rossa",
           "procedimento": [
-            "Taglio più spesso: allunga leggermente i tempi rispetto alla fettina sottile."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -394,32 +369,25 @@
         {
           "nome": "alla piastra",
           "procedimento": [
-            "Scalda una piastra o padella antiaderente a fuoco alto con un filo d'olio.",
-            "Cuoci 4-5 minuti per lato, senza muovere troppo, finché si forma una leggera crosta dorata.",
-            "Sala solo a fine cottura, lascia riposare 2 minuti prima di servire."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "al forno",
           "procedimento": [
-            "Preriscalda il forno a 200°C.",
-            "Disponi in teglia con un filo d'olio.",
-            "Inforna 15-20 minuti a seconda dello spessore, finché ben cotto al centro."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "in padella",
           "procedimento": [
-            "Scalda l'olio in padella a fuoco medio-alto.",
-            "Cuoci girando a metà cottura, finché dorato fuori e cotto dentro."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "ai ferri",
           "procedimento": [
-            "Scalda bene la griglia o la bistecchiera.",
-            "Cuoci senza aggiungere grassi, girando una sola volta.",
-            "Condisci a crudo con olio una volta servito."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -435,63 +403,63 @@
           "nome": "grana o parmigiano",
           "sottotipo": "formaggio_stagionato",
           "procedimento": [
-            "Nessuna preparazione particolare, si serve così com'è."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "mozzarella",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Scola dal liquido di governo prima di servire."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "crescenza",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Consistenza morbida e spalmabile."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "ricotta",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Scola dall'eventuale siero in eccesso."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pecorino",
           "sottotipo": "formaggio_stagionato",
           "procedimento": [
-            "Nessuna preparazione particolare, si serve così com'è."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "stracchino",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Consistenza cremosa, si preleva con un cucchiaio."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "brie",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Estrai dal frigo almeno 15 minuti prima: a temperatura ambiente il sapore è migliore."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "feta",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Scola dal liquido di conservazione prima di servire."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "provola",
           "sottotipo": "formaggio_stagionato",
           "procedimento": [
-            "Adatta anche alla cottura, non solo al naturale."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -499,37 +467,37 @@
         {
           "nome": "a fette",
           "procedimento": [
-            "Taglia a fette regolari di circa 1 cm."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "a scaglie",
           "procedimento": [
-            "Ricava scaglie sottili con un coltello o un pelapatate."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "a cubetti",
           "procedimento": [
-            "Taglia a cubetti regolari."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "a cucchiaiate",
           "procedimento": [
-            "Preleva direttamente dalla confezione con un cucchiaio."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "al naturale",
           "procedimento": [
-            "Servi così com'è, in una ciotolina."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "alla piastra",
           "procedimento": [
-            "Scalda una piastra ben calda senza grassi, cuoci un minuto per lato finché dorato fuori e filante dentro."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -549,25 +517,25 @@
         {
           "nome": "pomodorini",
           "procedimento": [
-            "Lava e taglia a metà, condisci con un filo d'olio."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "rucola",
           "procedimento": [
-            "Lava e servi cruda, condisci con un filo d'olio."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "radicchio",
           "procedimento": [
-            "Lava, taglia a listarelle sottili e servi crudo."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "finocchi",
           "procedimento": [
-            "Lava, taglia sottile e servi crudo."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -576,24 +544,24 @@
             {
               "nome": "radicchio",
               "procedimento": [
-                "Lava e taglia a listarelle sottili."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "pomodori",
               "procedimento": [
-                "Lava e taglia a spicchi."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "cipolle",
               "procedimento": [
-                "Affetta sottile, anche in acqua fredda per ammorbidire il sapore se serve."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci tutto in una ciotola e condisci con un filo d'olio."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -602,24 +570,24 @@
             {
               "nome": "insalata",
               "procedimento": [
-                "Lava e asciuga bene le foglie."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "peperoni",
               "procedimento": [
-                "Lava e taglia a listarelle sottili."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "carote",
               "procedimento": [
-                "Lava, pela e taglia a julienne o grattugia."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci tutto in una ciotola e condisci con un filo d'olio."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -628,18 +596,18 @@
             {
               "nome": "finocchio",
               "procedimento": [
-                "Lava e taglia sottile, anche con la mandolina."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "arancia",
               "procedimento": [
-                "Pela al vivo e taglia a spicchi, raccogliendo il succo che cola."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci finocchio e spicchi d'arancia, condisci con il succo raccolto e un filo d'olio."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -648,18 +616,18 @@
             {
               "nome": "spinaci freschi",
               "procedimento": [
-                "Lava bene le foglie e asciugale."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "ananas",
               "procedimento": [
-                "Taglia la polpa a tocchetti, eliminando il torsolo centrale."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci spinaci e ananas in una ciotola, condisci con un filo d'olio."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -675,27 +643,26 @@
           "nome": "taleggio",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Taglia a pezzetti e mescola nella polenta calda finché fuso."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "gorgonzola",
           "sottotipo": "formaggio_fresco",
           "procedimento": [
-            "Sbriciola e mescola nella polenta calda finché fuso e cremoso."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "parmigiano",
           "sottotipo": "formaggio_stagionato",
           "procedimento": [
-            "Grattugia e mescola nella polenta calda finché ben amalgamato."
+            "DA_DEFINIRE"
           ]
         }
       ],
       "procedimentoComune": [
-        "Cuoci la polenta in acqua salata secondo i tempi di confezione, mescolando di tanto in tanto.",
-        "A cottura ultimata, incorpora il formaggio scelto mescolando finché sciolto e ben distribuito."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -725,31 +692,30 @@
         {
           "nome": "pomodorini",
           "procedimento": [
-            "Lava e taglia a metà."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "cetriolo",
           "procedimento": [
-            "Lava, pela se preferito, taglia a dadini."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "carote",
           "procedimento": [
-            "Lava, pela e taglia a dadini o julienne."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "peperoni",
           "procedimento": [
-            "Lava, elimina semi e filamenti, taglia a dadini."
+            "DA_DEFINIRE"
           ]
         }
       ],
       "procedimentoComune": [
-        "In una ciotola capiente unisci il cereale scelto raffreddato con la verdura scelta.",
-        "Condisci con un filo d'olio e mescola bene."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -781,25 +747,25 @@
           "nome": "tonno",
           "sottotipo": "pesce_conservato",
           "procedimento": [
-            "Sgocciola bene e sminuzza prima di unire al resto."
+            "DA_DEFINIRE"
           ],
           "verdureCompatibili": [
             {
               "nome": "olive",
               "procedimento": [
-                "Snocciola se necessario, unisci intere o a rondelle."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "capperi",
               "procedimento": [
-                "Sciacqua bene se sotto sale, unisci interi."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "pomodorini",
               "procedimento": [
-                "Lava e taglia a metà."
+                "DA_DEFINIRE"
               ]
             }
           ]
@@ -808,33 +774,32 @@
           "nome": "salmone",
           "sottotipo": "pesce_grande",
           "procedimento": [
-            "Se affumicato, taglia a listarelle; se fresco cotto, sfalda a pezzi grossi."
+            "DA_DEFINIRE"
           ],
           "verdureCompatibili": [
             {
               "nome": "avocado",
               "procedimento": [
-                "Sbuccia, elimina il nocciolo e taglia a fette o dadini."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "cetriolo",
               "procedimento": [
-                "Lava e taglia a dadini sottili."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "aneto fresco",
               "procedimento": [
-                "Trita finemente e cospargi sul piatto finito."
+                "DA_DEFINIRE"
               ]
             }
           ]
         }
       ],
       "procedimentoComune": [
-        "In una ciotola capiente unisci il cereale scelto raffreddato, la proteina scelta e la sua verdura abbinata.",
-        "Condisci con un filo d'olio e mescola bene."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -864,25 +829,24 @@
         {
           "nome": "melanzane",
           "procedimento": [
-            "Taglia a dadini e salta in padella con olio 8-10 minuti finché dorate, lascia intiepidire."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "zucchine",
           "procedimento": [
-            "Taglia a dadini e salta in padella con olio 6-8 minuti finché morbide, lascia intiepidire."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "zucca",
           "procedimento": [
-            "Taglia a dadini e cuoci in padella o al forno finché morbida, lascia intiepidire."
+            "DA_DEFINIRE"
           ]
         }
       ],
       "procedimentoComune": [
-        "In una ciotola capiente unisci il cereale scelto raffreddato con la verdura cotta scelta, ormai tiepida.",
-        "Condisci con un filo d'olio e mescola bene."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -910,8 +874,7 @@
         }
       ],
       "procedimentoComune": [
-        "Condisci il carboidrato scelto, ancora caldo, con un filo d'olio e una spolverata di parmigiano grattugiato.",
-        "Mescola bene finché il formaggio si scioglie leggermente nel calore."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -1128,7 +1091,7 @@
         {
           "nome": "piselli",
           "procedimento": [
-            "Cuoci in padella con un filo d'olio e un mestolo d'acqua per 8-10 minuti."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -1150,7 +1113,7 @@
         }
       ],
       "procedimentoComune": [
-        "Manteca il carboidrato scelto con i piselli a fuoco vivace."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -1174,29 +1137,26 @@
           "nome": "ceci",
           "sottotipo": "legumi",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "fagioli borlotti",
           "sottotipo": "legumi",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "lenticchie",
           "sottotipo": "legumi",
           "procedimento": [
-            "Scola dal liquido di conservazione e sciacqua bene."
+            "DA_DEFINIRE"
           ]
         }
       ],
       "procedimentoComune": [
-        "Metti il cereale scelto in una pentola con brodo vegetale o acqua a coprire abbondantemente.",
-        "Cuoci a fuoco basso finché il cereale è morbido (tempi secondo il tipo scelto).",
-        "Aggiungi il legume scelto negli ultimi 5-10 minuti di cottura, giusto per scaldarlo insieme.",
-        "Regola di sale e completa con un filo d'olio a crudo."
+        "DA_DEFINIRE"
       ]
     },
     {
@@ -1207,25 +1167,25 @@
         {
           "nome": "lattuga",
           "procedimento": [
-            "Lava le foglie e asciugale bene, spezzetta a mano."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "radicchio",
           "procedimento": [
-            "Lava e taglia a listarelle sottili."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "valeriana",
           "procedimento": [
-            "Lava con cura (trattiene terra), asciuga bene."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "songino",
           "procedimento": [
-            "Lava con cura (trattiene terra), asciuga bene."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1234,30 +1194,30 @@
             {
               "nome": "lattuga",
               "procedimento": [
-                "Lava le foglie e asciugale bene, spezzetta a mano."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "radicchio",
               "procedimento": [
-                "Lava e taglia a listarelle sottili."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "valeriana",
               "procedimento": [
-                "Lava con cura, asciuga bene."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "songino",
               "procedimento": [
-                "Lava con cura, asciuga bene."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci tutte le foglie in una ciotola."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -1265,7 +1225,7 @@
         {
           "nome": "al limone",
           "procedimento": [
-            "Condisci con olio e succo di limone fresco."
+            "DA_DEFINIRE"
           ]
         }
       ]
@@ -1278,61 +1238,61 @@
         {
           "nome": "rucola",
           "procedimento": [
-            "Lava e asciuga bene le foglie."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "carote",
           "procedimento": [
-            "Lava, pela e taglia a julienne o grattugia."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "cetriolo",
           "procedimento": [
-            "Lava, pela se preferito, taglia a rondelle o dadini."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "finocchi",
           "procedimento": [
-            "Lava e taglia sottile, anche con la mandolina."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pomodoro fresco",
           "procedimento": [
-            "Lava e taglia a spicchi o cubetti."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pomodorini",
           "procedimento": [
-            "Lava e taglia a metà."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "peperoni",
           "procedimento": [
-            "Lava, elimina semi e filamenti, taglia a listarelle sottili."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "cipolla",
           "procedimento": [
-            "Affetta sottile, anche in acqua fredda per ammorbidire il sapore."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "spinaci freschi",
           "procedimento": [
-            "Lava bene le foglie piccole e asciugale."
+            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "zucchine",
           "procedimento": [
-            "Lava e taglia a carpaccio sottile con la mandolina o un pelapatate."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1341,24 +1301,24 @@
             {
               "nome": "pomodori",
               "procedimento": [
-                "Lava e taglia a spicchi."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "cetrioli",
               "procedimento": [
-                "Lava e taglia a rondelle."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "cipolla",
               "procedimento": [
-                "Affetta sottile."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci in una ciotola."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1367,18 +1327,18 @@
             {
               "nome": "carote",
               "procedimento": [
-                "Lava, pela e taglia a julienne."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "finocchi",
               "procedimento": [
-                "Lava e taglia sottile."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci in una ciotola."
+            "DA_DEFINIRE"
           ]
         },
         {
@@ -1387,18 +1347,18 @@
             {
               "nome": "rucola",
               "procedimento": [
-                "Lava e asciuga bene le foglie."
+                "DA_DEFINIRE"
               ]
             },
             {
               "nome": "pomodorini",
               "procedimento": [
-                "Lava e taglia a metà."
+                "DA_DEFINIRE"
               ]
             }
           ],
           "procedimentoComune": [
-            "Unisci in una ciotola."
+            "DA_DEFINIRE"
           ]
         }
       ],
@@ -1406,7 +1366,7 @@
         {
           "nome": "al limone",
           "procedimento": [
-            "Condisci con olio e succo di limone fresco."
+            "DA_DEFINIRE"
           ]
         }
       ]
