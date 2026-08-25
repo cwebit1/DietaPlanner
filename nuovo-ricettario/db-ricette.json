@@ -1,5 +1,5 @@
 {
-  "versione": 1,
+  "versione": 2,
   "ricette": [
     {
       "gruppi": [
@@ -43,7 +43,7 @@
         "C",
         "PF"
       ],
-      "id": 21
+      "id": 1
     }
   ]
 }
