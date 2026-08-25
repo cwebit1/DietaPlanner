@@ -364,7 +364,10 @@ function riepilogoTesto(v) {
 function popolaSelettoreSfoglia() {
   const sel = document.getElementById('selettoreSfoglia');
   const idxCorrente = INDICE_IN_MODIFICA;
-  sel.innerHTML = VOCI.map((v, i) => `<option value="${i}" ${i === idxCorrente ? 'selected' : ''}>id ${v.id} — ${riepilogoTesto(v).slice(0, 40)}</option>`).join('');
+  sel.innerHTML = VOCI.map((v, i) => {
+    const classi = Array.isArray(v.classe) ? v.classe.join(', ') : (v.classe || '');
+    return `<option value="${i}" ${i === idxCorrente ? 'selected' : ''}>id ${v.id} ${classi}</option>`;
+  }).join('');
 }
 
 function sfogliaVaiA(indiceStr) {
