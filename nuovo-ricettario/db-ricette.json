@@ -1,5 +1,5 @@
 {
-  "versione": 3,
+  "versione": 4,
   "ricette": [
     {
       "gruppi": [
@@ -11,7 +11,7 @@
             "Orzo perlato",
             "Riso Originario"
           ],
-          "testo2": "",
+          "testo2": "con",
           "mostraNomi": false
         },
         {
