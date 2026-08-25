@@ -72,6 +72,16 @@
 </section>
 
 <section>
+  <h2>Sfoglia ricette salvate</h2>
+  <div style="display:flex; gap:6px; align-items:center;">
+    <button class="btn-secondary" style="margin:0; flex:0 0 auto; width:auto; padding:8px 12px;" onclick="sfogliaPrecedente()">◀</button>
+    <select id="selettoreSfoglia" style="flex:1;" onchange="sfogliaVaiA(this.value)"></select>
+    <button class="btn-secondary" style="margin:0; flex:0 0 auto; width:auto; padding:8px 12px;" onclick="sfogliaSuccessiva()">▶</button>
+  </div>
+  <button class="btn-main" onclick="sfogliaSalva()">💾 Salva</button>
+</section>
+
+<section>
   <h2>1. Tre gruppi (identici)</h2>
   <div class="stato" id="statoIngredienti">Ingredienti non ancora caricati.</div>
   <div id="gruppo1"></div>
@@ -333,7 +343,39 @@ function riepilogoTesto(v) {
   }).filter(Boolean).join(' | ');
 }
 
+// ============== Barra "Sfoglia ricette salvate" ==============
+function popolaSelettoreSfoglia() {
+  const sel = document.getElementById('selettoreSfoglia');
+  const idxCorrente = INDICE_IN_MODIFICA;
+  sel.innerHTML = VOCI.map((v, i) => `<option value="${i}" ${i === idxCorrente ? 'selected' : ''}>id ${v.id} — ${riepilogoTesto(v).slice(0, 40)}</option>`).join('');
+}
+
+function sfogliaVaiA(indiceStr) {
+  const indice = Number(indiceStr);
+  if (Number.isNaN(indice) || !VOCI[indice]) return;
+  modificaVoce(indice);
+}
+
+function sfogliaPrecedente() {
+  if (!VOCI.length) return;
+  const attuale = INDICE_IN_MODIFICA !== null ? INDICE_IN_MODIFICA : 0;
+  const nuovo = (attuale - 1 + VOCI.length) % VOCI.length;
+  modificaVoce(nuovo);
+}
+
+function sfogliaSuccessiva() {
+  if (!VOCI.length) return;
+  const attuale = INDICE_IN_MODIFICA !== null ? INDICE_IN_MODIFICA : -1;
+  const nuovo = (attuale + 1) % VOCI.length;
+  modificaVoce(nuovo);
+}
+
+function sfogliaSalva() {
+  salvaVoce();
+}
+
 function renderListaVoci() {
+  popolaSelettoreSfoglia();
   document.getElementById('contatoreVoci').textContent = VOCI.length;
   const box = document.getElementById('listaVociSalvate');
   if (!VOCI.length) { box.innerHTML = '<div class="stato">Nessuna voce salvata ancora.</div>'; return; }
