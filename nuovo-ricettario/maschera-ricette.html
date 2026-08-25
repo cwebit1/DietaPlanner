@@ -276,11 +276,14 @@ function svuotaForm() {
 function salvaVoce() {
   const dati = leggiFormCorrente();
   if (INDICE_IN_MODIFICA !== null) {
+    dati.id = VOCI[INDICE_IN_MODIFICA].id; // conservo l'id esistente, mai cambiato in modifica
     VOCI[INDICE_IN_MODIFICA] = dati;
     INDICE_IN_MODIFICA = null;
     document.getElementById('btnAnnullaModifica').style.display = 'none';
     document.getElementById('titoloSalva').textContent = '5. Salva questa voce';
   } else {
+    const idMassimoEsistente = VOCI.reduce((max, v) => Math.max(max, v.id || 0), 0);
+    dati.id = idMassimoEsistente + 1; // mai riassegnato, nemmeno se in mezzo ci sono stati elimina
     VOCI.push(dati);
   }
   localStorage.setItem('maschera_voci', JSON.stringify(VOCI));
@@ -302,7 +305,7 @@ function modificaVoce(indice) {
     aggiungiSetSugo();
   }
   document.getElementById('btnAnnullaModifica').style.display = 'block';
-  document.getElementById('titoloSalva').innerHTML = '5. Salva questa voce <span class="badge-editing">stai modificando la voce #' + indice + '</span>';
+  document.getElementById('titoloSalva').innerHTML = '5. Salva questa voce <span class="badge-editing">stai modificando id ' + dati.id + '</span>';
   window.scrollTo(0, 0);
 }
 
@@ -328,7 +331,7 @@ function renderListaVoci() {
     const nSughi = (v.sughiCondimenti || []).length;
     return `
       <div class="voce-salvata">
-        <span class="indice">#${i}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}${v.testo ? ' — testo: "' + v.testo + '"' : ''}
+        <span class="indice">id ${v.id != null ? v.id : '?'}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}${v.testo ? ' — testo: "' + v.testo + '"' : ''}
         <div class="riepilogo">${nIngr} ingredienti compatibili, ${nSughi} set sugo/condimento</div>
         <div class="azioni">
           <button onclick="modificaVoce(${i})">Modifica</button>

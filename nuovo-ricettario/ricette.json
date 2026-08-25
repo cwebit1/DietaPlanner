@@ -1,7 +1,8 @@
 {
-  "versione": 16,
+  "versione": 17,
   "ricette": [
     {
+      "id": 1,
       "nome": "al pomodoro",
       "classe": "C",
       "carboidratiCompatibili": [
@@ -19,6 +20,7 @@
       ]
     },
     {
+      "id": 2,
       "nome": "con taleggio e speck",
       "classe": [
         "C",
@@ -44,6 +46,7 @@
       ]
     },
     {
+      "id": 3,
       "nome": "alla Norma",
       "classe": [
         "C",
@@ -61,6 +64,7 @@
       ]
     },
     {
+      "id": 4,
       "classe": "PP",
       "proteineCompatibili": [
         {
@@ -95,6 +99,7 @@
       ]
     },
     {
+      "id": 5,
       "classe": "PC",
       "proteineCompatibili": [
         {
@@ -113,6 +118,7 @@
       ]
     },
     {
+      "id": 6,
       "nome": "insalata fredda con uovo, emmental e pomodoro",
       "classe": [
         "C",
@@ -150,6 +156,7 @@
       ]
     },
     {
+      "id": 7,
       "classe": "PU",
       "tipiCotturaCompatibili": [
         {
@@ -167,6 +174,7 @@
       ]
     },
     {
+      "id": 8,
       "classe": "PL",
       "proteineCompatibili": [
         {
@@ -207,6 +215,7 @@
       ]
     },
     {
+      "id": 9,
       "classe": "PC",
       "proteineCompatibili": [
         {
@@ -250,6 +259,7 @@
       ]
     },
     {
+      "id": 10,
       "classe": [
         "PF",
         "C",
@@ -391,6 +401,7 @@
       ]
     },
     {
+      "id": 11,
       "nome": "Polenta con",
       "classe": [
         "C",
@@ -412,6 +423,7 @@
       ]
     },
     {
+      "id": 12,
       "nome": "fredda di cereali con verdure crude",
       "classe": [
         "C",
@@ -450,6 +462,7 @@
       ]
     },
     {
+      "id": 13,
       "nome": "fredda di cereali con tonno o salmone",
       "classe": [
         "C",
@@ -507,6 +520,7 @@
       ]
     },
     {
+      "id": 14,
       "nome": "fredda di cereali con verdure cotte",
       "classe": [
         "C",
@@ -542,6 +556,7 @@
       ]
     },
     {
+      "id": 15,
       "nome": "in bianco con parmigiano",
       "classe": "C",
       "carboidratiCompatibili": [
@@ -567,6 +582,7 @@
       ]
     },
     {
+      "id": 16,
       "nome": "con verdure",
       "classe": [
         "C",
@@ -699,6 +715,7 @@
       ]
     },
     {
+      "id": 17,
       "nome": "con piselli",
       "classe": [
         "C",
@@ -728,6 +745,7 @@
       ]
     },
     {
+      "id": 18,
       "nome": "zuppa di cereali e legumi",
       "classe": [
         "C",
@@ -759,6 +777,7 @@
       ]
     },
     {
+      "id": 19,
       "nome": "Insalata di",
       "classe": "V",
       "porzioneRiferimentoGrammi": 70,
@@ -800,6 +819,7 @@
       ]
     },
     {
+      "id": 20,
       "nome": "Insalata di",
       "classe": "V",
       "porzioneRiferimentoGrammi": 200,
