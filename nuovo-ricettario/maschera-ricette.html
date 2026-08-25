@@ -26,8 +26,16 @@
   .set-sugo button.rimuovi{position:absolute;top:8px;right:8px;background:var(--bad);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:0.7rem;}
   .btn-add{background:var(--card2);border:1px dashed var(--border);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:0.78rem;width:100%;margin-top:8px;}
   .btn-main{background:var(--accent);color:#12220a;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-top:10px;}
+  .btn-secondary{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:0.82rem;width:100%;margin-top:6px;}
   .stato{font-size:0.72rem;color:var(--dim);margin-top:4px;}
   .array-block{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;max-height:340px;overflow-y:auto;}
+  .voce-salvata{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;}
+  .voce-salvata .indice{color:var(--accent);font-weight:700;font-size:0.8rem;}
+  .voce-salvata .riepilogo{font-size:0.76rem;color:var(--dim);margin:4px 0;}
+  .voce-salvata .azioni{display:flex;gap:6px;margin-top:6px;}
+  .voce-salvata .azioni button{flex:1;padding:5px;font-size:0.72rem;border-radius:6px;border:1px solid var(--border);background:var(--card2);color:var(--text);}
+  .voce-salvata .azioni button.elimina{color:var(--bad);}
+  .badge-editing{background:var(--warn);color:#221200;font-size:0.7rem;padding:2px 8px;border-radius:10px;margin-left:6px;}
 </style>
 </head>
 <body>
@@ -56,26 +64,38 @@
 
 <section>
   <h2>3. Ingredienti della macrocategoria selezionata</h2>
-  <div class="help">Ogni riga: seleziona per includerlo come compatibile, casella di testo libera accanto per una nota/variante su quell'ingrediente.</div>
+  <div class="help">Seleziona per includere, casella di testo accanto per ogni ingrediente.</div>
   <div class="array-block" id="listaIngredienti"><div class="stato">Seleziona prima una classe.</div></div>
 </section>
 
 <section>
   <h2>4. Sughi / condimenti</h2>
-  <div class="help">Ogni set: casella "sugo" + casella "condimento". Il pulsante ne crea un altro identico sotto. Tutti gli ingredienti selezionati sopra sono considerati compatibili con tutti i set qui sotto.</div>
+  <div class="help">Ogni set: casella "sugo" + casella "condimento". Il pulsante ne crea un altro identico sotto.</div>
   <div id="setsSughi"></div>
   <button class="btn-add" onclick="aggiungiSetSugo()">+ crea nuovo set sugo/condimento</button>
 </section>
 
 <section>
-  <h2>5. JSON risultante</h2>
-  <div class="help">Gli ingredienti selezionati sono compatibili con le combinazioni sugo/condimento elencate. Le combinazioni sugo/condimento verranno analizzate e collegate alla tabella ingredienti in un secondo momento (lavoro di background, non qui).</div>
-  <button class="btn-main" onclick="generaJSON()">Genera JSON</button>
-  <textarea id="output" readonly placeholder="Compila i campi sopra e premi Genera JSON"></textarea>
+  <h2 id="titoloSalva">5. Salva questa voce</h2>
+  <button class="btn-main" onclick="salvaVoce()">💾 Salva voce</button>
+  <button class="btn-secondary" id="btnAnnullaModifica" style="display:none;" onclick="annullaModifica()">Annulla modifica</button>
+</section>
+
+<section>
+  <h2>6. Voci salvate (<span id="contatoreVoci">0</span>)</h2>
+  <div id="listaVociSalvate"><div class="stato">Nessuna voce salvata ancora.</div></div>
+</section>
+
+<section>
+  <h2>7. JSON di tutte le voci salvate</h2>
+  <button class="btn-secondary" onclick="mostraJSONTotale()">Mostra JSON completo</button>
+  <textarea id="outputTotale" readonly placeholder="Premi il pulsante sopra"></textarea>
 </section>
 
 <script>
 let INGREDIENTI = null;
+let VOCI = JSON.parse(localStorage.getItem('maschera_voci') || '[]');
+let INDICE_IN_MODIFICA = null; // null = nuova voce, altrimenti indice della voce in modifica
 
 const MAPPA_CLASSE = {
   C:  { gruppo: 'carboidrati' },
@@ -97,9 +117,12 @@ const MAPPA_CLASSE = {
   } catch (err) {
     document.getElementById('statoIngredienti').textContent = 'Caricamento automatico non riuscito: ' + err.message;
   }
+  renderListaVoci();
 })();
 
-document.getElementById('classe').addEventListener('change', () => {
+document.getElementById('classe').addEventListener('change', () => renderIngredienti());
+
+function renderIngredienti(preselezionati) {
   const classe = document.getElementById('classe').value;
   const box = document.getElementById('listaIngredienti');
   if (!classe) { box.innerHTML = '<div class="stato">Seleziona prima una classe.</div>'; return; }
@@ -115,17 +138,20 @@ document.getElementById('classe').addEventListener('change', () => {
 
   if (!nomi.length) { box.innerHTML = '<div class="stato">Nessun ingrediente trovato per questa classe.</div>'; return; }
 
+  const mappaPre = {};
+  (preselezionati || []).forEach(p => mappaPre[p.nome] = p.testo || '');
+
   box.innerHTML = nomi.map(nome => `
     <div class="ingrediente-riga">
-      <input type="checkbox" class="ingr-check" data-nome="${nome}">
+      <input type="checkbox" class="ingr-check" data-nome="${nome}" ${mappaPre[nome] !== undefined ? 'checked' : ''}>
       <span class="nome-ingr">${nome}</span>
-      <input type="text" class="ingr-nota" placeholder="testo">
+      <input type="text" class="ingr-nota" placeholder="testo" value="${mappaPre[nome] || ''}">
     </div>
   `).join('');
-});
+}
 
 let contatoreSet = 0;
-function aggiungiSetSugo() {
+function aggiungiSetSugo(sugo, condimento) {
   const cont = document.getElementById('setsSughi');
   const id = contatoreSet++;
   const div = document.createElement('div');
@@ -134,23 +160,23 @@ function aggiungiSetSugo() {
   div.innerHTML = `
     <button class="rimuovi" onclick="this.closest('.set-sugo').remove()">✕</button>
     <label>Sugo</label>
-    <input type="text" class="campo-sugo" placeholder="es. al pomodoro">
+    <input type="text" class="campo-sugo" placeholder="es. al pomodoro" value="${sugo || ''}">
     <label>Condimento</label>
-    <input type="text" class="campo-condimento" placeholder="es. basilico fresco">
+    <input type="text" class="campo-condimento" placeholder="es. basilico fresco" value="${condimento || ''}">
   `;
   cont.appendChild(div);
 }
 aggiungiSetSugo();
 
-function generaJSON() {
+function leggiFormCorrente() {
   const classe = document.getElementById('classe').value;
-  const descrizione = document.getElementById('descrizioneLibera').value.trim();
+  const testo = document.getElementById('descrizioneLibera').value.trim();
 
-  const ingredientiSelezionati = [...document.querySelectorAll('.ingr-check:checked')].map(chk => {
+  const ingredientiCompatibili = [...document.querySelectorAll('.ingr-check:checked')].map(chk => {
     const riga = chk.closest('.ingrediente-riga');
-    const testo = riga.querySelector('.ingr-nota').value.trim();
+    const t = riga.querySelector('.ingr-nota').value.trim();
     const obj = { nome: chk.dataset.nome };
-    if (testo) obj.testo = testo;
+    if (t) obj.testo = t;
     return obj;
   });
 
@@ -165,11 +191,88 @@ function generaJSON() {
 
   const out = {};
   if (classe) out.classe = classe;
-  if (descrizione) out.testo = descrizione;
-  if (ingredientiSelezionati.length) out.ingredientiCompatibili = ingredientiSelezionati;
+  if (testo) out.testo = testo;
+  if (ingredientiCompatibili.length) out.ingredientiCompatibili = ingredientiCompatibili;
   if (sughiCondimenti.length) out.sughiCondimenti = sughiCondimenti;
+  return out;
+}
 
-  document.getElementById('output').value = JSON.stringify(out, null, 2);
+function svuotaForm() {
+  document.getElementById('classe').value = '';
+  document.getElementById('descrizioneLibera').value = '';
+  document.getElementById('listaIngredienti').innerHTML = '<div class="stato">Seleziona prima una classe.</div>';
+  document.getElementById('setsSughi').innerHTML = '';
+  aggiungiSetSugo();
+}
+
+function salvaVoce() {
+  const dati = leggiFormCorrente();
+  if (INDICE_IN_MODIFICA !== null) {
+    VOCI[INDICE_IN_MODIFICA] = dati;
+    INDICE_IN_MODIFICA = null;
+    document.getElementById('btnAnnullaModifica').style.display = 'none';
+    document.getElementById('titoloSalva').textContent = '5. Salva questa voce';
+  } else {
+    VOCI.push(dati);
+  }
+  localStorage.setItem('maschera_voci', JSON.stringify(VOCI));
+  svuotaForm();
+  renderListaVoci();
+}
+
+function modificaVoce(indice) {
+  INDICE_IN_MODIFICA = indice;
+  const dati = VOCI[indice];
+  document.getElementById('classe').value = dati.classe || '';
+  document.getElementById('descrizioneLibera').value = dati.testo || '';
+  renderIngredienti(dati.ingredientiCompatibili);
+  document.getElementById('setsSughi').innerHTML = '';
+  contatoreSet = 0;
+  if (dati.sughiCondimenti && dati.sughiCondimenti.length) {
+    dati.sughiCondimenti.forEach(s => aggiungiSetSugo(s.sugo, s.condimento));
+  } else {
+    aggiungiSetSugo();
+  }
+  document.getElementById('btnAnnullaModifica').style.display = 'block';
+  document.getElementById('titoloSalva').innerHTML = '5. Salva questa voce <span class="badge-editing">stai modificando la voce #' + indice + '</span>';
+  window.scrollTo(0, 0);
+}
+
+function annullaModifica() {
+  INDICE_IN_MODIFICA = null;
+  document.getElementById('btnAnnullaModifica').style.display = 'none';
+  document.getElementById('titoloSalva').textContent = '5. Salva questa voce';
+  svuotaForm();
+}
+
+function eliminaVoce(indice) {
+  VOCI.splice(indice, 1);
+  localStorage.setItem('maschera_voci', JSON.stringify(VOCI));
+  renderListaVoci();
+}
+
+function renderListaVoci() {
+  document.getElementById('contatoreVoci').textContent = VOCI.length;
+  const box = document.getElementById('listaVociSalvate');
+  if (!VOCI.length) { box.innerHTML = '<div class="stato">Nessuna voce salvata ancora.</div>'; return; }
+  box.innerHTML = VOCI.map((v, i) => {
+    const nIngr = (v.ingredientiCompatibili || []).length;
+    const nSughi = (v.sughiCondimenti || []).length;
+    return `
+      <div class="voce-salvata">
+        <span class="indice">#${i}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}${v.testo ? ' — testo: "' + v.testo + '"' : ''}
+        <div class="riepilogo">${nIngr} ingredienti compatibili, ${nSughi} set sugo/condimento</div>
+        <div class="azioni">
+          <button onclick="modificaVoce(${i})">Modifica</button>
+          <button class="elimina" onclick="eliminaVoce(${i})">Elimina</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function mostraJSONTotale() {
+  document.getElementById('outputTotale').value = JSON.stringify(VOCI, null, 2);
 }
 </script>
 
