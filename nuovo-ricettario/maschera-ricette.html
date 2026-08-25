@@ -51,7 +51,7 @@
 
 <section>
   <h2>0. Connessione GitHub</h2>
-  <label>Token GitHub (mai salvato)</label>
+  <label>Token GitHub (si ricorda da solo dopo la prima volta, resta solo su questo dispositivo)</label>
   <input type="password" id="ghToken" placeholder="ghp_...">
 </section>
 
@@ -146,6 +146,18 @@ function ghApiUrl(path){
   return `https://api.github.com/repos/cwebit1/DietaPlanner/contents/${path}`;
 }
 function ghToken(){ return document.getElementById('ghToken').value.trim(); }
+
+// Il token si ricorda nel browser (localStorage) dopo la prima volta, cosi'
+// non va riscritto ogni volta. Resta solo su questo dispositivo - non puo'
+// stare scritto nel codice della pagina, GitHub blocca il push se lo rileva
+// in un file (verificato: il push con il token scritto qui e' stato rifiutato).
+(() => {
+  const salvato = localStorage.getItem('maschera_ghtoken');
+  if (salvato) document.getElementById('ghToken').value = salvato;
+  document.getElementById('ghToken').addEventListener('input', (e) => {
+    localStorage.setItem('maschera_ghtoken', e.target.value.trim());
+  });
+})();
 function ghBranch(){ return 'main'; }
 
 async function ghLoad(path){
