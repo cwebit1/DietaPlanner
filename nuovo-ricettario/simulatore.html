@@ -126,7 +126,7 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 // niente upload manuale, il file input resta solo come alternativa/fallback.
 (async () => {
   try {
-    const res = await fetch('ricette.json');
+    const res = await fetch('ricette.json?nocache=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     RICETTE = d.ricette;
