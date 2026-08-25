@@ -1,5 +1,5 @@
 {
-  "versione": 9,
+  "versione": 10,
   "ingredienti": {
     "Pasta corta": {
       "kcal": 350,
@@ -1374,27 +1374,6 @@
       "deperibilita": "bassa",
       "conservazione": "lunga",
       "porzione": 100,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Farina 00": {
-      "kcal": 340,
-      "proteine": 10,
-      "carboidrati": 76,
-      "grassi": 1,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 40,
       "gradimento": 1,
       "stock": 1,
       "formatoRiordino": {
