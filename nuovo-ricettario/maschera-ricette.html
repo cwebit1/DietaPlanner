@@ -69,6 +69,8 @@
   <input type="text" id="ghRepo" value="cwebit1/DietaPlanner">
   <label>Branch</label>
   <input type="text" id="ghBranch" value="main">
+  <button class="btn-main" onclick="connettiGithub()">🔌 Connetti</button>
+  <div class="stato" id="statoConnetti"></div>
 </section>
 
 <section>
@@ -189,6 +191,21 @@ async function ghSave(path, obj, sha, message){
   }
   renderListaVoci();
 })();
+
+// ============== Connetti: carica entrambi i file insieme ==============
+async function connettiGithub() {
+  const stato = document.getElementById('statoConnetti');
+  stato.textContent = 'Connetto...'; stato.className = 'stato';
+  try {
+    await caricaRicetteDaGithub();
+    await caricaIngredientiDaGithub();
+    stato.textContent = `Connesso — ${VOCI.length} ricette e ${Object.keys(INGREDIENTI_FULL.ingredienti).length} ingredienti caricati da GitHub.`;
+    stato.className = 'stato ok';
+  } catch (err) {
+    stato.textContent = 'Errore: ' + err.message;
+    stato.className = 'stato err';
+  }
+}
 
 // ============== 1. TRE GRUPPI IDENTICI ==============
 const OPZIONI_SELETTORE = ['C','PC','PP','PF','PU','PL','V','Condimenti','Nessuno'];
