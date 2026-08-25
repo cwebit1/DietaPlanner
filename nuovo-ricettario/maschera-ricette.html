@@ -423,6 +423,7 @@ async function caricaRicetteDaGithub() {
     VOCI = json.ricette || [];
     localStorage.setItem('maschera_voci', JSON.stringify(VOCI));
     renderListaVoci();
+    if (VOCI.length) modificaVoce(0); // carico subito la prima voce nei gruppi, non solo nel selettore
     stato.textContent = `Caricate ${VOCI.length} voci (versione ${json.versione}, sha ${sha.slice(0,7)}).`;
     stato.className = 'stato ok';
   } catch (err) {
