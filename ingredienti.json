@@ -1,25 +1,6 @@
 {
-  "versione": 11,
+  "versione": 12,
   "ingredienti": {
-    "ZZZ_TEST_TEMP_CANCELLAMI": {
-      "kcal": 0,
-      "proteine": 0,
-      "carboidrati": 0,
-      "grassi": 0,
-      "deperibilita": "",
-      "conservazione": "",
-      "porzione": 0,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false,
-      "gruppo": "verdura"
-    },
     "Aglio": {
       "kcal": 149,
       "proteine": 6.4,
