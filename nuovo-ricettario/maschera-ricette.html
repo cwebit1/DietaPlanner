@@ -50,13 +50,9 @@
 <h1>🧩 Maschera creazione ricette — nuovo ricettario</h1>
 
 <section>
-  <h2>0. Connessione GitHub (per ingredienti.json e ricette.json)</h2>
+  <h2>0. Connessione GitHub</h2>
   <label>Token GitHub (mai salvato)</label>
   <input type="password" id="ghToken" placeholder="ghp_...">
-  <label>Repo</label>
-  <input type="text" id="ghRepo" value="cwebit1/DietaPlanner">
-  <label>Branch</label>
-  <input type="text" id="ghBranch" value="main">
 </section>
 
 <section>
@@ -147,11 +143,10 @@ function b64DecodeUtf8(str){
   return decodeURIComponent(atob(str.replace(/\n/g,'')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
 }
 function ghApiUrl(path){
-  const repo = document.getElementById('ghRepo').value.trim();
-  return `https://api.github.com/repos/${repo}/contents/${path}`;
+  return `https://api.github.com/repos/cwebit1/DietaPlanner/contents/${path}`;
 }
 function ghToken(){ return document.getElementById('ghToken').value.trim(); }
-function ghBranch(){ return document.getElementById('ghBranch').value.trim() || 'main'; }
+function ghBranch(){ return 'main'; }
 
 async function ghLoad(path){
   const token = ghToken();
