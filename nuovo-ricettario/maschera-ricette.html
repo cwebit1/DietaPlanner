@@ -24,6 +24,9 @@
   .ingrediente-riga input[type=text]{flex:1;}
   .set-sugo{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;position:relative;}
   .set-sugo button.rimuovi{position:absolute;top:8px;right:8px;background:var(--bad);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:0.7rem;}
+  .chip-ingredienti{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;min-height:26px;padding:6px;background:var(--card2);border:1px solid var(--border);border-radius:6px;}
+  .chip-ingredienti .chip{background:var(--bg);border:1px solid var(--accent);color:var(--accent);border-radius:14px;padding:3px 10px;font-size:0.74rem;}
+  .chip-ingredienti .vuoto{color:var(--dim);font-size:0.72rem;font-style:italic;}
   .btn-add{background:var(--card2);border:1px dashed var(--border);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:0.78rem;width:100%;margin-top:8px;}
   .btn-main{background:var(--accent);color:#12220a;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-top:10px;}
   .btn-secondary{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:0.82rem;width:100%;margin-top:6px;}
@@ -228,7 +231,7 @@ function renderIngredienti(preselezionati) {
 }
 
 let contatoreSet = 0;
-function aggiungiSetSugo(sugo, condimento) {
+function aggiungiSetSugo(sugo, condimento, ingredientiSugo) {
   const cont = document.getElementById('setsSughi');
   const id = contatoreSet++;
   const div = document.createElement('div');
@@ -238,10 +241,23 @@ function aggiungiSetSugo(sugo, condimento) {
     <button class="rimuovi" onclick="this.closest('.set-sugo').remove()">✕</button>
     <label>Sugo</label>
     <input type="text" class="campo-sugo" placeholder="es. al pomodoro" value="${sugo || ''}">
+    <label>Ingredienti che compongono il sugo</label>
+    <input type="text" class="campo-ingredienti-sugo" placeholder="es. Pomodoro fresco, Olio extravergine oliva (separati da virgola)" value="${(ingredientiSugo || []).join(', ')}">
+    <div class="chip-ingredienti campo-ingredienti-sugo-chip"></div>
     <label>Condimento</label>
     <input type="text" class="campo-condimento" placeholder="es. basilico fresco" value="${condimento || ''}">
   `;
   cont.appendChild(div);
+  const inputIngr = div.querySelector('.campo-ingredienti-sugo');
+  const chipBox = div.querySelector('.campo-ingredienti-sugo-chip');
+  function aggiornaChip() {
+    const nomi = inputIngr.value.split(',').map(s => s.trim()).filter(Boolean);
+    chipBox.innerHTML = nomi.length
+      ? nomi.map(n => `<span class="chip">${n}</span>`).join('')
+      : '<span class="vuoto">nessun ingrediente collegato ancora</span>';
+  }
+  inputIngr.addEventListener('input', aggiornaChip);
+  aggiornaChip();
 }
 aggiungiSetSugo();
 
@@ -258,11 +274,13 @@ function leggiFormCorrente() {
   const sughiCondimenti = [...document.querySelectorAll('.set-sugo')].map(set => {
     const sugo = set.querySelector('.campo-sugo').value.trim();
     const condimento = set.querySelector('.campo-condimento').value.trim();
+    const ingredientiSugo = set.querySelector('.campo-ingredienti-sugo').value.split(',').map(s => s.trim()).filter(Boolean);
     const obj = {};
     if (sugo) obj.sugo = sugo;
     if (condimento) obj.condimento = condimento;
+    if (ingredientiSugo.length) obj.ingredientiSugo = ingredientiSugo;
     return obj;
-  }).filter(o => o.sugo || o.condimento);
+  }).filter(o => o.sugo || o.condimento || o.ingredientiSugo);
 
   const out = {};
   if (classe) out.classe = classe;
@@ -307,7 +325,7 @@ function modificaVoce(indice) {
   document.getElementById('setsSughi').innerHTML = '';
   contatoreSet = 0;
   if (dati.sughiCondimenti && dati.sughiCondimenti.length) {
-    dati.sughiCondimenti.forEach(s => aggiungiSetSugo(s.sugo, s.condimento));
+    dati.sughiCondimenti.forEach(s => aggiungiSetSugo(s.sugo, s.condimento, s.ingredientiSugo));
   } else {
     aggiungiSetSugo();
   }
