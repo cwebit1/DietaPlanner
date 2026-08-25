@@ -77,6 +77,7 @@
   <div id="gruppo1"></div>
   <div id="gruppo2"></div>
   <div id="gruppo3"></div>
+  <div id="gruppo4"></div>
 </section>
 
 <section>
@@ -203,6 +204,7 @@ function creaGruppo(idGruppo) {
 creaGruppo('gruppo1');
 creaGruppo('gruppo2');
 creaGruppo('gruppo3');
+creaGruppo('gruppo4');
 
 function selezionaOpzione(idGruppo, valore) {
   const el = document.getElementById(idGruppo);
@@ -263,7 +265,7 @@ function scriviGruppo(idGruppo, dati) {
 }
 
 function leggiFormCorrente() {
-  const gruppi = [leggiGruppo('gruppo1'), leggiGruppo('gruppo2'), leggiGruppo('gruppo3')];
+  const gruppi = [leggiGruppo('gruppo1'), leggiGruppo('gruppo2'), leggiGruppo('gruppo3'), leggiGruppo('gruppo4')];
   const classiUsate = new Set();
   gruppi.forEach(g => { if (g.categoria && g.categoria !== 'Nessuno' && g.categoria !== 'Condimenti') classiUsate.add(g.categoria); });
   const out = { gruppi };
@@ -275,6 +277,7 @@ function svuotaForm() {
   creaGruppo('gruppo1');
   creaGruppo('gruppo2');
   creaGruppo('gruppo3');
+  creaGruppo('gruppo4');
 }
 
 function salvaVoce() {
@@ -299,7 +302,7 @@ function modificaVoce(indice) {
   INDICE_IN_MODIFICA = indice;
   const dati = VOCI[indice];
   svuotaForm();
-  const idGruppi = ['gruppo1', 'gruppo2', 'gruppo3'];
+  const idGruppi = ['gruppo1', 'gruppo2', 'gruppo3', 'gruppo4'];
   (dati.gruppi || []).forEach((g, i) => scriviGruppo(idGruppi[i], g));
   document.getElementById('btnAnnullaModifica').style.display = 'block';
   document.getElementById('titoloSalva').innerHTML = '2. Salva questa voce <span class="badge-editing">stai modificando id ' + dati.id + '</span>';
