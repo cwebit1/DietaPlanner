@@ -22,12 +22,8 @@
   .ingrediente-riga input[type=checkbox]{width:auto;flex:0 0 auto;}
   .ingrediente-riga .nome-ingr{flex:0 0 40%;font-size:0.8rem;}
   .ingrediente-riga input[type=text]{flex:1;}
-  .set-sugo{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;position:relative;}
-  .set-sugo button.rimuovi{position:absolute;top:8px;right:8px;background:var(--bad);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:0.7rem;}
-  .chip-ingredienti{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;min-height:26px;padding:6px;background:var(--card2);border:1px solid var(--border);border-radius:6px;}
-  .chip-ingredienti .chip{background:var(--bg);border:1px solid var(--accent);color:var(--accent);border-radius:14px;padding:3px 10px;font-size:0.74rem;}
-  .chip-ingredienti .vuoto{color:var(--dim);font-size:0.72rem;font-style:italic;}
   .btn-add{background:var(--card2);border:1px dashed var(--border);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:0.78rem;width:100%;margin-top:8px;}
+  .btn-add:disabled{opacity:0.4;border-style:solid;color:var(--dim);}
   .btn-main{background:var(--accent);color:#12220a;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-top:10px;}
   .btn-secondary{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:0.82rem;width:100%;margin-top:6px;}
   .stato{font-size:0.72rem;color:var(--dim);margin-top:4px;}
@@ -45,7 +41,13 @@
   .ingr-full-riga .campi{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px;}
   .ingr-full-riga input{font-size:0.78rem;padding:5px;}
   .ingr-full-riga button.elimina{background:var(--bad);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:0.7rem;margin-top:4px;width:100%;}
-  details summary{cursor:pointer;font-size:0.82rem;color:var(--dim);}
+
+  .blocco{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;position:relative;}
+  .blocco .etichetta-blocco{font-size:0.72rem;color:var(--dim);text-transform:uppercase;letter-spacing:0.5px;}
+  .blocco button.rimuovi-blocco{position:absolute;top:8px;right:8px;background:var(--bad);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:0.7rem;}
+  .toolbar-blocchi{display:flex;gap:6px;margin-top:8px;}
+  .toolbar-blocchi button{flex:1;}
+  .contatore-slot{font-size:0.72rem;color:var(--dim);margin-top:4px;}
 </style>
 </head>
 <body>
@@ -53,52 +55,38 @@
 <h1>🧩 Maschera creazione ricette — nuovo ricettario</h1>
 
 <section>
-  <h2>0. Connessione GitHub</h2>
-  <label>Token GitHub (si ricorda da solo dopo la prima volta, resta solo su questo dispositivo)</label>
+  <h2>0. Connessione GitHub (per ingredienti.json e ricette.json)</h2>
+  <label>Token GitHub (mai salvato)</label>
   <input type="password" id="ghToken" placeholder="ghp_...">
+  <label>Repo</label>
+  <input type="text" id="ghRepo" value="cwebit1/DietaPlanner">
+  <label>Branch</label>
+  <input type="text" id="ghBranch" value="main">
 </section>
 
 <section>
-  <h2>1. Classe</h2>
-  <select id="classe">
-    <option value="">— seleziona —</option>
-    <option value="C">C (carboidrato)</option>
-    <option value="V">V (verdura)</option>
-    <option value="PC">PC (carne)</option>
-    <option value="PP">PP (pesce)</option>
-    <option value="PF">PF (formaggio)</option>
-    <option value="PU">PU (uova)</option>
-    <option value="PL">PL (legumi)</option>
-  </select>
+  <h2>1. Sequenza (testo / categoria / condimenti), nell'ordine che vuoi</h2>
+  <div class="help">
+    Aggiungi blocchi in qualunque ordine: <b>testo</b> libero, <b>categoria</b> (C/PC/PP/PF/PU/PL/V — max 3 in tutta la sequenza, ognuna con la sua dose applicata poi dal setting nutrizionista), <b>condimenti/spezie</b> (nessuna dose, solo inventario). Esempio: testo "insalata di" → categoria C (farro) → testo "con" → categoria PF (mozzarella) → testo "e" → categoria V (pomodoro fresco) → testo "al" → condimenti (basilico).
+  </div>
+  <div id="sequenza"></div>
+  <div class="toolbar-blocchi">
+    <button class="btn-add" onclick="aggiungiBloccoTesto()">+ Testo</button>
+    <button class="btn-add" id="btnAggiungiCategoria" onclick="aggiungiBloccoCategoria()">+ Categoria</button>
+    <button class="btn-add" onclick="aggiungiBloccoCondimenti()">+ Condimenti/spezie</button>
+  </div>
+  <div class="contatore-slot" id="contatoreSlot">0 / 3 blocchi categoria usati</div>
   <div class="stato" id="statoIngredienti">Ingredienti non ancora caricati.</div>
 </section>
 
 <section>
-  <h2>2. Testo</h2>
-  <input type="text" id="descrizioneLibera" placeholder="testo">
-</section>
-
-<section>
-  <h2>3. Ingredienti della macrocategoria selezionata</h2>
-  <div class="help">Seleziona per includere, casella di testo accanto per ogni ingrediente.</div>
-  <div class="array-block" id="listaIngredienti"><div class="stato">Seleziona prima una classe.</div></div>
-</section>
-
-<section>
-  <h2>4. Sughi / condimenti</h2>
-  <div class="help">Ogni set: casella "sugo" + casella "condimento". Il pulsante ne crea un altro identico sotto.</div>
-  <div id="setsSughi"></div>
-  <button class="btn-add" onclick="aggiungiSetSugo()">+ crea nuovo set sugo/condimento</button>
-</section>
-
-<section>
-  <h2 id="titoloSalva">5. Salva questa voce</h2>
+  <h2 id="titoloSalva">2. Salva questa voce</h2>
   <button class="btn-main" onclick="salvaVoce()">💾 Salva voce (nella lista qui sotto)</button>
   <button class="btn-secondary" id="btnAnnullaModifica" style="display:none;" onclick="annullaModifica()">Annulla modifica</button>
 </section>
 
 <section>
-  <h2>6. Voci salvate (<span id="contatoreVoci">0</span>) — nuovo-ricettario/ricette.json</h2>
+  <h2>3. Voci salvate (<span id="contatoreVoci">0</span>) — nuovo-ricettario/ricette.json</h2>
   <button class="btn-secondary" onclick="caricaRicetteDaGithub()">⬇️ Carica ricette.json da GitHub</button>
   <button class="btn-main" onclick="salvaRicetteSuGithub()">⬆️ Salva tutte le voci su GitHub</button>
   <div class="stato" id="statoRicetteGh"></div>
@@ -106,13 +94,13 @@
 </section>
 
 <section>
-  <h2>7. JSON di tutte le voci salvate</h2>
+  <h2>4. JSON di tutte le voci salvate</h2>
   <button class="btn-secondary" onclick="mostraJSONTotale()">Mostra JSON completo</button>
   <textarea id="outputTotale" readonly placeholder="Premi il pulsante sopra"></textarea>
 </section>
 
 <section>
-  <h2>8. Gestione ingredienti (ingredienti.json) — elimina, rinomina, aggiungi</h2>
+  <h2>5. Gestione ingredienti (ingredienti.json) — elimina, rinomina, aggiungi</h2>
   <button class="btn-secondary" onclick="caricaIngredientiDaGithub()">⬇️ Carica ingredienti.json da GitHub</button>
   <button class="btn-main" onclick="salvaIngredientiSuGithub()">⬆️ Salva ingredienti su GitHub</button>
   <div class="stato" id="statoIngredientiGh"></div>
@@ -121,12 +109,13 @@
 </section>
 
 <script>
-let INGREDIENTI = null;      // mappa nome->dati, usata per i filtri della sezione 3
-let INGREDIENTI_SHA = null;  // sha del file su GitHub, serve per salvare
+let INGREDIENTI = null;
+let INGREDIENTI_SHA = null;
 let VOCI = JSON.parse(localStorage.getItem('maschera_voci') || '[]');
-let RICETTE_DATA = null;     // oggetto completo {versione, ricette} caricato da GitHub
+let RICETTE_DATA = null;
 let RICETTE_SHA = null;
 let INDICE_IN_MODIFICA = null;
+let contatoreBlocchi = 0;
 
 const MAPPA_CLASSE = {
   C:  { gruppo: 'carboidrati' },
@@ -138,7 +127,7 @@ const MAPPA_CLASSE = {
   PL: { gruppo: 'proteine', sottotipi: ['legumi'] },
 };
 
-// ============== utilita' base64/GitHub (stesso pattern di editor-ricette.html) ==============
+// ============== utilita' base64/GitHub ==============
 function b64EncodeUtf8(str){
   return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_,p1)=>String.fromCharCode('0x'+p1)));
 }
@@ -146,22 +135,11 @@ function b64DecodeUtf8(str){
   return decodeURIComponent(atob(str.replace(/\n/g,'')).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
 }
 function ghApiUrl(path){
-  return `https://api.github.com/repos/cwebit1/DietaPlanner/contents/${path}`;
+  const repo = document.getElementById('ghRepo').value.trim();
+  return `https://api.github.com/repos/${repo}/contents/${path}`;
 }
 function ghToken(){ return document.getElementById('ghToken').value.trim(); }
-
-// Il token si ricorda nel browser (localStorage) dopo la prima volta, cosi'
-// non va riscritto ogni volta. Resta solo su questo dispositivo - non puo'
-// stare scritto nel codice della pagina, GitHub blocca il push se lo rileva
-// in un file (verificato: il push con il token scritto qui e' stato rifiutato).
-(() => {
-  const salvato = localStorage.getItem('maschera_ghtoken');
-  if (salvato) document.getElementById('ghToken').value = salvato;
-  document.getElementById('ghToken').addEventListener('input', (e) => {
-    localStorage.setItem('maschera_ghtoken', e.target.value.trim());
-  });
-})();
-function ghBranch(){ return 'main'; }
+function ghBranch(){ return document.getElementById('ghBranch').value.trim() || 'main'; }
 
 async function ghLoad(path){
   const token = ghToken();
@@ -186,7 +164,7 @@ async function ghSave(path, obj, sha, message){
   return resJson;
 }
 
-// ============== 0. Caricamento automatico sola lettura ingredienti (per i filtri sezione 3) ==============
+// ============== caricamento automatico sola lettura ingredienti (per i filtri sequenza) ==============
 (async () => {
   try {
     const res = await fetch('../ingredienti.json?nocache=' + Date.now());
@@ -200,27 +178,94 @@ async function ghSave(path, obj, sha, message){
   renderListaVoci();
 })();
 
-document.getElementById('classe').addEventListener('change', () => renderIngredienti());
+// ============== 1. SEQUENZA: blocchi testo / categoria / condimenti ==============
+function contaBlocchiCategoria() {
+  return document.querySelectorAll('#sequenza .blocco[data-tipo="categoria"]').length;
+}
+function aggiornaContatoreSlot() {
+  const n = contaBlocchiCategoria();
+  document.getElementById('contatoreSlot').textContent = `${n} / 3 blocchi categoria usati`;
+  document.getElementById('btnAggiungiCategoria').disabled = n >= 3;
+}
 
-function renderIngredienti(preselezionati) {
-  const classe = document.getElementById('classe').value;
-  const box = document.getElementById('listaIngredienti');
-  if (!classe) { box.innerHTML = '<div class="stato">Seleziona prima una classe.</div>'; return; }
+function aggiungiBloccoTesto(valorePrecompilato) {
+  const cont = document.getElementById('sequenza');
+  const div = document.createElement('div');
+  div.className = 'blocco';
+  div.dataset.tipo = 'testo';
+  div.innerHTML = `
+    <button class="rimuovi-blocco" onclick="rimuoviBlocco(this)">✕</button>
+    <div class="etichetta-blocco">Testo</div>
+    <input type="text" class="campo-testo-blocco" placeholder="testo" value="${valorePrecompilato || ''}">
+  `;
+  cont.appendChild(div);
+}
+
+function aggiungiBloccoCategoria(categoriaPrecompilata, ingredientiPrecompilati) {
+  if (contaBlocchiCategoria() >= 3 && !categoriaPrecompilata) { alert('Massimo 3 blocchi categoria per voce.'); return; }
+  const cont = document.getElementById('sequenza');
+  const div = document.createElement('div');
+  div.className = 'blocco';
+  div.dataset.tipo = 'categoria';
+  div.innerHTML = `
+    <button class="rimuovi-blocco" onclick="rimuoviBlocco(this)">✕</button>
+    <div class="etichetta-blocco">Categoria</div>
+    <select class="campo-categoria">
+      <option value="">— nessuna —</option>
+      <option value="C">C (carboidrato)</option>
+      <option value="V">V (verdura)</option>
+      <option value="PC">PC (carne)</option>
+      <option value="PP">PP (pesce)</option>
+      <option value="PF">PF (formaggio)</option>
+      <option value="PU">PU (uova)</option>
+      <option value="PL">PL (legumi)</option>
+    </select>
+    <div class="array-block campo-lista-ingredienti"><div class="stato">Seleziona una categoria.</div></div>
+  `;
+  cont.appendChild(div);
+  const select = div.querySelector('.campo-categoria');
+  select.addEventListener('change', () => renderListaIngredientiBlocco(div));
+  if (categoriaPrecompilata) {
+    select.value = categoriaPrecompilata;
+    renderListaIngredientiBlocco(div, ingredientiPrecompilati);
+  }
+  aggiornaContatoreSlot();
+}
+
+function aggiungiBloccoCondimenti(ingredientiPrecompilati) {
+  const cont = document.getElementById('sequenza');
+  const div = document.createElement('div');
+  div.className = 'blocco';
+  div.dataset.tipo = 'condimenti';
+  div.innerHTML = `
+    <button class="rimuovi-blocco" onclick="rimuoviBlocco(this)">✕</button>
+    <div class="etichetta-blocco">Condimenti / spezie (nessuna dose, solo inventario)</div>
+    <div class="array-block campo-lista-condimenti"><div class="stato">Ingredienti non ancora caricati.</div></div>
+  `;
+  cont.appendChild(div);
+  renderListaCondimentiBlocco(div, ingredientiPrecompilati);
+}
+
+function rimuoviBlocco(btn) {
+  btn.closest('.blocco').remove();
+  aggiornaContatoreSlot();
+}
+
+function renderListaIngredientiBlocco(bloccoDiv, preselezionati) {
+  const categoria = bloccoDiv.querySelector('.campo-categoria').value;
+  const box = bloccoDiv.querySelector('.campo-lista-ingredienti');
+  if (!categoria) { box.innerHTML = '<div class="stato">Seleziona una categoria.</div>'; return; }
   if (!INGREDIENTI) { box.innerHTML = '<div class="stato">Ingredienti non ancora caricati.</div>'; return; }
-
-  const filtro = MAPPA_CLASSE[classe];
+  const filtro = MAPPA_CLASSE[categoria];
   const nomi = Object.keys(INGREDIENTI).filter(nome => {
     const ing = INGREDIENTI[nome];
     if (ing.gruppo !== filtro.gruppo) return false;
     if (filtro.sottotipi) return filtro.sottotipi.includes(ing.sottotipo);
     return true;
   }).sort();
-
-  if (!nomi.length) { box.innerHTML = '<div class="stato">Nessun ingrediente trovato per questa classe.</div>'; return; }
-
+  if (!nomi.length) { box.innerHTML = '<div class="stato">Nessun ingrediente trovato per questa categoria.</div>'; return; }
   const mappaPre = {};
   (preselezionati || []).forEach(p => mappaPre[p.nome] = p.testo || '');
-
   box.innerHTML = nomi.map(nome => `
     <div class="ingrediente-riga">
       <input type="checkbox" class="ingr-check" data-nome="${nome}" ${mappaPre[nome] !== undefined ? 'checked' : ''}>
@@ -230,85 +275,69 @@ function renderIngredienti(preselezionati) {
   `).join('');
 }
 
-let contatoreSet = 0;
-function aggiungiSetSugo(sugo, condimento, ingredientiSugo) {
-  const cont = document.getElementById('setsSughi');
-  const id = contatoreSet++;
-  const div = document.createElement('div');
-  div.className = 'set-sugo';
-  div.dataset.id = id;
-  div.innerHTML = `
-    <button class="rimuovi" onclick="this.closest('.set-sugo').remove()">✕</button>
-    <label>Sugo</label>
-    <input type="text" class="campo-sugo" placeholder="es. al pomodoro" value="${sugo || ''}">
-    <label>Ingredienti che compongono il sugo</label>
-    <input type="text" class="campo-ingredienti-sugo" placeholder="es. Pomodoro fresco, Olio extravergine oliva (separati da virgola)" value="${(ingredientiSugo || []).join(', ')}">
-    <div class="chip-ingredienti campo-ingredienti-sugo-chip"></div>
-    <label>Condimento</label>
-    <input type="text" class="campo-condimento" placeholder="es. basilico fresco" value="${condimento || ''}">
-  `;
-  cont.appendChild(div);
-  const inputIngr = div.querySelector('.campo-ingredienti-sugo');
-  const chipBox = div.querySelector('.campo-ingredienti-sugo-chip');
-  function aggiornaChip() {
-    const nomi = inputIngr.value.split(',').map(s => s.trim()).filter(Boolean);
-    chipBox.innerHTML = nomi.length
-      ? nomi.map(n => `<span class="chip">${n}</span>`).join('')
-      : '<span class="vuoto">nessun ingrediente collegato ancora</span>';
-  }
-  inputIngr.addEventListener('input', aggiornaChip);
-  aggiornaChip();
+function renderListaCondimentiBlocco(bloccoDiv, preselezionati) {
+  const box = bloccoDiv.querySelector('.campo-lista-condimenti');
+  if (!INGREDIENTI) { box.innerHTML = '<div class="stato">Ingredienti non ancora caricati.</div>'; return; }
+  const nomi = Object.keys(INGREDIENTI).sort();
+  const set = new Set(preselezionati || []);
+  box.innerHTML = nomi.map(nome => `
+    <div class="ingrediente-riga">
+      <input type="checkbox" class="cond-check" data-nome="${nome}" ${set.has(nome) ? 'checked' : ''}>
+      <span class="nome-ingr">${nome}</span>
+    </div>
+  `).join('');
 }
-aggiungiSetSugo();
 
+// ============== 2. Lettura/salvataggio voce ==============
 function leggiFormCorrente() {
-  const classe = document.getElementById('classe').value;
-  const testo = document.getElementById('descrizioneLibera').value.trim();
-  const ingredientiCompatibili = [...document.querySelectorAll('.ingr-check:checked')].map(chk => {
-    const riga = chk.closest('.ingrediente-riga');
-    const t = riga.querySelector('.ingr-nota').value.trim();
-    const obj = { nome: chk.dataset.nome };
-    if (t) obj.testo = t;
-    return obj;
-  });
-  const sughiCondimenti = [...document.querySelectorAll('.set-sugo')].map(set => {
-    const sugo = set.querySelector('.campo-sugo').value.trim();
-    const condimento = set.querySelector('.campo-condimento').value.trim();
-    const ingredientiSugo = set.querySelector('.campo-ingredienti-sugo').value.split(',').map(s => s.trim()).filter(Boolean);
-    const obj = {};
-    if (sugo) obj.sugo = sugo;
-    if (condimento) obj.condimento = condimento;
-    if (ingredientiSugo.length) obj.ingredientiSugo = ingredientiSugo;
-    return obj;
-  }).filter(o => o.sugo || o.condimento || o.ingredientiSugo);
+  const blocchi = [...document.querySelectorAll('#sequenza .blocco')];
+  const sequenza = [];
+  const classiUsate = new Set();
 
-  const out = {};
-  if (classe) out.classe = classe;
-  if (testo) out.testo = testo;
-  if (ingredientiCompatibili.length) out.ingredientiCompatibili = ingredientiCompatibili;
-  if (sughiCondimenti.length) out.sughiCondimenti = sughiCondimenti;
+  blocchi.forEach(b => {
+    const tipo = b.dataset.tipo;
+    if (tipo === 'testo') {
+      const valore = b.querySelector('.campo-testo-blocco').value.trim();
+      if (valore) sequenza.push({ tipo: 'testo', valore });
+    } else if (tipo === 'categoria') {
+      const categoria = b.querySelector('.campo-categoria').value;
+      if (!categoria) { sequenza.push({ tipo: 'categoria', categoria: null, ingredienti: [] }); return; }
+      const ingredienti = [...b.querySelectorAll('.ingr-check:checked')].map(chk => {
+        const riga = chk.closest('.ingrediente-riga');
+        const testo = riga.querySelector('.ingr-nota').value.trim();
+        const obj = { nome: chk.dataset.nome };
+        if (testo) obj.testo = testo;
+        return obj;
+      });
+      sequenza.push({ tipo: 'categoria', categoria, ingredienti });
+      classiUsate.add(categoria);
+    } else if (tipo === 'condimenti') {
+      const ingredienti = [...b.querySelectorAll('.cond-check:checked')].map(chk => chk.dataset.nome);
+      sequenza.push({ tipo: 'condimenti', ingredienti });
+    }
+  });
+
+  const out = { sequenza };
+  if (classiUsate.size) out.classe = classiUsate.size === 1 ? [...classiUsate][0] : [...classiUsate];
   return out;
 }
 
 function svuotaForm() {
-  document.getElementById('classe').value = '';
-  document.getElementById('descrizioneLibera').value = '';
-  document.getElementById('listaIngredienti').innerHTML = '<div class="stato">Seleziona prima una classe.</div>';
-  document.getElementById('setsSughi').innerHTML = '';
-  aggiungiSetSugo();
+  document.getElementById('sequenza').innerHTML = '';
+  aggiornaContatoreSlot();
 }
 
 function salvaVoce() {
   const dati = leggiFormCorrente();
   if (INDICE_IN_MODIFICA !== null) {
-    dati.id = VOCI[INDICE_IN_MODIFICA].id; // conservo l'id esistente, mai cambiato in modifica
+    dati.id = VOCI[INDICE_IN_MODIFICA].id;
     VOCI[INDICE_IN_MODIFICA] = dati;
     INDICE_IN_MODIFICA = null;
     document.getElementById('btnAnnullaModifica').style.display = 'none';
-    document.getElementById('titoloSalva').textContent = '5. Salva questa voce';
+    document.getElementById('titoloSalva').textContent = '2. Salva questa voce';
   } else {
     const idMassimoEsistente = VOCI.reduce((max, v) => Math.max(max, v.id || 0), 0);
-    dati.id = idMassimoEsistente + 1; // mai riassegnato, nemmeno se in mezzo ci sono stati elimina
+    dati.id = idMassimoEsistente + 1;
     VOCI.push(dati);
   }
   localStorage.setItem('maschera_voci', JSON.stringify(VOCI));
@@ -319,25 +348,21 @@ function salvaVoce() {
 function modificaVoce(indice) {
   INDICE_IN_MODIFICA = indice;
   const dati = VOCI[indice];
-  document.getElementById('classe').value = dati.classe || '';
-  document.getElementById('descrizioneLibera').value = dati.testo || '';
-  renderIngredienti(dati.ingredientiCompatibili);
-  document.getElementById('setsSughi').innerHTML = '';
-  contatoreSet = 0;
-  if (dati.sughiCondimenti && dati.sughiCondimenti.length) {
-    dati.sughiCondimenti.forEach(s => aggiungiSetSugo(s.sugo, s.condimento, s.ingredientiSugo));
-  } else {
-    aggiungiSetSugo();
-  }
+  svuotaForm();
+  (dati.sequenza || []).forEach(blocco => {
+    if (blocco.tipo === 'testo') aggiungiBloccoTesto(blocco.valore);
+    else if (blocco.tipo === 'categoria') aggiungiBloccoCategoria(blocco.categoria, blocco.ingredienti);
+    else if (blocco.tipo === 'condimenti') aggiungiBloccoCondimenti(blocco.ingredienti);
+  });
   document.getElementById('btnAnnullaModifica').style.display = 'block';
-  document.getElementById('titoloSalva').innerHTML = '5. Salva questa voce <span class="badge-editing">stai modificando id ' + dati.id + '</span>';
+  document.getElementById('titoloSalva').innerHTML = '2. Salva questa voce <span class="badge-editing">stai modificando id ' + dati.id + '</span>';
   window.scrollTo(0, 0);
 }
 
 function annullaModifica() {
   INDICE_IN_MODIFICA = null;
   document.getElementById('btnAnnullaModifica').style.display = 'none';
-  document.getElementById('titoloSalva').textContent = '5. Salva questa voce';
+  document.getElementById('titoloSalva').textContent = '2. Salva questa voce';
   svuotaForm();
 }
 
@@ -347,31 +372,36 @@ function eliminaVoce(indice) {
   renderListaVoci();
 }
 
+function riepilogoTesto(v) {
+  return (v.sequenza || []).map(b => {
+    if (b.tipo === 'testo') return b.valore;
+    if (b.tipo === 'categoria') return `[${b.categoria || '—'}: ${(b.ingredienti||[]).map(i=>i.nome).join('/')}]`;
+    if (b.tipo === 'condimenti') return `(${(b.ingredienti||[]).join('/')})`;
+    return '';
+  }).join(' ');
+}
+
 function renderListaVoci() {
   document.getElementById('contatoreVoci').textContent = VOCI.length;
   const box = document.getElementById('listaVociSalvate');
   if (!VOCI.length) { box.innerHTML = '<div class="stato">Nessuna voce salvata ancora.</div>'; return; }
-  box.innerHTML = VOCI.map((v, i) => {
-    const nIngr = (v.ingredientiCompatibili || []).length;
-    const nSughi = (v.sughiCondimenti || []).length;
-    return `
-      <div class="voce-salvata">
-        <span class="indice">id ${v.id != null ? v.id : '?'}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}${v.testo ? ' — testo: "' + v.testo + '"' : ''}
-        <div class="riepilogo">${nIngr} ingredienti compatibili, ${nSughi} set sugo/condimento</div>
-        <div class="azioni">
-          <button onclick="modificaVoce(${i})">Modifica</button>
-          <button class="elimina" onclick="eliminaVoce(${i})">Elimina</button>
-        </div>
+  box.innerHTML = VOCI.map((v, i) => `
+    <div class="voce-salvata">
+      <span class="indice">id ${v.id != null ? v.id : '?'}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}
+      <div class="riepilogo">${riepilogoTesto(v)}</div>
+      <div class="azioni">
+        <button onclick="modificaVoce(${i})">Modifica</button>
+        <button class="elimina" onclick="eliminaVoce(${i})">Elimina</button>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 }
 
 function mostraJSONTotale() {
   document.getElementById('outputTotale').value = JSON.stringify(VOCI, null, 2);
 }
 
-// ============== 6. Lettura/salvataggio ricette.json (nuovo ricettario) su GitHub ==============
+// ============== 3. Lettura/salvataggio ricette.json su GitHub ==============
 async function caricaRicetteDaGithub() {
   const stato = document.getElementById('statoRicetteGh');
   stato.textContent = 'Carico...'; stato.className = 'stato';
@@ -408,8 +438,8 @@ async function salvaRicetteSuGithub() {
   }
 }
 
-// ============== 8. Gestione ingredienti.json: elimina, rinomina, aggiungi ==============
-let INGREDIENTI_FULL = null; // {nome: {...dati}} versione editabile completa, caricata da GitHub
+// ============== 5. Gestione ingredienti.json: elimina, rinomina, aggiungi ==============
+let INGREDIENTI_FULL = null;
 
 async function caricaIngredientiDaGithub() {
   const stato = document.getElementById('statoIngredientiGh');
@@ -451,7 +481,7 @@ function aggiungiIngredienteNuovo() {
   if (!INGREDIENTI_FULL) { alert('Carica prima ingredienti.json da GitHub.'); return; }
   const div = document.createElement('div');
   div.className = 'ingr-full-riga';
-  div.dataset.nomeOriginale = ''; // vuoto = e' una voce nuova, non un rename
+  div.dataset.nomeOriginale = '';
   div.innerHTML = `
     <input type="text" class="campo-rinomina" value="" placeholder="nome nuovo ingrediente">
     <div class="campi">
@@ -473,10 +503,9 @@ async function salvaIngredientiSuGithub() {
     for (const riga of righe) {
       const nomeOriginale = riga.dataset.nomeOriginale;
       const nomeNuovo = riga.querySelector('.campo-rinomina').value.trim();
-      if (!nomeNuovo) continue; // riga senza nome, salto
+      if (!nomeNuovo) continue;
       const gruppo = riga.querySelector('.campo-gruppo').value.trim();
       const sottotipo = riga.querySelector('.campo-sottotipo').value.trim();
-
       let base = nomeOriginale && INGREDIENTI_FULL.ingredienti[nomeOriginale]
         ? Object.assign({}, INGREDIENTI_FULL.ingredienti[nomeOriginale])
         : { kcal: 0, proteine: 0, carboidrati: 0, grassi: 0, deperibilita: '', conservazione: '',
