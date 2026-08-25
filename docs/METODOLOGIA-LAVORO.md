@@ -67,6 +67,17 @@ verificabile, non solo il singolo punto toccato.
    `NUOVA-ARCHITETTURA-MOTORE.md` come esempio di come è stato fatto per
    la riprogettazione del motore di generazione deciso il 2026-08-23/24.
 
+6. **Fase attuale del nuovo ricettario: solo classificazione (nome,
+   classe, array di compatibilità). La cottura/procedimento NON è
+   questa fase — si decide dopo, esplicitamente, quando Cwe lo dice.**
+   Regola data il 2026-08-25 dopo che Claude ha scritto ripetutamente
+   contenuto di cottura (procedimento) inventato in ogni voce del nuovo
+   ricettario, senza che fosse mai richiesto in questa fase. Finché non
+   viene detto altrimenti: nessun campo `procedimento`/
+   `procedimentoComune` va scritto, nemmeno come placeholder — si lascia
+   assente, non `DA_DEFINIRE`. Vale per ogni voce futura del nuovo
+   ricettario.
+
 ## Metodo di verifica (eredità dell'audit iniziale, resta valido)
 
 Ogni correzione va verificata **dal vivo**, non solo letta nel codice:
