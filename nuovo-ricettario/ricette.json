@@ -1,5 +1,5 @@
 {
-  "versione": 15,
+  "versione": 16,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -15,14 +15,6 @@
         {
           "nome": "Tagliolini all'uovo",
           "nomeVisualizzato": "Tagliolini"
-        }
-      ],
-      "preparazioneCompatibili": [
-        {
-          "nome": "pomodoro cotto"
-        },
-        {
-          "nome": "pomodorini e olio a crudo"
         }
       ]
     },
