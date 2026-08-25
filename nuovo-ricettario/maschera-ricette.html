@@ -50,8 +50,8 @@
 </section>
 
 <section>
-  <h2>2. Testo libero</h2>
-  <input type="text" id="descrizioneLibera" placeholder="testo libero">
+  <h2>2. Testo</h2>
+  <input type="text" id="descrizioneLibera" placeholder="testo">
 </section>
 
 <section>
@@ -119,7 +119,7 @@ document.getElementById('classe').addEventListener('change', () => {
     <div class="ingrediente-riga">
       <input type="checkbox" class="ingr-check" data-nome="${nome}">
       <span class="nome-ingr">${nome}</span>
-      <input type="text" class="ingr-nota" placeholder="nota/variante (opzionale)">
+      <input type="text" class="ingr-nota" placeholder="testo">
     </div>
   `).join('');
 });
@@ -148,9 +148,9 @@ function generaJSON() {
 
   const ingredientiSelezionati = [...document.querySelectorAll('.ingr-check:checked')].map(chk => {
     const riga = chk.closest('.ingrediente-riga');
-    const nota = riga.querySelector('.ingr-nota').value.trim();
+    const testo = riga.querySelector('.ingr-nota').value.trim();
     const obj = { nome: chk.dataset.nome };
-    if (nota) obj.nota = nota;
+    if (testo) obj.testo = testo;
     return obj;
   });
 
@@ -165,7 +165,7 @@ function generaJSON() {
 
   const out = {};
   if (classe) out.classe = classe;
-  if (descrizione) out.descrizioneLibera = descrizione;
+  if (descrizione) out.testo = descrizione;
   if (ingredientiSelezionati.length) out.ingredientiCompatibili = ingredientiSelezionati;
   if (sughiCondimenti.length) out.sughiCondimenti = sughiCondimenti;
 
