@@ -94,8 +94,10 @@
 
 <section>
   <h2 id="titoloSalva">2. Salva questa voce</h2>
-  <button class="btn-main" onclick="salvaVoce()">💾 Salva voce (nella lista qui sotto)</button>
+  <button class="btn-secondary" onclick="nuovaRicetta()">➕ Nuova ricetta (svuota i campi)</button>
+  <button class="btn-main" onclick="salvaVoce()">💾 Salva voce</button>
   <button class="btn-secondary" id="btnAnnullaModifica" style="display:none;" onclick="annullaModifica()">Annulla modifica</button>
+  <div class="stato" id="statoSalvaVoce"></div>
 </section>
 
 <section>
@@ -310,20 +312,34 @@ function svuotaForm() {
 
 function salvaVoce() {
   const dati = leggiFormCorrente();
+  let indiceSalvato;
+  let messaggio;
   if (INDICE_IN_MODIFICA !== null) {
     dati.id = VOCI[INDICE_IN_MODIFICA].id;
     VOCI[INDICE_IN_MODIFICA] = dati;
-    INDICE_IN_MODIFICA = null;
-    document.getElementById('btnAnnullaModifica').style.display = 'none';
-    document.getElementById('titoloSalva').textContent = '2. Salva questa voce';
+    indiceSalvato = INDICE_IN_MODIFICA;
+    messaggio = `Aggiornata id ${dati.id} — salvata solo in questo browser (locale). Per metterla online premi "Salva tutte le voci su GitHub" più sotto.`;
   } else {
     const idMassimoEsistente = VOCI.reduce((max, v) => Math.max(max, v.id || 0), 0);
     dati.id = idMassimoEsistente + 1;
     VOCI.push(dati);
+    indiceSalvato = VOCI.length - 1;
+    messaggio = `Creata nuova voce id ${dati.id} — salvata solo in questo browser (locale). Per metterla online premi "Salva tutte le voci su GitHub" più sotto.`;
   }
   localStorage.setItem('maschera_voci', JSON.stringify(VOCI));
-  svuotaForm();
   renderListaVoci();
+  modificaVoce(indiceSalvato); // resto sulla stessa voce, non svuoto il form
+  const statoSalva = document.getElementById('statoSalvaVoce');
+  if (statoSalva) { statoSalva.textContent = messaggio; statoSalva.className = 'stato ok'; }
+}
+
+function nuovaRicetta() {
+  INDICE_IN_MODIFICA = null;
+  document.getElementById('btnAnnullaModifica').style.display = 'none';
+  document.getElementById('titoloSalva').textContent = '2. Salva questa voce';
+  svuotaForm();
+  const statoSalva = document.getElementById('statoSalvaVoce');
+  if (statoSalva) { statoSalva.textContent = 'Nuova ricetta vuota, pronta da compilare.'; statoSalva.className = 'stato'; }
 }
 
 function modificaVoce(indice) {
