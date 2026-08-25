@@ -567,6 +567,13 @@ Non ancora deciso: nome esatto del campo e scala del peso (es. un
 moltiplicatore 0-1 sulla probabilità, o un valore intero comparato agli
 altri candidati) — dettaglio da chiudere nel documento tecnico.
 
+## Promemoria aperto — lavoro di Claude su nuovo-ricettario/maschera-ricette.html
+
+Cwe ha detto (2026-08-25) che c'è un lavoro aggiuntivo da fare su
+`nuovo-ricettario/maschera-ricette.html`, a carico di Claude, **non ancora
+specificato**. Da chiedere/riprendere appena Cwe lo definisce — non
+inventare di cosa si tratta nel frattempo.
+
 ## Domande ancora aperte (non bloccanti per iniziare il documento tecnico, ma da chiudere prima del codice)
 
 - Dettaglio esatto della nuova preferenza "numero di portate" in Set: UI,
