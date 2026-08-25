@@ -574,6 +574,21 @@ Cwe ha detto (2026-08-25) che c'è un lavoro aggiuntivo da fare su
 specificato**. Da chiedere/riprendere appena Cwe lo definisce — non
 inventare di cosa si tratta nel frattempo.
 
+## Il vecchio nuovo-ricettario/ricette.json (20 voci) è sospeso, non convertito
+
+**Decisione data da Cwe, salvata solo ora (2026-08-25) dopo essere andata persa
+una volta perché non era stata scritta subito — vedi regola 5 in
+METODOLOGIA-LAVORO.md.** Le 20 voci create prima della maschera a 3+1 gruppi
+(id 1-20, formato `nome`/`classe`/array `*Compatibili` piatti) **non vengono
+convertite** nel nuovo formato a gruppi. Restano dov'erano, intatte, come
+riferimento storico — non si toccano più con la maschera nuova.
+
+**Tutto il lavoro nuovo tramite maschera va in un file separato**:
+`nuovo-ricettario/db-ricette-maschera.json`, formato a gruppi
+(`{id, gruppi:[{testo1,categoria,ingredienti,testo2,mostraNomi}], classe}`).
+La maschera (`maschera-ricette.html`) legge/scrive solo questo file, mai più
+il vecchio `ricette.json`.
+
 ## Domande ancora aperte (non bloccanti per iniziare il documento tecnico, ma da chiudere prima del codice)
 
 - Dettaglio esatto della nuova preferenza "numero di portate" in Set: UI,
