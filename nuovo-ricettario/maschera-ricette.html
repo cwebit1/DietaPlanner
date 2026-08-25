@@ -18,19 +18,16 @@
   }
   textarea{font-family:monospace;font-size:0.72rem;min-height:140px;white-space:pre;}
   .help{font-size:0.7rem;color:var(--dim);margin-top:3px;line-height:1.4;}
-  .classi{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-  .classi label{display:flex;align-items:center;gap:4px;background:var(--card2);border:1px solid var(--border);border-radius:16px;padding:4px 10px;font-size:0.78rem;margin:0;color:var(--text);}
-  .classi input{width:auto;}
-  .riga{display:flex;gap:6px;margin-top:6px;align-items:flex-start;}
-  .riga input{flex:1;}
-  .riga button{flex:0 0 auto;background:var(--bad);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:0.75rem;}
-  .btn-add{background:var(--card2);border:1px dashed var(--border);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:0.78rem;width:100%;margin-top:6px;}
+  .ingrediente-riga{display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);}
+  .ingrediente-riga input[type=checkbox]{width:auto;flex:0 0 auto;}
+  .ingrediente-riga .nome-ingr{flex:0 0 40%;font-size:0.8rem;}
+  .ingrediente-riga input[type=text]{flex:1;}
+  .set-sugo{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;position:relative;}
+  .set-sugo button.rimuovi{position:absolute;top:8px;right:8px;background:var(--bad);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:0.7rem;}
+  .btn-add{background:var(--card2);border:1px dashed var(--border);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:0.78rem;width:100%;margin-top:8px;}
   .btn-main{background:var(--accent);color:#12220a;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-top:10px;}
-  .btn-secondary{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;font-size:0.82rem;width:100%;margin-top:6px;}
-  .array-block{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:10px;}
-  .anteprima{background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:10px;margin-top:10px;font-size:0.82rem;}
-  .anteprima .riga-esempio{padding:3px 0;color:var(--dim);}
-  .errore{color:var(--bad);font-size:0.78rem;margin-top:4px;}
+  .stato{font-size:0.72rem;color:var(--dim);margin-top:4px;}
+  .array-block{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;max-height:340px;overflow-y:auto;}
 </style>
 </head>
 <body>
@@ -38,171 +35,141 @@
 <h1>🧩 Maschera creazione ricette — nuovo ricettario</h1>
 
 <section>
-  <h2>1. Nome (template con segnaposto)</h2>
-  <input type="text" id="nomeTemplate" placeholder='es. "{carboidrato} con taleggio e speck" oppure "Polenta con {proteina}"'>
-  <div class="help">
-    Segnaposto disponibili: <code>{carboidrato}</code> <code>{proteina}</code> <code>{verdura}</code> <code>{cottura}</code> — scrivili esattamente dove deve comparire quel pezzo nella frase finale. Se la ricetta non ha un segnaposto per un array che comunque compili sotto, quell'array non verrà inserito nel nome (solo nella struttura dati). Lascia vuoto se la ricetta non ha un nome fisso (es. una classe pura come "PP" con solo proteine/cotture).
-  </div>
+  <h2>1. Classe</h2>
+  <select id="classe">
+    <option value="">— seleziona —</option>
+    <option value="C">C (carboidrato)</option>
+    <option value="V">V (verdura)</option>
+    <option value="PC">PC (carne)</option>
+    <option value="PP">PP (pesce)</option>
+    <option value="PF">PF (formaggio)</option>
+    <option value="PU">PU (uova)</option>
+    <option value="PL">PL (legumi)</option>
+  </select>
+  <div class="stato" id="statoIngredienti">Ingredienti non ancora caricati.</div>
 </section>
 
 <section>
-  <h2>2. Classe di copertura</h2>
-  <div class="classi" id="classiBox">
-    <label><input type="checkbox" value="C"> C</label>
-    <label><input type="checkbox" value="V"> V</label>
-    <label><input type="checkbox" value="PC"> PC</label>
-    <label><input type="checkbox" value="PP"> PP</label>
-    <label><input type="checkbox" value="PF"> PF</label>
-    <label><input type="checkbox" value="PU"> PU</label>
-    <label><input type="checkbox" value="PL"> PL</label>
-  </div>
-  <div class="help">Ricorda: deve contenere anche le classi dei pool allegati obbligatori, non solo quella "principale".</div>
+  <h2>2. Nome / descrizione libera</h2>
+  <input type="text" id="descrizioneLibera" placeholder="testo libero, es. nome template o nota">
 </section>
 
 <section>
-  <h2>3. Carboidrati compatibili</h2>
-  <div class="array-block" id="blockCarb"></div>
-  <button class="btn-add" onclick="aggiungiRiga('blockCarb','carb')">+ aggiungi carboidrato</button>
+  <h2>3. Ingredienti della macrocategoria selezionata</h2>
+  <div class="help">Ogni riga: seleziona per includerlo come compatibile, casella di testo libera accanto per una nota/variante su quell'ingrediente.</div>
+  <div class="array-block" id="listaIngredienti"><div class="stato">Seleziona prima una classe.</div></div>
 </section>
 
 <section>
-  <h2>4. Proteine compatibili</h2>
-  <div class="array-block" id="blockProt"></div>
-  <button class="btn-add" onclick="aggiungiRiga('blockProt','prot')">+ aggiungi proteina</button>
+  <h2>4. Sughi / condimenti</h2>
+  <div class="help">Ogni set: casella "sugo" + casella "condimento". Il pulsante ne crea un altro identico sotto. Tutti gli ingredienti selezionati sopra sono considerati compatibili con tutti i set qui sotto.</div>
+  <div id="setsSughi"></div>
+  <button class="btn-add" onclick="aggiungiSetSugo()">+ crea nuovo set sugo/condimento</button>
 </section>
 
 <section>
-  <h2>5. Verdure compatibili</h2>
-  <div class="array-block" id="blockVerd"></div>
-  <button class="btn-add" onclick="aggiungiRiga('blockVerd','verd')">+ aggiungi verdura</button>
-</section>
-
-<section>
-  <h2>6. Tipi di cottura compatibili</h2>
-  <div class="array-block" id="blockCott"></div>
-  <button class="btn-add" onclick="aggiungiRiga('blockCott','cott')">+ aggiungi cottura</button>
-</section>
-
-<section>
-  <h2>7. Composizione fissa (ingredienti sempre presenti insieme, non a scelta)</h2>
-  <div class="array-block" id="blockFissa"></div>
-  <button class="btn-add" onclick="aggiungiRiga('blockFissa','fissa')">+ aggiungi ingrediente fisso</button>
-</section>
-
-<section>
-  <h2>8. Verifica</h2>
-  <button class="btn-secondary" onclick="mostraAnteprima()">Mostra anteprima nomi generati</button>
-  <div class="anteprima" id="anteprima" style="display:none;"></div>
-</section>
-
-<section>
-  <h2>9. JSON risultante</h2>
+  <h2>5. JSON risultante</h2>
+  <div class="help">Gli ingredienti selezionati sono compatibili con le combinazioni sugo/condimento elencate. Le combinazioni sugo/condimento verranno analizzate e collegate alla tabella ingredienti in un secondo momento (lavoro di background, non qui).</div>
   <button class="btn-main" onclick="generaJSON()">Genera JSON</button>
   <textarea id="output" readonly placeholder="Compila i campi sopra e premi Genera JSON"></textarea>
-  <div class="help">Copia questo blocco e incollalo (o dammelo) per aggiungerlo a nuovo-ricettario/ricette.json.</div>
 </section>
 
 <script>
-let contatori = { carb: 0, prot: 0, verd: 0, cott: 0, fissa: 0 };
+let INGREDIENTI = null;
 
-function aggiungiRiga(blockId, tipo) {
-  const block = document.getElementById(blockId);
-  const idx = contatori[tipo]++;
-  const div = document.createElement('div');
-  div.className = 'riga';
-  div.dataset.tipo = tipo;
-  div.dataset.idx = idx;
+const MAPPA_CLASSE = {
+  C:  { gruppo: 'carboidrati' },
+  V:  { gruppo: 'verdura' },
+  PC: { gruppo: 'proteine', sottotipi: ['carne_bianca','carne_rossa','affettati'] },
+  PP: { gruppo: 'proteine', sottotipi: ['pesce_bianco','pesce_azzurro','pesce_grande','pesce_conservato','crostacei','molluschi'] },
+  PF: { gruppo: 'proteine', sottotipi: ['formaggio_fresco','formaggio_stagionato'] },
+  PU: { gruppo: 'proteine', sottotipi: ['uova'] },
+  PL: { gruppo: 'proteine', sottotipi: ['legumi'] },
+};
 
-  let campiExtra = '';
-  if (tipo === 'prot') {
-    campiExtra = `<input type="text" placeholder="sottotipo (opzionale, es. formaggio_fresco)" class="campo-sottotipo">`;
+(async () => {
+  try {
+    const res = await fetch('../ingredienti.json?nocache=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    INGREDIENTI = d.ingredienti;
+    document.getElementById('statoIngredienti').textContent = `Caricati ${Object.keys(INGREDIENTI).length} ingredienti da ingredienti.json (versione ${d.versione}).`;
+  } catch (err) {
+    document.getElementById('statoIngredienti').textContent = 'Caricamento automatico non riuscito: ' + err.message;
   }
+})();
 
-  div.innerHTML = `
-    <div style="flex:1;">
-      <input type="text" placeholder="nome esatto (da ingredienti.json)" class="campo-nome">
-      <input type="text" placeholder="nomeVisualizzato (opzionale, se diverso)" class="campo-display" style="margin-top:4px;">
-      ${campiExtra}
+document.getElementById('classe').addEventListener('change', () => {
+  const classe = document.getElementById('classe').value;
+  const box = document.getElementById('listaIngredienti');
+  if (!classe) { box.innerHTML = '<div class="stato">Seleziona prima una classe.</div>'; return; }
+  if (!INGREDIENTI) { box.innerHTML = '<div class="stato">Ingredienti non ancora caricati.</div>'; return; }
+
+  const filtro = MAPPA_CLASSE[classe];
+  const nomi = Object.keys(INGREDIENTI).filter(nome => {
+    const ing = INGREDIENTI[nome];
+    if (ing.gruppo !== filtro.gruppo) return false;
+    if (filtro.sottotipi) return filtro.sottotipi.includes(ing.sottotipo);
+    return true;
+  }).sort();
+
+  if (!nomi.length) { box.innerHTML = '<div class="stato">Nessun ingrediente trovato per questa classe.</div>'; return; }
+
+  box.innerHTML = nomi.map(nome => `
+    <div class="ingrediente-riga">
+      <input type="checkbox" class="ingr-check" data-nome="${nome}">
+      <span class="nome-ingr">${nome}</span>
+      <input type="text" class="ingr-nota" placeholder="nota/variante (opzionale)">
     </div>
-    <button onclick="this.closest('.riga').remove()">✕</button>
+  `).join('');
+});
+
+let contatoreSet = 0;
+function aggiungiSetSugo() {
+  const cont = document.getElementById('setsSughi');
+  const id = contatoreSet++;
+  const div = document.createElement('div');
+  div.className = 'set-sugo';
+  div.dataset.id = id;
+  div.innerHTML = `
+    <button class="rimuovi" onclick="this.closest('.set-sugo').remove()">✕</button>
+    <label>Sugo</label>
+    <input type="text" class="campo-sugo" placeholder="es. al pomodoro">
+    <label>Condimento</label>
+    <input type="text" class="campo-condimento" placeholder="es. basilico fresco">
   `;
-  block.appendChild(div);
+  cont.appendChild(div);
 }
-
-function leggiArray(blockId) {
-  const block = document.getElementById(blockId);
-  const righe = block.querySelectorAll('.riga');
-  const out = [];
-  righe.forEach(r => {
-    const nome = r.querySelector('.campo-nome').value.trim();
-    if (!nome) return;
-    const obj = { nome };
-    const display = r.querySelector('.campo-display').value.trim();
-    if (display) obj.nomeVisualizzato = display;
-    const sottotipo = r.querySelector('.campo-sottotipo');
-    if (sottotipo && sottotipo.value.trim()) obj.sottotipo = sottotipo.value.trim();
-    out.push(obj);
-  });
-  return out;
-}
-
-function costruisciOggetto() {
-  const template = document.getElementById('nomeTemplate').value.trim();
-  const classi = [...document.querySelectorAll('#classiBox input:checked')].map(c => c.value);
-  const carb = leggiArray('blockCarb');
-  const prot = leggiArray('blockProt');
-  const verd = leggiArray('blockVerd');
-  const cott = leggiArray('blockCott');
-  const fissa = leggiArray('blockFissa');
-
-  const obj = {};
-  if (template) obj.nomeTemplate = template;
-  obj.classe = classi.length === 1 ? classi[0] : classi;
-  if (carb.length) obj.carboidratiCompatibili = carb;
-  if (prot.length) obj.proteineCompatibili = prot;
-  if (verd.length) obj.verdureCompatibili = verd;
-  if (cott.length) obj.tipiCotturaCompatibili = cott;
-  if (fissa.length) obj.composizioneFissa = fissa;
-  return obj;
-}
-
-function componiEsempio(template, c, p, v, k) {
-  if (!template) return null;
-  let s = template;
-  s = s.replace('{carboidrato}', c ? (c.nomeVisualizzato || c.nome) : '');
-  s = s.replace('{proteina}', p ? (p.nomeVisualizzato || p.nome) : '');
-  s = s.replace('{verdura}', v ? (v.nomeVisualizzato || v.nome) : '');
-  s = s.replace('{cottura}', k ? (k.nomeVisualizzato || k.nome) : '');
-  return s.replace(/\s+/g, ' ').trim();
-}
-
-function mostraAnteprima() {
-  const obj = costruisciOggetto();
-  const box = document.getElementById('anteprima');
-  box.style.display = 'block';
-  const template = obj.nomeTemplate;
-  if (!template) {
-    box.innerHTML = '<div class="riga-esempio">Nessun nomeTemplate impostato — questa ricetta non ha un nome composto (es. classe pura).</div>';
-    return;
-  }
-  const carb = obj.carboidratiCompatibili || [null];
-  const prot = obj.proteineCompatibili || [null];
-  const verd = obj.verdureCompatibili || [null];
-  const cott = obj.tipiCotturaCompatibili || [null];
-  let esempi = [];
-  // mostro fino a 5 combinazioni di esempio, non tutte (potrebbero essere tante)
-  outer:
-  for (const c of carb) for (const p of prot) for (const v of verd) for (const k of cott) {
-    esempi.push(componiEsempio(template, c, p, v, k));
-    if (esempi.length >= 5) break outer;
-  }
-  box.innerHTML = '<b>Esempi di nome generato (max 5):</b>' +
-    esempi.map(e => `<div class="riga-esempio">• ${e}</div>`).join('');
-}
+aggiungiSetSugo();
 
 function generaJSON() {
-  const obj = costruisciOggetto();
-  document.getElementById('output').value = JSON.stringify(obj, null, 2);
+  const classe = document.getElementById('classe').value;
+  const descrizione = document.getElementById('descrizioneLibera').value.trim();
+
+  const ingredientiSelezionati = [...document.querySelectorAll('.ingr-check:checked')].map(chk => {
+    const riga = chk.closest('.ingrediente-riga');
+    const nota = riga.querySelector('.ingr-nota').value.trim();
+    const obj = { nome: chk.dataset.nome };
+    if (nota) obj.nota = nota;
+    return obj;
+  });
+
+  const sughiCondimenti = [...document.querySelectorAll('.set-sugo')].map(set => {
+    const sugo = set.querySelector('.campo-sugo').value.trim();
+    const condimento = set.querySelector('.campo-condimento').value.trim();
+    const obj = {};
+    if (sugo) obj.sugo = sugo;
+    if (condimento) obj.condimento = condimento;
+    return obj;
+  }).filter(o => o.sugo || o.condimento);
+
+  const out = {};
+  if (classe) out.classe = classe;
+  if (descrizione) out.descrizioneLibera = descrizione;
+  if (ingredientiSelezionati.length) out.ingredientiCompatibili = ingredientiSelezionati;
+  if (sughiCondimenti.length) out.sughiCondimenti = sughiCondimenti;
+
+  document.getElementById('output').value = JSON.stringify(out, null, 2);
 }
 </script>
 
