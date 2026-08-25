@@ -1,5 +1,5 @@
 {
-  "versione": 14,
+  "versione": 15,
   "ricette": [
     {
       "nome": "al pomodoro",
@@ -19,16 +19,10 @@
       ],
       "preparazioneCompatibili": [
         {
-          "nome": "pomodoro cotto",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodoro cotto"
         },
         {
-          "nome": "pomodorini e olio a crudo",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodorini e olio a crudo"
         }
       ]
     },
@@ -38,9 +32,6 @@
         "C",
         "PF",
         "PC"
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ],
       "carboidratiCompatibili": [
         {
@@ -67,9 +58,6 @@
         "V"
       ],
       "verduraGrammiInclusi": 100,
-      "procedimentoComune": [
-        "DA_DEFINIRE"
-      ],
       "carboidratiCompatibili": [
         {
           "nome": "Pasta corta",
@@ -84,60 +72,33 @@
       "classe": "PP",
       "proteineCompatibili": [
         {
-          "nome": "sogliola",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "sogliola"
         },
         {
-          "nome": "nasello",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "nasello"
         },
         {
-          "nome": "orata",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "orata"
         },
         {
-          "nome": "branzino",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "branzino"
         },
         {
-          "nome": "platessa",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "platessa"
         }
       ],
       "tipiCotturaCompatibili": [
         {
-          "nome": "al forno",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al forno"
         },
         {
-          "nome": "al limone",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al limone"
         },
         {
-          "nome": "al cartoccio",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al cartoccio"
         },
         {
-          "nome": "ai ferri",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "ai ferri"
         }
       ]
     },
@@ -146,25 +107,16 @@
       "proteineCompatibili": [
         {
           "nome": "salsiccia di maiale",
-          "sottotipo": "carne_rossa",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_rossa"
         },
         {
           "nome": "salsiccia di tacchino",
-          "sottotipo": "carne_bianca",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_bianca"
         }
       ],
       "tipiCotturaCompatibili": [
         {
-          "nome": "al forno",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al forno"
         }
       ]
     },
@@ -178,22 +130,13 @@
       ],
       "composizioneFissa": [
         {
-          "nome": "uovo sodo",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "uovo sodo"
         },
         {
-          "nome": "emmental a cubetti",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "emmental a cubetti"
         },
         {
-          "nome": "pomodori freschi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodori freschi"
         }
       ],
       "carboidratiCompatibili": [
@@ -212,37 +155,22 @@
         {
           "nome": "Cous cous"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
       "classe": "PU",
       "tipiCotturaCompatibili": [
         {
-          "nome": "sode",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "sode"
         },
         {
-          "nome": "strapazzate",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "strapazzate"
         },
         {
-          "nome": "in camicia",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "in camicia"
         },
         {
-          "nome": "al tegamino",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al tegamino"
         }
       ]
     },
@@ -250,72 +178,39 @@
       "classe": "PL",
       "proteineCompatibili": [
         {
-          "nome": "ceci",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "ceci"
         },
         {
-          "nome": "fagioli borlotti",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "fagioli borlotti"
         },
         {
-          "nome": "fagioli cannellini",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "fagioli cannellini"
         },
         {
-          "nome": "lenticchie",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "lenticchie"
         },
         {
-          "nome": "tofu",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "tofu"
         }
       ],
       "tipiCotturaCompatibili": [
         {
-          "nome": "all'olio e rosmarino",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "all'olio e rosmarino"
         },
         {
-          "nome": "olio piccante e sesamo",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "olio piccante e sesamo"
         },
         {
-          "nome": "aglio olio e peperoncino",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "aglio olio e peperoncino"
         },
         {
-          "nome": "al pepe",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al pepe"
         },
         {
-          "nome": "saltati",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "saltati"
         },
         {
-          "nome": "in insalata",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "in insalata"
         }
       ]
     },
@@ -324,71 +219,41 @@
       "proteineCompatibili": [
         {
           "nome": "petto di pollo",
-          "sottotipo": "carne_bianca",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_bianca"
         },
         {
           "nome": "sovracosce di pollo",
-          "sottotipo": "carne_bianca",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_bianca"
         },
         {
           "nome": "petto di tacchino",
-          "sottotipo": "carne_bianca",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_bianca"
         },
         {
           "nome": "fettina di vitello",
-          "sottotipo": "carne_bianca",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_bianca"
         },
         {
           "nome": "fettina di manzo",
-          "sottotipo": "carne_rossa",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_rossa"
         },
         {
           "nome": "nodino di maiale",
-          "sottotipo": "carne_rossa",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "carne_rossa"
         }
       ],
       "tipiCotturaCompatibili": [
         {
-          "nome": "alla piastra",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "alla piastra"
         },
         {
-          "nome": "al forno",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al forno"
         },
         {
-          "nome": "in padella",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "in padella"
         },
         {
-          "nome": "ai ferri",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "ai ferri"
         }
       ]
     },
@@ -401,104 +266,59 @@
       "proteineCompatibili": [
         {
           "nome": "grana o parmigiano",
-          "sottotipo": "formaggio_stagionato",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_stagionato"
         },
         {
           "nome": "mozzarella",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "crescenza",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "ricotta",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "pecorino",
-          "sottotipo": "formaggio_stagionato",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_stagionato"
         },
         {
           "nome": "stracchino",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "brie",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "feta",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "provola",
-          "sottotipo": "formaggio_stagionato",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_stagionato"
         }
       ],
       "tipiCotturaCompatibili": [
         {
-          "nome": "a fette",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "a fette"
         },
         {
-          "nome": "a scaglie",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "a scaglie"
         },
         {
-          "nome": "a cubetti",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "a cubetti"
         },
         {
-          "nome": "a cucchiaiate",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "a cucchiaiate"
         },
         {
-          "nome": "al naturale",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al naturale"
         },
         {
-          "nome": "alla piastra",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "alla piastra"
         }
       ],
       "carboidratiCompatibili": [
@@ -515,119 +335,65 @@
       ],
       "verdureCompatibili": [
         {
-          "nome": "pomodorini",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodorini"
         },
         {
-          "nome": "rucola",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "rucola"
         },
         {
-          "nome": "radicchio",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "radicchio"
         },
         {
-          "nome": "finocchi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "finocchi"
         },
         {
           "nome": "radicchio, pomodori e cipolle",
           "composizioneFissa": [
             {
-              "nome": "radicchio",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "radicchio"
             },
             {
-              "nome": "pomodori",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodori"
             },
             {
-              "nome": "cipolle",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "cipolle"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "insalata, peperoni e carote",
           "composizioneFissa": [
             {
-              "nome": "insalata",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "insalata"
             },
             {
-              "nome": "peperoni",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "peperoni"
             },
             {
-              "nome": "carote",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "carote"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "finocchio all'arancio",
           "composizioneFissa": [
             {
-              "nome": "finocchio",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "finocchio"
             },
             {
-              "nome": "arancia",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "arancia"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "spinaci freschi con ananas",
           "composizioneFissa": [
             {
-              "nome": "spinaci freschi",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "spinaci freschi"
             },
             {
-              "nome": "ananas",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "ananas"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         }
       ]
@@ -641,28 +407,16 @@
       "proteineCompatibili": [
         {
           "nome": "taleggio",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "gorgonzola",
-          "sottotipo": "formaggio_fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_fresco"
         },
         {
           "nome": "parmigiano",
-          "sottotipo": "formaggio_stagionato",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "formaggio_stagionato"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -690,32 +444,17 @@
       ],
       "verdureCompatibili": [
         {
-          "nome": "pomodorini",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodorini"
         },
         {
-          "nome": "cetriolo",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "cetriolo"
         },
         {
-          "nome": "carote",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "carote"
         },
         {
-          "nome": "peperoni",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "peperoni"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -746,60 +485,33 @@
         {
           "nome": "tonno",
           "sottotipo": "pesce_conservato",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ],
           "verdureCompatibili": [
             {
-              "nome": "olive",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "olive"
             },
             {
-              "nome": "capperi",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "capperi"
             },
             {
-              "nome": "pomodorini",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodorini"
             }
           ]
         },
         {
           "nome": "salmone",
           "sottotipo": "pesce_grande",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ],
           "verdureCompatibili": [
             {
-              "nome": "avocado",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "avocado"
             },
             {
-              "nome": "cetriolo",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "cetriolo"
             },
             {
-              "nome": "aneto fresco",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "aneto fresco"
             }
           ]
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -827,26 +539,14 @@
       ],
       "verdureCompatibili": [
         {
-          "nome": "melanzane",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "melanzane"
         },
         {
-          "nome": "zucchine",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "zucchine"
         },
         {
-          "nome": "zucca",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "zucca"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -872,9 +572,6 @@
           "nome": "Farro perlato",
           "nomeVisualizzato": "Farro"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -923,160 +620,88 @@
           "nome": "zucchine e melanzane",
           "composizioneFissa": [
             {
-              "nome": "zucchine",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "zucchine"
             },
             {
-              "nome": "melanzane",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "melanzane"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "zucchine e carote",
           "composizioneFissa": [
             {
-              "nome": "zucchine",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "zucchine"
             },
             {
-              "nome": "carote",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "carote"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "zucchine e pomodoro",
           "composizioneFissa": [
             {
-              "nome": "zucchine",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "zucchine"
             },
             {
-              "nome": "pomodoro",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodoro"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pomodoro e melanzane",
           "composizioneFissa": [
             {
-              "nome": "pomodoro",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodoro"
             },
             {
-              "nome": "melanzane",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "melanzane"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "piselli e carote",
           "composizioneFissa": [
             {
-              "nome": "piselli",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "piselli"
             },
             {
-              "nome": "carote",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "carote"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "piselli e pomodoro fresco",
           "composizioneFissa": [
             {
-              "nome": "piselli",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "piselli"
             },
             {
-              "nome": "pomodoro fresco",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodoro fresco"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "pomodoro e basilico",
           "composizioneFissa": [
             {
-              "nome": "pomodoro",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodoro"
             },
             {
-              "nome": "basilico fresco",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "basilico fresco"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "aglio, olio e pomodorini",
           "composizioneFissa": [
             {
-              "nome": "aglio",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "aglio"
             },
             {
-              "nome": "pomodorini",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodorini"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         }
       ]
@@ -1089,10 +714,7 @@
       ],
       "composizioneFissa": [
         {
-          "nome": "piselli",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "piselli"
         }
       ],
       "carboidratiCompatibili": [
@@ -1111,9 +733,6 @@
         {
           "nome": "Cous cous"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -1135,28 +754,16 @@
       "proteineCompatibili": [
         {
           "nome": "ceci",
-          "sottotipo": "legumi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "legumi"
         },
         {
           "nome": "fagioli borlotti",
-          "sottotipo": "legumi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "legumi"
         },
         {
           "nome": "lenticchie",
-          "sottotipo": "legumi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "sottotipo": "legumi"
         }
-      ],
-      "procedimentoComune": [
-        "DA_DEFINIRE"
       ]
     },
     {
@@ -1165,68 +772,38 @@
       "porzioneRiferimentoGrammi": 70,
       "verdureCompatibili": [
         {
-          "nome": "lattuga",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "lattuga"
         },
         {
-          "nome": "radicchio",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "radicchio"
         },
         {
-          "nome": "valeriana",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "valeriana"
         },
         {
-          "nome": "songino",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "songino"
         },
         {
           "nome": "misticanza (lattuga, radicchio, valeriana e songino)",
           "composizioneFissa": [
             {
-              "nome": "lattuga",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "lattuga"
             },
             {
-              "nome": "radicchio",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "radicchio"
             },
             {
-              "nome": "valeriana",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "valeriana"
             },
             {
-              "nome": "songino",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "songino"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         }
       ],
       "condimentoCompatibili": [
         {
-          "nome": "al limone",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al limone"
         }
       ]
     },
@@ -1236,138 +813,75 @@
       "porzioneRiferimentoGrammi": 200,
       "verdureCompatibili": [
         {
-          "nome": "rucola",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "rucola"
         },
         {
-          "nome": "carote",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "carote"
         },
         {
-          "nome": "cetriolo",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "cetriolo"
         },
         {
-          "nome": "finocchi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "finocchi"
         },
         {
-          "nome": "pomodoro fresco",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodoro fresco"
         },
         {
-          "nome": "pomodorini",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "pomodorini"
         },
         {
-          "nome": "peperoni",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "peperoni"
         },
         {
-          "nome": "cipolla",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "cipolla"
         },
         {
-          "nome": "spinaci freschi",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "spinaci freschi"
         },
         {
-          "nome": "zucchine",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "zucchine"
         },
         {
           "nome": "pomodori, cetrioli e cipolla",
           "composizioneFissa": [
             {
-              "nome": "pomodori",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodori"
             },
             {
-              "nome": "cetrioli",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "cetrioli"
             },
             {
-              "nome": "cipolla",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "cipolla"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "carote e finocchi",
           "composizioneFissa": [
             {
-              "nome": "carote",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "carote"
             },
             {
-              "nome": "finocchi",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "finocchi"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         },
         {
           "nome": "rucola e pomodorini",
           "composizioneFissa": [
             {
-              "nome": "rucola",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "rucola"
             },
             {
-              "nome": "pomodorini",
-              "procedimento": [
-                "DA_DEFINIRE"
-              ]
+              "nome": "pomodorini"
             }
-          ],
-          "procedimentoComune": [
-            "DA_DEFINIRE"
           ]
         }
       ],
       "condimentoCompatibili": [
         {
-          "nome": "al limone",
-          "procedimento": [
-            "DA_DEFINIRE"
-          ]
+          "nome": "al limone"
         }
       ]
     }
