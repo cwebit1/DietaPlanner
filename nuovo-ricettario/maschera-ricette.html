@@ -99,7 +99,7 @@
 </section>
 
 <section>
-  <h2>3. Voci salvate (<span id="contatoreVoci">0</span>) — nuovo-ricettario/db-ricette-maschera.json</h2>
+  <h2>3. Voci salvate (<span id="contatoreVoci">0</span>) — nuovo-ricettario/db-ricette.json</h2>
   <button class="btn-secondary" onclick="caricaRicetteDaGithub()">⬇️ Carica ricette.json da GitHub</button>
   <button class="btn-main" onclick="salvaRicetteSuGithub()">⬆️ Salva tutte le voci su GitHub</button>
   <div class="stato" id="statoRicetteGh"></div>
@@ -417,7 +417,7 @@ async function caricaRicetteDaGithub() {
   const stato = document.getElementById('statoRicetteGh');
   stato.textContent = 'Carico...'; stato.className = 'stato';
   try {
-    const { json, sha } = await ghLoad('nuovo-ricettario/db-ricette-maschera.json');
+    const { json, sha } = await ghLoad('nuovo-ricettario/db-ricette.json');
     RICETTE_DATA = json;
     RICETTE_SHA = sha;
     VOCI = json.ricette || [];
@@ -438,7 +438,7 @@ async function salvaRicetteSuGithub() {
   try {
     const nuovaVersione = (RICETTE_DATA.versione || 1) + 1;
     const output = Object.assign({}, RICETTE_DATA, { versione: nuovaVersione, ricette: VOCI });
-    const resJson = await ghSave('nuovo-ricettario/db-ricette-maschera.json', output, RICETTE_SHA, `Maschera: aggiorno ricette.json (${VOCI.length} voci, v${nuovaVersione})`);
+    const resJson = await ghSave('nuovo-ricettario/db-ricette.json', output, RICETTE_SHA, `Maschera: aggiorno ricette.json (${VOCI.length} voci, v${nuovaVersione})`);
     RICETTE_SHA = resJson.content.sha;
     RICETTE_DATA = output;
     stato.textContent = `Salvato — commit ${resJson.commit.sha.slice(0,7)}, versione ${nuovaVersione}.`;

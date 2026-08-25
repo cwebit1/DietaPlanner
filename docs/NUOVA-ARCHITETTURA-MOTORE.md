@@ -584,7 +584,7 @@ convertite** nel nuovo formato a gruppi. Restano dov'erano, intatte, come
 riferimento storico — non si toccano più con la maschera nuova.
 
 **Tutto il lavoro nuovo tramite maschera va in un file separato**:
-`nuovo-ricettario/db-ricette-maschera.json`, formato a gruppi
+`nuovo-ricettario/db-ricette.json`, formato a gruppi
 (`{id, gruppi:[{testo1,categoria,ingredienti,testo2,mostraNomi}], classe}`).
 La maschera (`maschera-ricette.html`) legge/scrive solo questo file, mai più
 il vecchio `ricette.json`.
