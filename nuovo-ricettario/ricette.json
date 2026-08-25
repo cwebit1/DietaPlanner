@@ -1,5 +1,5 @@
 {
-  "versione": 17,
+  "versione": 18,
   "ricette": [
     {
       "id": 1,
@@ -896,6 +896,50 @@
           "nome": "al limone"
         }
       ]
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            "Farro perlato",
+            "Orzo perlato",
+            "Riso Originario"
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "PF",
+          "ingredienti": [
+            "Gorgonzola",
+            "Taleggio"
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PF"
+      ],
+      "id": 21
     }
   ]
 }
