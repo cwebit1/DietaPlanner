@@ -214,6 +214,7 @@ const OPZIONI_SELETTORE = ['C','PC','PP','PF','PU','PL','V','Condimenti','Nessun
 
 function creaGruppo(idGruppo) {
   const el = document.getElementById(idGruppo);
+  const isCondimenti = (idGruppo === 'gruppo4');
   el.innerHTML = `
     <div class="gruppo-div" data-gruppo="${idGruppo}">
       <label>Testo 1</label>
@@ -222,8 +223,16 @@ function creaGruppo(idGruppo) {
         ${OPZIONI_SELETTORE.map(o => `<button type="button" class="opzione-selettore" data-valore="${o}" onclick="selezionaOpzione('${idGruppo}','${o}')">${o}</button>`).join('')}
       </div>
       <div class="array-block campo-ingredienti"><div class="stato">Seleziona una categoria.</div></div>
-      <label>Testo 2</label>
+      ${isCondimenti ? '' : `
+      <label>Cotture compatibili</label>
+      <div style="display:flex; gap:6px;">
+        <input type="text" class="campo-nuova-cottura" placeholder="es. al forno">
+        <button type="button" class="btn-add" style="width:auto; margin:0; flex:0 0 auto; padding:6px 10px;" onclick="aggiungiCottura('${idGruppo}')">+ aggiungi</button>
+      </div>
+      <div class="array-block campo-cotture"><div class="stato">Nessuna cottura aggiunta.</div></div>
+      <label>Testo 2 (campo vuoto, per quando la cottura non è prevista)</label>
       <input type="text" class="campo-testo2">
+      `}
       <div class="flag-mostra">
         <input type="checkbox" class="campo-flag-mostra">
         <label style="margin:0;">Mostra/nascondi nomi ingredienti sulla ricetta</label>
@@ -235,6 +244,20 @@ creaGruppo('gruppo1');
 creaGruppo('gruppo2');
 creaGruppo('gruppo3');
 creaGruppo('gruppo4');
+
+function aggiungiCottura(idGruppo) {
+  const el = document.getElementById(idGruppo);
+  const input = el.querySelector('.campo-nuova-cottura');
+  const nome = input.value.trim();
+  if (!nome) return;
+  const box = el.querySelector('.campo-cotture');
+  if (box.querySelector('.stato')) box.innerHTML = '';
+  const riga = document.createElement('div');
+  riga.className = 'ingrediente-riga';
+  riga.innerHTML = `<input type="checkbox" class="cottura-check" data-nome="${nome}" checked><span class="nome-ingr">${nome}</span>`;
+  box.appendChild(riga);
+  input.value = '';
+}
 
 function selezionaOpzione(idGruppo, valore) {
   const el = document.getElementById(idGruppo);
@@ -277,16 +300,23 @@ function leggiGruppo(idGruppo) {
   const testo1 = el.querySelector('.campo-testo1').value.trim();
   const categoria = el.dataset.categoriaAttiva || 'Nessuno';
   const ingredienti = [...el.querySelectorAll('.ingr-check:checked')].map(chk => chk.dataset.nome);
-  const testo2 = el.querySelector('.campo-testo2').value.trim();
+  const campoTesto2 = el.querySelector('.campo-testo2');
+  const testo2 = campoTesto2 ? campoTesto2.value.trim() : '';
+  const cotture = [...el.querySelectorAll('.cottura-check:checked')].map(chk => chk.dataset.nome);
   const mostraNomi = el.querySelector('.campo-flag-mostra').checked;
-  return { testo1, categoria, ingredienti, testo2, mostraNomi };
+  return { testo1, categoria, ingredienti, cotture, testo2, mostraNomi };
 }
 
 function scriviGruppo(idGruppo, dati) {
   const el = document.getElementById(idGruppo);
   el.querySelector('.campo-testo1').value = dati.testo1 || '';
-  el.querySelector('.campo-testo2').value = dati.testo2 || '';
+  const campoTesto2 = el.querySelector('.campo-testo2');
+  if (campoTesto2) campoTesto2.value = dati.testo2 || '';
   el.querySelector('.campo-flag-mostra').checked = !!dati.mostraNomi;
+  const boxCotture = el.querySelector('.campo-cotture');
+  if (boxCotture && dati.cotture && dati.cotture.length) {
+    boxCotture.innerHTML = dati.cotture.map(nome => `<div class="ingrediente-riga"><input type="checkbox" class="cottura-check" data-nome="${nome}" checked><span class="nome-ingr">${nome}</span></div>`).join('');
+  }
   if (dati.categoria && dati.categoria !== 'Nessuno') {
     el.querySelectorAll('.opzione-selettore').forEach(b => b.classList.toggle('attivo', b.dataset.valore === dati.categoria));
     el.dataset.categoriaAttiva = dati.categoria;
