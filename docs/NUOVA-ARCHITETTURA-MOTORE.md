@@ -510,6 +510,27 @@ ricettario:**
   (`soglia_A : presente = soglia_B : x`) può produrre quantità
   psicologicamente insignificanti (es. 24,5g di insalata), tecnicamente
   corrette ma inutili in cucina.
+
+## Dose per ingrediente nella lista — due colonne, vale ovunque
+
+**Decisione data da Cwe, salvata solo ora dopo essere andata persa una
+volta** (stesso problema già capitato con "nuovo db separato" — detta a
+voce, mai scritta subito). **Non è legata al calcolo V/V-** (quello non
+usa più dosi, vedi sopra) — è una regola di struttura/UI a sé, generale:
+
+- La lista ingredienti di ogni gruppo (checkbox + nome) va **divisa in
+  due colonne**: a sinistra checkbox+nome come oggi, a destra un **campo
+  dose in grammi**.
+- Vale **sia per i primi (gruppo categoria C) sia per i secondi** (gruppo
+  categoria PC/PP/PF/PU/PL) — stessa struttura a due colonne ovunque,
+  nessuna eccezione di categoria.
+- Serve a registrare il dato quantità per ogni ingrediente scelto,
+  indipendentemente da come/se quel dato viene poi usato dal motore per
+  altri calcoli (es. non serve più per V/V-, ma resta comunque un dato
+  utile da avere — inventario, nutrizione).
+
+**Non ancora implementato nella maschera** — da fare quando si riprende
+il lavoro sulla UI.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
   `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
   procedimento per ogni singola voce**, non solo il nome — altrimenti non
