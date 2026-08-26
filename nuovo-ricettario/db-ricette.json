@@ -1,5 +1,5 @@
 {
-  "versione": 29,
+  "versione": 30,
   "ricette": [
     {
       "gruppi": [
@@ -1365,6 +1365,102 @@
       ],
       "classe": "V",
       "id": 18
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Insalata di",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Carote",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Cetriolo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Finocchi",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Peperoni",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Pomodoro fresco",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Basilico fresco",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Cipolla rossa",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Sedano",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Condimenti",
+          "ingredienti": [
+            {
+              "nome": "Aceto balsamico",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Aceto di mele",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Limone",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "V",
+      "id": 19
     }
   ]
 }
