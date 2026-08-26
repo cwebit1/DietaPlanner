@@ -1,5 +1,5 @@
 {
-  "versione": 10,
+  "versione": 11,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -3073,6 +3073,25 @@
       },
       "allergeni": [],
       "bloccoManuale": false
+    },
+    "Cipolla rossa": {
+      "kcal": 40,
+      "proteine": 1.1,
+      "carboidrati": 9,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
     }
   }
 }
