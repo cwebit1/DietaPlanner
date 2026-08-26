@@ -1,5 +1,5 @@
 {
-  "versione": 20,
+  "versione": 21,
   "ricette": [
     {
       "gruppi": [
@@ -567,7 +567,7 @@
             }
           ],
           "testo2": "e",
-          "mostraNomi": false
+          "mostraNomi": true
         },
         {
           "testo1": "",
@@ -582,7 +582,7 @@
           ],
           "cotture": [],
           "testo2": "",
-          "mostraNomi": false
+          "mostraNomi": true
         },
         {
           "testo1": "",
@@ -643,7 +643,7 @@
           ],
           "cotture": [],
           "testo2": "e",
-          "mostraNomi": false
+          "mostraNomi": true
         },
         {
           "testo1": "",
@@ -658,7 +658,7 @@
           ],
           "cotture": [],
           "testo2": "",
-          "mostraNomi": false
+          "mostraNomi": true
         },
         {
           "testo1": "",
