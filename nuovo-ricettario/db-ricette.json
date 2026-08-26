@@ -1,5 +1,5 @@
 {
-  "versione": 7,
+  "versione": 8,
   "ricette": [
     {
       "gruppi": [
@@ -70,7 +70,7 @@
         },
         {
           "testo1": "",
-          "categoria": "PF",
+          "categoria": "Nessuno",
           "ingredienti": [],
           "cotture": [],
           "testo2": "",
@@ -93,10 +93,7 @@
           "mostraNomi": false
         }
       ],
-      "classe": [
-        "PP",
-        "PF"
-      ],
+      "classe": "PP",
       "id": 2
     }
   ]
