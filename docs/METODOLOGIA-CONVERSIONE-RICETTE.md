@@ -47,6 +47,16 @@ collegamento tipo "con"/"e") — sono stati proprio quelli a causare errori.
    le segnalo come scelta aperta e la chiedo — non ne scelgo una
    plausibile in autonomia.
 
+4bis. **Considero TUTTE le parole del nome/testo originale, una per
+   una, non solo gli ingredienti/array evidenti.** L'errore già commesso
+   (dimenticare "con" tra due gruppi) è nato da questo: guardavo solo
+   "quali ingredienti", non "cosa c'è scritto per intero, parola per
+   parola". Prima di proporre una conversione, rileggo il nome/testo
+   originale e verifico che ogni singola parola (articoli, preposizioni,
+   congiunzioni comprese) abbia un posto nella struttura nuova — o segnalo
+   esplicitamente quella che non ce l'ha, invece di ometterla in
+   silenzio.
+
 5. **Prima di scrivere qualunque cosa sul file reale**, mostro la
    conversione proposta per intero, con ogni punto ambiguo elencato a
    parte e ben visibile, e aspetto conferma esplicita.
