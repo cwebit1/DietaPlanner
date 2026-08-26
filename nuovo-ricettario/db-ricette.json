@@ -1,5 +1,5 @@
 {
-  "versione": 21,
+  "versione": 22,
   "ricette": [
     {
       "gruppi": [
@@ -675,6 +675,76 @@
         "V"
       ],
       "id": 10
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PU",
+          "ingredienti": [
+            {
+              "nome": "Uova",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "sode",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "strapazzate",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "in camicia",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "al tegamino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "in frittata",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PU",
+      "id": 11
     }
   ]
 }
