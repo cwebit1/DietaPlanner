@@ -1,5 +1,5 @@
 {
-  "versione": 7,
+  "versione": 8,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -3029,6 +3029,27 @@
       ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
+    },
+    "Semi di sesamo": {
+      "kcal": 573,
+      "proteine": 17.7,
+      "carboidrati": 23.4,
+      "grassi": 49.7,
+      "gruppo": "condimento",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "sesamo"
+      ],
+      "bloccoManuale": false
     }
   }
 }
