@@ -133,6 +133,12 @@ let RICETTE_SHA = null;
 let INDICE_IN_MODIFICA = null;
 let contatoreBlocchi = 0;
 
+// gruppo puo' essere una stringa singola o un array (es. Pomodori gratinati = ["carboidrati","verdura"])
+function gruppoContiene(gruppoIngrediente, gruppoCercato) {
+  if (Array.isArray(gruppoIngrediente)) return gruppoIngrediente.includes(gruppoCercato);
+  return gruppoIngrediente === gruppoCercato;
+}
+
 const MAPPA_CLASSE = {
   C:  { gruppo: 'carboidrati' },
   V:  { gruppo: 'verdura' },
@@ -291,7 +297,7 @@ function renderIngredientiGruppo(idGruppo, valore, preselezionati) {
     const filtro = MAPPA_CLASSE[valore];
     nomi = Object.keys(INGREDIENTI).filter(nome => {
       const ing = INGREDIENTI[nome];
-      if (ing.gruppo !== filtro.gruppo) return false;
+      if (!gruppoContiene(ing.gruppo, filtro.gruppo)) return false;
       if (filtro.sottotipi) return filtro.sottotipi.includes(ing.sottotipo);
       return true;
     }).sort();
@@ -575,7 +581,7 @@ let FILTRO_INGREDIENTI_FULL = 'Tutti';
 function ingredienteRientraInCategoria(dati, categoria) {
   const filtro = MAPPA_CLASSE[categoria];
   if (!filtro) return false;
-  if (dati.gruppo !== filtro.gruppo) return false;
+  if (!gruppoContiene(dati.gruppo, filtro.gruppo)) return false;
   if (filtro.sottotipi) return filtro.sottotipi.includes(dati.sottotipo);
   return true;
 }
@@ -665,7 +671,8 @@ async function salvaIngredientiSuGithub() {
         : { kcal: 0, proteine: 0, carboidrati: 0, grassi: 0, deperibilita: '', conservazione: '',
             porzione: 0, gradimento: 1, stock: 1, formatoRiordino: { valore: null, unita: null },
             allergeni: [], bloccoManuale: false, nonRichiedeInventario: false };
-      base.gruppo = gruppo;
+      // se contiene una virgola, e' un gruppo multiplo (es. "carboidrati,verdura") -> array, altrimenti stringa singola
+      base.gruppo = gruppo.includes(',') ? gruppo.split(',').map(s => s.trim()).filter(Boolean) : gruppo;
       if (sottotipo) base.sottotipo = sottotipo; else delete base.sottotipo;
       nuovi[nomeNuovo] = base;
     }

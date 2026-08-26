@@ -1,5 +1,5 @@
 {
-  "versione": 2,
+  "versione": 3,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -2953,6 +2953,33 @@
         "unita": null
       },
       "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pomodori gratinati": {
+      "gruppo": [
+        "carboidrati",
+        "verdura"
+      ],
+      "kcal": 158,
+      "proteine": 5,
+      "carboidrati": 20,
+      "grassi": 5,
+      "deperibilita": "bassa",
+      "conservazione": "surgelato",
+      "porzione": 12,
+      "unitaPorzione": "pezzi",
+      "pesoPorzioneGrammi": 360,
+      "notaPorzione": "12 pezzi, ~30g cad. (8g pangrattato imbevuto + 22g pomodoro)",
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     }
