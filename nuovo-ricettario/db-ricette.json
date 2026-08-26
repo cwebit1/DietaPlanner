@@ -1,5 +1,5 @@
 {
-  "versione": 8,
+  "versione": 9,
   "ricette": [
     {
       "gruppi": [
@@ -7,10 +7,26 @@
           "testo1": "",
           "categoria": "C",
           "ingredienti": [
-            "Farina per polenta",
-            "Farro perlato",
-            "Orzo perlato",
-            "Riso Originario"
+            {
+              "nome": "Farina per polenta",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Farro perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orzo perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Riso Originario",
+              "stack": 1,
+              "roll": 1
+            }
           ],
           "testo2": "con",
           "mostraNomi": false
@@ -19,8 +35,16 @@
           "testo1": "",
           "categoria": "PF",
           "ingredienti": [
-            "Gorgonzola",
-            "Taleggio"
+            {
+              "nome": "Gorgonzola",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Taleggio",
+              "stack": 1,
+              "roll": 1
+            }
           ],
           "testo2": "",
           "mostraNomi": false
@@ -52,18 +76,58 @@
           "testo1": "",
           "categoria": "PP",
           "ingredienti": [
-            "Branzino",
-            "Merluzzo",
-            "Nasello",
-            "Orata",
-            "Platessa",
-            "Sogliola"
+            {
+              "nome": "Branzino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Merluzzo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Nasello",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orata",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Platessa",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Sogliola",
+              "stack": 1,
+              "roll": 1
+            }
           ],
           "cotture": [
-            "al forno",
-            "al limone",
-            "al cartoccio",
-            "ai ferri"
+            {
+              "nome": "al forno",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "al limone",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "al cartoccio",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "ai ferri",
+              "stack": 1,
+              "roll": 1
+            }
           ],
           "testo2": "",
           "mostraNomi": false
