@@ -458,6 +458,7 @@ function popolaSelettoreSfoglia() {
     const classi = Array.isArray(v.classe) ? v.classe.join(', ') : (v.classe || '');
     return `<option value="${i}" ${i === idxCorrente ? 'selected' : ''}>id ${v.id} ${classi}</option>`;
   }).join('');
+  if (idxCorrente !== null && VOCI[idxCorrente]) sel.value = idxCorrente; // forza l'aggiornamento visivo, non solo l'attributo
 }
 
 function sfogliaVaiA(indiceStr) {
