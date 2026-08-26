@@ -246,7 +246,7 @@ creaGruppo('gruppo2');
 creaGruppo('gruppo3');
 creaGruppo('gruppo4');
 
-function aggiungiCottura(idGruppo) {
+function aggiungiCottura(idGruppo, stackPre, rollPre) {
   const el = document.getElementById(idGruppo);
   const input = el.querySelector('.campo-nuova-cottura');
   const nome = input.value.trim();
@@ -255,7 +255,9 @@ function aggiungiCottura(idGruppo) {
   if (box.querySelector('.stato')) box.innerHTML = '';
   const riga = document.createElement('div');
   riga.className = 'ingrediente-riga';
-  riga.innerHTML = `<input type="checkbox" class="cottura-check" data-nome="${nome}" checked><span class="nome-ingr">${nome}</span>`;
+  const stack = stackPre !== undefined ? stackPre : 1;
+  const roll = rollPre !== undefined ? rollPre : 1;
+  riga.innerHTML = `<input type="checkbox" class="cottura-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" checked><span class="nome-ingr">${nome}</span>`;
   box.appendChild(riga);
   input.value = '';
 }
@@ -287,23 +289,32 @@ function renderIngredientiGruppo(idGruppo, valore, preselezionati) {
   }
   if (!nomi.length) { box.innerHTML = '<div class="stato">Nessun ingrediente trovato per questa categoria.</div>'; return; }
 
-  const set = new Set(preselezionati || []);
-  box.innerHTML = nomi.map(nome => `
+  const set = new Map((preselezionati || []).map(p => typeof p === 'string' ? [p, {}] : [p.nome, p]));
+  box.innerHTML = nomi.map(nome => {
+    const pre = set.get(nome);
+    const stack = pre && pre.stack !== undefined ? pre.stack : 1;
+    const roll = pre && pre.roll !== undefined ? pre.roll : 1;
+    return `
     <div class="ingrediente-riga">
-      <input type="checkbox" class="ingr-check" data-nome="${nome}" ${set.has(nome) ? 'checked' : ''}>
+      <input type="checkbox" class="ingr-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" ${set.has(nome) ? 'checked' : ''}>
       <span class="nome-ingr">${nome}</span>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function leggiGruppo(idGruppo) {
   const el = document.getElementById(idGruppo);
   const testo1 = el.querySelector('.campo-testo1').value.trim();
   const categoria = el.dataset.categoriaAttiva || 'Nessuno';
-  const ingredienti = [...el.querySelectorAll('.ingr-check:checked')].map(chk => chk.dataset.nome);
+  const ingredienti = [...el.querySelectorAll('.ingr-check:checked')].map(chk => ({
+    nome: chk.dataset.nome, stack: Number(chk.dataset.stack) || 1, roll: Number(chk.dataset.roll) || 1
+  }));
   const campoTesto2 = el.querySelector('.campo-testo2');
   const testo2 = campoTesto2 ? campoTesto2.value.trim() : '';
-  const cotture = [...el.querySelectorAll('.cottura-check:checked')].map(chk => chk.dataset.nome);
+  const cotture = [...el.querySelectorAll('.cottura-check:checked')].map(chk => ({
+    nome: chk.dataset.nome, stack: Number(chk.dataset.stack) || 1, roll: Number(chk.dataset.roll) || 1
+  }));
   const mostraNomi = el.querySelector('.campo-flag-mostra').checked;
   return { testo1, categoria, ingredienti, cotture, testo2, mostraNomi };
 }
@@ -316,7 +327,12 @@ function scriviGruppo(idGruppo, dati) {
   el.querySelector('.campo-flag-mostra').checked = !!dati.mostraNomi;
   const boxCotture = el.querySelector('.campo-cotture');
   if (boxCotture && dati.cotture && dati.cotture.length) {
-    boxCotture.innerHTML = dati.cotture.map(nome => `<div class="ingrediente-riga"><input type="checkbox" class="cottura-check" data-nome="${nome}" checked><span class="nome-ingr">${nome}</span></div>`).join('');
+    boxCotture.innerHTML = dati.cotture.map(c => {
+      const nome = typeof c === 'string' ? c : c.nome;
+      const stack = typeof c === 'string' ? 1 : (c.stack !== undefined ? c.stack : 1);
+      const roll = typeof c === 'string' ? 1 : (c.roll !== undefined ? c.roll : 1);
+      return `<div class="ingrediente-riga"><input type="checkbox" class="cottura-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" checked><span class="nome-ingr">${nome}</span></div>`;
+    }).join('');
   }
   if (dati.categoria && dati.categoria !== 'Nessuno') {
     el.querySelectorAll('.opzione-selettore').forEach(b => b.classList.toggle('attivo', b.dataset.valore === dati.categoria));
@@ -416,7 +432,10 @@ function riepilogoTesto(v) {
   return (v.gruppi || []).map(g => {
     const pezzi = [];
     if (g.testo1) pezzi.push(g.testo1);
-    if (g.categoria && g.categoria !== 'Nessuno') pezzi.push(`[${g.categoria}: ${(g.ingredienti||[]).join('/')}]`);
+    if (g.categoria && g.categoria !== 'Nessuno') {
+      const nomi = (g.ingredienti || []).map(i => typeof i === 'string' ? i : i.nome).join('/');
+      pezzi.push(`[${g.categoria}: ${nomi}]`);
+    }
     if (g.testo2) pezzi.push(g.testo2);
     return pezzi.join(' ');
   }).filter(Boolean).join(' | ');
