@@ -1,5 +1,5 @@
 {
-  "versione": 15,
+  "versione": 16,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -479,27 +479,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Cous cous": {
-      "kcal": 376,
-      "proteine": 13,
-      "carboidrati": 77,
-      "grassi": 1,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Cozze": {
       "kcal": 86,
       "proteine": 12,
@@ -518,27 +497,6 @@
       },
       "allergeni": [
         "molluschi"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Crackers": {
-      "kcal": 440,
-      "proteine": 10,
-      "carboidrati": 65,
-      "grassi": 15,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 30,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
       ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
@@ -706,48 +664,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Farina per polenta": {
-      "kcal": 362,
-      "proteine": 8,
-      "carboidrati": 75,
-      "grassi": 3.4,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Farro perlato": {
-      "kcal": 335,
-      "proteine": 15,
-      "carboidrati": 67,
-      "grassi": 2.5,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Feta": {
       "kcal": 264,
       "proteine": 14,
@@ -877,30 +793,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Friselle": {
-      "kcal": 330,
-      "proteine": 11,
-      "carboidrati": 65,
-      "grassi": 3,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "gradimento": 1,
-      "porzione": 2,
-      "unitaPorzione": "pezzi",
-      "notaPorzione": "2 piccole o 1 grande (PDF)",
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false,
-      "pesoPorzioneGrammi": 50
-    },
     "Funghi champignon": {
       "kcal": 22,
       "proteine": 3.1,
@@ -918,25 +810,6 @@
       },
       "allergeni": [],
       "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Gallette di riso": {
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "kcal": 385,
-      "proteine": 8,
-      "carboidrati": 81,
-      "grassi": 3,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 50,
       "nonRichiedeInventario": false
     },
     "Gamberetti surgelati": {
@@ -957,27 +830,6 @@
       },
       "allergeni": [
         "crostacei"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Gnocchi": {
-      "kcal": 140,
-      "proteine": 3.1,
-      "carboidrati": 30,
-      "grassi": 0.5,
-      "gruppo": "carboidrati",
-      "deperibilita": "media",
-      "conservazione": "fresco",
-      "porzione": 175,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
       ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
@@ -1444,27 +1296,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Noodles per ramen": {
-      "kcal": 350,
-      "proteine": 10,
-      "carboidrati": 71,
-      "grassi": 2,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Olio extravergine oliva": {
       "kcal": 884,
       "proteine": 0,
@@ -1506,27 +1337,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Orzo perlato": {
-      "kcal": 352,
-      "proteine": 10,
-      "carboidrati": 72,
-      "grassi": 2,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Pancetta a cubetti": {
       "kcal": 380,
       "proteine": 14,
@@ -1544,48 +1354,6 @@
         "unita": null
       },
       "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Pane integrale": {
-      "kcal": 224,
-      "proteine": 9,
-      "carboidrati": 41,
-      "grassi": 2,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 100,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Panino": {
-      "kcal": 275,
-      "proteine": 9,
-      "carboidrati": 56,
-      "grassi": 1.2,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 100,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
@@ -1629,67 +1397,6 @@
       "allergeni": [
         "latte"
       ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Pasta corta": {
-      "kcal": 350,
-      "proteine": 12,
-      "carboidrati": 71,
-      "grassi": 1.5,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Pasta integrale": {
-      "kcal": 332,
-      "proteine": 13,
-      "carboidrati": 66,
-      "grassi": 2.5,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Patate": {
-      "kcal": 77,
-      "proteine": 2,
-      "carboidrati": 17,
-      "grassi": 0.1,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 325,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
@@ -1852,25 +1559,6 @@
       },
       "allergeni": [],
       "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Piadina": {
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "kcal": 340,
-      "proteine": 8,
-      "carboidrati": 52,
-      "grassi": 11,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 80,
       "nonRichiedeInventario": false
     },
     "Piselli in barattolo": {
@@ -2157,27 +1845,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Ravioli ricotta e spinaci": {
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "latte"
-      ],
-      "bloccoManuale": false,
-      "kcal": 250,
-      "proteine": 10,
-      "carboidrati": 35,
-      "grassi": 8,
-      "gruppo": "carboidrati",
-      "deperibilita": "media",
-      "conservazione": "breve",
-      "porzione": 125,
-      "nonRichiedeInventario": false
-    },
     "Ricotta": {
       "kcal": 146,
       "proteine": 8.8,
@@ -2197,44 +1864,6 @@
       "allergeni": [
         "latte"
       ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Riso Originario": {
-      "kcal": 332,
-      "proteine": 6.7,
-      "carboidrati": 75,
-      "grassi": 0.6,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Riso integrale": {
-      "kcal": 337,
-      "proteine": 7,
-      "carboidrati": 74,
-      "grassi": 2.5,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
@@ -2593,28 +2222,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Tagliolini all'uovo": {
-      "kcal": 380,
-      "proteine": 15,
-      "carboidrati": 68,
-      "grassi": 4.3,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "glutine",
-        "uova"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Taleggio": {
       "kcal": 315,
       "proteine": 19,
@@ -2635,25 +2242,6 @@
         "latte"
       ],
       "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Taralli": {
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "kcal": 430,
-      "proteine": 10,
-      "carboidrati": 67,
-      "grassi": 14,
-      "gruppo": "carboidrati",
-      "deperibilita": "bassa",
-      "conservazione": "lunga",
-      "porzione": 65,
       "nonRichiedeInventario": false
     },
     "Tofu": {
@@ -2911,6 +2499,399 @@
       },
       "allergeni": [],
       "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cous cous": {
+      "kcal": 376,
+      "proteine": 13,
+      "carboidrati": 77,
+      "grassi": 1,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Crackers": {
+      "kcal": 440,
+      "proteine": 10,
+      "carboidrati": 65,
+      "grassi": 15,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 30,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Polenta": {
+      "kcal": 362,
+      "proteine": 8,
+      "carboidrati": 75,
+      "grassi": 3.4,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Farro perlato": {
+      "kcal": 335,
+      "proteine": 15,
+      "carboidrati": 67,
+      "grassi": 2.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Friselle": {
+      "kcal": 330,
+      "proteine": 11,
+      "carboidrati": 65,
+      "grassi": 3,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "gradimento": 1,
+      "porzione": 2,
+      "unitaPorzione": "pezzi",
+      "notaPorzione": "2 piccole o 1 grande (PDF)",
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false,
+      "pesoPorzioneGrammi": 50
+    },
+    "Gallette di riso": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "kcal": 385,
+      "proteine": 8,
+      "carboidrati": 81,
+      "grassi": 3,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 50,
+      "nonRichiedeInventario": false
+    },
+    "Gnocchi": {
+      "kcal": 140,
+      "proteine": 3.1,
+      "carboidrati": 30,
+      "grassi": 0.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Noodles": {
+      "kcal": 350,
+      "proteine": 10,
+      "carboidrati": 71,
+      "grassi": 2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Orzo perlato": {
+      "kcal": 352,
+      "proteine": 10,
+      "carboidrati": 72,
+      "grassi": 2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pane integrale": {
+      "kcal": 224,
+      "proteine": 9,
+      "carboidrati": 41,
+      "grassi": 2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Panino": {
+      "kcal": 275,
+      "proteine": 9,
+      "carboidrati": 56,
+      "grassi": 1.2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pasta corta": {
+      "kcal": 350,
+      "proteine": 12,
+      "carboidrati": 71,
+      "grassi": 1.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pasta integrale": {
+      "kcal": 332,
+      "proteine": 13,
+      "carboidrati": 66,
+      "grassi": 2.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Patate": {
+      "kcal": 77,
+      "proteine": 2,
+      "carboidrati": 17,
+      "grassi": 0.1,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 325,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Piadina": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "kcal": 340,
+      "proteine": 8,
+      "carboidrati": 52,
+      "grassi": 11,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 80,
+      "nonRichiedeInventario": false
+    },
+    "Ravioli ricotta e spinaci": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "kcal": 250,
+      "proteine": 10,
+      "carboidrati": 35,
+      "grassi": 8,
+      "gruppo": "carboidrati",
+      "deperibilita": "media",
+      "conservazione": "breve",
+      "porzione": 125,
+      "nonRichiedeInventario": false
+    },
+    "Riso": {
+      "kcal": 332,
+      "proteine": 6.7,
+      "carboidrati": 75,
+      "grassi": 0.6,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tagliolini all'uovo": {
+      "kcal": 380,
+      "proteine": 15,
+      "carboidrati": 68,
+      "grassi": 4.3,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine",
+        "uova"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Taralli": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "kcal": 430,
+      "proteine": 10,
+      "carboidrati": 67,
+      "grassi": 14,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 65,
       "nonRichiedeInventario": false
     }
   }
