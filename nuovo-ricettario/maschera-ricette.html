@@ -309,10 +309,14 @@ function renderIngredientiGruppo(idGruppo, valore, preselezionati) {
     const pre = set.get(nome);
     const stack = pre && pre.stack !== undefined ? pre.stack : 1;
     const roll = pre && pre.roll !== undefined ? pre.roll : 1;
+    const dose = pre && pre.dose !== undefined ? pre.dose : '';
     return `
-    <div class="ingrediente-riga">
-      <input type="checkbox" class="ingr-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" ${set.has(nome) ? 'checked' : ''}>
-      <span class="nome-ingr">${nome}</span>
+    <div class="ingrediente-riga ingrediente-riga-due-colonne">
+      <label class="colonna-sx">
+        <input type="checkbox" class="ingr-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" ${set.has(nome) ? 'checked' : ''}>
+        <span class="nome-ingr">${nome}</span>
+      </label>
+      <input type="number" class="campo-dose colonna-dx" placeholder="g" value="${dose}">
     </div>
   `;
   }).join('');
@@ -322,9 +326,14 @@ function leggiGruppo(idGruppo) {
   const el = document.getElementById(idGruppo);
   const testo1 = el.querySelector('.campo-testo1').value.trim();
   const categoria = el.dataset.categoriaAttiva || 'Nessuno';
-  const ingredienti = [...el.querySelectorAll('.ingr-check:checked')].map(chk => ({
-    nome: chk.dataset.nome, stack: Number(chk.dataset.stack) || 1, roll: Number(chk.dataset.roll) || 1
-  }));
+  const ingredienti = [...el.querySelectorAll('.ingr-check:checked')].map(chk => {
+    const riga = chk.closest('.ingrediente-riga');
+    const campoDose = riga ? riga.querySelector('.campo-dose') : null;
+    const dose = campoDose && campoDose.value !== '' ? Number(campoDose.value) : undefined;
+    const obj = { nome: chk.dataset.nome, stack: Number(chk.dataset.stack) || 1, roll: Number(chk.dataset.roll) || 1 };
+    if (dose !== undefined) obj.dose = dose;
+    return obj;
+  });
   const campoTesto2 = el.querySelector('.campo-testo2');
   const testo2 = campoTesto2 ? campoTesto2.value.trim() : '';
   const cotture = [...el.querySelectorAll('.cottura-check:checked')].map(chk => ({
