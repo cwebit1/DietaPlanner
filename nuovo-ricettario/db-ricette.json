@@ -1,5 +1,5 @@
 {
-  "versione": 12,
+  "versione": 13,
   "ricette": [
     {
       "gruppi": [
@@ -277,7 +277,8 @@
             {
               "nome": "Pomodori gratinati",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "dose": 12
             }
           ],
           "cotture": [],
