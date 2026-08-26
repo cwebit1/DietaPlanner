@@ -478,13 +478,20 @@ ricettario:**
   - Il "-" non si scrive mai a mano da nessuna parte: è sempre l'esito di
     quale dei 3 stati è stato scelto (o della label, se Off).
 
-  **Domanda aperta, non ancora risolta**: su cosa si basa lo Stadio 1 per
-  determinare in automatico "V" o "V-", **senza avere una ricetta di
-  riferimento/raffronto con cui confrontare** (oggi non esiste ancora un
-  dato di quantità nella ricetta a gruppi). Da capire prima di
-  implementare lo Stadio 1 — nel frattempo si può comunque implementare e
-  usare lo Stadio 2 da solo, con la label sempre a un default fisso in
-  attesa di una risposta.
+  **Domanda chiusa il 2026-08-26** (era aperta: su cosa si basa lo Stadio
+  1 per determinare "V" o "V-" in automatico). Risposta trovata nelle
+  regole di prodotto vincolanti (`REGOLE_FLUSSO_LOGICO.md`, dettate dal
+  nutrizionista): **non serve confrontare con un'altra ricetta** — basta
+  un dato quantità (grammi) per quella verdura, confrontato con la sua
+  soglia propria (70g insalata, 200g altro tipo — gli aromatici non
+  contano mai). Sotto soglia → V-, alla soglia o sopra → V. Stessa regola,
+  identica, sia per un contorno a sé sia per verdura dentro un primo/piatto
+  combinato — confermato dall'esempio reale già nelle regole di prodotto
+  ("Pasta con zucchine e pomodorini", 100-150g, non raggiunge la soglia).
+  **Conseguenza per la maschera**: serve aggiungere un campo dose
+  (grammi) sulla verdura del gruppo — non esiste ancora nella struttura a
+  gruppi — da cui lo Stadio 1 calcola la label confrontando con la soglia
+  del tipo di verdura selezionato.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
   `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
   procedimento per ogni singola voce**, non solo il nome — altrimenti non
