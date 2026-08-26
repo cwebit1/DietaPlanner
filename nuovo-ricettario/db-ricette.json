@@ -1,5 +1,5 @@
 {
-  "versione": 5,
+  "versione": 8,
   "ricette": [
     {
       "gruppi": [
@@ -45,6 +45,56 @@
         "PF"
       ],
       "id": 1
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PP",
+          "ingredienti": [
+            "Branzino",
+            "Merluzzo",
+            "Nasello",
+            "Orata",
+            "Platessa",
+            "Sogliola"
+          ],
+          "cotture": [
+            "al forno",
+            "al limone",
+            "al cartoccio",
+            "ai ferri"
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PP",
+      "id": 2
     }
   ]
 }
