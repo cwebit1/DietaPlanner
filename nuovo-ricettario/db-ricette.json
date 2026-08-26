@@ -1,5 +1,5 @@
 {
-  "versione": 28,
+  "versione": 29,
   "ricette": [
     {
       "gruppi": [
@@ -1285,6 +1285,86 @@
         "V"
       ],
       "id": 17
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Insalata di",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Lattuga",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Radicchio",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Songino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Spinaci freschi",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Valeriana",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Condimenti",
+          "ingredienti": [
+            {
+              "nome": "Aceto balsamico",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Aceto di mele",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Limone",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "V",
+      "id": 18
     }
   ]
 }
