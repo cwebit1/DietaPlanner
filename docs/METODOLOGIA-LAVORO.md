@@ -85,6 +85,16 @@ verificabile, non solo il singolo punto toccato.
    confusi tra loro). Nessuna decisione ambigua si prende in autonomia
    in questo contesto.
 
+8. **Alla fine di ogni processo definito/chiuso (una decisione presa,
+   un meccanismo confermato, un problema risolto), salvare sempre
+   analisi e istruzioni per intero — non solo il singolo dato.**
+   Regola data da Cwe il 2026-08-26, dopo che più decisioni ("nuovo db
+   separato", "due colonne con dose") sono andate perse perché discusse
+   a voce ma non scritte subito. Il quadro generale va tenuto in
+   `STATO-NUOVO-RICETTARIO.md` — aggiornarlo ad ogni chiusura di
+   processo, per permettere di riprendere il lavoro anche da un altro
+   account senza dover ricostruire tutto rileggendo la conversazione.
+
 ## Metodo di verifica (eredità dell'audit iniziale, resta valido)
 
 Ogni correzione va verificata **dal vivo**, non solo letta nel codice:
