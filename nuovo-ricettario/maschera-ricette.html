@@ -79,12 +79,12 @@
     <button class="btn-secondary" style="margin:0; flex:0 0 auto; width:auto; padding:8px 12px;" onclick="sfogliaPrecedente()">◀</button>
     <select id="selettoreSfoglia" style="flex:1;" onchange="sfogliaVaiA(this.value)"></select>
     <button class="btn-secondary" style="margin:0; flex:0 0 auto; width:auto; padding:8px 12px;" onclick="sfogliaSuccessiva()">▶</button>
+    <button class="btn-main" style="margin:0; flex:0 0 auto; width:auto; padding:8px 14px;" onclick="sfogliaSalva()">💾</button>
   </div>
-  <button class="btn-main" onclick="sfogliaSalva()">💾 Salva</button>
 </section>
 
 <section>
-  <h2>1. Tre gruppi (identici)</h2>
+  <h2>Composizione ricetta</h2>
   <div class="stato" id="statoIngredienti">Ingredienti non ancora caricati.</div>
   <div id="gruppo1"></div>
   <div id="gruppo2"></div>
@@ -229,6 +229,7 @@ function creaGruppo(idGruppo) {
       <div style="display:flex; gap:6px;">
         <input type="text" class="campo-nuova-cottura" placeholder="es. al forno">
         <button type="button" class="btn-add" style="width:auto; margin:0; flex:0 0 auto; padding:6px 10px;" onclick="aggiungiCottura('${idGruppo}')">+ aggiungi</button>
+        <button type="button" class="btn-add" style="width:auto; margin:0; flex:0 0 auto; padding:6px 10px; color:var(--bad); border-color:var(--bad);" onclick="eliminaCotturaSelezionata('${idGruppo}')">✕ elimina</button>
       </div>
       <div class="array-block campo-cotture"><div class="stato">Nessuna cottura aggiunta.</div></div>
       <label>Testo 2 (campo vuoto, per quando la cottura non è prevista)</label>
@@ -260,6 +261,14 @@ function aggiungiCottura(idGruppo, stackPre, rollPre) {
   riga.innerHTML = `<input type="checkbox" class="cottura-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" checked><span class="nome-ingr">${nome}</span>`;
   box.appendChild(riga);
   input.value = '';
+}
+
+function eliminaCotturaSelezionata(idGruppo) {
+  const el = document.getElementById(idGruppo);
+  const box = el.querySelector('.campo-cotture');
+  const selezionate = [...box.querySelectorAll('.cottura-check:checked')];
+  selezionate.forEach(chk => chk.closest('.ingrediente-riga').remove());
+  if (!box.querySelector('.cottura-check')) box.innerHTML = '<div class="stato">Nessuna cottura aggiunta.</div>';
 }
 
 function selezionaOpzione(idGruppo, valore) {
