@@ -447,6 +447,16 @@ ricettario:**
   soglie V trovato nell'audit** (STRUTTURA §11): non serve più decidere se
   una quantità "conta" o no come V, ogni quantità contribuisce
   proporzionalmente.
+  **Precisato il 2026-08-26**: questa regola vale **solo per le verdure**
+  (le proteine hanno la loro regola separata, il dimezzamento sopra — non
+  uno storno/completamento). Quando la verdura in una ricetta combinata
+  non copre la dose piena, lo storno **non è facoltativo**: si forza
+  sempre un'estrazione V a completamento della dose indicata dal
+  nutrizionista, mai lasciata a metà. Quella V allegata come completamento
+  va marcata con **un asterisco prima del nome**, per segnalare che è uno
+  storno di dose (verdura già in parte coperta da un'altra ricetta) e non
+  una V piena a sé stante — distinzione visiva/dati da mantenere ovunque
+  venga mostrata.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
   `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
   procedimento per ogni singola voce**, non solo il nome — altrimenti non
