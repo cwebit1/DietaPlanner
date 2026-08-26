@@ -1,5 +1,5 @@
 {
-  "versione": 4,
+  "versione": 5,
   "ricette": [
     {
       "gruppi": [
@@ -7,6 +7,7 @@
           "testo1": "",
           "categoria": "C",
           "ingredienti": [
+            "Farina per polenta",
             "Farro perlato",
             "Orzo perlato",
             "Riso Originario"
