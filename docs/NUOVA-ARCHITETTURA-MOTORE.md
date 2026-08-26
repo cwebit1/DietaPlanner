@@ -457,6 +457,14 @@ ricettario:**
   storno di dose (verdura già in parte coperta da un'altra ricetta) e non
   una V piena a sé stante — distinzione visiva/dati da mantenere ovunque
   venga mostrata.
+  **Notazione confermata il 2026-08-26**: invece di tracciare grammi
+  esatti nella ricetta, si usa un segno diretto sul token di classe —
+  `V` (verdura piena, nessun completamento) contro `V-` (verdura
+  insufficiente/parziale, completamento sempre forzato). Una ricetta come
+  "alla Norma" ha quindi classe `[C, V-]`, non `[C, V]`. Il motore, quando
+  vede `V-` in una classe, sa già — senza bisogno di leggere una quantità
+  in grammi — che deve forzare l'estrazione di una V a completamento,
+  marcata con l'asterisco come sopra.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
   `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
   procedimento per ogni singola voce**, non solo il nome — altrimenti non
