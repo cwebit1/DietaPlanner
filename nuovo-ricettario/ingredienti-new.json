@@ -1,5 +1,5 @@
 {
-  "versione": 4,
+  "versione": 5,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -647,46 +647,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Fagioli borlotti in barattolo": {
-      "kcal": 127,
-      "proteine": 8.7,
-      "carboidrati": 16,
-      "grassi": 0.5,
-      "gruppo": "proteine",
-      "deperibilita": "bassa",
-      "sottotipo": "legumi",
-      "conservazione": "lunga",
-      "porzione": 135,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Fagioli cannellini in barattolo": {
-      "kcal": 126,
-      "proteine": 8.5,
-      "carboidrati": 16,
-      "grassi": 0.5,
-      "gruppo": "proteine",
-      "deperibilita": "bassa",
-      "sottotipo": "legumi",
-      "conservazione": "lunga",
-      "porzione": 135,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Fagiolini": {
       "kcal": 24,
       "proteine": 1.7,
@@ -1131,26 +1091,6 @@
       "deperibilita": "alta",
       "conservazione": "fresco",
       "porzione": 75,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
-    "Lenticchie in barattolo": {
-      "kcal": 116,
-      "proteine": 9,
-      "carboidrati": 14,
-      "grassi": 0.5,
-      "gruppo": "proteine",
-      "deperibilita": "bassa",
-      "sottotipo": "legumi",
-      "conservazione": "lunga",
-      "porzione": 135,
       "gradimento": 1,
       "stock": 1,
       "formatoRiordino": {
@@ -2982,6 +2922,69 @@
       "allergeni": [],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
+    },
+    "Fagioli borlotti": {
+      "kcal": 127,
+      "proteine": 8.7,
+      "carboidrati": 16,
+      "grassi": 0.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false,
+      "formato": "barattolo"
+    },
+    "Fagioli cannellini": {
+      "kcal": 126,
+      "proteine": 8.5,
+      "carboidrati": 16,
+      "grassi": 0.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false,
+      "formato": "barattolo"
+    },
+    "Lenticchie": {
+      "kcal": 116,
+      "proteine": 9,
+      "carboidrati": 14,
+      "grassi": 0.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false,
+      "formato": "barattolo"
     }
   }
 }
