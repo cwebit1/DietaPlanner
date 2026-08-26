@@ -1,5 +1,5 @@
 {
-  "versione": 23,
+  "versione": 24,
   "ricette": [
     {
       "gruppi": [
@@ -840,6 +840,111 @@
       ],
       "classe": "PL",
       "id": 12
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PC",
+          "ingredienti": [
+            {
+              "nome": "Fettina di manzo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Hamburger di pollo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Hamburger di suino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Hamburger di tacchino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Hamburger di vitello",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Nodino di maiale",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Petto di pollo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Petto di tacchino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Sovracosce di pollo",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "alla piastra",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "al forno",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "in padella",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "ai ferri",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PC",
+      "id": 13
     }
   ]
 }
