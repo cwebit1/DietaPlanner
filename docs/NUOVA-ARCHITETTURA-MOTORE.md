@@ -465,6 +465,26 @@ ricettario:**
   vede `V-` in una classe, sa già — senza bisogno di leggere una quantità
   in grammi — che deve forzare l'estrazione di una V a completamento,
   marcata con l'asterisco come sopra.
+
+  **Meccanismo a due stadi per decidere V vs V- su un gruppo, deciso il
+  2026-08-26**:
+  - **Stadio 1 — label di sola lettura**, mostra cosa il sistema
+    determina in automatico per quel gruppo: "V" oppure "V-". Non è un
+    pulsante, solo un'indicazione.
+  - **Stadio 2 — 3 pulsanti sotto la label: Off / V / V-.**
+    - **Off** → vale quello che dice la label (il sistema decide).
+    - **V** → forza V, anche se la label diceva V-.
+    - **V-** → forza V-, anche se la label diceva V.
+  - Il "-" non si scrive mai a mano da nessuna parte: è sempre l'esito di
+    quale dei 3 stati è stato scelto (o della label, se Off).
+
+  **Domanda aperta, non ancora risolta**: su cosa si basa lo Stadio 1 per
+  determinare in automatico "V" o "V-", **senza avere una ricetta di
+  riferimento/raffronto con cui confrontare** (oggi non esiste ancora un
+  dato di quantità nella ricetta a gruppi). Da capire prima di
+  implementare lo Stadio 1 — nel frattempo si può comunque implementare e
+  usare lo Stadio 2 da solo, con la label sempre a un default fisso in
+  attesa di una risposta.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
   `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
   procedimento per ogni singola voce**, non solo il nome — altrimenti non
