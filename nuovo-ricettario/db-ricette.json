@@ -1,5 +1,5 @@
 {
-  "versione": 22,
+  "versione": 23,
   "ricette": [
     {
       "gruppi": [
@@ -745,6 +745,101 @@
       ],
       "classe": "PU",
       "id": 11
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Ceci",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Fagioli borlotti",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Fagioli cannellini",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Lenticchie",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Tofu",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "all'olio e rosmarino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "olio piccante e sesamo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "aglio olio e peperoncino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "al pepe",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "saltati",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "in insalata",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PL",
+      "id": 12
     }
   ]
 }
