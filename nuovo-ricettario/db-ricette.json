@@ -1,5 +1,5 @@
 {
-  "versione": 24,
+  "versione": 25,
   "ricette": [
     {
       "gruppi": [
@@ -945,6 +945,114 @@
       ],
       "classe": "PC",
       "id": 13
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Crackers",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Gallette di riso",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Taralli",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "PF",
+          "ingredienti": [
+            {
+              "nome": "Brie",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Crescenza",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Feta",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Grana",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Mozzarella",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Pecorino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Provola",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Ricotta",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Stracchino",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Tomino",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PF"
+      ],
+      "id": 14
     }
   ]
 }
