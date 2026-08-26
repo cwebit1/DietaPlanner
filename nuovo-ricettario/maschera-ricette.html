@@ -389,7 +389,7 @@ async function salvaVoce() {
   const statoSalva = document.getElementById('statoSalvaVoce');
   if (statoSalva) { statoSalva.textContent = 'Salvo su GitHub...'; statoSalva.className = 'stato'; }
   if (!RICETTE_SHA) {
-    if (statoSalva) { statoSalva.textContent = `${creata ? 'Creata' : 'Aggiornata'} id ${dati.id} in locale, ma non ho lo sha del file — premi prima "Connetti" per collegarti a GitHub, poi risalva.`; statoSalva.className = 'stato err'; }
+    if (statoSalva) { statoSalva.textContent = `${creata ? 'Creata' : 'Aggiornata'} id${dati.id} in locale, ma non ho lo sha del file — premi prima "Connetti" per collegarti a GitHub, poi risalva.`; statoSalva.className = 'stato err'; }
     return;
   }
   try {
@@ -398,7 +398,7 @@ async function salvaVoce() {
     const resJson = await ghSave('nuovo-ricettario/db-ricette.json', output, RICETTE_SHA, `Maschera: ${creata ? 'creo' : 'aggiorno'} id ${dati.id}`);
     RICETTE_SHA = resJson.content.sha;
     RICETTE_DATA = output;
-    if (statoSalva) { statoSalva.textContent = `${creata ? 'Creata' : 'Aggiornata'} id ${dati.id} — salvata online su GitHub, commit ${resJson.commit.sha.slice(0,7)}.`; statoSalva.className = 'stato ok'; }
+    if (statoSalva) { statoSalva.textContent = `${creata ? 'Creata' : 'Aggiornata'} id${dati.id} — salvata online su GitHub, commit ${resJson.commit.sha.slice(0,7)}.`; statoSalva.className = 'stato ok'; }
   } catch (err) {
     if (statoSalva) { statoSalva.textContent = `Salvata solo in locale — errore nel salvataggio su GitHub: ${err.message}`; statoSalva.className = 'stato err'; }
   }
@@ -456,7 +456,7 @@ function popolaSelettoreSfoglia() {
   const idxCorrente = INDICE_IN_MODIFICA;
   sel.innerHTML = VOCI.map((v, i) => {
     const classi = Array.isArray(v.classe) ? v.classe.join(', ') : (v.classe || '');
-    return `<option value="${i}" ${i === idxCorrente ? 'selected' : ''}>id ${v.id} ${classi}</option>`;
+    return `<option value="${i}" ${i === idxCorrente ? 'selected' : ''}>id${v.id} ${classi}</option>`;
   }).join('');
   if (idxCorrente !== null && VOCI[idxCorrente]) sel.value = idxCorrente; // forza l'aggiornamento visivo, non solo l'attributo
 }
@@ -492,7 +492,7 @@ function renderListaVoci() {
   if (!VOCI.length) { box.innerHTML = '<div class="stato">Nessuna voce salvata ancora.</div>'; return; }
   box.innerHTML = VOCI.map((v, i) => `
     <div class="voce-salvata">
-      <span class="indice">id ${v.id != null ? v.id : '?'}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}
+      <span class="indice">id${v.id != null ? v.id : '?'}</span> — classe: ${JSON.stringify(v.classe) || '(nessuna)'}
       <div class="riepilogo">${riepilogoTesto(v)}</div>
       <div class="azioni">
         <button onclick="modificaVoce(${i})">Modifica</button>
