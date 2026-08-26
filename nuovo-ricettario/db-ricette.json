@@ -1,5 +1,5 @@
 {
-  "versione": 9,
+  "versione": 10,
   "ricette": [
     {
       "gruppi": [
@@ -159,6 +159,61 @@
       ],
       "classe": "PP",
       "id": 2
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PC",
+          "ingredienti": [
+            {
+              "nome": "Salsiccia di maiale",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Salsiccia di tacchino",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "al forno",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PC",
+      "id": 3
     }
   ]
 }
