@@ -1,5 +1,5 @@
 {
-  "versione": 6,
+  "versione": 7,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -2732,28 +2732,6 @@
       "bloccoManuale": false,
       "nonRichiedeInventario": false
     },
-    "Tonno in scatola": {
-      "kcal": 116,
-      "proteine": 25,
-      "carboidrati": 0,
-      "grassi": 1,
-      "gruppo": "proteine",
-      "deperibilita": "bassa",
-      "sottotipo": "pesce_conservato",
-      "conservazione": "lunga",
-      "porzione": 100,
-      "gradimento": 1,
-      "stock": 1,
-      "formatoRiordino": {
-        "valore": null,
-        "unita": null
-      },
-      "allergeni": [
-        "pesce"
-      ],
-      "bloccoManuale": false,
-      "nonRichiedeInventario": false
-    },
     "Totani": {
       "kcal": 68,
       "proteine": 13,
@@ -3026,6 +3004,28 @@
       },
       "allergeni": [
         "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tonno": {
+      "kcal": 116,
+      "proteine": 25,
+      "carboidrati": 0,
+      "grassi": 1,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_conservato",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
       ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
