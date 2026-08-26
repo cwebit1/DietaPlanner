@@ -529,6 +529,20 @@ usa più dosi, vedi sopra) — è una regola di struttura/UI a sé, generale:
   altri calcoli (es. non serve più per V/V-, ma resta comunque un dato
   utile da avere — inventario, nutrizione).
 
+**Default precompilato quando si seleziona una verdura**, deciso il
+2026-08-26 — si applica **solo nel caso di concomitanza** (V insieme a C
+e/o proteina nella stessa ricetta, il caso V-): il default dipende da
+quante verdure sono selezionate insieme nello stesso gruppo:
+- 1 verdura selezionata → **70g**
+- 2 verdure selezionate → **40g** ciascuna
+- 3 verdure selezionate → **30g** ciascuna
+
+**Quando V è da sola** nella ricetta (nessun C/proteina concomitante,
+caso V piena — es. "Insalata di"), il default resta la soglia intera del
+tipo (200g altro / 70g insalata), non questo schema decrescente. Il
+campo resta comunque modificabile a mano in entrambi i casi, è solo un
+punto di partenza.
+
 **Non ancora implementato nella maschera** — da fare quando si riprende
 il lavoro sulla UI.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
