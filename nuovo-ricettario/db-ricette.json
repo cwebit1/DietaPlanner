@@ -1,5 +1,5 @@
 {
-  "versione": 11,
+  "versione": 12,
   "ricette": [
     {
       "gruppi": [
@@ -267,6 +267,59 @@
         "V"
       ],
       "id": 4
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Pomodori",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Pomodori gratinati",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [],
+          "cotture": [
+            {
+              "nome": "gratinati",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "V",
+        "C"
+      ],
+      "id": 5
     }
   ]
 }
