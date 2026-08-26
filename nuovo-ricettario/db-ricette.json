@@ -1,5 +1,5 @@
 {
-  "versione": 16,
+  "versione": 17,
   "ricette": [
     {
       "gruppi": [
@@ -418,7 +418,7 @@
           ],
           "cotture": [],
           "testo2": "",
-          "mostraNomi": true
+          "mostraNomi": false
         },
         {
           "testo1": "",
@@ -442,64 +442,6 @@
         "V"
       ],
       "id": 7
-    },
-    {
-      "gruppi": [
-        {
-          "testo1": "",
-          "categoria": "C",
-          "ingredienti": [
-            {
-              "nome": "Pasta corta",
-              "stack": 1,
-              "roll": 1
-            },
-            {
-              "nome": "Pasta integrale",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "cotture": [],
-          "testo2": "alla Norma",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "V",
-          "ingredienti": [
-            {
-              "nome": "Melanzane",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": true
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        }
-      ],
-      "classe": [
-        "C",
-        "V"
-      ],
-      "id": 8
     }
   ]
 }
