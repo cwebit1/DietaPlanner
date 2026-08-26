@@ -1,5 +1,5 @@
 {
-  "versione": 27,
+  "versione": 28,
   "ricette": [
     {
       "gruppi": [
@@ -1206,6 +1206,85 @@
         "PP"
       ],
       "id": 16
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Cous cous",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Farro perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orzo perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Riso",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Melanzane",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Zucchine",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "saltate in padella",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "V"
+      ],
+      "id": 17
     }
   ]
 }
