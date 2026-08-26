@@ -1,5 +1,5 @@
 {
-  "versione": 13,
+  "versione": 14,
   "ricette": [
     {
       "gruppi": [
@@ -321,6 +321,69 @@
         "C"
       ],
       "id": 5
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Pasta corta",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Pasta integrale",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Tagliolini all'uovo",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "al",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Pomodoro fresco",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "V"
+      ],
+      "id": 6
     }
   ]
 }
