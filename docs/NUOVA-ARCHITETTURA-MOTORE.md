@@ -478,20 +478,38 @@ ricettario:**
   - Il "-" non si scrive mai a mano da nessuna parte: è sempre l'esito di
     quale dei 3 stati è stato scelto (o della label, se Off).
 
-  **Domanda chiusa il 2026-08-26** (era aperta: su cosa si basa lo Stadio
-  1 per determinare "V" o "V-" in automatico). Risposta trovata nelle
-  regole di prodotto vincolanti (`REGOLE_FLUSSO_LOGICO.md`, dettate dal
-  nutrizionista): **non serve confrontare con un'altra ricetta** — basta
-  un dato quantità (grammi) per quella verdura, confrontato con la sua
-  soglia propria (70g insalata, 200g altro tipo — gli aromatici non
-  contano mai). Sotto soglia → V-, alla soglia o sopra → V. Stessa regola,
-  identica, sia per un contorno a sé sia per verdura dentro un primo/piatto
-  combinato — confermato dall'esempio reale già nelle regole di prodotto
-  ("Pasta con zucchine e pomodorini", 100-150g, non raggiunge la soglia).
-  **Conseguenza per la maschera**: serve aggiungere un campo dose
-  (grammi) sulla verdura del gruppo — non esiste ancora nella struttura a
-  gruppi — da cui lo Stadio 1 calcola la label confrontando con la soglia
-  del tipo di verdura selezionato.
+  **Versione finale, 2026-08-26 (sostituisce la versione precedente basata
+  su dose/grammi)**: lo Stadio 1 **non calcola più su una quantità** — è
+  puramente strutturale, guarda solo se ci sono altri gruppi attivi nella
+  stessa ricetta:
+  - **V da sola nel gruppo** (nessun C né proteina attivi nella stessa
+    ricetta, es. "Insalata di") → default **V piena**.
+  - **V insieme a qualcos'altro** (C e/o proteina presenti nella stessa
+    ricetta) → default **V-**.
+  - Il selettore manuale (Off/V/V-) resta sempre sopra, per forzare il
+    contrario quando serve.
+
+  **Perché non più su grammi**: ricercando dosi reali (alla Norma, pasta
+  con pomodoro e melanzane, pasta all'ortolana — 3 fonti indipendenti)
+  la verdura in un primo resta sempre 130-150g, mai vicina ai 200g di
+  soglia — ma le dosi da dieta si scostano apposta da quelle delle
+  ricette comuni: **conviene fissare la verdura in un primo bassa di
+  proposito (50-70g)**, cosicché il residuo per il contorno resti una
+  porzione vera e sostanziosa (130-150g), invece di rincorrere quanto
+  "assomiglia a una ricetta vera". Un campo dose avrebbe richiesto di
+  scegliere ogni volta il numero giusto; la regola strutturale (V sola
+  vs V insieme a qualcosa) ottiene lo stesso risultato senza bisogno di
+  nessun calcolo né di nessun dato quantità nella ricetta.
+
+  **Nota residua sulla formula di completamento (resta valida se serve
+  cambiare tipo di verdura tra presente e completamento)**: il
+  completamento di default resta **stesso tipo/stessa soglia** di quello
+  già presente (sottrazione diretta: `residuo = soglia − presente`) — mai
+  cambiare scala (es. da "altro tipo" a "insalata") senza un motivo
+  esplicito, perché convertire tra soglie diverse con una proporzione
+  (`soglia_A : presente = soglia_B : x`) può produrre quantità
+  psicologicamente insignificanti (es. 24,5g di insalata), tecnicamente
+  corrette ma inutili in cucina.
 - **Ogni array che compone una ricetta (`carboidratiCompatibili`,
   `proteineCompatibili`, `tipiCotturaCompatibili`) deve avere un
   procedimento per ogni singola voce**, non solo il nome — altrimenti non
