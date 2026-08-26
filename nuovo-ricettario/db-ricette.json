@@ -1,5 +1,5 @@
 {
-  "versione": 19,
+  "versione": 20,
   "ricette": [
     {
       "gruppi": [
@@ -599,6 +599,82 @@
         "V"
       ],
       "id": 9
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "insalata fredda di",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Cous cous",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Farro perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orzo perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Riso",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "PF",
+          "ingredienti": [
+            {
+              "nome": "Emmental",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Pomodoro fresco",
+              "stack": 1,
+              "roll": 1,
+              "dose": 200
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PF",
+        "V"
+      ],
+      "id": 10
     }
   ]
 }
