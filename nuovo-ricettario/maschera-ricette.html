@@ -214,6 +214,7 @@ const OPZIONI_SELETTORE = ['C','PC','PP','PF','PU','PL','V','Condimenti','Nessun
 
 function creaGruppo(idGruppo) {
   const el = document.getElementById(idGruppo);
+  delete el.dataset.categoriaAttiva; // pulizia esplicita: l'innerHTML sotto non resetta il dataset dell'elemento contenitore
   const isCondimenti = (idGruppo === 'gruppo4');
   el.innerHTML = `
     <div class="gruppo-div" data-gruppo="${idGruppo}">
