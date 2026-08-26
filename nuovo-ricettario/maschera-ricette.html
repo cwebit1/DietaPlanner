@@ -62,7 +62,7 @@
 <h1>🧩 Maschera creazione ricette — nuovo ricettario</h1>
 
 <section>
-  <h2>0. Connessione GitHub (per ingredienti.json e ricette.json)</h2>
+  <h2>0. Connessione GitHub (per ingredienti-new.json e db-ricette.json)</h2>
   <label>Token GitHub (mai salvato)</label>
   <input type="password" id="ghToken" placeholder="ghp_...">
   <label>Repo</label>
@@ -115,8 +115,8 @@
 </section>
 
 <section>
-  <h2>5. Gestione ingredienti (ingredienti.json) — elimina, rinomina, aggiungi</h2>
-  <button class="btn-secondary" onclick="caricaIngredientiDaGithub()">⬇️ Carica ingredienti.json da GitHub</button>
+  <h2>5. Gestione ingredienti (ingredienti-new.json) — elimina, rinomina, aggiungi</h2>
+  <button class="btn-secondary" onclick="caricaIngredientiDaGithub()">⬇️ Carica ingredienti-new.json da GitHub</button>
   <button class="btn-main" onclick="salvaIngredientiSuGithub()">⬆️ Salva ingredienti su GitHub</button>
   <div class="stato" id="statoIngredientiGh"></div>
   <button class="btn-add" onclick="aggiungiIngredienteNuovo()">+ aggiungi nuovo ingrediente</button>
@@ -183,11 +183,11 @@ async function ghSave(path, obj, sha, message){
 // ============== caricamento automatico sola lettura ingredienti (per i filtri sequenza) ==============
 (async () => {
   try {
-    const res = await fetch('../ingredienti.json?nocache=' + Date.now());
+    const res = await fetch('ingredienti-new.json?nocache=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     INGREDIENTI = d.ingredienti;
-    document.getElementById('statoIngredienti').textContent = `Caricati ${Object.keys(INGREDIENTI).length} ingredienti da ingredienti.json (versione ${d.versione}).`;
+    document.getElementById('statoIngredienti').textContent = `Caricati ${Object.keys(INGREDIENTI).length} ingredienti da ingredienti-new.json (versione ${d.versione}).`;
   } catch (err) {
     document.getElementById('statoIngredienti').textContent = 'Caricamento automatico non riuscito: ' + err.message;
   }
@@ -498,7 +498,7 @@ async function caricaIngredientiDaGithub() {
   const stato = document.getElementById('statoIngredientiGh');
   stato.textContent = 'Carico...'; stato.className = 'stato';
   try {
-    const { json, sha } = await ghLoad('ingredienti.json');
+    const { json, sha } = await ghLoad('nuovo-ricettario/ingredienti-new.json');
     INGREDIENTI_FULL = json;
     INGREDIENTI_SHA = sha;
     INGREDIENTI_ELIMINATI = new Set();
@@ -536,7 +536,7 @@ function renderIngredientiFull() {
   ).join('');
 
   const box = document.getElementById('listaIngredientiFull');
-  if (!INGREDIENTI_FULL) { box.innerHTML = '<div class="stato">Carica prima ingredienti.json da GitHub.</div>'; return; }
+  if (!INGREDIENTI_FULL) { box.innerHTML = '<div class="stato">Carica prima ingredienti-new.json da GitHub.</div>'; return; }
 
   let nomi = Object.keys(INGREDIENTI_FULL.ingredienti).sort();
   if (FILTRO_INGREDIENTI_FULL === 'Non in categoria') {
@@ -564,7 +564,7 @@ function renderIngredientiFull() {
 
 function aggiungiIngredienteNuovo() {
   const box = document.getElementById('listaIngredientiFull');
-  if (!INGREDIENTI_FULL) { alert('Carica prima ingredienti.json da GitHub.'); return; }
+  if (!INGREDIENTI_FULL) { alert('Carica prima ingredienti-new.json da GitHub.'); return; }
   const div = document.createElement('div');
   div.className = 'ingr-full-riga';
   div.dataset.nomeOriginale = '';
@@ -581,7 +581,7 @@ function aggiungiIngredienteNuovo() {
 
 async function salvaIngredientiSuGithub() {
   const stato = document.getElementById('statoIngredientiGh');
-  if (!INGREDIENTI_SHA) { stato.textContent = 'Carica prima ingredienti.json da GitHub (serve lo sha per aggiornare).'; stato.className = 'stato err'; return; }
+  if (!INGREDIENTI_SHA) { stato.textContent = 'Carica prima ingredienti-new.json da GitHub (serve lo sha per aggiornare).'; stato.className = 'stato err'; return; }
   stato.textContent = 'Salvo...'; stato.className = 'stato';
   try {
     const righe = [...document.querySelectorAll('.ingr-full-riga')];
@@ -611,7 +611,7 @@ async function salvaIngredientiSuGithub() {
     }
     const nuovaVersione = (INGREDIENTI_FULL.versione || 1) + 1;
     const output = Object.assign({}, INGREDIENTI_FULL, { versione: nuovaVersione, ingredienti: nuovi });
-    const resJson = await ghSave('ingredienti.json', output, INGREDIENTI_SHA, `Maschera: aggiorno ingredienti.json (v${nuovaVersione})`);
+    const resJson = await ghSave('nuovo-ricettario/ingredienti-new.json', output, INGREDIENTI_SHA, `Maschera: aggiorno ingredienti-new.json (v${nuovaVersione})`);
     INGREDIENTI_SHA = resJson.content.sha;
     INGREDIENTI_FULL = output;
     INGREDIENTI_ELIMINATI = new Set();

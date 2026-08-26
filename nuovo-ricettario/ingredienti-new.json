@@ -1,0 +1,2920 @@
+{
+  "versione": 1,
+  "ingredienti": {
+    "Aglio": {
+      "kcal": 149,
+      "proteine": 6.4,
+      "carboidrati": 33,
+      "grassi": 0.5,
+      "gruppo": "verdura",
+      "deperibilita": "bassa",
+      "quantificabile": false,
+      "conservazione": "lunga",
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Alici fresche": {
+      "kcal": 131,
+      "proteine": 20.4,
+      "carboidrati": 0,
+      "grassi": 4.8,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_azzurro",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Arista di maiale": {
+      "kcal": 150,
+      "proteine": 22,
+      "carboidrati": 0,
+      "grassi": 6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Asparagi": {
+      "kcal": 20,
+      "proteine": 2.2,
+      "carboidrati": 3.9,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Avocado": {
+      "kcal": 160,
+      "proteine": 2,
+      "carboidrati": 8.5,
+      "grassi": 14.7,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Banana": {
+      "kcal": 89,
+      "proteine": 1.1,
+      "carboidrati": 23,
+      "grassi": 0.3,
+      "gruppo": "frutta",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Basilico fresco": {
+      "kcal": 23,
+      "proteine": 3.2,
+      "carboidrati": 2.7,
+      "grassi": 0.6,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "gradimento": 1,
+      "quantificabile": false,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Biscotti secchi": {
+      "kcal": 440,
+      "proteine": 7,
+      "carboidrati": 75,
+      "grassi": 13,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "sottoCategoriaColazione": "carboidrati",
+      "porzione": 25,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Bresaola": {
+      "kcal": 151,
+      "proteine": 32,
+      "carboidrati": 0.4,
+      "grassi": 2.6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "affettati",
+      "conservazione": "fresco",
+      "porzione": 60,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Brie": {
+      "kcal": 334,
+      "proteine": 20,
+      "carboidrati": 0.5,
+      "grassi": 28,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Broccoli": {
+      "kcal": 34,
+      "proteine": 2.8,
+      "carboidrati": 4,
+      "grassi": 0.4,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Burro": {
+      "kcal": 717,
+      "proteine": 0.9,
+      "carboidrati": 0.1,
+      "grassi": 81,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Carciofi": {
+      "kcal": 47,
+      "proteine": 3.3,
+      "carboidrati": 10.5,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Carote": {
+      "kcal": 35,
+      "proteine": 0.9,
+      "carboidrati": 7.6,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cavolfiore": {
+      "kcal": 25,
+      "proteine": 1.9,
+      "carboidrati": 2.9,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Ceci": {
+      "kcal": 139,
+      "proteine": 7.3,
+      "carboidrati": 16,
+      "grassi": 2.6,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cereali da colazione": {
+      "kcal": 378,
+      "proteine": 7,
+      "carboidrati": 84,
+      "grassi": 1,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "sottoCategoriaColazione": "carboidrati",
+      "porzione": 30,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cetriolo": {
+      "kcal": 12,
+      "proteine": 0.6,
+      "carboidrati": 2.2,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cime di rapa": {
+      "kcal": 22,
+      "proteine": 3.2,
+      "carboidrati": 2.9,
+      "grassi": 0.4,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cioccolato fondente": {
+      "kcal": 546,
+      "proteine": 7.8,
+      "carboidrati": 46,
+      "grassi": 31,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "sottoCategoriaColazione": "grassi",
+      "porzione": 8,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cipolla": {
+      "kcal": 40,
+      "proteine": 1.1,
+      "carboidrati": 9,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cipollotto": {
+      "kcal": 32,
+      "proteine": 1.8,
+      "carboidrati": 7,
+      "grassi": 0.2,
+      "gruppo": "condimento",
+      "deperibilita": "bassa",
+      "conservazione": "surgelato",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false
+    },
+    "Costine di maiale": {
+      "kcal": 277,
+      "proteine": 16.5,
+      "carboidrati": 0,
+      "grassi": 23.5,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cozze": {
+      "kcal": 86,
+      "proteine": 12,
+      "carboidrati": 3.7,
+      "grassi": 2.2,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "molluschi",
+      "conservazione": "fresco",
+      "porzione": 250,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "molluschi"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Crauti": {
+      "kcal": 19,
+      "proteine": 0.9,
+      "carboidrati": 4.3,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Crema di nocciole e cacao": {
+      "kcal": 539,
+      "proteine": 6,
+      "carboidrati": 57,
+      "grassi": 31,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "sottoCategoriaColazione": "grassi",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "frutta_guscio"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Crescenza": {
+      "kcal": 289,
+      "proteine": 17,
+      "carboidrati": 2,
+      "grassi": 24,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Dado": {
+      "kcal": 250,
+      "proteine": 7,
+      "carboidrati": 20,
+      "grassi": 15,
+      "gruppo": "condimento",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false
+    },
+    "Emmental": {
+      "kcal": 380,
+      "proteine": 28,
+      "carboidrati": 1.5,
+      "grassi": 29,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_stagionato",
+      "conservazione": "fresco",
+      "porzione": 40,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Fagioli borlotti in barattolo": {
+      "kcal": 127,
+      "proteine": 8.7,
+      "carboidrati": 16,
+      "grassi": 0.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Fagioli cannellini in barattolo": {
+      "kcal": 126,
+      "proteine": 8.5,
+      "carboidrati": 16,
+      "grassi": 0.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Fagiolini": {
+      "kcal": 24,
+      "proteine": 1.7,
+      "carboidrati": 3.4,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Feta": {
+      "kcal": 264,
+      "proteine": 14,
+      "carboidrati": 4,
+      "grassi": 21,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Fette biscottate": {
+      "kcal": 408,
+      "proteine": 10,
+      "carboidrati": 76,
+      "grassi": 8,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "sottoCategoriaColazione": "carboidrati",
+      "gradimento": 1,
+      "porzione": 4,
+      "unitaPorzione": "fette",
+      "notaPorzione": "3-4 fette (PDF)",
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Fettina di manzo": {
+      "kcal": 158,
+      "proteine": 26,
+      "carboidrati": 0,
+      "grassi": 5.4,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Finocchi": {
+      "kcal": 31,
+      "proteine": 1.2,
+      "carboidrati": 3.1,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Formaggio spalmabile": {
+      "kcal": 313,
+      "proteine": 8.6,
+      "carboidrati": 0.3,
+      "grassi": 31,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Funghi champignon": {
+      "kcal": 22,
+      "proteine": 3.1,
+      "carboidrati": 1.6,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Gamberetti surgelati": {
+      "kcal": 71,
+      "proteine": 13,
+      "carboidrati": 0.9,
+      "grassi": 1.2,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "crostacei",
+      "conservazione": "surgelato",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "crostacei"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Gorgonzola": {
+      "kcal": 330,
+      "proteine": 19,
+      "carboidrati": 2,
+      "grassi": 27,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_stagionato",
+      "conservazione": "fresco",
+      "porzione": 40,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Granita fatta in casa": {
+      "kcal": 110,
+      "proteine": 0,
+      "carboidrati": 27,
+      "grassi": 0,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "sottoCategoriaColazione": "spuntino",
+      "gradimento": 1,
+      "quantificabile": false,
+      "nonRichiedeInventario": true,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false
+    },
+    "Hamburger di pollo": {
+      "kcal": 165,
+      "proteine": 19,
+      "carboidrati": 1,
+      "grassi": 9.5,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_bianca",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Hamburger di suino": {
+      "kcal": 250,
+      "proteine": 17,
+      "carboidrati": 0,
+      "grassi": 20,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Hamburger di tacchino": {
+      "kcal": 140,
+      "proteine": 20,
+      "carboidrati": 1.3,
+      "grassi": 6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_bianca",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Hamburger di vitello": {
+      "kcal": 132,
+      "proteine": 20,
+      "carboidrati": 0,
+      "grassi": 5.4,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Insalata mista": {
+      "kcal": 15,
+      "proteine": 1.4,
+      "carboidrati": 2.9,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Latte intero": {
+      "kcal": 64,
+      "proteine": 3.2,
+      "carboidrati": 4.8,
+      "grassi": 3.6,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Latte parzialmente scremato": {
+      "kcal": 46,
+      "proteine": 3.3,
+      "carboidrati": 4.9,
+      "grassi": 1.5,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "sottoCategoriaColazione": "proteine",
+      "porzione": 200,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Lattuga": {
+      "kcal": 15,
+      "proteine": 1.4,
+      "carboidrati": 2.9,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Lenticchie in barattolo": {
+      "kcal": 116,
+      "proteine": 9,
+      "carboidrati": 14,
+      "grassi": 0.5,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 135,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Limone": {
+      "kcal": 29,
+      "proteine": 1.1,
+      "carboidrati": 9.3,
+      "grassi": 0.3,
+      "gruppo": "frutta",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "gradimento": 1,
+      "quantificabile": false,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Magro di vitello": {
+      "kcal": 109,
+      "proteine": 21,
+      "carboidrati": 0,
+      "grassi": 2,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Maionese": {
+      "kcal": 680,
+      "proteine": 1.1,
+      "carboidrati": 2,
+      "grassi": 75,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Marmellata": {
+      "kcal": 250,
+      "proteine": 0.4,
+      "carboidrati": 62,
+      "grassi": 0.1,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "sottoCategoriaColazione": "carboidrati_semplici",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Mela": {
+      "kcal": 52,
+      "proteine": 0.3,
+      "carboidrati": 14,
+      "grassi": 0.2,
+      "gruppo": "frutta",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Melanzane": {
+      "kcal": 24,
+      "proteine": 1,
+      "carboidrati": 5.7,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Melone": {
+      "kcal": 34,
+      "proteine": 0.8,
+      "carboidrati": 8,
+      "grassi": 0.2,
+      "gruppo": "frutta",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Merluzzo": {
+      "kcal": 82,
+      "proteine": 17.8,
+      "carboidrati": 0,
+      "grassi": 0.7,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_bianco",
+      "conservazione": "fresco",
+      "porzione": 165,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Miele": {
+      "kcal": 304,
+      "proteine": 0.3,
+      "carboidrati": 82,
+      "grassi": 0,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "sottoCategoriaColazione": "carboidrati_semplici",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Mozzarella": {
+      "kcal": 253,
+      "proteine": 18,
+      "carboidrati": 1,
+      "grassi": 19,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Noci e mandorle": {
+      "kcal": 654,
+      "proteine": 15,
+      "carboidrati": 14,
+      "grassi": 65,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 15,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "frutta_guscio"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Nodino di maiale": {
+      "kcal": 143,
+      "proteine": 21,
+      "carboidrati": 0,
+      "grassi": 6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_rossa",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Olio extravergine oliva": {
+      "kcal": 884,
+      "proteine": 0,
+      "carboidrati": 0,
+      "grassi": 100,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pancetta a cubetti": {
+      "kcal": 380,
+      "proteine": 14,
+      "carboidrati": 0.5,
+      "grassi": 36,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "affettati",
+      "conservazione": "fresco",
+      "porzione": 60,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Panna da cucina": {
+      "kcal": 196,
+      "proteine": 2.5,
+      "carboidrati": 3.5,
+      "grassi": 19,
+      "gruppo": "grassi",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Parmigiano grattugiato": {
+      "kcal": 392,
+      "proteine": 35,
+      "carboidrati": 0,
+      "grassi": 28,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_stagionato",
+      "conservazione": "fresco",
+      "porzione": 40,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Patatine in busta": {
+      "kcal": 536,
+      "proteine": 6,
+      "carboidrati": 53,
+      "grassi": 33,
+      "gruppo": "colazione",
+      "deperibilita": "bassa",
+      "sottoCategoriaColazione": "spuntino",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pecorino": {
+      "kcal": 392,
+      "proteine": 26,
+      "carboidrati": 0,
+      "grassi": 32,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_stagionato",
+      "conservazione": "fresco",
+      "porzione": 40,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Peperoncino": {
+      "kcal": 40,
+      "proteine": 2,
+      "carboidrati": 9,
+      "grassi": 0.4,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "quantificabile": false,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "conservazione": "fresco",
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Peperoni": {
+      "kcal": 27,
+      "proteine": 1,
+      "carboidrati": 6,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pera": {
+      "kcal": 57,
+      "proteine": 0.4,
+      "carboidrati": 15,
+      "grassi": 0.1,
+      "gruppo": "frutta",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pesce spada": {
+      "kcal": 144,
+      "proteine": 20,
+      "carboidrati": 0,
+      "grassi": 6.7,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_grande",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Petto di pollo": {
+      "kcal": 120,
+      "proteine": 23,
+      "carboidrati": 0,
+      "grassi": 2.6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_bianca",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Petto di tacchino": {
+      "kcal": 104,
+      "proteine": 24,
+      "carboidrati": 0,
+      "grassi": 1,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_bianca",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Piselli in barattolo": {
+      "kcal": 75,
+      "proteine": 4.8,
+      "carboidrati": 12,
+      "grassi": 0.3,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "lunga",
+      "porzione": 120,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Piselli surgelati": {
+      "kcal": 81,
+      "proteine": 5.4,
+      "carboidrati": 14,
+      "grassi": 0.4,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "legumi",
+      "conservazione": "surgelato",
+      "porzione": 120,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pizza alle verdure": {
+      "kcal": 248,
+      "proteine": 7.6,
+      "carboidrati": 40.7,
+      "grassi": 6.6,
+      "gruppo": "speciale",
+      "deperibilita": "bassa",
+      "conservazione": "asporto",
+      "porzione": 300,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "fonteNutrizionale": "CREA 000710, proxy pizza con pomodoro"
+    },
+    "Pizza margherita": {
+      "kcal": 235,
+      "proteine": 10.7,
+      "carboidrati": 27.4,
+      "grassi": 9.3,
+      "gruppo": "speciale",
+      "deperibilita": "bassa",
+      "porzione": 300,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine",
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "conservazione": "asporto",
+      "fonteNutrizionale": "CREA PC0001"
+    },
+    "Pollo a dadini": {
+      "kcal": 120,
+      "proteine": 23,
+      "carboidrati": 0,
+      "grassi": 2.6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_bianca",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Polpo surgelato": {
+      "kcal": 164,
+      "proteine": 30,
+      "carboidrati": 0,
+      "grassi": 2.1,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "molluschi",
+      "conservazione": "surgelato",
+      "porzione": 250,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "molluschi"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pomodorini": {
+      "kcal": 18,
+      "proteine": 0.9,
+      "carboidrati": 3.9,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pomodoro fresco": {
+      "kcal": 18,
+      "proteine": 0.9,
+      "carboidrati": 3.9,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Prezzemolo": {
+      "kcal": 36,
+      "proteine": 3,
+      "carboidrati": 6,
+      "grassi": 0.8,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "quantificabile": false,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "conservazione": "fresco",
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Prosciutto cotto": {
+      "kcal": 109,
+      "proteine": 18,
+      "carboidrati": 1.4,
+      "grassi": 3.3,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "affettati",
+      "conservazione": "fresco",
+      "porzione": 60,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Prosciutto crudo": {
+      "kcal": 268,
+      "proteine": 28,
+      "carboidrati": 0,
+      "grassi": 18,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "affettati",
+      "conservazione": "fresco",
+      "porzione": 60,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Provola": {
+      "kcal": 262,
+      "proteine": 21,
+      "carboidrati": 0.7,
+      "grassi": 19.6,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_stagionato",
+      "conservazione": "fresco",
+      "porzione": 40,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Radicchio": {
+      "kcal": 13,
+      "proteine": 1.4,
+      "carboidrati": 1.7,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Ravanelli": {
+      "kcal": 16,
+      "proteine": 0.7,
+      "carboidrati": 3.4,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Ricotta": {
+      "kcal": 146,
+      "proteine": 8.8,
+      "carboidrati": 3.5,
+      "grassi": 10.9,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Rucola": {
+      "kcal": 19,
+      "proteine": 2,
+      "carboidrati": 1.6,
+      "grassi": 0.5,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Salmone": {
+      "kcal": 208,
+      "proteine": 20,
+      "carboidrati": 0,
+      "grassi": 13,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_grande",
+      "conservazione": "lunga",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Salmone affumicato": {
+      "kcal": 147,
+      "proteine": 25,
+      "carboidrati": 0,
+      "grassi": 4.5,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_conservato",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Salsa di soia": {
+      "kcal": 66,
+      "proteine": 9.5,
+      "carboidrati": 7,
+      "grassi": 0.7,
+      "gruppo": "condimento",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 15,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "soia"
+      ],
+      "bloccoManuale": false
+    },
+    "Salsiccia": {
+      "kcal": 330,
+      "proteine": 16,
+      "carboidrati": 1,
+      "grassi": 28,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "affettati",
+      "conservazione": "fresco",
+      "porzione": 60,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sardine fresche": {
+      "kcal": 135,
+      "proteine": 20.8,
+      "carboidrati": 0,
+      "grassi": 4.5,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_azzurro",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sedano": {
+      "kcal": 16,
+      "proteine": 0.7,
+      "carboidrati": 3,
+      "grassi": 0.2,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "sedano"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Seppie": {
+      "kcal": 72,
+      "proteine": 15,
+      "carboidrati": 0.8,
+      "grassi": 1,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "molluschi",
+      "conservazione": "fresco",
+      "porzione": 250,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "molluschi"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sfoglie di lasagna": {
+      "kcal": 350,
+      "proteine": 12,
+      "carboidrati": 72,
+      "grassi": 1.5,
+      "gruppo": "speciale",
+      "deperibilita": "bassa",
+      "gradimento": 1,
+      "quantificabile": false,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sgombro fresco": {
+      "kcal": 205,
+      "proteine": 18,
+      "carboidrati": 0,
+      "grassi": 14,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_azzurro",
+      "conservazione": "lunga",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sgombro in scatola": {
+      "kcal": 190,
+      "proteine": 21,
+      "carboidrati": 0,
+      "grassi": 11,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_conservato",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Songino": {
+      "kcal": 16,
+      "proteine": 1.5,
+      "carboidrati": 2.7,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Sovracosce di pollo": {
+      "kcal": 119,
+      "proteine": 20.5,
+      "carboidrati": 0,
+      "grassi": 4,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "carne_bianca",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Speck": {
+      "kcal": 232,
+      "proteine": 26,
+      "carboidrati": 0.4,
+      "grassi": 15,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "affettati",
+      "conservazione": "fresco",
+      "porzione": 60,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Spinaci freschi": {
+      "kcal": 23,
+      "proteine": 2.9,
+      "carboidrati": 3.6,
+      "grassi": 0.4,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Stracchino": {
+      "kcal": 280,
+      "proteine": 16,
+      "carboidrati": 2,
+      "grassi": 24,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Taleggio": {
+      "kcal": 315,
+      "proteine": 19,
+      "carboidrati": 0.9,
+      "grassi": 26.2,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_stagionato",
+      "conservazione": "fresco",
+      "porzione": 40,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tofu": {
+      "kcal": 76,
+      "proteine": 8,
+      "carboidrati": 1.9,
+      "grassi": 4.8,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "legumi",
+      "conservazione": "fresco",
+      "porzione": 190,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "soia"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tomini": {
+      "kcal": 280,
+      "proteine": 20,
+      "carboidrati": 1,
+      "grassi": 22,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "formaggio_fresco",
+      "conservazione": "fresco",
+      "porzione": 90,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tonno fresco": {
+      "kcal": 144,
+      "proteine": 23.3,
+      "carboidrati": 0,
+      "grassi": 4.9,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_grande",
+      "conservazione": "fresco",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tonno in scatola": {
+      "kcal": 116,
+      "proteine": 25,
+      "carboidrati": 0,
+      "grassi": 1,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_conservato",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Totani": {
+      "kcal": 68,
+      "proteine": 13,
+      "carboidrati": 1,
+      "grassi": 1,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "molluschi",
+      "conservazione": "fresco",
+      "porzione": 250,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "molluschi"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Uova": {
+      "kcal": 143,
+      "proteine": 13,
+      "carboidrati": 1.1,
+      "grassi": 9.5,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "uova",
+      "conservazione": "fresco",
+      "ancheColazione": {
+        "sottoCategoriaColazione": "proteine",
+        "nota": "doppia gestione: stesso ingrediente, due contesti con frequenze diverse",
+        "porzioneMin": 1,
+        "porzioneMax": 2,
+        "unitaPorzione": "pezzi"
+      },
+      "gradimento": 1,
+      "porzione": 2,
+      "unitaPorzione": "pezzi",
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "uova"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Valeriana": {
+      "kcal": 16,
+      "proteine": 1.5,
+      "carboidrati": 2.7,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Verza": {
+      "kcal": 27,
+      "proteine": 2,
+      "carboidrati": 6.1,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Yogurt bianco": {
+      "kcal": 61,
+      "proteine": 3.5,
+      "carboidrati": 4.7,
+      "grassi": 3.3,
+      "gruppo": "colazione",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "sottoCategoriaColazione": "proteine",
+      "porzione": 125,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Zenzero": {
+      "kcal": 80,
+      "proteine": 1.8,
+      "carboidrati": 18,
+      "grassi": 0.8,
+      "gruppo": "condimento",
+      "deperibilita": "media",
+      "conservazione": "lunga",
+      "porzione": 10,
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false
+    },
+    "Zucca": {
+      "kcal": 26,
+      "proteine": 1,
+      "carboidrati": 6.5,
+      "grassi": 0.1,
+      "gruppo": "verdura",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Zucchine": {
+      "kcal": 17,
+      "proteine": 1.2,
+      "carboidrati": 3.1,
+      "grassi": 0.3,
+      "gruppo": "verdura",
+      "deperibilita": "alta",
+      "conservazione": "fresco",
+      "porzione": 225,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Cous cous": {
+      "kcal": 376,
+      "proteine": 13,
+      "carboidrati": 77,
+      "grassi": 1,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Crackers": {
+      "kcal": 440,
+      "proteine": 10,
+      "carboidrati": 65,
+      "grassi": 15,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 30,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Polenta": {
+      "kcal": 362,
+      "proteine": 8,
+      "carboidrati": 75,
+      "grassi": 3.4,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Farro perlato": {
+      "kcal": 335,
+      "proteine": 15,
+      "carboidrati": 67,
+      "grassi": 2.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Friselle": {
+      "kcal": 330,
+      "proteine": 11,
+      "carboidrati": 65,
+      "grassi": 3,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "gradimento": 1,
+      "porzione": 2,
+      "unitaPorzione": "pezzi",
+      "notaPorzione": "2 piccole o 1 grande (PDF)",
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false,
+      "pesoPorzioneGrammi": 50
+    },
+    "Gallette di riso": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "kcal": 385,
+      "proteine": 8,
+      "carboidrati": 81,
+      "grassi": 3,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 50,
+      "nonRichiedeInventario": false
+    },
+    "Gnocchi": {
+      "kcal": 140,
+      "proteine": 3.1,
+      "carboidrati": 30,
+      "grassi": 0.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "media",
+      "conservazione": "fresco",
+      "porzione": 175,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Noodles": {
+      "kcal": 350,
+      "proteine": 10,
+      "carboidrati": 71,
+      "grassi": 2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Orzo perlato": {
+      "kcal": 352,
+      "proteine": 10,
+      "carboidrati": 72,
+      "grassi": 2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pane integrale": {
+      "kcal": 224,
+      "proteine": 9,
+      "carboidrati": 41,
+      "grassi": 2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Panino": {
+      "kcal": 275,
+      "proteine": 9,
+      "carboidrati": 56,
+      "grassi": 1.2,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 100,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pasta corta": {
+      "kcal": 350,
+      "proteine": 12,
+      "carboidrati": 71,
+      "grassi": 1.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Pasta integrale": {
+      "kcal": 332,
+      "proteine": 13,
+      "carboidrati": 66,
+      "grassi": 2.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Patate": {
+      "kcal": 77,
+      "proteine": 2,
+      "carboidrati": 17,
+      "grassi": 0.1,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 325,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Piadina": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "kcal": 340,
+      "proteine": 8,
+      "carboidrati": 52,
+      "grassi": 11,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 80,
+      "nonRichiedeInventario": false
+    },
+    "Ravioli ricotta e spinaci": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "latte"
+      ],
+      "bloccoManuale": false,
+      "kcal": 250,
+      "proteine": 10,
+      "carboidrati": 35,
+      "grassi": 8,
+      "gruppo": "carboidrati",
+      "deperibilita": "media",
+      "conservazione": "breve",
+      "porzione": 125,
+      "nonRichiedeInventario": false
+    },
+    "Riso": {
+      "kcal": 332,
+      "proteine": 6.7,
+      "carboidrati": 75,
+      "grassi": 0.6,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Tagliolini all'uovo": {
+      "kcal": 380,
+      "proteine": 15,
+      "carboidrati": 68,
+      "grassi": 4.3,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine",
+        "uova"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Taralli": {
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false,
+      "kcal": 430,
+      "proteine": 10,
+      "carboidrati": 67,
+      "grassi": 14,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 65,
+      "nonRichiedeInventario": false
+    },
+    "Sogliola": {
+      "kcal": 86,
+      "proteine": 16.5,
+      "carboidrati": 0,
+      "grassi": 1.7,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_bianco",
+      "conservazione": "surgelato",
+      "porzione": 165,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Nasello": {
+      "kcal": 78,
+      "proteine": 17,
+      "carboidrati": 0,
+      "grassi": 0.8,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_bianco",
+      "conservazione": "surgelato",
+      "porzione": 165,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Orata": {
+      "kcal": 100,
+      "proteine": 20,
+      "carboidrati": 0,
+      "grassi": 2,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_bianco",
+      "conservazione": "surgelato",
+      "porzione": 165,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Branzino": {
+      "kcal": 82,
+      "proteine": 16,
+      "carboidrati": 0,
+      "grassi": 2.6,
+      "gruppo": "proteine",
+      "deperibilita": "bassa",
+      "sottotipo": "pesce_bianco",
+      "conservazione": "surgelato",
+      "porzione": 165,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Platessa": {
+      "kcal": 79,
+      "proteine": 17.0,
+      "carboidrati": 0,
+      "grassi": 1.0,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "pesce_bianco",
+      "conservazione": "fresco",
+      "porzione": 165,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "pesce"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    }
+  }
+}
