@@ -78,6 +78,13 @@ verificabile, non solo il singolo punto toccato.
    assente, non `DA_DEFINIRE`. Vale per ogni voce futura del nuovo
    ricettario.
 
+7. **Conversione ricette dal vecchio formato al nuovo formato a
+   gruppi: seguire sempre `METODOLOGIA-CONVERSIONE-RICETTE.md`**,
+   documento dedicato dato che gli errori qui erano diventati
+   sistematici (parole di collegamento inventate, gruppi/compatibilità
+   confusi tra loro). Nessuna decisione ambigua si prende in autonomia
+   in questo contesto.
+
 ## Metodo di verifica (eredità dell'audit iniziale, resta valido)
 
 Ogni correzione va verificata **dal vivo**, non solo letta nel codice:
