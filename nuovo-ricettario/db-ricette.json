@@ -1,5 +1,5 @@
 {
-  "versione": 65,
+  "versione": 66,
   "ricette": [
     {
       "gruppi": [
@@ -2583,6 +2583,61 @@
         "C"
       ],
       "id": 40
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PP",
+          "ingredienti": [
+            {
+              "nome": "Sardine fresche",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Sgombro fresco",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "al forno",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "gratinati",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PP",
+      "id": 41
     }
   ]
 }
