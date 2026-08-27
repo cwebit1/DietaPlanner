@@ -1,5 +1,5 @@
 {
-  "versione": 13,
+  "versione": 14,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -1222,7 +1222,10 @@
       "proteine": 0.8,
       "carboidrati": 8,
       "grassi": 0.2,
-      "gruppo": "frutta",
+      "gruppo": [
+        "frutta",
+        "verdura"
+      ],
       "deperibilita": "alta",
       "conservazione": "fresco",
       "porzione": 175,
