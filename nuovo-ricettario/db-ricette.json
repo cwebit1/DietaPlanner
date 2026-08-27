@@ -1,5 +1,5 @@
 {
-  "versione": 57,
+  "versione": 58,
   "ricette": [
     {
       "gruppi": [
@@ -2275,6 +2275,56 @@
       ],
       "classe": "PL",
       "id": 35
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Piselli",
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Piselli surgelati",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Condimenti",
+          "ingredienti": [
+            {
+              "nome": "Cipolla rossa",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PL",
+      "id": 36
     }
   ]
 }
