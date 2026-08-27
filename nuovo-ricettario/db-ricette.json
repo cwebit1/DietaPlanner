@@ -1,5 +1,5 @@
 {
-  "versione": 58,
+  "versione": 59,
   "ricette": [
     {
       "gruppi": [
@@ -8,7 +8,7 @@
           "categoria": "C",
           "ingredienti": [
             {
-              "nome": "Farina per polenta",
+              "nome": "Polenta",
               "stack": 1,
               "roll": 1
             },
@@ -23,7 +23,7 @@
               "roll": 1
             },
             {
-              "nome": "Riso Originario",
+              "nome": "Riso",
               "stack": 1,
               "roll": 1
             }
