@@ -109,7 +109,27 @@ Vedi `METODOLOGIA-CONVERSIONE-RICETTE.md` per il dettaglio (punti
 
 - Continuare la conversione delle voci rimaste nel vecchio elenco:
   "in bianco con parmigiano", "con verdure" (8 coppie fisse), "con
-  piselli", "zuppa di cereali e legumi".
+  piselli" (fatto), "zuppa di cereali e legumi" (fatto).
 - Implementare il selettore Off/V/V- nella maschera (deciso, mai
   scritto nel codice).
-- Rifare il report di copertura/carenze con le 26 voci attuali.
+- Rifare il report di copertura/carenze con le voci attuali (33+).
+
+## Algoritmo di generazione settimanale — vedi NUOVA-ARCHITETTURA-MOTORE.md
+
+Sezione dedicata scritta il 2026-08-26 dopo che l'intera logica (griglia
+P fissa 14 caselle, griglia C fissa casuale, query progressiva con
+completamento multi-buco, esclusione solo pasto successivo) era rimasta
+per un'ora solo in script Python temporanei, mai salvata — causa diretta
+di correzioni ripetute sullo stesso errore da parte di Cwe. **Leggere
+quella sezione per intero prima di toccare di nuovo la generazione
+settimanale.**
+
+## Ingredienti PL nel database (per riferimento rapido)
+
+Ceci, Fagioli borlotti, Fagioli cannellini, Lenticchie, Mix cereali e
+legumi (unico con gruppo doppio carboidrati+proteine), Piselli in
+barattolo, Piselli surgelati, Tofu. **Solo id28 ("zuppa", Mix cereali e
+legumi) ha un carboidrato nella stessa ricetta** — collo di bottiglia
+noto quando la griglia P richiede più PL della settimana di quante
+combinazioni C+PL dirette esistano.
+

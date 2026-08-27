@@ -702,3 +702,63 @@ il vecchio `ricette.json`.
   già esistente.
 - Elenco preciso, ricetta per ricetta, delle 44 "primo" da valutare per il
   progetto sughi (chi diventa modulare/sugo, chi resta unico).
+
+## Algoritmo di generazione settimanale — versione definitiva (2026-08-26)
+
+**Scritto qui perché era rimasto solo negli script Python temporanei di
+sessione, mai salvato — causa concreta di molte correzioni ripetute sullo
+stesso errore.** Sequenza esatta, data da Cwe, da seguire senza
+deviazioni:
+
+### 1. Due griglie fisse a 14 caselle (7 giorni × 2 pasti)
+
+- **Griglia P**: una macrocategoria proteica (PC/PP/PF/PU/PL) per
+  casella, generata rispettando le frequenze settimanali della guida
+  (carne 1-3, pesce 2-3, formaggi 2-3, uova 1-2, legumi 2-3+ — i legumi
+  assorbono il resto fino a 14, essendo l'unica categoria senza tetto
+  esplicito). Generata **una volta, fissa per tutta la settimana**.
+- **Griglia C**: un tipo di carboidrato specifico per casella, scelto
+  casualmente (indipendente dalla griglia P). Anche questa fissa.
+
+### 2. Per ogni casella, in ordine, sequenza esatta
+
+1. **Filtro fisico per P**: tra le ricette che coprono la macrocategoria
+   P richiesta per quella casella, **preferisco quelle che hanno anche
+   il carboidrato della griglia C per quella casella**; se nessuna
+   combacia su entrambi, uso il filtro sulla sola P.
+2. **Piazzo fisicamente** quella ricetta nella casella (scelta casuale
+   dentro il pool filtrato).
+3. **Controllo cosa manca**: la ricetta appena piazzata copre già C?
+   Copre già V? Segno i buchi (nessuno, C, V, o entrambi).
+4. **Se c'è almeno un buco**: cerco un candidato che copra **tutti i
+   buchi rimasti insieme** (un solo controllo combinato — non una
+   ricerca per C e una per V separate). Se lo trovo, lo piazzo e la
+   casella è completa.
+5. **Se non esiste un candidato che copra tutto insieme**: piazzo un
+   candidato che copra almeno il **primo** buco, poi ripeto il punto 4
+   per il/i buco/i ancora rimasto/i (nuova query, stesso principio).
+
+### 3. Esclusione tra caselle
+
+La ricetta appena piazzata è esclusa **solo dal pasto immediatamente
+successivo**, non da tutta la settimana — è una rotazione leggera
+(coerente con stack/roll), non un vincolo di unicità totale sui 14
+pasti. Una stessa ricetta può quindi comparire più volte nella
+settimana, anche non consecutive.
+
+### 4. Presentazione del risultato
+
+**Mai un ingrediente isolato.** Ogni pezzo mostrato (C, P, V) va sempre
+accompagnato dal testo/cottura/condimento della ricetta reale a cui
+appartiene, ricostruendo il testo così come la ricetta lo prevede
+(testo1 + nome se mostraNomi + cottura/condimento + testo2) — mai il
+solo nome nudo dell'ingrediente estratto dai dati.
+
+### 5. Principio generale sotteso a tutto questo
+
+**L'algoritmo esegue il dato così com'è scritto, matematicamente —
+non giudica se il risultato "sembra strano" o ridondante.** Se una
+ricetta ha un testo composto che pare ripetitivo (es. "Pomodori
+Pomodori gratinati gratinati"), non è un errore da segnalare o
+correggere di iniziativa: è il dato, e l'algoritmo lo applica com'è.
+
