@@ -1,5 +1,5 @@
 {
-  "versione": 30,
+  "versione": 31,
   "ricette": [
     {
       "gruppi": [
@@ -1461,6 +1461,56 @@
       ],
       "classe": "V",
       "id": 19
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Insalata di",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Pomodoro fresco",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Condimenti",
+          "ingredienti": [
+            {
+              "nome": "Aceto balsamico",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "V",
+      "id": 20
     }
   ]
 }
