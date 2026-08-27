@@ -1,5 +1,5 @@
 {
-  "versione": 53,
+  "versione": 54,
   "ricette": [
     {
       "gruppi": [
@@ -214,59 +214,6 @@
       ],
       "classe": "PC",
       "id": 3
-    },
-    {
-      "gruppi": [
-        {
-          "testo1": "",
-          "categoria": "C",
-          "ingredienti": [],
-          "cotture": [
-            {
-              "nome": "gratinati al forno",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "V",
-          "ingredienti": [
-            {
-              "nome": "Pomodoro fresco",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        }
-      ],
-      "classe": [
-        "C",
-        "V"
-      ],
-      "id": 4
     },
     {
       "gruppi": [
