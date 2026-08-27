@@ -1,5 +1,5 @@
 {
-  "versione": 59,
+  "versione": 60,
   "ricette": [
     {
       "gruppi": [
@@ -2325,6 +2325,79 @@
       ],
       "classe": "PL",
       "id": 36
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Linguine",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Spaghetti",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Tagliolini all'uovo",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "PP",
+          "ingredienti": [
+            {
+              "nome": "Cozze",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Gamberetti surgelati",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Vongole",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e pomodoro",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PP"
+      ],
+      "id": 37
     }
   ]
 }
