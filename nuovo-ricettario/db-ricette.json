@@ -1,5 +1,5 @@
 {
-  "versione": 45,
+  "versione": 46,
   "ricette": [
     {
       "gruppi": [
@@ -2053,17 +2053,17 @@
     {
       "gruppi": [
         {
-          "testo1": "zuppa di cereali e legumi",
+          "testo1": "",
           "categoria": "C",
-          "ingredienti": [
+          "ingredienti": [],
+          "cotture": [
             {
-              "nome": "Mix cereali e legumi",
+              "nome": "zuppa",
               "stack": 1,
               "roll": 1
             }
           ],
-          "cotture": [],
-          "testo2": "",
+          "testo2": "di",
           "mostraNomi": false
         },
         {
