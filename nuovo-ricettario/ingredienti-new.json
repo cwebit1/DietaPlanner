@@ -1,5 +1,5 @@
 {
-  "versione": 15,
+  "versione": 16,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -3148,6 +3148,70 @@
       },
       "allergeni": [],
       "bloccoManuale": false
+    },
+    "Spaghetti": {
+      "kcal": 350,
+      "proteine": 12,
+      "carboidrati": 71,
+      "grassi": 1.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Linguine": {
+      "kcal": 350,
+      "proteine": 12,
+      "carboidrati": 71,
+      "grassi": 1.5,
+      "gruppo": "carboidrati",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 75,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
+    },
+    "Vongole": {
+      "kcal": 86,
+      "proteine": 13,
+      "carboidrati": 3.5,
+      "grassi": 1.5,
+      "gruppo": "proteine",
+      "deperibilita": "alta",
+      "sottotipo": "molluschi",
+      "conservazione": "fresco",
+      "porzione": 250,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "molluschi"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
     }
   }
 }
