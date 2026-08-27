@@ -1,5 +1,5 @@
 {
-  "versione": 64,
+  "versione": 65,
   "ricette": [
     {
       "gruppi": [
@@ -2519,6 +2519,70 @@
         "V"
       ],
       "id": 39
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PP",
+          "ingredienti": [
+            {
+              "nome": "Pesce spada",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Polpo surgelato",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Patate",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "lesse",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "PP",
+        "C"
+      ],
+      "id": 40
     }
   ]
 }
