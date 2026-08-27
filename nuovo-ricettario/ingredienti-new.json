@@ -1,5 +1,5 @@
 {
-  "versione": 14,
+  "versione": 15,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -3134,6 +3134,20 @@
       ],
       "bloccoManuale": false,
       "nonRichiedeInventario": false
+    },
+    "Rosmarino": {
+      "gruppo": "condimento",
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "gradimento": 1,
+      "stock": 1,
+      "nonRichiedeInventario": true,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [],
+      "bloccoManuale": false
     }
   }
 }
