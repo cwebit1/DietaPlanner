@@ -432,9 +432,17 @@ ricettario:**
   scrivono nella ricetta: dipendono da un setting nutrizionista in
   Impostazioni, quindi sono scalabili/modificabili senza toccare le
   ricette.
-- **Due fonti proteiche nella stessa ricetta**: il motore dimezza la dose
-  di ciascuna per ottenere lo stesso apporto proteico complessivo di una
-  sola. Non si scrive nella ricetta, è comportamento del motore.
+- **Due fonti nella stessa categoria nella stessa ricetta (non solo
+  proteine — generalizzato il 2026-08-26)**: il motore dimezza la dose
+  di ciascuna per ottenere lo stesso apporto complessivo di una sola
+  fonte. Vale per qualunque categoria che compare due volte in una
+  ricetta (due gruppi V, due gruppi PC/PF, ecc.), non solo le proteine
+  come originariamente formulato. Esempio: una ricetta con due gruppi V
+  (uno di foglie/insalata, uno di altri ortaggi) — il motore attribuisce
+  metà della dose piena V a ciascun gruppo. **Non si scrive nella
+  ricetta, è comportamento del motore** — nessun campo dose/fattore
+  aggiuntivo serve nel dato, il motore rileva da solo che la stessa
+  categoria compare due volte e dimezza di conseguenza.
 - **Verdura già presente in una ricetta C (es. melanzane in "alla
   Norma")**: il pool contorno, quando serve completare V, eroga **per
   differenza**: `residuo = porzione piena V − quanto già presente nella
