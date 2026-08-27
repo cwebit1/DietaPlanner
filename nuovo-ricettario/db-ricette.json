@@ -1,5 +1,5 @@
 {
-  "versione": 52,
+  "versione": 53,
   "ricette": [
     {
       "gruppi": [
@@ -2261,6 +2261,59 @@
         "PC"
       ],
       "id": 32
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PC",
+          "ingredienti": [
+            {
+              "nome": "Prosciutto crudo",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Melone",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "PC",
+        "V"
+      ],
+      "id": 33
     }
   ]
 }
