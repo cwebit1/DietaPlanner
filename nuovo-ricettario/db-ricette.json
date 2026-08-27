@@ -1,5 +1,5 @@
 {
-  "versione": 41,
+  "versione": 42,
   "ricette": [
     {
       "gruppi": [
@@ -2015,8 +2015,14 @@
         },
         {
           "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Mix cereali e legumi",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
           "cotture": [],
           "testo2": "",
           "mostraNomi": false
@@ -2038,7 +2044,10 @@
           "mostraNomi": false
         }
       ],
-      "classe": "C",
+      "classe": [
+        "C",
+        "PL"
+      ],
       "id": 28
     },
     {
