@@ -1,5 +1,5 @@
 {
-  "versione": 61,
+  "versione": 62,
   "ricette": [
     {
       "gruppi": [
@@ -2358,11 +2358,6 @@
           "ingredienti": [
             {
               "nome": "Cozze",
-              "stack": 1,
-              "roll": 1
-            },
-            {
-              "nome": "Cozze e vongole",
               "stack": 1,
               "roll": 1
             },
