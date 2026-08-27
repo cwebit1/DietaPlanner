@@ -1,5 +1,5 @@
 {
-  "versione": 56,
+  "versione": 57,
   "ricette": [
     {
       "gruppi": [
@@ -2225,6 +2225,56 @@
       ],
       "classe": "PL",
       "id": 34
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Tofu",
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Tofu",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "al pepe",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PL",
+      "id": 35
     }
   ]
 }
