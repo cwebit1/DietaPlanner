@@ -1,5 +1,5 @@
 {
-  "versione": 50,
+  "versione": 51,
   "ricette": [
     {
       "gruppi": [
@@ -2155,6 +2155,59 @@
         "PL"
       ],
       "id": 30
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PC",
+          "ingredienti": [
+            {
+              "nome": "Bresaola",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Rucola",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "PC",
+        "V"
+      ],
+      "id": 31
     }
   ]
 }
