@@ -1,5 +1,5 @@
 {
-  "versione": 18,
+  "versione": 19,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -1800,7 +1800,10 @@
       "proteine": 4.8,
       "carboidrati": 12,
       "grassi": 0.3,
-      "gruppo": "proteine",
+      "gruppo": [
+        "proteine",
+        "verdura"
+      ],
       "deperibilita": "bassa",
       "sottotipo": "legumi",
       "conservazione": "lunga",
@@ -1820,7 +1823,10 @@
       "proteine": 5.4,
       "carboidrati": 14,
       "grassi": 0.4,
-      "gruppo": "proteine",
+      "gruppo": [
+        "proteine",
+        "verdura"
+      ],
       "deperibilita": "bassa",
       "sottotipo": "legumi",
       "conservazione": "surgelato",
