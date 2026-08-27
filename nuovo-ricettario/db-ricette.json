@@ -1,5 +1,5 @@
 {
-  "versione": 39,
+  "versione": 40,
   "ricette": [
     {
       "gruppi": [
@@ -2040,6 +2040,50 @@
       ],
       "classe": "C",
       "id": 28
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "zuppa di cereali e legumi",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Mix cereali e legumi",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "C",
+      "id": 29
     }
   ]
 }
