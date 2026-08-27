@@ -1,5 +1,5 @@
 {
-  "versione": 51,
+  "versione": 52,
   "ricette": [
     {
       "gruppi": [
@@ -2208,6 +2208,59 @@
         "V"
       ],
       "id": 31
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Panino",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "al",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "PC",
+          "ingredienti": [
+            {
+              "nome": "Prosciutto crudo",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PC"
+      ],
+      "id": 32
     }
   ]
 }
