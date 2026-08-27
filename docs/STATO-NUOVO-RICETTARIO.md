@@ -15,18 +15,32 @@ Ultimo aggiornamento: 2026-08-26.
   composizione, unico modo per creare/modificare voci (mai scrivere
   JSON a mano).
 - `nuovo-ricettario/db-ricette.json` — le ricette nel nuovo formato a
-  gruppi. **5 voci** ad oggi (id1-id5).
+  gruppi. **26 voci** ad oggi (id1-id26).
 - `nuovo-ricettario/ingredienti-new.json` — ingredienti per il nuovo
   sistema, copia separata del vecchio `ingredienti.json` (quello resta
-  intatto per l'app in uso).
+  intatto per l'app in uso). Rinomine fatte qui (nessun rischio,
+  file separato): Sogliola/Nasello/Orata/Branzino (tolto
+  surgelato/a), Fagioli borlotti/cannellini e Lenticchie (tolto "in
+  barattolo", info conservata in campo `formato`), Tonno (da "in
+  scatola"), Riso (da "Originario", voluto da Cwe). Nuovi ingredienti
+  aggiunti: Platessa, Merluzzo, Salsiccia di maiale/tacchino, Pomodori
+  gratinati (gruppo array `["carboidrati","verdura"]`), Grana, Tomino,
+  Cipolla rossa, e i condimenti Semi di sesamo/Aceto balsamico/Aceto
+  di mele/Arancia (questi ultimi senza dati nutrizionali — non
+  servono per i condimenti).
 - Il vecchio `nuovo-ricettario/ricette.json` (20 voci, formato
   precedente) resta **sospeso, non convertito**, solo riferimento
-  storico da cui si estrae una voce alla volta per convertirla.
+  storico — **non riferirsi mai alle sue voci con "id"+numero**, solo
+  per nome/testo originale (regola data da Cwe dopo confusione ripetuta
+  con la numerazione del nuovo db).
 
 ## Struttura di una voce (db-ricette.json)
 
 Ogni ricetta: `id`, `classe` (stringa o array), `gruppi` (sempre 4:
-massimo 3 usabili per macrocategorie + 1 dedicato ai condimenti).
+massimo 3 usabili per macrocategorie + 1 dedicato ai condimenti, ma
+**qualunque dei 4 può ospitare qualunque categoria**, non solo il 4°
+i condimenti — verificato con "insalata fredda con uovo, emmental e
+pomodoro" che usa tutti e 4 come macrocategorie).
 Ogni gruppo: `testo1`, `categoria`, `ingredienti` (array di
 `{nome,stack,roll,dose?}`), `cotture` (stesso formato, assente sul
 gruppo condimenti), `testo2`, `mostraNomi`.
@@ -34,60 +48,68 @@ gruppo condimenti), `testo2`, `mostraNomi`.
 - `stack`/`roll`: ogni ingrediente e ogni cottura li ha (rotazione
   15gg / ciclo alternative), default 1.
 - `dose`: grammi, opzionale, campo a destra nella lista (due colonne,
-  implementato il 2026-08-26).
+  implementato il 2026-08-26). **Usato solo per eccezioni** — il
+  valore standard non si scrive mai, arriva dal setting nutrizionista
+  via motore.
 - La `classe` finale si costruisce dalle categorie scelte nei gruppi,
   **a prescindere da quali ingredienti sono spuntati dentro** — anche
-  un gruppo con categoria attiva ma zero ingredienti conta.
+  un gruppo con categoria attiva ma zero ingredienti conta (usato per
+  "Pomodori gratinati al forno": C attivo senza ingredienti, solo la
+  cottura "gratinati al forno" a testimoniarlo).
 
-## Ricette già composte (id1-id5)
+## Metodo di conversione/composizione — il processo che funziona
 
-1. **Farro/Orzo/Riso/Polenta con Gorgonzola/Taleggio** — C+PF
-2. **Pesce (6 tipi) con 4 cotture** — PP, include Platessa e Merluzzo
-   aggiunti apposta
-3. **Salsiccia di maiale/tacchino al forno** — PC
-4. **Pomodori gratinati al forno** — C+V (C senza ingredienti tracciati,
-   solo cottura "gratinati al forno"; V = Pomodoro fresco)
-5. **Pomodori (con ingrediente "Pomodori gratinati")** — V+C, usa il
-   nuovo ingrediente cumulativo, dose 12 (pezzi)
+Vedi `METODOLOGIA-CONVERSIONE-RICETTE.md` per il dettaglio (punti
+4ter-4sexies sono il cuore). In sintesi:
+1. Per ogni parola del testo originale: è un ingrediente reale? →
+   collego con categoria. Condimento? → condimenti. Cottura? →
+   cotture. Nessuna delle tre? → resta testo. Niente altre domande.
+2. Mostra/nascondi nome: nascondo solo se il testo nomina già
+   esplicitamente la cosa senza alternative da distinguere. Un
+   ingrediente implicito da un nome di piatto riconosciuto (es.
+   melanzane in "alla Norma") si estrae comunque come dato vero — la
+   selezione (dato) e la visualizzazione (testo) sono separate.
+3. Una ricetta alla volta: presento la forma finale già decisa
+   (Classe/Slot/Testo/Condimenti/Cottura), aspetto conferma esplicita,
+   solo poi compongo con la maschera vera e salvo. Mai riferirsi alle
+   vecchie voci con "id"+numero.
 
-## Regole chiuse, valgono per ogni conversione futura
+## Regole del motore chiuse (comportamento, mai scritte nel dato)
 
-- **V/V- (decisione finale, sostituisce ogni versione precedente basata
-  su grammi/soglie)**: puramente strutturale. V da sola nella ricetta →
-  V piena di default. V insieme a C e/o proteina → V- di default.
-  Selettore manuale Off/V/V- sempre disponibile per forzare il
-  contrario. **Non ancora implementato nella maschera** (solo deciso).
-- **Verdura parziale in un primo/secondo**: dose bassa **per scelta**
-  (50-70g con 1 verdura, 40g×2, 30g×3 — default precompilato quando si
-  seleziona, sempre modificabile), per lasciare un residuo sostanzioso
-  al contorno di completamento. Completamento sempre stesso
-  tipo/soglia del presente (mai cambiare scala con una proporzione,
-  produce quantità insignificanti tipo 24g di insalata).
-- **Due proteine nella stessa ricetta**: il motore dimezza la dose
-  (regola separata da quella della verdura).
-- **`gruppo` di un ingrediente può essere un array** (es. "Pomodori
-  gratinati" → `["carboidrati","verdura"]`), stesso pattern già usato
-  per `classe`. Il filtro (`gruppoContiene`) e il salvataggio (sezione
-  5 gestione ingredienti) supportano entrambi i formati.
-- **Ingredienti quantificati a pezzi**: campi `unitaPorzione: "pezzi"`,
-  `pesoPorzioneGrammi`, `notaPorzione` (visto su Friselle, riusato per
-  Pomodori gratinati).
-- **Ricette "solo manuali" (richiedono preparazione anticipata, mai
-  proposte in automatico)**: non impostare nessuna categoria sui
-  gruppi (restano "Nessuno") → classe vuota → invisibile alle query
-  del motore, recuperabile solo sfogliando a mano. Non serve un campo
-  dedicato, si riusa un comportamento già esistente.
+- **Due fonti nella stessa categoria nella stessa ricetta → il motore
+  dimezza la dose di ciascuna** (generalizzato il 2026-08-26 da
+  "proteine" a qualunque categoria — due gruppi V, due PC, ecc. Non
+  serve nessun campo dose/fattore nella ricetta, il motore rileva da
+  solo la doppia categoria).
+- **V/V- (decisione finale)**: puramente strutturale. V da sola nella
+  ricetta → V piena di default. V insieme a C e/o proteina → V- di
+  default. Selettore manuale Off/V/V- sempre disponibile per forzare
+  il contrario. **Non ancora implementato nella maschera** (solo
+  deciso — oggi si può selezionare solo "V", non "V-", nel tool).
+- **Verdura parziale in concomitanza**: dose bassa per scelta
+  (70g/1 verdura, 40g×2, 30g×3 — default da precompilare quando si
+  seleziona, solo nel caso di concomitanza C/proteina, mai quando V è
+  sola). Completamento sempre stesso tipo/soglia del presente.
+- **Un campo `fattoreDose` (moltiplicatore) era stato proposto e
+  scartato**: infilerebbe un controllo/regola dentro il dato. Se un
+  dimezzamento è sempre vero per una certa condizione strutturale
+  (es. due categorie uguali), è il motore a saperlo da solo, non la
+  ricetta a doverlo dire.
 
-## Decisioni prese ma NON ancora implementate nel codice
+## Report di copertura (agosto 2026, su 19 voci — da riverificare con le 26 attuali)
 
-- Stadio 1/Stadio 2 per V/V- (label automatica + 3 pulsanti Off/V/V-)
-  — solo Stadio 2 sarebbe da fare, Stadio 1 non serve più (non è più
-  su dose/quantità, vedi sopra).
-- Nessun'altra decisione risulta in sospeso ad oggi.
+- Combinazioni totali reali (prodotto ingredienti×cotture per gruppo,
+  condimenti NON moltiplicano — si usano sempre tutti insieme): 194
+  su 19 voci.
+- Solo 2 ricette avevano C+P+V completo nella stessa ricetta (8
+  combinazioni "giorno completo" in totale da quelle due).
+- Carenza più diffusa: V assente in 9 ricette su 17 incomplete.
 
 ## Prossimi passi possibili
 
-- Continuare la conversione delle voci rimaste nel vecchio
-  `ricette.json` (id 6,7,8,9,10,12-20), una alla volta, seguendo
-  `METODOLOGIA-CONVERSIONE-RICETTE.md`.
-- Implementare il selettore Off/V/V- nella maschera.
+- Continuare la conversione delle voci rimaste nel vecchio elenco:
+  "in bianco con parmigiano", "con verdure" (8 coppie fisse), "con
+  piselli", "zuppa di cereali e legumi".
+- Implementare il selettore Off/V/V- nella maschera (deciso, mai
+  scritto nel codice).
+- Rifare il report di copertura/carenze con le 26 voci attuali.
