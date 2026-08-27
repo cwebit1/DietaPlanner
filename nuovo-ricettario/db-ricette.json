@@ -1,5 +1,5 @@
 {
-  "versione": 35,
+  "versione": 36,
   "ricette": [
     {
       "gruppi": [
@@ -1715,6 +1715,56 @@
       ],
       "classe": "V",
       "id": 24
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Insalata di",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Carote",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "al vapore",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "V",
+      "id": 25
     }
   ]
 }
