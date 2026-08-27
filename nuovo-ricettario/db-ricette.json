@@ -1,5 +1,5 @@
 {
-  "versione": 31,
+  "versione": 32,
   "ricette": [
     {
       "gruppi": [
@@ -1511,6 +1511,50 @@
       ],
       "classe": "V",
       "id": 20
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "Insalata di",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Carote",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "julienne",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "V",
+      "id": 21
     }
   ]
 }
