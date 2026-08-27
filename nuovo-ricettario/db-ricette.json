@@ -1,5 +1,5 @@
 {
-  "versione": 47,
+  "versione": 48,
   "ricette": [
     {
       "gruppi": [
@@ -2025,7 +2025,7 @@
           ],
           "cotture": [],
           "testo2": "",
-          "mostraNomi": false
+          "mostraNomi": true
         },
         {
           "testo1": "",
