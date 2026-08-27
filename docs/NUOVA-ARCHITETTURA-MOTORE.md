@@ -416,6 +416,20 @@ ricettario:**
   già usato per ricette intere come "insalata fredda con uovo, emmental e
   pomodoro" — vale identico anche quando la combinazione è solo una voce
   dentro un array più grande, non l'intera ricetta.
+- **Nella maschera a gruppi: una coppia fissa di ingredienti reali (es.
+  "cozze e vongole" insieme, non uno o l'altro) non si rappresenta MAI
+  con un ingrediente nuovo inventato dai dati medi.** Si scompone voce
+  per voce con ingredienti reali già esistenti (stesso principio di
+  `composizioneFissa` sopra, applicato alla struttura a gruppi): se la
+  ricetta ha bisogno di quella coppia sempre insieme, **si crea una
+  ricetta separata** dove quello slot ha solo quei due ingredienti
+  selezionati (nessun terzo, nessuna alternativa) — distinta dalla
+  ricetta "sorella" che invece li tratta come alternative singole (uno
+  slot con tutte le opzioni, incluse quelle due separatamente). Deciso
+  il 2026-08-26 dopo un errore (creato un ingrediente fittizio "Cozze e
+  vongole" con valori medi, sbagliato — tolto e sostituito con questa
+  soluzione).
+
 - **`classe` deve sempre contenere anche le classi dei pool allegati
   obbligatori**, non solo la classe "principale" della ricetta. Se una
   ricetta richiede sempre un carboidrato e una verdura per essere completa
