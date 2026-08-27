@@ -1,5 +1,5 @@
 {
-  "versione": 63,
+  "versione": 64,
   "ricette": [
     {
       "gruppi": [
@@ -2466,6 +2466,59 @@
         "PP"
       ],
       "id": 38
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PP",
+          "ingredienti": [
+            {
+              "nome": "Seppie",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [
+            {
+              "nome": "Piselli surgelati",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "PP",
+        "V"
+      ],
+      "id": 39
     }
   ]
 }
