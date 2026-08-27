@@ -1,5 +1,5 @@
 {
-  "versione": 55,
+  "versione": 56,
   "ricette": [
     {
       "gruppi": [
@@ -2155,6 +2155,76 @@
         "V"
       ],
       "id": 33
+    },
+    {
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Ceci",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Fagioli borlotti",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Fagioli cannellini",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Lenticchie",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Condimenti",
+          "ingredienti": [
+            {
+              "nome": "Olio extravergine oliva",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Rosmarino",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": "PL",
+      "id": 34
     }
   ]
 }
