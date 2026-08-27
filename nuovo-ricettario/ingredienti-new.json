@@ -1,5 +1,5 @@
 {
-  "versione": 12,
+  "versione": 13,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -3106,6 +3106,31 @@
       },
       "allergeni": [],
       "bloccoManuale": false
+    },
+    "Mix cereali e legumi": {
+      "gruppo": [
+        "carboidrati",
+        "proteine"
+      ],
+      "sottotipo": "legumi",
+      "kcal": 325,
+      "proteine": 21,
+      "carboidrati": 52,
+      "grassi": 2.5,
+      "deperibilita": "bassa",
+      "conservazione": "lunga",
+      "porzione": 80,
+      "gradimento": 1,
+      "stock": 1,
+      "formatoRiordino": {
+        "valore": null,
+        "unita": null
+      },
+      "allergeni": [
+        "glutine"
+      ],
+      "bloccoManuale": false,
+      "nonRichiedeInventario": false
     }
   }
 }
