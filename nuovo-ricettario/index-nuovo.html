@@ -5514,6 +5514,55 @@ async function apriModalEditorColazione(giorno){
   });
 }
 
+async function targetNuovoMotorePerPasto(giorno,pasto){
+  const idx=((new Date(giorno+'T12:00:00').getDay()+6)%7);
+  const rec=await getOne('impostazioni','tabellaGiornoCategoria');
+  const a=rec&&rec.valore&&rec.valore['giorno_'+idx]||[];
+  return a[pasto==='cena'?1:0]||['carne','pesce','formaggi','uova','legumi'][(idx*2+(pasto==='cena'?1:0))%5];
+}
+
+async function renderBloccoNuovoMotore(pasto,giorno,elementId){
+  giorno=giorno||giornoSelezionato;
+  const el=document.getElementById(elementId||(pasto==='pranzo'?'blocPranzo':'blocCena'));
+  if(!el)return;
+  const id=giorno+'_'+pasto;
+  const voce=await getOne('piano',id);
+  const title=ICONA_PASTO[pasto]+' '+LABEL_PASTO[pasto];
+  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
+    if(giorno<todayISO()){el.innerHTML='<div class="pasto-header">'+title+'</div><div class="meta">Nessun pasto registrato.</div>';return;}
+    el.innerHTML='<div class="pasto-header">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
+    el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
+      const target=await targetNuovoMotorePerPasto(giorno,pasto);
+      await DietaPlannerNuovoMotore.rigeneraPasto(giorno,pasto,target);
+      await renderBloccoNuovoMotore(pasto,giorno,elementId);
+    });
+    return;
+  }
+  let html='<div class="pasto-header">'+title+'</div>';
+  let kcal=0;
+  for(const x of voce.realizzazioni){
+    const rr=x&&x.ricettaId?await getOne('ricette',x.ricettaId):null;
+    if(!rr)continue;
+    kcal+=Number(rr.nutrienti&&rr.nutrienti.kcal||0);
+    const cls=(Array.isArray(rr.classe)?rr.classe:[rr.classe]).filter(Boolean).join(' + ');
+    const nomi=(rr.ingredienti||[]).map(i=>i.nome).filter(Boolean).join(' · ');
+    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+esc(cls)+'</div><div class="pasto-riga-valore">'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(rr.nome)+'</div><div class="meta">'+esc(nomi)+'</div></div>';
+  }
+  html+='<div class="meta" style="margin-top:8px;">'+Math.round(kcal)+' kcal · nuovo DB</div>';
+  if(!voce.consumato&&giorno>=todayISO())html+='<div class="row" style="margin-top:10px;gap:7px;"><button class="secondary" data-nm-rigenera>🔄 Rigenera</button><button class="secondary" data-nm-salvafrigo>♻️ Salvafrigo</button></div>';
+  el.innerHTML=html;
+  el.querySelector('[data-nm-rigenera]')?.addEventListener('click',async()=>{
+    const target=voce.categoriaTarget||await targetNuovoMotorePerPasto(giorno,pasto);
+    await DietaPlannerNuovoMotore.rigeneraPasto(giorno,pasto,target);
+    await renderBloccoNuovoMotore(pasto,giorno,elementId);
+  });
+  el.querySelector('[data-nm-salvafrigo]')?.addEventListener('click',async()=>{
+    const sf=await DietaPlannerNuovoMotore.salvafrigo();
+    if(!sf.ricette.length){await avviso('Nessuna ricetta Salvafrigo disponibile.');return;}
+    await avviso('Salvafrigo '+sf.origine+': '+sf.ricette.slice(0,3).map(q=>q.nome).join(' · '));
+  });
+}
 async function renderBloccoCompleto(pasto, giorno, elementId){
   giorno = giorno || giornoSelezionato;
   const chiaveStato = giorno+'_'+pasto;
@@ -5521,6 +5570,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
   if(!el) return;
   const pianoId = giorno+'_'+pasto;
   let voce = await getOne('piano', pianoId);
+  if(window.DietaPlannerNuovoMotore) return renderBloccoNuovoMotore(pasto,giorno,elementId);
   voce = Object.assign({id:pianoId, modo:'multi', fascia:'facile', porzioni:1}, voce||{});
 
   // I pasti già consumati o ormai trascorsi restano immutabili.
