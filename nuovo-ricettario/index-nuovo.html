@@ -629,7 +629,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <!-- ============ VIEW: RICETTE ============ -->
 <section class="view" id="view-ricette">
   <div id="filtroAlfabetico" class="filtro-alfabetico"></div>
-  <button class="primary" id="btnNuovaRicetta" style="margin-bottom:12px;">+ Aggiungi ricetta manuale</button>
+  <button class="primary" id="btnNuovaRicetta" style="display:none;">+ Aggiungi ricetta manuale</button>
   <details class="pasto-sub-panel" id="pannelloFiltroTipo">
     <summary id="riepilogoFiltroTipo">Tipo di portata: in tutto 0 ricette</summary>
     <div class="contenuto"><div class="tabgroup" id="filtroTipoRicette"></div></div>
@@ -720,8 +720,8 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
   <div class="card">
     <h3 style="margin-bottom:10px;">Libreria ricette</h3>
-    <div class="meta" style="margin-bottom:10px;">Le ricette non sono più incluse nel file dell'app: vivono in un file separato (ricette.json) da importare qui. Puoi reimportarlo quante volte vuoi: aggiorna quelle già presenti (per nome) senza mai duplicarle, e non tocca ricette generate con l'AI o modificate a mano.</div>
-    <button class="primary" id="btnImportaRicette" style="margin-bottom:8px;">Importa ricette (JSON)</button>
+    <div class="meta" style="margin-bottom:10px;">Questa copia usa direttamente db-ricette.json e ingredienti-new.json della cartella nuovo-ricettario. IndexedDB conserva solo la cache compilata e i dati operativi del test.</div>
+    <button class="primary" id="btnImportaRicette" style="display:none;">Importa ricette (JSON)</button>
     <input type="file" id="fileImportaRicette" accept="application/json" class="hidden">
     <div id="statusImportaRicette" class="meta" style="margin-top:8px;"></div>
   </div>
@@ -8834,21 +8834,15 @@ async function renderInfoVersioniRemote(){
     (dataRic ? ' · aggiornato il ' + dataRic.valore : '');
 }
 document.getElementById('btnControllaAggiornamenti')?.addEventListener('click', async ()=>{
-  const btn = document.getElementById('btnControllaAggiornamenti');
-  btn.disabled = true;
-  btn.textContent = '⏳ Controllo in corso...';
-  const esitoIng = await caricaIngredientiJson();
-  const esitoRic = await controllaAggiornamentoRicetteRemote();
-  btn.disabled = false;
-  btn.textContent = 'Controlla aggiornamenti ora';
-  await renderInfoVersioniRemote();
-  let msg = '';
-  msg += 'Ingredienti: ' + (esitoIng.aggiornato ? 'aggiornati a v' + esitoIng.versione : 'già aggiornati') + '\n';
-  msg += 'Ricette: ' + (esitoRic.aggiornato ? 'aggiornate a v' + esitoRic.versione + ' (+' + esitoRic.aggiunte + ' nuove)' : esitoRic.motivo);
-  await avviso(msg);
-  if(esitoRic.aggiornato) renderRicette();
+  const btn=document.getElementById('btnControllaAggiornamenti');
+  btn.disabled=true;btn.textContent='⏳ Ricarico nuovo DB...';
+  try{
+    const esito=await DietaPlannerNuovoMotore.inizializza({basePath:''});
+    await renderVersioneHeader();
+    if(document.getElementById('view-ricette').classList.contains('active'))await renderRicette();
+    await avviso('Nuovo ricettario ricaricato: '+esito.template+' template -> '+esito.concrete+' combinazioni concrete.');
+  }finally{btn.disabled=false;btn.textContent='Controlla aggiornamenti ora';}
 });
-
 document.getElementById('btnEsporta').addEventListener('click', async ()=>{
   const stores = ['ingredienti','varianti','inventario','ricette','piano','impostazioni'];
   const backup = {};
