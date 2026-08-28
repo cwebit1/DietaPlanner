@@ -56,6 +56,10 @@ gruppo condimenti), `testo2`, `mostraNomi`.
   un gruppo con categoria attiva ma zero ingredienti conta (usato per
   "Pomodori gratinati al forno": C attivo senza ingredienti, solo la
   cottura "gratinati al forno" a testimoniarlo).
+- **Espansione combinatoria (decisione 2026-08-29):** le ricette si
+  ottengono tramite **prodotto cartesiano tra tutti gli slot/gruppi
+  presenti**, escludendo gli slot di categoria `Condimenti`, che non
+  moltiplicano le combinazioni.
 
 ## Metodo di conversione/composizione — il processo che funziona
 
