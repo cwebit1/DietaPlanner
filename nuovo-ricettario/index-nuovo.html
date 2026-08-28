@@ -5551,7 +5551,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     kcal+=Number(rr.nutrienti&&rr.nutrienti.kcal||0);
     const cls=(Array.isArray(rr.classe)?rr.classe:[rr.classe]).filter(Boolean).join(' + ');
     const nomi=(rr.ingredienti||[]).map(i=>i.nome).filter(Boolean).join(' · ');
-    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+esc(cls)+'</div><div class="pasto-riga-valore">'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(rr.nome)+'</div><div class="meta">'+esc(nomi)+'</div></div>';
+    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+esc(cls)+'</div><div class="pasto-riga-valore">'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(rr.nomeTecnico||rr.nome)+'</div>'+(rr.nomeStrutturato&&rr.nomeStrutturato!==rr.nomeTecnico?'<div class="meta">Testo: '+esc(rr.nomeStrutturato)+'</div>':'')+'<div class="meta">'+esc(nomi)+'</div></div>';
   }
   html+='<div class="meta" style="margin-top:8px;">'+Math.round(kcal)+' kcal · nuovo DB</div>';
   if(!voce.consumato&&giorno>=todayISO())html+='<div class="row" style="margin-top:10px;gap:7px;"><button class="secondary" data-nm-rigenera>🔄 Rigenera</button><button class="secondary" data-nm-salvafrigo>♻️ Salvafrigo</button></div>';
@@ -8145,7 +8145,7 @@ async function riepilogoTestualePasto(giorno, pasto){
     if(voce.realizzazioni&&voce.realizzazioni.length){
       for(const x of voce.realizzazioni){
         const rr=x&&x.ricettaId?await getOne('ricette',x.ricettaId):null;
-        if(rr)nomi.push(rr.nome);
+        if(rr)nomi.push(rr.nomeTecnico||rr.nome);
       }
       return nomi.length ? prefisso + nomi.join(' · ') : testoVuoto;
     }
@@ -9274,7 +9274,7 @@ if('serviceWorker' in navigator){
 })();
 </script>
 
-<script src="motore-nuovo.js?v=1"></script>
+<script src="motore-nuovo.js?v=2"></script>
 
 </body>
 </html>
