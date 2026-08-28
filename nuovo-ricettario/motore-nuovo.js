@@ -398,7 +398,7 @@ async function registraUtilizzo(r,data){
 }
 
 async function configRuntime(){
-  const cfg={allergie:[],vincoli:{},weeklyLimits:{carneRossa:1,affettati:1,pesceConservato:1,pesceGrande:1},maxProteinSourcesPerDay:2};
+  const cfg={allergie:[],vincoli:{},weeklyLimits:{carne_rossa:1,affettati:1,pesce_conservato:1,pesce_grande:1},maxProteinSourcesPerDay:2};
   if(typeof getOne!=='function') return cfg;
   try{
     const [a,v,c]=await Promise.all([
@@ -498,11 +498,21 @@ async function ricetteConVariantIds(ids){
   const s=new Set(ids||[]);
   return state.ricetteConcrete.filter(r=>(r.ingredienti||[]).some(i=>i.variantId&&s.has(i.variantId)));
 }
+async function getFreezerDisponibili(){
+  if(typeof getAll!=='function') return [];
+  const inv=await getAll('inventario'),out=[];
+  for(const item of inv||[]){
+    if(item.zona!=='freezer'||item.stato==='esaurito'||Number(item.quantita)<=0)continue;
+    const v=[...state.variantByName.values()].find(x=>x.id===item.variantId);
+    out.push({variantId:item.variantId,nome:v?v.nome:'?',quantita:Number(item.quantita)||0,itemId:item.id,dataCongelamento:item.dataCongelamento||null});
+  }
+  return out;
+}
 async function salvafrigo(){
-  const [scad,avanzi,freezer]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getCongelatiDaTempo()]);
+  const [scad,avanzi,vecchi,freezerTutti]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getCongelatiDaTempo(),getFreezerDisponibili()]);
   let src=scad,origine='scadenza';
   if(!src.length){src=avanzi;origine='avanzo';}
-  if(!src.length){src=freezer;origine='freezer';}
+  if(!src.length){src=vecchi.length?vecchi:freezerTutti;origine='freezer';}
   const ricette=await ricetteConVariantIds(src.map(x=>x.variantId));
   return {origine,ingredienti:src,ricette};
 }
@@ -538,24 +548,38 @@ async function poolAmmesso(data,opts){
 }
 function scegliCasuale(pool){ return pool.length?pool[Math.floor(Math.random()*pool.length)]:null; }
 
+async function prioritaInventario(pool){
+  const [scad,avanzi,freezer]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getFreezerDisponibili()]);
+  for(const src of [scad,avanzi,freezer]){
+    if(!src.length)continue;
+    const ids=new Set(src.map(x=>x.variantId));
+    const p=pool.filter(r=>(r.ingredienti||[]).some(i=>i.variantId&&ids.has(i.variantId)));
+    if(p.length)return p;
+  }
+  return pool;
+}
 async function generaPasto(target,data,opts){
   opts=opts||{};
   const token=PROTEIN_MACRO_TO_TOKEN[target]||SUBTYPE_TO_TOKEN[target]||target;
-  const pool=await poolAmmesso(data,opts);
+  const exclude=new Set(opts.excludeRecipeIds||[]);
+  let pool=(await poolAmmesso(data,opts)).filter(r=>!exclude.has(r.id));
   let prot=pool.filter(r=>copertura(r).tokens.has(token));
   if(!prot.length) return null;
   const maxScore=Math.max(...prot.map(r=>scoreCopertura(r,token)));
   prot=prot.filter(r=>scoreCopertura(r,token)===maxScore);
+  prot=await prioritaInventario(prot);
   const primo=scegliCasuale(prot);
   const scelti=[primo];
   let have=copertura(primo);
   if(!have.C){
-    const carb=pool.filter(r=>copertura(r).C&&!copertura(r).P&&!scelti.includes(r));
+    let carb=pool.filter(r=>copertura(r).C&&!copertura(r).P&&!scelti.includes(r));
+    carb=await prioritaInventario(carb);
     const r=scegliCasuale(carb); if(r) scelti.push(r);
   }
   have={C:scelti.some(r=>copertura(r).C),V:scelti.some(r=>copertura(r).V),Vparziale:scelti.some(r=>copertura(r).Vparziale)};
   if(!have.V || have.Vparziale){
-    const veg=pool.filter(r=>copertura(r).V&&!copertura(r).P&&!scelti.includes(r));
+    let veg=pool.filter(r=>copertura(r).V&&!copertura(r).P&&!scelti.includes(r));
+    veg=await prioritaInventario(veg);
     const r=scegliCasuale(veg); if(r) scelti.push(r);
   }
   return {
@@ -571,7 +595,14 @@ async function generaPianoSettimana(scarto,opzioni){
   const days=giorniSettimana(scarto), today=typeof todayISO==='function'?todayISO():isoDate(new Date());
   let tab={};
   try{const r=await getOne('impostazioni','tabellaGiornoCategoria');tab=r&&r.valore||{};}catch(e){}
-  const defaults=['carne','pesce','formaggi','uova','legumi'];
+  const defaults=['carne','pesce','formaggi','uova','legumi','pesce','formaggi','carne','legumi','uova','pesce','formaggi','carne','legumi'];
+  const used=new Set();
+  for(const day of days){
+    for(const pasto of ['pranzo','cena']){
+      const old=await getOne('piano',day+'_'+pasto);
+      for(const x of old&&old.realizzazioni||[])if(x&&x.ricettaId)used.add(x.ricettaId);
+    }
+  }
   const generated=[];
   for(let di=0;di<days.length;di++){
     const day=days[di]; if(day<=today) continue;
@@ -581,14 +612,16 @@ async function generaPianoSettimana(scarto,opzioni){
       const old=await getOne('piano',id);
       if(old&&old.bloccata) continue;
       if(old&&!opzioni.forza&&old.realizzazioni&&old.realizzazioni.length) continue;
-      const target=arr[mi]||defaults[(di*2+mi)%defaults.length];
-      const x=await generaPasto(target,day,{});
+      if(old&&opzioni.forza)for(const x of old.realizzazioni||[])if(x&&x.ricettaId)used.delete(x.ricettaId);
+      const target=arr[mi]||defaults[di*2+mi];
+      const x=await generaPasto(target,day,{excludeRecipeIds:[...used]});
       if(!x) continue;
       await put('piano',{
         id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),
         categoriaTarget:target
       });
+      for(const rr of x.ricette)used.add(rr.id);
       generated.push(id);
     }
   }
@@ -598,7 +631,8 @@ async function generaPianoSettimana(scarto,opzioni){
 async function rigeneraPasto(giorno,pasto,target){
   const id=giorno+'_'+pasto, old=typeof getOne==='function'?await getOne('piano',id):null;
   target=target||(old&&old.categoriaTarget)||'legumi';
-  const x=await generaPasto(target,giorno,{ignoraCooldown:true});
+  const exclude=(old&&old.realizzazioni||[]).map(x=>x&&x.ricettaId).filter(Boolean);
+  const x=await generaPasto(target,giorno,{ignoraCooldown:true,excludeRecipeIds:exclude});
   if(!x) return null;
   const voce=Object.assign({},old||{id},{modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),categoriaTarget:target});
   if(typeof put==='function') await put('piano',voce);
