@@ -7884,199 +7884,53 @@ document.getElementById('cercaRicette').addEventListener('input', (e)=>{
 });
 
 async function renderRicette(){
-const mappaStatiDisp=await mappaStatiDisponibilita();
-  // ---- filtro Salvafrigo: solo ingredienti con avanzo scomodo da confezione ----
-  const disponibili = await getAvanziScomodi();
-  const salvafrigoEl = document.getElementById('filtroSalvafrigo');
-  const nomeVarianteSalvafrigo = filtroSalvafrigoVariante ? disponibili.find(i=>i.variantId===filtroSalvafrigoVariante)?.nome : null;
-  document.getElementById('riepilogoFiltroSalvafrigo').textContent = 'Salvafrigo: ' +
-    (nomeVarianteSalvafrigo ? nomeVarianteSalvafrigo
-      : !disponibili.length ? 'nessun avanzo al momento'
-      : 'nessun filtro (' + disponibili.length + ' disponibili)');
-  if(!disponibili.length){
-    salvafrigoEl.innerHTML = '<div class="meta">Nessun avanzo scomodo al momento: tutte le confezioni aperte sono piene o esaurite.</div>';
-  } else {
-    salvafrigoEl.innerHTML = disponibili.map(i=>
-      `<span style="display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:20px;overflow:hidden;margin:2px 4px 2px 0;">
-        <button data-sf="${i.variantId}" style="border:none;padding:6px 10px;cursor:pointer;border-radius:0;background:${filtroSalvafrigoVariante===i.variantId?'var(--accent)':'transparent'};color:${filtroSalvafrigoVariante===i.variantId?'#fff':'inherit'};">${i.nome}</button>
-        <button data-sf-consuma="${i.variantId}" title="Consumato da altri in casa" style="border:none;border-left:1px solid var(--border);padding:6px 8px;cursor:pointer;background:transparent;color:var(--warn);">✕</button>
-      </span>`
-    ).join('') + (filtroSalvafrigoVariante ? `<button data-sf-reset="1">✕ Rimuovi filtro</button>` : '');
-    salvafrigoEl.querySelectorAll('[data-sf]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        filtroSalvafrigoVariante = (filtroSalvafrigoVariante===b.dataset.sf) ? null : b.dataset.sf;
-        renderRicette();
-      });
-    });
-    salvafrigoEl.querySelectorAll('[data-sf-consuma]').forEach(b=>{
-      b.addEventListener('click', async (e)=>{
-        e.stopPropagation();
-        const vid = b.dataset.sfConsuma;
-        const inventario = await getAll('inventario');
-        for(const voce of inventario.filter(i=>i.variantId===vid && i.stato==='disponibile')){
-          voce.stato = 'esaurito';
-          await put('inventario', voce);
-        }
-        if(filtroSalvafrigoVariante===vid) filtroSalvafrigoVariante = null;
-        renderRicette();
-      });
-    });
-    salvafrigoEl.querySelector('[data-sf-reset]')?.addEventListener('click', ()=>{
-      filtroSalvafrigoVariante = null;
-      renderRicette();
-    });
-  }
+  const all=window.DietaPlannerNuovoMotore?DietaPlannerNuovoMotore.getRicette():[];
+  const esc=x=>{const d=document.createElement('div');d.textContent=String(x??'');return d.innerHTML;};
+  const macro=r=>{
+    const c=new Set((Array.isArray(r.classe)?r.classe:[r.classe]).filter(Boolean));
+    const p=['PC','PP','PF','PU','PL'].some(x=>c.has(x));
+    return (c.has('C')?'C':'')+(p?'P':'')+(c.has('V')||c.has('V-')?'V':'')||'Altro';
+  };
+  const tipi=[['tutte','Tutte'],['C','Carboidrati'],['P','Proteine'],['V','Verdure'],['CP','C + P'],['CV','C + V'],['PV','P + V'],['CPV','C + P + V']];
+  if(!tipi.some(x=>x[0]===filtroTipoRicette))filtroTipoRicette='tutte';
+  const ft=document.getElementById('filtroTipoRicette');
+  ft.innerHTML=tipi.map(x=>'<button data-t="'+x[0]+'" class="'+(filtroTipoRicette===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
+  ft.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{filtroTipoRicette=btn.dataset.t;renderRicette();}));
+  const count=filtroTipoRicette==='tutte'?all.length:all.filter(r=>macro(r)===filtroTipoRicette).length;
+  document.getElementById('riepilogoFiltroTipo').textContent='Copertura: '+(filtroTipoRicette==='tutte'?'tutte · '+count:filtroTipoRicette+' · '+count);
 
-  // ---- filtro tipo portata ----
-  // Conteggio SEMPRE sull'intera libreria (indipendente da ricerca/fascia/Salvafrigo):
-  // il riepilogo di questo filtro deve rispondere solo "quante ricette ha questo tipo",
-  // non "quante ne restano incrociando gli altri filtri attivi"
-  const tutteLeRicette = await getAll('ricette');
-  const tipi = [['tutte','Tutte'],['unico','Unico'],['primo','Primo'],['secondo','Secondo'],['contorno','Contorno'],['colazione','Colazione'],['spuntino','Spuntino'],['modulare','🧩 Modulari']];
-  const nomeTipoDescrittivo = {tutte:'', unico:'Piatto Unico', primo:'Primo', secondo:'Secondo', contorno:'Contorno', colazione:'Colazione', spuntino:'Spuntino', modulare:'Modulo componibile'};
-  document.getElementById('filtroTipoRicette').innerHTML = tipi.map(([v,l])=>
-    `<button data-t="${v}" class="${filtroTipoRicette===v?'active':''}">${l}</button>`
-  ).join('');
-  const conteggioTipoSelezionato = filtroTipoRicette==='tutte'
-    ? tutteLeRicette.length
-    : tutteLeRicette.filter(r=>(r.tipoPortata||'unico')===filtroTipoRicette).length;
-  document.getElementById('riepilogoFiltroTipo').textContent = 'Tipo di portata: ' + (filtroTipoRicette==='tutte'
-    ? `in tutto ${conteggioTipoSelezionato} ricette`
-    : `${conteggioTipoSelezionato} ricette di ${nomeTipoDescrittivo[filtroTipoRicette]}`);
-  document.querySelectorAll('#filtroTipoRicette button').forEach(b=>{
-    b.addEventListener('click', ()=>{ filtroTipoRicette=b.dataset.t; renderRicette(); });
-  });
+  const disponibili=await getAvanziScomodi();
+  const sfBox=document.getElementById('filtroSalvafrigo');
+  const nomeSf=new Map(disponibili.map(x=>[String(x.variantId),x.nome]));
+  sfBox.innerHTML=disponibili.map(x=>'<button data-sf="'+esc(x.variantId)+'" class="'+(String(filtroSalvafrigoVariante)===String(x.variantId)?'active':'')+'">'+esc(x.nome)+'</button>').join('')+(filtroSalvafrigoVariante?'<button data-sf-reset="1">✕</button>':'');
+  sfBox.querySelectorAll('[data-sf]').forEach(btn=>btn.addEventListener('click',()=>{filtroSalvafrigoVariante=String(filtroSalvafrigoVariante)===btn.dataset.sf?null:btn.dataset.sf;renderRicette();}));
+  sfBox.querySelector('[data-sf-reset]')?.addEventListener('click',()=>{filtroSalvafrigoVariante=null;renderRicette();});
+  document.getElementById('riepilogoFiltroSalvafrigo').textContent='Salvafrigo: '+(filtroSalvafrigoVariante?(nomeSf.get(String(filtroSalvafrigoVariante))||'ingrediente selezionato'):'nessun filtro');
 
-  // ---- filtro fascia ----
-  const fasce = ['tutte','facile','medio','difficile'];
-  document.getElementById('filtroFasceRicette').innerHTML = fasce.map(f=>
-    `<button data-f="${f}" class="${f===filtroFasciaRicette?'active':''}">${f}</button>`
-  ).join('');
-  document.getElementById('riepilogoFiltroFascia').textContent = 'Fascia di tempo: ' + (filtroFasciaRicette==='tutte' ? 'Tutte' : filtroFasciaRicette.charAt(0).toUpperCase()+filtroFasciaRicette.slice(1));
-  document.querySelectorAll('#filtroFasceRicette button').forEach(b=>{
-    b.addEventListener('click', ()=>{ filtroFasciaRicette=b.dataset.f; renderRicette(); });
-  });
+  let list=all.slice();
+  if(filtroTipoRicette!=='tutte')list=list.filter(r=>macro(r)===filtroTipoRicette);
+  if(filtroSalvafrigoVariante)list=list.filter(r=>(r.ingredienti||[]).some(i=>String(i.variantId)===String(filtroSalvafrigoVariante)));
+  if(filtroTestoRicette)list=list.filter(r=>String((r.nome||'')+' '+(r.nomeTecnico||'')).toLowerCase().includes(filtroTestoRicette));
+  if(filtroLetteraRicette)list=list.filter(r=>String(r.nome||'').toUpperCase().startsWith(filtroLetteraRicette));
+  list.sort((x,y)=>String(x.nome||'').localeCompare(String(y.nome||''),'it'));
 
-  // ---- applica i filtri combinati (tranne la lettera, serve prima per sapere quali lettere hanno risultati) ----
-  let ricette = filtroSalvafrigoVariante
-    ? await cercaRicetteConIngrediente(filtroSalvafrigoVariante)
-    : await getAll('ricette');
+  const lettere=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+  const presenti=new Set(all.map(r=>String(r.nome||'').charAt(0).toUpperCase()));
+  const alfa=document.getElementById('filtroAlfabetico');
+  alfa.innerHTML=lettere.map(l=>'<button data-lettera="'+l+'" class="'+(filtroLetteraRicette===l?'active ':'')+(presenti.has(l)?'':'senza-ricette')+'">'+l+'</button>').join('');
+  alfa.querySelectorAll('[data-lettera]').forEach(btn=>btn.addEventListener('click',()=>{filtroLetteraRicette=filtroLetteraRicette===btn.dataset.lettera?null:btn.dataset.lettera;renderRicette();}));
 
-  if(filtroFasciaRicette!=='tutte') ricette = ricette.filter(r=>r.fascia===filtroFasciaRicette);
-  if(filtroTipoRicette!=='tutte') ricette = ricette.filter(r=>(r.tipoPortata||'unico')===filtroTipoRicette);
-  if(filtroTestoRicette){
-    ricette = ricette.filter(r=> r.nome.toLowerCase().includes(filtroTestoRicette));
-  }
-
-  // ---- filtro alfabetico: striscia fissa A-Z sul bordo destro ----
-  const lettereConRisultati = new Set(ricette.map(r=>r.nome.charAt(0).toUpperCase()));
-  const alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const elAlfabeto = document.getElementById('filtroAlfabetico');
-  elAlfabeto.innerHTML = `<button data-lettera="" class="${!filtroLetteraRicette?'active':''}">↕</button>` +
-    alfabeto.map(l=>{
-      const disponibile = lettereConRisultati.has(l);
-      return `<button data-lettera="${l}" class="${filtroLetteraRicette===l?'active':''} ${disponibile?'':'senza-ricette'}">${l}</button>`;
-    }).join('');
-  elAlfabeto.querySelectorAll('button').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      filtroLetteraRicette = b.dataset.lettera || null;
-      renderRicette();
-    });
-  });
-  if(filtroLetteraRicette){
-    ricette = ricette.filter(r=> r.nome.charAt(0).toUpperCase()===filtroLetteraRicette);
-  }
-
-  if(!filtroSalvafrigoVariante){
-    ricette = ricette.slice().sort((a,b)=> a.nome.localeCompare(b.nome));
-  }
-
-  const el = document.getElementById('listaRicette');
-  if(!ricette.length){
-    const primaDelFiltro = await getAll('ricette');
-    el.innerHTML = primaDelFiltro.length
-      ? '<div class="meta">Nessuna ricetta corrisponde ai filtri scelti.</div>'
-      : '<div class="meta">Nessuna ricetta in libreria: vai su Impostazioni → Libreria ricette e importa ricette.json.</div>';
-    return;
-  }
-
-  el.innerHTML = '';
-  for(const r of ricette){
-    const nutri = await nutrizionePerPersona(r);
-    const isColazione = (r.tipoPortata||'unico')==='colazione';
-    const isUnico = (r.tipoPortata||'unico')==='unico';
-    const quasi=ricettaHaQuasiEsaurito(r,mappaStatiDisp);
-    const div = document.createElement('div');
-    div.className='card';
-    div.innerHTML = `
-      ${fasciaBadgeColorata(r.fascia)}
-      <span class="pill dim" style="margin-left:6px;">${r.tipoPortata||'unico'}</span>
-      ${r.fonte==='ai'?'<span class="pill dim" style="margin-left:6px;">generata AI</span>':''}
-      ${r.piattoSpeciale?'<span class="pill dim" style="margin-left:6px;">🍽 piatto speciale</span>':''}
-      ${r.esclusa?'<span class="pill dim" style="margin-left:6px;">🚫 esclusa</span>':''}
-      ${r.componente==='proteina'?'<span class="pill dim" style="margin-left:6px;background:#c0792a;">Base proteica</span>':r.componente==='contorno'?'<span class="pill dim" style="margin-left:6px;background:#5e9c63;">Contorno</span>':''}
-      ${r.tipoPortata==='modulare' ? '<span class="pill dim" style="margin-left:6px;background:#6a4ac2;">🧩 ' + (r.sottoCategoriaModulare||'') + '</span>' : ''}
-      ${r.preparazione?`<span class="pill dim" style="margin-left:6px;">${r.preparazione}</span>`:''}
-      <div class="row" style="margin-top:6px;${r.esclusa?'opacity:0.55;':''}"><h3 style="flex:1;">${r.nome}</h3>${quasi?WARN_QUASI:''}${stellaBtn(r)}</div>
-      <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
-      ${nutrizioneInaffidabile(r) ? '<div class="warn-tag">⚠ nutrizione non compilata — conta 0 nel computo giornaliero, compilala manualmente nella modifica</div>' : ''}
-      ${isColazione ? '<div class="meta" style="margin-top:6px;">Spunto per la colazione — componila dalla scheda Piano, scegliendo gli alimenti a gruppi.</div>' : ''}
-      <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap;">
-        <button class="small" data-vedi="${r.id}">Ricetta</button>
-        ${isColazione ? '' : `<button class="small accent" data-usa="${r.id}">Usa in un pasto</button>`}
-        ${isUnico ? `<button class="small" data-speciale="${r.id}">${r.piattoSpeciale?'🍽 Togli speciale':'🍽 Piatto speciale'}</button>` : ''}
-        <button class="small" data-escludi="${r.id}">${r.esclusa?'Riattiva':'🚫 Escludi'}</button>
-        <button class="small" data-del="${r.id}">Elimina</button>
-      </div>
-    `;
-    // I4: event delegation — nessun listener individuale sulla card.
-    // Un singolo listener sul contenitore padre (#listaRicette) gestisce
-    // tutti i click tramite closest() sull'attributo data-*.
-    el.appendChild(div);
-  }
+  const box=document.getElementById('listaRicette');
+  if(!list.length){box.innerHTML='<div class="card"><div class="meta">Nessuna combinazione corrispondente.</div></div>';return;}
+  box.innerHTML=list.map(r=>{
+    const n=r.nutrienti||{};
+    const classe=(Array.isArray(r.classe)?r.classe:[r.classe]).filter(Boolean).join(' + ');
+    const ingredienti=(r.ingredienti||[]).map(i=>i.nome+(Number(i.quantita)>0?' '+Math.round(i.quantita)+(i.unita||'g'):'')).join(' · ');
+    const tecnico=r.nomeTecnico&&r.nomeTecnico!==r.nome?'<div class="meta" style="margin-top:4px;">Combinazione: '+esc(r.nomeTecnico)+'</div>':'';
+    return '<div class="card"><div class="row" style="align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-weight:800;">'+esc(r.nome)+'</div><div class="meta">Template '+esc(r.recipeModelId)+' · '+esc(classe)+'</div>'+tecnico+'<div class="meta" style="margin-top:5px;">'+esc(ingredienti)+'</div><div class="meta" style="margin-top:5px;">'+Math.round(n.kcal||0)+' kcal · P '+Math.round(n.proteine||0)+'g · C '+Math.round(n.carboidrati||0)+'g · G '+Math.round(n.grassi||0)+'g</div></div><button class="icon-info-btn" data-info-new="'+esc(r.id)+'">ⓘ</button></div></div>';
+  }).join('');
+  box.querySelectorAll('[data-info-new]').forEach(btn=>btn.addEventListener('click',async()=>{const rr=await getOne('ricette',btn.dataset.infoNew);if(rr)apriModalInfoNutrizionale(rr);}));
 }
-
-/* I4: event delegation — un singolo listener sul contenitore padre (#listaRicette)
-   gestisce tutti i click sui bottoni delle card ricetta. Registrato UNA SOLA VOLTA
-   qui (fuori da renderRicette), non viene duplicato ad ogni cambio filtro. */
-document.getElementById('listaRicette').addEventListener('click', async (e)=>{
-  const btnVedi = e.target.closest('[data-vedi]');
-  if(btnVedi){
-    const rc = await getOne('ricette', btnVedi.dataset.vedi);
-    apriModalDettaglioRicetta(rc, 1);
-    return;
-  }
-  const btnStar = e.target.closest('[data-star]');
-  if(btnStar){
-    await toggleFavorito(btnStar.dataset.star);
-    renderRicette();
-    return;
-  }
-  const btnUsa = e.target.closest('[data-usa]');
-  if(btnUsa){
-    apriModalAssegnaAPasto(btnUsa.dataset.usa);
-    return;
-  }
-  const btnSpeciale = e.target.closest('[data-speciale]');
-  if(btnSpeciale){
-    await togglePiattoSpeciale(btnSpeciale.dataset.speciale);
-    renderRicette();
-    return;
-  }
-  const btnEscludi = e.target.closest('[data-escludi]');
-  if(btnEscludi){
-    await toggleEsclusa(btnEscludi.dataset.escludi);
-    renderRicette();
-    return;
-  }
-  const btnDel = e.target.closest('[data-del]');
-  if(btnDel){
-    await delKey('ricette', btnDel.dataset.del);
-    renderRicette();
-    return;
-  }
-});
-
 /* =========================================================
    MODAL: assegna una ricetta della libreria a un giorno/pasto specifico
    (azione deliberata dell'utente: scrive subito come pasto PROGRAMMATO)
