@@ -8284,6 +8284,13 @@ async function riepilogoTestualePasto(giorno, pasto){
   }
   if(voce.modo==='multi'){
     const nomi = [];
+    if(voce.realizzazioni&&voce.realizzazioni.length){
+      for(const x of voce.realizzazioni){
+        const rr=x&&x.ricettaId?await getOne('ricette',x.ricettaId):null;
+        if(rr)nomi.push(rr.nome);
+      }
+      return nomi.length ? prefisso + nomi.join(' · ') : testoVuoto;
+    }
     for(const chiave of ['primoId','secondoId','contornoId']){
       if(voce[chiave]){
         const r = await getOne('ricette', voce[chiave]);
