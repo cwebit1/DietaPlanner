@@ -1639,24 +1639,19 @@ let ingredientiJsonMap = {};
    a = versione ingredienti, b = versione ricette. Letta da impostazioni
    (salvate dalla Modifica 26). */
 async function renderVersioneHeader(){
-  const el = document.getElementById('headerVersione');
-  if(!el) return;
-  const verIng = await getOne('impostazioni', 'versioneIngredientiRemote');
-  const verRic = await getOne('impostazioni', 'versioneRicetteRemote');
-  const vIng = verIng ? verIng.valore : 0;
-  const vRic = verRic ? verRic.valore : 0;
-  console.log('[DEBUG versione]', {verIng, verRic, vIng, vRic});
-  if(vIng === 0 && vRic === 0){
-    el.textContent = 'v.1.0.0 ⚠';
-    el.title = 'Versione non aggiornata: verifica che ingredienti.json e ricette.json su GitHub abbiano il campo "versione"';
-  } else {
-    el.textContent = 'v.1.' + vIng + '.' + vRic;
-    el.title = '';
+  const el=document.getElementById('headerVersione');
+  if(!el)return;
+  const st=window.DietaPlannerNuovoMotore&&DietaPlannerNuovoMotore.stato?DietaPlannerNuovoMotore.stato():null;
+  if(st&&st.pronto){
+    el.textContent='nuovo DB v.'+st.versioneRicette;
+    el.title=st.ricetteConcrete+' ricette concrete compilate dal nuovo ricettario';
+  }else{
+    el.textContent='nuovo DB';
+    el.title='Motore nuovo non ancora inizializzato';
   }
 }
 
-
-async function sincronizzaCatalogoIngredientiJson(){
+async function sincronizzaCatalogoIngredientiJson(){async function sincronizzaCatalogoIngredientiJson(){
   const basi=await getAll('ingredienti');
   const varianti=await getAll('varianti');
   const baseByName=new Map(basi.map(x=>[x.nome.toLowerCase(),x]));
@@ -8219,21 +8214,19 @@ const CATEGORIE_PROTEICHE_SET = [
   {chiave:'formaggi', label:'Formaggi'}, {chiave:'uova', label:'Uova'}, {chiave:'legumi', label:'Legumi'}
 ];
 
+async function generaPianoSettimana(scartoSettimane,opzioni){
+  return await DietaPlannerNuovoMotore.generaPianoSettimana(scartoSettimane,opzioni||{});
+}
 async function generaMenuDaConfigSet(scartoSettimane){
-  scartoSettimane=scartoSettimane||0; menuSettimanaScarto=scartoSettimane; mostraVista('menu');
-  const recTab=await getOne('impostazioni','tabellaGiornoCategoria'); const tab=recTab&&recTab.valore?recTab.valore:{};
-  const giorniGen=giorniSettimana(scartoSettimane), giornoCategoria={};
-  giorniGen.forEach((g,i)=>{ const a=tab['giorno_'+i]; if(a&&a.length) giornoCategoria[g]=a.slice(); });
-  const recPrefV=await getOne('impostazioni','setVerdurePreferite'); const nomiV=recPrefV&&recPrefV.valore?recPrefV.valore:[];
-  const varianti=await getAll('varianti'); const verdureVariantIds=nomiV.map(n=>varianti.find(v=>v.nome===n)?.id).filter(Boolean);
-  const recLim=await getOne('impostazioni','setProteineLimitate');
-  const recTempo=await getOne('impostazioni','setPocoTempo'); const t=Object.assign({pranzo:false,cena:false},recTempo&&recTempo.valore?recTempo.valore:{});
-  const preferenze={giornoCategoria,verdureVariantIds,proteineLimitate:recLim&&recLim.valore?recLim.valore:[],pocoTempoPranzo:!!t.pranzo,pocoTempoCena:!!t.cena};
-  await generaPianoSettimana(scartoSettimane,{ignoraCopertura:false,forza:true,preferenze});
-  await renderMenuSettimanale(); await renderPiano();
+  scartoSettimane=scartoSettimane||0;
+  menuSettimanaScarto=scartoSettimane;
+  mostraVista('menu');
+  await DietaPlannerNuovoMotore.generaPianoSettimana(scartoSettimane,{forza:true});
+  await renderMenuSettimanale();
+  await renderPiano();
 }
 
-document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)=>{
+document.getElementById('pannelloGraficiConsumo')document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)=>{
   if(e.target.open){
     renderGraficiConsumo();
   } else if(intervalloCaroselloGrafici){
