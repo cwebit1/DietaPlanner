@@ -4007,24 +4007,10 @@ async function annullaScalaInventarioPerRicetta(ricetta, porzioniSel){
 
 /* Elenco ingredienti la cui scadenza stimata è entro 2 giorni (B4) */
 async function getScadenzeImminenti(){
-  const inventario = await getAll('inventario');
-  const varianti = await getAll('varianti');
-  const risultato = [];
-  const oggi = new Date(todayISO()+'T00:00:00');
-  for(const voce of inventario){
-    if(voce.stato!=='disponibile' || voce.quantita<=0 || !voce.dataApertura) continue;
-    const scadenza = await calcolaScadenzaStimata(voce);
-    if(!scadenza) continue;
-    const giorniRimanenti = Math.round((new Date(scadenza+'T00:00:00') - oggi) / 86400000);
-    if(giorniRimanenti <= 2){
-      const v = varianti.find(x=>x.id===voce.variantId);
-      risultato.push({variantId:voce.variantId, nome: v?v.nome:'?', giorniRimanenti});
-    }
-  }
-  return risultato.sort((a,b)=>a.giorniRimanenti-b.giorniRimanenti);
+  return window.DietaPlannerNuovoMotore ? await DietaPlannerNuovoMotore.getScadenzeImminenti() : [];
 }
 
-function domaniISO(){
+function domaniISO(){function domaniISO(){
   const d = new Date(todayISO()+'T00:00:00');
   d.setDate(d.getDate()+1);
   return isoLocale(d);
@@ -4641,6 +4627,7 @@ async function renderAlertCongelamento(){
       const voci = inventario.filter(i=>i.variantId===b.dataset.congela && i.stato==='disponibile');
       for(const voce of voci){
         voce.zona = 'freezer';
+        voce.dataCongelamento = todayISO();
         voce.dataApertura = null; // il congelamento "mette in pausa" il conto alla rovescia
         await put('inventario', voce);
       }
@@ -6781,24 +6768,10 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
    olio o biscotti per settimane, non è mai un'urgenza. Usati come filtro Salvafrigo
    nella scheda Ricette — questo, e non "tutto ciò che hai", è il criterio corretto. */
 async function getAvanziScomodi(){
-  const inventario = await getAll('inventario');
-  const varianti = await getAll('varianti');
-  const mappa = {};
-  for(const item of inventario){
-    if(item.stato!=='disponibile' || item.quantita<=0) continue;
-    const v = varianti.find(x=>x.id===item.variantId);
-    if(!v || !v.formato || v.formato<=0) continue; // sfuso: non applicabile
-    if(v.categoria!=='fresco' && v.categoria!=='surgelato') continue; // conf: mai urgente
-    if(item.quantita >= v.formato) continue; // confezione piena/intera: non è un avanzo
-    mappa[item.variantId] = (mappa[item.variantId]||0) + item.quantita;
-  }
-  return Object.entries(mappa).map(([variantId, quantita])=>{
-    const v = varianti.find(x=>x.id===variantId);
-    return {variantId, nome:v.nome, quantita, prioritaVerdura:v&&v.categoria==='fresco'?0:3};
-  }).sort((a,b)=> a.prioritaVerdura-b.prioritaVerdura || a.nome.localeCompare(b.nome,'it'));
+  return window.DietaPlannerNuovoMotore ? await DietaPlannerNuovoMotore.getAvanziScomodi() : [];
 }
 
-/* Cerca tutte le ricette (di qualsiasi tipoPortata, o filtrate) che contengono un dato
+/* Cerca tutte le ricette/* Cerca tutte le ricette (di qualsiasi tipoPortata, o filtrate) che contengono un dato
    ingrediente, ordinate alfabeticamente. Usata dal filtro Salvafrigo della scheda Ricette. */
 async function cercaRicetteConIngrediente(variantId){
   const ricette = await getAll('ricette');
@@ -8614,6 +8587,7 @@ async function renderInventario(){
       });
       row.querySelector('[data-congela-manuale]')?.addEventListener('click', async ()=>{
         voce.zona = 'freezer';
+        voce.dataCongelamento = todayISO();
         voce.dataApertura = null; // il congelamento mette in pausa il conto alla rovescia
         await put('inventario', voce);
         renderInventario();
