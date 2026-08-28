@@ -709,6 +709,14 @@ riferimento storico — non si toccano più con la maschera nuova.
 La maschera (`maschera-ricette.html`) legge/scrive solo questo file, mai più
 il vecchio `ricette.json`.
 
+### Regola di espansione delle ricette a gruppi — prodotto cartesiano
+
+**Decisione esplicita 2026-08-29:** ogni ricetta del nuovo db si espande
+mediante **prodotto cartesiano tra tutti gli slot/gruppi presenti**, con
+una sola esclusione: gli slot di categoria `Condimenti` **non partecipano
+al prodotto cartesiano** e quindi non moltiplicano il numero delle
+combinazioni generate.
+
 ## Domande ancora aperte (non bloccanti per iniziare il documento tecnico, ma da chiudere prima del codice)
 
 - Dettaglio esatto della nuova preferenza "numero di portate" in Set: UI,
