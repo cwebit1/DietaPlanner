@@ -1651,7 +1651,7 @@ async function renderVersioneHeader(){
   }
 }
 
-async function sincronizzaCatalogoIngredientiJson(){async function sincronizzaCatalogoIngredientiJson(){
+async function sincronizzaCatalogoIngredientiJson(){
   const basi=await getAll('ingredienti');
   const varianti=await getAll('varianti');
   const baseByName=new Map(basi.map(x=>[x.nome.toLowerCase(),x]));
@@ -4010,7 +4010,7 @@ async function getScadenzeImminenti(){
   return window.DietaPlannerNuovoMotore ? await DietaPlannerNuovoMotore.getScadenzeImminenti() : [];
 }
 
-function domaniISO(){function domaniISO(){
+function domaniISO(){
   const d = new Date(todayISO()+'T00:00:00');
   d.setDate(d.getDate()+1);
   return isoLocale(d);
@@ -6821,7 +6821,7 @@ async function getAvanziScomodi(){
   return window.DietaPlannerNuovoMotore ? await DietaPlannerNuovoMotore.getAvanziScomodi() : [];
 }
 
-/* Cerca tutte le ricette/* Cerca tutte le ricette (di qualsiasi tipoPortata, o filtrate) che contengono un dato
+/* Cerca tutte le ricette (di qualsiasi tipoPortata, o filtrate) che contengono un dato
    ingrediente, ordinate alfabeticamente. Usata dal filtro Salvafrigo della scheda Ricette. */
 async function cercaRicetteConIngrediente(variantId){
   const ricette = await getAll('ricette');
