@@ -4135,6 +4135,10 @@ porzioni:voce.porzioni||1,
 nutrizioneTotale,
 registratoIl:new Date().toISOString()
 });
+if(voce.motoreNuovo&&window.DietaPlannerNuovoMotore){
+  const ids=[...new Set((voce.realizzazioni||[]).map(x=>x&&x.ricettaId).filter(Boolean))];
+  for(const id of ids){const rr=await getOne('ricette',id);if(rr)await DietaPlannerNuovoMotore.registraUtilizzo(rr,voce.dataConsumato||giorno);}
+}
 }
 
 function aggiungiNutrizione(tot,n){
