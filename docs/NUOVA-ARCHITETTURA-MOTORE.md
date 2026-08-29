@@ -826,3 +826,11 @@ giorno con tutti i criteri correnti e genera un altro pasto compatibile.
 
 Questa sezione prevale sulle descrizioni precedenti del roll generico come
 ciclo fra ricette/candidati.
+
+
+### Speck / affettati — decisione 2026-08-29
+
+- `Speck` è classificato come sottotipo `affettati` e partecipa al limite aggregato della categoria.
+- Il limite affettati resta massimo 1 utilizzo nella settimana: dopo un affettato consumato, gli altri affettati sono esclusi per il resto della stessa settimana.
+- `Speck` ha inoltre un cooldown specifico di 20 giorni dalla conferma/consumo, indipendente dal normale stack di 15 giorni.
+- Il motore non possiede attualmente un peso probabilistico esplicito separato dall'abilitazione; quindi non viene introdotto un peso artificiale a 0. Se la rotazione risultasse ancora troppo favorevole allo Speck, la regola potrà essere resa più restrittiva.
