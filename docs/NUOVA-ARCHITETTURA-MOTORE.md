@@ -834,3 +834,8 @@ ciclo fra ricette/candidati.
 - Il limite affettati resta massimo 1 utilizzo nella settimana: dopo un affettato consumato, gli altri affettati sono esclusi per il resto della stessa settimana.
 - `Speck` ha inoltre un cooldown specifico di 20 giorni dalla conferma/consumo, indipendente dal normale stack di 15 giorni.
 - Il motore non possiede attualmente un peso probabilistico esplicito separato dall'abilitazione; quindi non viene introdotto un peso artificiale a 0. Se la rotazione risultasse ancora troppo favorevole allo Speck, la regola potrà essere resa più restrittiva.
+
+
+### Sequenza automatica dei Condimenti — decisione 2026-08-29
+
+Nelle nuove proposte il condimento iniziale non è più sempre l'elemento 0. Per ogni combinazione concreta di ingredienti il motore mantiene un cursore separato sui `condimentiCompatibili`: proposta 1 → variante 1, proposta successiva della stessa combinazione → variante 2, e così via; esaurito l'array riparte dalla prima. Il cursore avanza solo quando il motore sceglie davvero quella proposta, non durante la costruzione del pool candidati. Il Roll V manuale resta indipendente e non modifica il cursore automatico.
