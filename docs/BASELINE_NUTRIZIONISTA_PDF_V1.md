@@ -1,4 +1,4 @@
-# DietaPlanner — Baseline nutrizionista PDF V1.0
+# DietaPlanner — Baseline nutrizionista PDF V1.1
 
 **Data baseline:** 2026-08-29  
 **Fonte nutrizionale primaria:** `PERCORSO ALIMENTARE MIRIA SPILLER.pdf` (22 pagine, letto integralmente e verificato visivamente nelle tabelle principali).  
@@ -75,11 +75,12 @@ Esempi:
 - Gnocchi: 150-200 g, 0-2/settimana.
 - Pasta ripiena: ~125 g, 0-2/settimana.
 - Pane: ~100 g.
-- Gallette: 6-8 pezzi, **nessun 0-2 indicato**.
-- Crackers: 1 pacchetto, **nessun 0-2 indicato**.
+- Gallette: 6-8 pezzi, 0-2/settimana.
+- Crackers: 1 pacchetto, 0-2/settimana.
 - Friselle: 2 piccole / 1 grande, 0-2/settimana.
 - Taralli/Grissini/Crostini: 60-70 g, 0-2/settimana.
-- Piadina: 1 pezzo, **nessun 0-2 indicato**.
+- Piadina: 1 pezzo, 0-2/settimana.
+- **Correzione V1.1 dopo verifica visiva della pagina 14:** la nota viola «da consumare con minore frequenza [0-2 volte a settimana]» è in una cella unica che copre il blocco Gallette → Piadina. Quindi Gallette, Crackers, Friselle, Taralli/Grissini/Crostini e Piadina appartengono tutti al blocco 0-2. Non si deduce dal PDF un tetto cumulativo unico fra queste voci.
 - Patate: 300-350 g.
 - Polenta: 70-80 g.
 - Pasta sfoglia/brisée: 60-70 g, 0-2/settimana.
@@ -93,6 +94,8 @@ Esempi:
 - Taccole/fagiolini, funghi e zucca sono verdura.
 - Piselli freschi possono essere considerati verdura occasionalmente.
 - Frutta: 2-3 porzioni/giorno, 150-200 g per porzione.
+- La copertura della verdura è **quantitativa**, non soltanto booleana: ogni quantità di verdura già presente nel pasto (anche dentro un primo o un sugo) contribuisce alla porzione richiesta.
+- Se la verdura presente copre solo una parte della porzione, il motore deve aggiungere **solo il residuo necessario** per completarla, non una seconda porzione intera. Per ortaggi il riferimento PDF è 200-250 g; per insalata 70-80 g. Se si combinano più alimenti dello stesso gruppo, le quantità contribuiscono per frazione di porzione.
 
 ### 2.6 Colazione
 Composizione ordinaria:
@@ -185,7 +188,7 @@ Questi possono restare se approvati, ma devono essere distinti:
 13. **Eliminare la mutazione globale delle ricette da `applicaQuantitaNutrizionistaAlleRicette()`** o limitarla a una migrazione controllata: salvare un Setting non deve riscrivere indiscriminatamente il catalogo ricette.
 14. **Calcolare la quantità effettiva a runtime** in base a ingrediente, contesto e configurazione; la ricetta deve restare stabile salvo modifica esplicita del catalogo.
 15. **Uniformare unità pezzi/grammi/ml** e conversioni; il motore converte solo quando necessario per nutrizione/inventario.
-16. **Correggere la classificazione dei carboidrati limitati secondo pagina 14**: piadina NON limitata; gallette e crackers NON limitati; restano 0-2 gnocchi, pasta ripiena, friselle, taralli/grissini/crostini, sfoglia/brisée.
+16. **Correggere la classificazione dei carboidrati limitati secondo pagina 14 (verifica visiva V1.1)**: sono 0-2/settimana gnocchi, pasta ripiena, gallette, crackers, friselle, taralli/grissini/crostini, piadina e sfoglia/brisée.
 17. **Non attribuire al PDF il tetto cumulativo `CONFIG_CARB_TETTO_LIMITATI=3`**. Prima di rimuoverlo va trattato come regola APP-CWE preesistente e verificato con Cwe.
 18. **Propagare i vincoli carboidrati nutrizionista al Set e al generatore**, non limitarli alla validazione del salvataggio UI.
 19. **Garantire una fonte di carboidrati a pranzo e cena** nel percorso automatico, salvo pasto speciale/override esplicito.
@@ -220,6 +223,10 @@ Questi possono restare se approvati, ma devono essere distinti:
 48. **Aggiungere test quantità per contesto**: ricotta/uova/affettato/salmone/formaggio devono poter avere dose colazione diversa dal pasto principale.
 49. **Aggiungere test unità**: Uova/Friselle e qualunque futura voce a pezzi non devono diventare grammi nella UI.
 50. **Eseguire ogni modifica per lotti isolati**, con diff e test dopo ogni lotto; non fare un refactor unico che tocchi contemporaneamente UI, dati, motore, ricette e storico.
+51. **Interpretare ogni valore `0` impostato dall'utente nel budget carboidrati come esclusione hard dalla generazione automatica**: se Piadina=0, nessun fallback, esaurimento pool o regola speciale può proporre piadina. La stessa semantica vale per ogni carboidrato configurabile.
+52. **Non usare fallback che riattivano carboidrati a budget zero**: se la configurazione residua non consente una scelta, il motore deve risolvere l'incompatibilità o segnalare l'impossibilità; non può pescare da voci impostate a 0.
+53. **Rendere quantitativa la copertura verdura del pasto**: sommare la quota di porzione già presente in primo, sugo, proteina/ricetta completa e altri componenti validi.
+54. **Aggiungere soltanto la verdura residua necessaria**: `residuo = max(0, porzioneRichiesta - quotaEquivalenteGiàPresente)`. Esempio: un sugo con metà porzione di zucchine deve far aggiungere metà porzione di verdura, non una porzione intera. Se la porzione è già completa, nessun contorno aggiuntivo.
 
 ## 5. Ordine obbligatorio di lavoro anti-regressione
 
