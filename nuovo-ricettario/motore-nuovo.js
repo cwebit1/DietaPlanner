@@ -871,7 +871,7 @@ global.DietaPlannerNuovoMotore={
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
-  generaCandidatiPasto,generaPasto,generaPianoSettimana,rigeneraPasto,rollMirato,
+  generaPasto,generaPianoSettimana,rigeneraPasto,rollMirato,
   registraUtilizzo,copertura
 };
 })(window);
