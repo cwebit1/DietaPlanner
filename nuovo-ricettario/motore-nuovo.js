@@ -843,7 +843,8 @@ async function materializzaRicetta(base,condimentoVarianteIndex){
     nutrizioneManualeTotale:{kcal:nut.kcal,prot:nut.proteine,carb:nut.carboidrati,grassi:nut.grassi},
     condimenti:clone(selezionata.condimenti),
     condimentoVarianteIndex:selezionata.condimentoVarianteIndex,
-    numeroVariantiCondimento:selezionata.numeroVariantiCondimento
+    numeroVariantiCondimento:selezionata.numeroVariantiCondimento,
+    chiaviStack:chiaviStack(selezionata,ricetta.id)
   });
 }
 
