@@ -30,6 +30,10 @@ assert(baseline.carbohydrates.limitedByPdf.includes('piadina'));
 assert(baseline.carbohydrates.limitedByPdf.includes('gallette'));
 assert(baseline.carbohydrates.limitedByPdf.includes('crackers'));
 assert.equal(baseline.carbohydrates.userZeroMeansAutomaticExclusion, true);
+assert.equal(baseline.carbohydrates.defaultFill.totalSlots, 14);
+assert.equal(baseline.carbohydrates.defaultFill.weeklyCappedAutoInsert, false);
+assert.equal(baseline.carbohydrates.partialFill.preserveExactUserCounts, true);
+assert.equal(baseline.carbohydrates.partialFill.neverOverrideExplicitZero, true);
 assert.equal(baseline.vegetables.residualCompletion, true);
 assert.equal(baseline.breakfast.specialDefaultPerWeek, 1);
 assert.equal(baseline.breakfast.specialPdfMaxPerWeek, 2);
@@ -56,6 +60,14 @@ assert(
 assert(
   /\{\s*chiave:\s*'crackers',\s*label:\s*'Crackers',\s*limitato:\s*false/.test(index),
   'Lotto A snapshot: Crackers non sono più non-limitati nel codice; aggiornare audit e test.'
+);
+assert(
+  index.includes("const attivatiLimitati=new Set(CONFIG_CARB_TIPI.filter(t=>t.limitato&&(statoCaselleCarb[t.chiave]||0)>0)"),
+  'Lotto A snapshot: completaCaselleCarboidrati non conserva più il filtro sui limitati attivati; aggiornare audit e test.'
+);
+assert(
+  index.includes("const min=Math.min(...pool.map(t=>statoCaselleCarb[t.chiave]||0))"),
+  'Lotto A snapshot: il completamento corrente non usa più il bilanciamento per minimo; aggiornare audit e test.'
 );
 assert(
   engine.includes("if(!pool.length)pool=Object.keys(defs).filter"),
