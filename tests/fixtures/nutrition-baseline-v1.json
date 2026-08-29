@@ -1,5 +1,5 @@
 {
-  "version": "PDF-V1",
+  "version": "PDF-V1.1",
   "source": "PERCORSO ALIMENTARE MIRIA SPILLER.pdf",
   "principles": {
     "pdfIsPrimaryForNutrition": true,
@@ -7,11 +7,26 @@
     "defaultFromRangeUsesLowerBound": true
   },
   "proteinFrequencies": {
-    "carne": { "min": 1, "max": 3 },
-    "pesce": { "min": 2, "max": 3 },
-    "formaggi": { "min": 2, "max": 3 },
-    "uova": { "min": 1, "max": 2 },
-    "legumi": { "min": 2, "max": null }
+    "carne": {
+      "min": 1,
+      "max": 3
+    },
+    "pesce": {
+      "min": 2,
+      "max": 3
+    },
+    "formaggi": {
+      "min": 2,
+      "max": 3
+    },
+    "uova": {
+      "min": 1,
+      "max": 2
+    },
+    "legumi": {
+      "min": 2,
+      "max": null
+    }
   },
   "subtypeCaps": {
     "carne_rossa": 1,
@@ -23,16 +38,17 @@
     "limitedByPdf": [
       "gnocchi",
       "pasta_ripiena",
-      "friselle",
-      "taralli",
-      "pasta_sfoglia"
-    ],
-    "notLimitedByPdf": [
       "gallette",
       "crackers",
-      "piadina"
+      "friselle",
+      "taralli",
+      "piadina",
+      "pasta_sfoglia"
     ],
-    "appCweGlobalLimitedCap": 3
+    "notLimitedByPdf": [],
+    "appCweGlobalLimitedCap": 3,
+    "userZeroMeansAutomaticExclusion": true,
+    "zeroBudgetFallbackForbidden": true
   },
   "fruit": {
     "dailyMin": 2,
@@ -41,26 +57,55 @@
     "portionMaxGrams": 200
   },
   "vegetables": {
-    "mealPresence": ["pranzo", "cena"],
+    "mealPresence": [
+      "pranzo",
+      "cena"
+    ],
     "vegetablePortionMinGrams": 200,
     "vegetablePortionMaxGrams": 250,
     "saladPortionMinGrams": 70,
-    "saladPortionMaxGrams": 80
+    "saladPortionMaxGrams": 80,
+    "partialContributionCounts": true,
+    "residualCompletion": true,
+    "residualRule": "complete only the missing portion fraction across all meal components, including sauces"
   },
   "breakfast": {
-    "requiredGroups": ["carboidrati", "proteine"],
-    "optionalGroups": ["grassi", "carboidrati_semplici"],
+    "requiredGroups": [
+      "carboidrati",
+      "proteine"
+    ],
+    "optionalGroups": [
+      "grassi",
+      "carboidrati_semplici"
+    ],
     "specialDefaultPerWeek": 1,
     "specialPdfMaxPerWeek": 2,
     "contextualLimitedPdfMaxPerWeek": 2
   },
   "snacks": {
-    "granita": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
-    "grana": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
-    "crackers": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
-    "pane_marmellata": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
-    "frutta_secca": { "pdfMaxPerDay": 1 },
-    "patatine_grisbi": { "defaultPerWeek": 1, "pdfMaxPerWeek": 2 }
+    "granita": {
+      "defaultPerWeek": 2,
+      "pdfMaxPerWeek": 3
+    },
+    "grana": {
+      "defaultPerWeek": 2,
+      "pdfMaxPerWeek": 3
+    },
+    "crackers": {
+      "defaultPerWeek": 2,
+      "pdfMaxPerWeek": 3
+    },
+    "pane_marmellata": {
+      "defaultPerWeek": 2,
+      "pdfMaxPerWeek": 3
+    },
+    "frutta_secca": {
+      "pdfMaxPerDay": 1
+    },
+    "patatine_grisbi": {
+      "defaultPerWeek": 1,
+      "pdfMaxPerWeek": 2
+    }
   },
   "oil": {
     "defaultGramsPerMeal": 10,
