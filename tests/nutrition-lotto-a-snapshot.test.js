@@ -46,8 +46,8 @@ assert(
   'Lotto A snapshot: FREQUENZE_CONSIGLIATE legumi non è più max 3; aggiornare audit e test nello stesso Lotto.'
 );
 assert(
-  /legumi:\s*\{min:2,\s*max:null,\s*target:3\}/.test(engine),
-  'Lotto A snapshot: engine default legumi non è più max null.'
+  engine.includes("legumi:{min:N.PDF_BASELINE.proteinFrequencies.legumi.min,max:N.PDF_BASELINE.proteinFrequencies.legumi.max,target:N.APP_DEFAULTS.proteinTargets.legumi}"),
+  'Lotto C: engine default legumi deve derivare dal resolver canonico.'
 );
 assert(
   /\{\s*chiave:\s*'piadina',\s*label:\s*'Piadina',\s*limitato:\s*true/.test(index),
