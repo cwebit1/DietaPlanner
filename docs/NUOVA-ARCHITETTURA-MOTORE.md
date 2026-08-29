@@ -784,3 +784,24 @@ ricetta ha un testo composto che pare ripetitivo (es. "Pomodori
 Pomodori gratinati gratinati"), non è un errore da segnalare o
 correggere di iniziativa: è il dato, e l'algoritmo lo applica com'è.
 
+
+
+### Compatibilità Condimenti per ingrediente — decisione 2026-08-29
+
+Il gruppo `Condimenti` resta fuori dal prodotto cartesiano della ricetta. I suoi
+ingredienti costituiscono il catalogo dei condimenti disponibili per quel template.
+
+Ogni ingrediente dei gruppi non-`Condimenti` può però dichiarare:
+
+```json
+"condimentiCompatibili": ["Aceto balsamico", "Limone"]
+```
+
+La lista è una relazione di compatibilità, non una nuova dimensione cartesiana.
+Quando una realizzazione contiene più ingredienti che dichiarano
+`condimentiCompatibili`, il pool effettivo dei condimenti è l'intersezione
+delle rispettive liste: il condimento proposto deve essere compatibile con tutti
+gli ingredienti selezionati che pongono un vincolo. Campo assente = nessun
+vincolo aggiuntivo da quell'ingrediente.
+
+Il Roll V agisce solo su questo pool effettivo e non cambia gli altri slot.
