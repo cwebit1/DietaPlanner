@@ -805,3 +805,24 @@ gli ingredienti selezionati che pongono un vincolo. Campo assente = nessun
 vincolo aggiuntivo da quell'ingrediente.
 
 Il Roll V agisce solo su questo pool effettivo e non cambia gli altri slot.
+
+
+### Roll C / P / V — decisione 2026-08-29 (sostituisce il roll generico precedente)
+
+Nel nuovo ricettario il comando di roll non riestrae una nuova ricetta e non
+tocca lo stack. I tre pulsanti agiscono esclusivamente sulla realizzazione già
+proposta:
+
+- **Roll C**: ruota solo le alternative dello/degli slot `C` della stessa
+  ricetta-template, lasciando invariati gli altri ingredienti e le cotture.
+- **Roll P**: ruota solo le cotture degli slot proteici `PC/PP/PF/PU/PL`,
+  lasciando invariati gli ingredienti scelti.
+- **Roll V**: ruota solo i `Condimenti` compatibili con gli ingredienti
+  attualmente selezionati, secondo `condimentiCompatibili`.
+
+Il pulsante relativo è abilitato solo quando esiste più di una variante valida.
+**Proponi nuovo pasto** è un comando distinto: riesegue la query completa del
+giorno con tutti i criteri correnti e genera un altro pasto compatibile.
+
+Questa sezione prevale sulle descrizioni precedenti del roll generico come
+ciclo fra ricette/candidati.
