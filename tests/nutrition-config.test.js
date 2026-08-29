@@ -141,7 +141,11 @@ assert.deepEqual(
   const r=N.resolveNutritionConfig({
     nutritionist:{
       ingredientConstraints:{
-        speck:{stato:'limitato',min:0,max:1,quantita:60},
+        speck:{stato:'limitato',min:0,max:1,quantita:60,contesti:{
+          colazione:{max:1,quantita:40},
+          pastoPrincipale:{quantita:60},
+          spuntino:{max:0}
+        }},
         escluso:{stato:'escluso'}
       }
     },
@@ -153,9 +157,23 @@ assert.deepEqual(
   assert.equal(r.ingredientConstraints.speck.max,0);
   assert.equal(r.ingredientConstraints.speck.min,0);
   assert.equal(r.ingredientConstraints.speck.quantity,60);
+  assert.deepEqual(r.ingredientConstraints.speck.contexts.colazione,{quantity:40,max:1});
+  assert.deepEqual(r.ingredientConstraints.speck.contexts.pastoPrincipale,{quantity:60,max:null});
+  assert.deepEqual(r.ingredientConstraints.speck.contexts.spuntino,{quantity:null,max:0});
   assert.equal(r.ingredientConstraints.escluso.state,'excluded');
   assert.equal(r.ingredientConstraints.escluso.max,0);
   assert.equal(r.ingredientConstraints.pasta.max,2);
+}
+
+{
+  const r=N.resolveNutritionConfig({
+    nutritionist:{ingredientConstraints:{
+      x:{stato:'limitato',min:0,max:2,quantita:100,contesti:{colazione:{quantita:0,max:-1}}}
+    }}
+  });
+  assert.equal(r.valid,false);
+  assert(r.errors.some(x=>x.includes('quantità contestuale')));
+  assert(r.errors.some(x=>x.includes('massimo contestuale')));
 }
 
 {
