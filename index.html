@@ -3486,7 +3486,8 @@ async function salvaLimitiPersonaliSet(mostraMessaggio){
   for(const b of basi){
     if(!Object.prototype.hasOwnProperty.call(caps,b.id))continue;
     const n=Number(caps[b.id]);if(!Number.isFinite(n)||n<0||Math.trunc(n)!==n){const msg='Il limite personale di '+b.nome+' deve essere un numero intero non negativo.';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
-    const rule=resolvedClinical.ingredientConstraints&&resolvedClinical.ingredientConstraints[b.id]||{},clinicalMax=ingredienteEsclusoClinicamenteNelSet(b,resolvedClinical)?0:rule.max;
+    const rule=resolvedClinical.ingredientConstraints&&resolvedClinical.ingredientConstraints[b.id]||{},clinicalExcluded=ingredienteEsclusoClinicamenteNelSet(b,resolvedClinical),clinicalMax=clinicalExcluded?0:rule.max;
+    if(clinicalExcluded){delete caps[b.id];continue;}
     if(clinicalMax!==null&&clinicalMax!==undefined&&n>Number(clinicalMax)){const msg='Il limite personale di '+b.nome+' non può superare il massimo del nutrizionista ('+clinicalMax+').';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
   }
   const resolved=await risolviSetUtenteCorrente({ingredientWeeklyCaps:caps});if(!resolved.valid){if(mostraMessaggio!==false)await avviso('Limiti personali non compatibili con il piano: '+resolved.errors.join(' '));return {ok:false,errori:resolved.errors};}
