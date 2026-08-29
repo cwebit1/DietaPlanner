@@ -307,6 +307,7 @@ async function preparaIngredientiDettagliati(ricetta,combinazione){
         conservazione:meta.conservazione||null,
         carbRazionato:!!meta.carbRazionato,
         frequenzaSettimanale:meta.frequenzaSettimanale||null,
+        cooldownGiorni:Number(meta.cooldownGiorni)||null,
         stack:s.ingrediente.stack===undefined?1:s.ingrediente.stack,
         roll:s.ingrediente.roll===undefined?1:s.ingrediente.roll
       });
@@ -327,6 +328,7 @@ async function preparaIngredientiDettagliati(ricetta,combinazione){
         allergeni:Array.isArray(meta.allergeni)?meta.allergeni.slice():[],
         sottotipo:meta.sottotipo||null,gruppo:meta.gruppo||null,
         deperibilita:meta.deperibilita||null,conservazione:meta.conservazione||null,
+        cooldownGiorni:Number(meta.cooldownGiorni)||null,
         condimento:true,stack:x.stack===undefined?1:x.stack,roll:x.roll===undefined?1:x.roll
       });
     }
@@ -416,6 +418,7 @@ async function sincronizzaIngredientiIndexedDB(){
       porzione:d.porzione||null,unitaPorzione:d.unitaPorzione||null,
       pesoPorzioneGrammi:d.pesoPorzioneGrammi||null,pesoPezzo:d.pesoPezzo||null,
       gradimento:d.gradimento===undefined?1:d.gradimento,stock:d.stock===undefined?1:d.stock,
+      cooldownGiorni:Number(d.cooldownGiorni)||null,
       formatoRiordino:d.formatoRiordino||{valore:null,unita:null},
       allergeni:Array.isArray(d.allergeni)?d.allergeni:[],
       bloccoManuale:!!d.bloccoManuale,nonRichiedeInventario:!!d.nonRichiedeInventario,
@@ -469,21 +472,36 @@ function usiSettimanali(nome,data){
   const k=nome+'_'+startOfWeekISO(data);
   return Number(state.tracking.utilizziSettimanali[k])||0;
 }
+function usiSettimanaliSottotipo(sottotipo,data){
+  return usiSettimanali('@sottotipo:'+sottotipo,data);
+}
 function giorniUltimo(key,data){
   const u=state.tracking.ultimoUtilizzo[key];
   if(!u) return Infinity;
   return giorniTra(new Date((typeof data==='string'?data:isoDate(data))+'T12:00:00'),new Date(u));
 }
 function cooldownOk(r,data){
-  return (r.chiaviStack||[]).every(k=>giorniUltimo(k,data)>=COOLDOWN_GIORNI);
+  if(!(r.chiaviStack||[]).every(k=>giorniUltimo(k,data)>=COOLDOWN_GIORNI)) return false;
+  for(const i of (r.ingredienti||[])){
+    const giorni=Number(i.cooldownGiorni)||0;
+    if(giorni>0 && giorniUltimo('@ingrediente:'+i.nome,data)<giorni) return false;
+  }
+  return true;
 }
 async function registraUtilizzo(r,data){
   const d=(data instanceof Date)?data:new Date((data||isoDate(new Date()))+'T12:00:00');
   const when=d.toISOString();
   for(const k of (r.chiaviStack||[])) state.tracking.ultimoUtilizzo[k]=when;
   const settimana=startOfWeekISO(d);
+  let haAffettati=false;
   for(const i of r.ingredienti||[]){
     const k=i.nome+'_'+settimana;
+    state.tracking.utilizziSettimanali[k]=(Number(state.tracking.utilizziSettimanali[k])||0)+1;
+    if((Number(i.cooldownGiorni)||0)>0) state.tracking.ultimoUtilizzo['@ingrediente:'+i.nome]=when;
+    if(i.sottotipo==='affettati') haAffettati=true;
+  }
+  if(haAffettati){
+    const k='@sottotipo:affettati_'+settimana;
     state.tracking.utilizziSettimanali[k]=(Number(state.tracking.utilizziSettimanali[k])||0)+1;
   }
   await salvaTracking();
@@ -521,7 +539,10 @@ async function ricettaAmmessa(r,data,opts){
     }
     const st=i.sottotipo;
     const cap=st&&cfg.weeklyLimits[st];
-    if(cap!==undefined&&cap!==null&&usiSettimanali(i.nome,data)>=Number(cap)) return false;
+    if(cap!==undefined&&cap!==null){
+      const usi=st==='affettati'?usiSettimanaliSottotipo(st,data):usiSettimanali(i.nome,data);
+      if(usi>=Number(cap)) return false;
+    }
   }
   if(!opts.ignoraCooldown && !cooldownOk(r,data)) return false;
   return true;
