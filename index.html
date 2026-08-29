@@ -2780,82 +2780,71 @@ document.getElementById('btnPulisciCarboidrati')?.addEventListener('click',()=>{
 document.getElementById('btnCompletaCarboidrati')?.addEventListener('click',()=>completaCaselleCarboidrati(false));
 document.getElementById('btnCasualeCarboidrati')?.addEventListener('click',()=>completaCaselleCarboidrati(true));
 document.getElementById('btnSalvaCarboidrati')?.addEventListener('click',()=>salvaConfigCarboidratiSet(true));
-const CONFIG_PROTEINE_DEFAULT = {
-  carne:3, pesce:3, formaggi:3, uova:2, legumi:3,
-  carne_rossa:1, affettati:1, pesce_grande:1, pesce_conservato:1
-};
-async function getConfigProteine(){ return CONFIG_PROTEINE_DEFAULT; }
-async function getFrequenzeConsigliateEffettive(){ return FREQUENZE_CONSIGLIATE; }
-async function getExtraCapSottotipiEffettivi(){ return EXTRA_CAP_SOTTOTIPI; }
+async function getConfigProteine(){
+  const rec=await getOne('impostazioni','configAvanzata'),cfg=configAvanzataEffettivaSalvata(rec&&rec.valore||{}),resolved=risolviConfigNutrizionista(cfg,{},[],[]),forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]),frequenze={};
+  for(const [k,v] of Object.entries(resolved.proteinFrequencies||{}))frequenze[k]=forbidden.has(k)?Object.assign({},v,{min:0,max:0,target:0}):Object.assign({},v);
+  return {frequenze,subtypeCaps:Object.assign({},resolved.subtypeCaps||{}),maxProteinSourcesPerDay:resolved.maxProteinSourcesPerDay,profile:resolved.profile};
+}
+async function getFrequenzeConsigliateEffettive(){return (await getConfigProteine()).frequenze;}
+async function getExtraCapSottotipiEffettivi(){return (await getConfigProteine()).subtypeCaps;}
 
-const NOMI_GIORNI_SET = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
+const NOMI_GIORNI_SET=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
 let tabellaProteineDraft=null;
-
-function validaFattibilitaProteineSet(tabella){
-  const conteggi={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
+let frequenzeProteineSetCorrenti=null;
+let maxFontiProteicheGiornaliereSet=2;
+async function caricaVincoliProteineSet(){
+  const cfg=await getConfigProteine();frequenzeProteineSetCorrenti=cfg.frequenze;maxFontiProteicheGiornaliereSet=Math.max(1,Math.min(2,Number(cfg.maxProteinSourcesPerDay)||2));return cfg;
+}
+function validaFattibilitaProteineSet(tabella,frequenze,maxGiorno){
+  const freq=frequenze||frequenzeProteineSetCorrenti||{},limiteGiorno=Math.max(1,Math.min(2,Number(maxGiorno||maxFontiProteicheGiornaliereSet)||2)),conteggi={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
   let occupati=0;
   for(let i=0;i<7;i++){
-    const arr=(tabella['giorno_'+i]||[]).slice(0,2);
-    occupati+=arr.length;
-    for(const cat of arr)if(conteggi[cat]!==undefined)conteggi[cat]++;
+    const arr=(tabella['giorno_'+i]||[]);if(arr.length>limiteGiorno)return {ok:false,reason:'day-max',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
+    occupati+=arr.length;for(const cat of arr)if(conteggi[cat]!==undefined)conteggi[cat]++;
   }
-  const slotLiberi=14-occupati;
-  let deficitMinimi=0;
-  for(const cat of Object.keys(conteggi)){
-    const min=Number(FREQUENZE_CONSIGLIATE[cat]?.min||0);
-    deficitMinimi+=Math.max(0,min-conteggi[cat]);
-  }
-  return {ok:deficitMinimi<=slotLiberi,slotLiberi,deficitMinimi,conteggi};
+  for(const [cat,n] of Object.entries(conteggi)){const max=freq[cat]&&freq[cat].max;if(max!==null&&max!==undefined&&n>Number(max))return {ok:false,reason:'weekly-max',categoria:cat,conteggi,slotLiberi:14-occupati,deficitMinimi:0};}
+  const slotLiberi=14-occupati;let deficitMinimi=0;
+  for(const cat of Object.keys(conteggi)){const min=Number(freq[cat]&&freq[cat].min||0);deficitMinimi+=Math.max(0,min-conteggi[cat]);}
+  return {ok:deficitMinimi<=slotLiberi,reason:deficitMinimi<=slotLiberi?null:'minimums',slotLiberi,deficitMinimi,conteggi};
 }
-
 async function renderSetTabellaGiorno(){
-  const el=document.getElementById('setTabellaGiorno'); if(!el) return;
-  const rec=await getOne('impostazioni','tabellaGiornoCategoria');
-  if(!tabellaProteineDraft)tabellaProteineDraft=structuredClone((rec&&rec.valore)?rec.valore:{});
-  const tabella=tabellaProteineDraft;
-  const head=NOMI_GIORNI_SET.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
+  const el=document.getElementById('setTabellaGiorno');if(!el)return;
+  const [rec,cfg]=await Promise.all([getOne('impostazioni','tabellaGiornoCategoria'),caricaVincoliProteineSet()]);
+  if(!tabellaProteineDraft)tabellaProteineDraft=cloneConfigurazione(rec&&rec.valore||{});
+  const tabella=tabellaProteineDraft,freq=cfg.frequenze,maxDay=maxFontiProteicheGiornaliereSet;
+  const head=NOMI_GIORNI_SET.map(g=>'<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">'+g+'</th>').join('');
   const righe=CATEGORIE_PROTEICHE_SET.map(c=>{
-    const tetto=FREQUENZE_CONSIGLIATE[c.chiave]?.max??99;
-    const n=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(c.chiave)).length;
-    const rowMax=n>=tetto;
-    const cells=NOMI_GIORNI_SET.map((_,i)=>{
-      const key='giorno_'+i, sel=(tabella[key]||[]).includes(c.chiave), dayMax=(tabella[key]||[]).length>=2;
-      const disabled=(dayMax||rowMax)&&!sel;
-      return `<td class="cella"><button data-set-cella="${i}|${c.chiave}" class="${sel?'active':''} ${disabled?'al-tetto':''}" ${disabled?'disabled':''}></button></td>`;
-    }).join('');
-    return `<tr><td class="riga-label">${c.label}</td>${cells}</tr>`;
+    const reg=freq[c.chiave]||{min:0,max:0},tetto=reg.max,n=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(c.chiave)).length,rowMax=tetto!==null&&tetto!==undefined&&n>=Number(tetto),range=reg.max===null?'min '+reg.min+' · senza max':reg.min+'–'+reg.max+' / sett.';
+    const cells=NOMI_GIORNI_SET.map((_,i)=>{const key='giorno_'+i,sel=(tabella[key]||[]).includes(c.chiave),dayMax=(tabella[key]||[]).length>=maxDay,disabled=(dayMax||rowMax)&&!sel;return '<td class="cella"><button data-set-cella="'+i+'|'+c.chiave+'" class="'+(sel?'active':'')+' '+(disabled?'al-tetto':'')+'" '+(disabled?'disabled':'')+'></button></td>';}).join('');
+    return '<tr><td class="riga-label">'+c.label+'<div class="meta" style="font-size:.56rem;line-height:1.05;">'+range+'</div></td>'+cells+'</tr>';
   }).join('');
-  el.innerHTML=`<table class="tabella-giorno"><tr><th class="col-label"></th>${head}</tr>${righe}</table>`;
-  el.querySelectorAll('[data-set-cella]').forEach(b=>b.addEventListener('click',async()=>{
-    const [is,cat]=b.dataset.setCella.split('|'), key='giorno_'+parseInt(is); tabella[key]=tabella[key]||[]; const arr=tabella[key], pos=arr.indexOf(cat);
-    if(pos>=0) arr.splice(pos,1); else {
-      const tetto=FREQUENZE_CONSIGLIATE[cat]?.max??99;
-      const used=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(cat)).length;
-      if(used>=tetto){ await avviso('Hai già raggiunto il massimo settimanale per questa categoria.'); return; }
-      if(arr.length>=2){ await avviso('Hai già selezionato 2 fonti proteiche per questo giorno.'); return; }
-      arr.push(cat);
-      const fatt=validaFattibilitaProteineSet(tabella);
-      if(!fatt.ok){
-        arr.pop();
-        await avviso('Questa scelta lascerebbe troppo pochi pasti liberi per completare le frequenze minime delle altre categorie.');
-        return;
-      }
+  el.innerHTML='<table class="tabella-giorno"><tr><th class="col-label"></th>'+head+'</tr>'+righe+'</table><div class="meta" style="margin-top:6px;">Vincoli effettivi dal piano nutrizionista · max categorie fissabili per giorno: '+maxDay+'</div>';
+  el.querySelectorAll('[data-set-cella]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const [is,cat]=btn.dataset.setCella.split('|'),key='giorno_'+parseInt(is);tabella[key]=tabella[key]||[];const arr=tabella[key],pos=arr.indexOf(cat);
+    if(pos>=0)arr.splice(pos,1);else{
+      const tetto=freq[cat]&&freq[cat].max,used=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(cat)).length;
+      if(tetto!==null&&tetto!==undefined&&used>=Number(tetto)){await avviso('Hai già raggiunto il massimo settimanale definito dal piano per questa categoria.');return;}
+      if(arr.length>=maxDay){await avviso('Puoi fissare al massimo '+maxDay+' categorie proteiche per questo giorno.');return;}
+      arr.push(cat);const fatt=validaFattibilitaProteineSet(tabella,freq,maxDay);if(!fatt.ok){arr.pop();await avviso(fatt.reason==='minimums'?'Questa scelta lascerebbe troppo pochi pasti liberi per completare le frequenze minime del piano.':'Questa scelta supera un vincolo proteico del piano.');return;}
     }
-    renderSetTabellaGiorno();
+    await renderSetTabellaGiorno();
   }));
 }
-
 async function completaTabellaProteine(daZero){
-  if(daZero)tabellaProteineDraft={};
-  const giorni=NOMI_GIORNI_SET.map((_,i)=>'giorno_'+i),griglia=typeof costruisciGrigliaBase==='function'?costruisciGrigliaBase(giorni,tabellaProteineDraft||{}):null;
-  if(griglia)for(const g of giorni){tabellaProteineDraft[g]=['pranzo','cena'].map(p=>griglia.celle[g][p].gruppoProteicoLargo).filter(Boolean);}
-  await renderSetTabellaGiorno();
+  if(daZero)tabellaProteineDraft={};const cfg=await caricaVincoliProteineSet(),giorni=NOMI_GIORNI_SET.map((_,i)=>'giorno_'+i),E=globalThis.DietaPlannerEngine;
+  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,tabellaProteineDraft||{},{proteinFrequencies:cfg.frequenze},{},Math.random):null;
+  if(griglia){for(const g of giorni)tabellaProteineDraft[g]=['pranzo','cena'].map(p=>griglia.cells[g][p].macro).filter(Boolean);}
+  await renderSetTabellaGiorno();return griglia;
 }
 document.getElementById('btnPulisciProteine')?.addEventListener('click',async()=>{tabellaProteineDraft={};await renderSetTabellaGiorno();});
 document.getElementById('btnCompletaProteine')?.addEventListener('click',()=>completaTabellaProteine(false));
 document.getElementById('btnCasualeProteine')?.addEventListener('click',()=>completaTabellaProteine(true));
-document.getElementById('btnSalvaProteine')?.addEventListener('click',async()=>{await completaTabellaProteine(false);await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:structuredClone(tabellaProteineDraft)});await avviso('Tabella proteine salvata.');});
-
+document.getElementById('btnSalvaProteine')?.addEventListener('click',async()=>{
+  const griglia=await completaTabellaProteine(false),cfg=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft||{},cfg.frequenze,maxFontiProteicheGiornaliereSet);
+  if(griglia&&griglia.errors&&griglia.errors.length){await avviso('Impossibile completare la tabella proteine senza violare il piano: '+griglia.errors.join(' · '));return;}
+  if(!fatt.ok){await avviso('Tabella proteine non compatibile con i limiti del nutrizionista.');return;}
+  await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:cloneConfigurazione(tabellaProteineDraft)});await avviso('Tabella proteine salvata.');
+});
 function catturaPosizioniSwipe(){
   return [...document.querySelectorAll('.setting-swipe,.colazione-gruppo-slide')].map((el,i)=>(
     {i, id:el.id||'', gruppo:el.dataset.setColGruppo||'', x:el.scrollLeft}
