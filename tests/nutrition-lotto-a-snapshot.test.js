@@ -94,7 +94,7 @@ assert(
 assert(index.includes("chiave:'setVerdureDisattivate'"));
 assert(motor.includes("'setVerdureDisattivate'"));
 assert(motor.includes("'verdureDisattivate'"),'fallback legacy verdure da preservare durante la migrazione');
-assert(motor.includes("getOne('impostazioni','tettiIngredienteSettimanali')"));
+assert(motor.includes("'tettiIngredienteSettimanali'"),'chiave cap utente deve restare letta dal resolver/motore');
 assert(
   !index.includes("chiave:'tettiIngredienteSettimanali'"),
   'Lotto A snapshot: è comparso un writer UI per i tetti utente; aggiornare audit e test.'
