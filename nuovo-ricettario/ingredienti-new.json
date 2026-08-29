@@ -1,5 +1,5 @@
 {
-  "versione": 19,
+  "versione": 20,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -2569,7 +2569,8 @@
       },
       "allergeni": [],
       "bloccoManuale": false,
-      "nonRichiedeInventario": false
+      "nonRichiedeInventario": false,
+      "cooldownGiorni": 20
     },
     "Spinaci freschi": {
       "kcal": 23,
