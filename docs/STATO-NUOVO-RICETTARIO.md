@@ -167,3 +167,8 @@ con **Proponi nuovo pasto**.
 ## Sequenza automatica Condimenti — 2026-08-29
 
 La prima variante dei Condimenti non è più fissa. `motoreNuovoTracking` conserva `condimentoCursori`, indicizzati per template + ingredienti selezionati. Ogni proposta effettivamente scelta usa la variante successiva compatibile; a fine elenco il ciclo ricomincia. Roll V non consuma né sposta questo cursore.
+
+
+## Rotazione globale Condimenti — 2026-08-29
+
+La precedente rotazione per template/ingredienti è superata. `motoreNuovoTracking.condimentoRotazione` conserva un contatore globale e l'ultimo ordine d'uso di ciascun condimento. Ogni nuova proposta sceglie, tra i condimenti compatibili, quello meno recente; quindi non riparte sempre dal primo elemento dell'array.
