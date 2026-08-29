@@ -117,44 +117,96 @@ function generaCombinazioni(ricetta){
   return combinazioni.map(x=>({slot:x,condimenti:clone(condimenti)}));
 }
 
-function testoGruppo(slot){
-  const pezzi=[];
-  if(slot.testo1) pezzi.push(slot.testo1);
-  if(slot.mostraNomi && slot.ingrediente && slot.ingrediente.nome) pezzi.push(slot.ingrediente.nome);
-  if(slot.cottura && slot.cottura.nome) pezzi.push(slot.cottura.nome);
-  if(slot.testo2) pezzi.push(slot.testo2);
-  return pezzi.join(' ').replace(/\s+/g,' ').trim();
-}
-function testoCondimento(g){
-  const pezzi=[];
-  if(g.testo1) pezzi.push(g.testo1);
-  for(const i of (g.ingredienti||[])) if(i&&i.nome) pezzi.push(i.nome);
-  for(const c of (g.cotture||[])) if(c&&c.nome) pezzi.push(c.nome);
-  if(g.testo2) pezzi.push(g.testo2);
-  return pezzi.join(' ').replace(/\s+/g,' ').trim();
-}
-function nomeTecnico(combinazione){
-  const out=[];
-  for(const s of combinazione.slot){
-    if(s.ingrediente&&s.ingrediente.nome) out.push(s.ingrediente.nome);
-    if(s.cottura&&s.cottura.nome) out.push(s.cottura.nome);
+function estraiPartiRicetta(ricetta,combinazione){
+  const parti=[];
+  const gruppi=Array.isArray(ricetta.gruppi)?ricetta.gruppi:[];
+  let indiceSlot=0;
+
+  for(let indiceGruppo=0; indiceGruppo<gruppi.length; indiceGruppo++){
+    const gruppo=gruppi[indiceGruppo]||{};
+    const categoria=gruppo.categoria||'Nessuno';
+
+    if(gruppo.testo1){
+      parti.push({
+        tipo:'testo1',
+        valore:String(gruppo.testo1),
+        gruppoIndex:indiceGruppo,
+        categoria
+      });
+    }
+
+    if(categoria==='Condimenti'){
+      for(const ingrediente of (gruppo.ingredienti||[])){
+        if(!ingrediente||!ingrediente.nome) continue;
+        parti.push({
+          tipo:'ingrediente',
+          valore:String(ingrediente.nome),
+          gruppoIndex:indiceGruppo,
+          categoria,
+          dato:clone(ingrediente),
+          mostraNomi:!!gruppo.mostraNomi
+        });
+      }
+      for(const cottura of (gruppo.cotture||[])){
+        if(!cottura||!cottura.nome) continue;
+        parti.push({
+          tipo:'cottura',
+          valore:String(cottura.nome),
+          gruppoIndex:indiceGruppo,
+          categoria,
+          dato:clone(cottura)
+        });
+      }
+    }else if(categoria!=='Nessuno'){
+      const slot=combinazione.slot[indiceSlot++]||null;
+      if(slot&&slot.ingrediente&&slot.ingrediente.nome){
+        parti.push({
+          tipo:'ingrediente',
+          valore:String(slot.ingrediente.nome),
+          gruppoIndex:indiceGruppo,
+          categoria,
+          dato:clone(slot.ingrediente),
+          mostraNomi:!!gruppo.mostraNomi
+        });
+      }
+      if(slot&&slot.cottura&&slot.cottura.nome){
+        parti.push({
+          tipo:'cottura',
+          valore:String(slot.cottura.nome),
+          gruppoIndex:indiceGruppo,
+          categoria,
+          dato:clone(slot.cottura)
+        });
+      }
+    }
+
+    if(gruppo.testo2){
+      parti.push({
+        tipo:'testo2',
+        valore:String(gruppo.testo2),
+        gruppoIndex:indiceGruppo,
+        categoria
+      });
+    }
   }
-  for(const g of combinazione.condimenti) for(const i of (g.ingredienti||[])) if(i.nome) out.push(i.nome);
-  return out.join(' · ');
+
+  return parti;
 }
+
+function compilaPartiRicetta(parti){
+  return (parti||[])
+    .filter(p=>p&&p.valore!==undefined&&p.valore!==null&&String(p.valore)!=='')
+    .map(p=>String(p.valore))
+    .join(' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
 function costruisciNomeRicetta(ricetta,combinazione){
-  const pezzi=[];
-  for(const s of combinazione.slot){
-    const t=testoGruppo(s); if(t) pezzi.push(t);
-  }
-  for(const g of combinazione.condimenti){
-    const t=testoCondimento(g); if(t) pezzi.push(t);
-  }
-  const strutturato=pezzi.join(' ').replace(/\s+/g,' ').trim();
+  const parti=estraiPartiRicetta(ricetta,combinazione);
   return {
-    strutturato,
-    tecnico:nomeTecnico(combinazione),
-    display:strutturato || nomeTecnico(combinazione) || ('Ricetta '+ricetta.id)
+    parti,
+    display:compilaPartiRicetta(parti)
   };
 }
 
@@ -292,8 +344,7 @@ async function compilaRicetta(ricetta,combinazione,index){
     recipeModelId:ricetta.id,
     comboIndex:index,
     nome:n.display,
-    nomeStrutturato:n.strutturato,
-    nomeTecnico:n.tecnico,
+    partiRicetta:n.parti,
     classe:clone(ricetta.classe),
     categoriaPrincipale:categoriaPrincipale(classe),
     gruppoProteico:gruppoProteicoDaIngredienti(ingredienti,classe),
@@ -668,7 +719,7 @@ function stato(){ return {pronto:state.pronto,versioneRicette:state.dbRicette&&s
 
 global.DietaPlannerNuovoMotore={
   inizializza,stato,getRicette,getRicetta,
-  generaCombinazioni,costruisciNomeRicetta,
+  generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
   generaPasto,generaPianoSettimana,rigeneraPasto,
