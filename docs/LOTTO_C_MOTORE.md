@@ -198,6 +198,15 @@ Controlli eseguiti:
 
 Smoke integrazione Lotto C: **PASS**.
 
+Controlli di contratto rieseguiti:
+- `engine-core.test.js`: PASS;
+- `nutrition-config.test.js`: PASS;
+- `lotto-c-integration.test.js`: PASS;
+- `nutrition-lotto-a-snapshot.test.js`: PASS;
+- `conformance.test.js`: PASS.
+
+`ui-contract.test.js` contiene invece un'asserzione legacy già incompatibile con l'`index.html` precedente al Lotto C (`if(!haContenutoVoce || !voce.programmatoIl) continue;`). Il Lotto C non ha toccato quella logica di consumo: il test resta segnalato come **stale preesistente** e non è stato corretto "già che c'eravamo", in conformità ad `AGENTS.md`.
+
 ## 15. File applicativi modificati
 
 - `nutrition-config.js`: invariato rispetto al Lotto B;
