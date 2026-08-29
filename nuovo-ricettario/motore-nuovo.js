@@ -28,7 +28,8 @@ const state = {
   ricetteById:new Map(),
   baseByName:new Map(),
   variantByName:new Map(),
-  tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}}
+  tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}},
+  rollCicli:new Map()
 };
 
 function slug(s){
@@ -74,20 +75,19 @@ function groupOptions(g){
   if(!g || g.categoria==='Nessuno' || g.categoria==='Condimenti') return [];
   const ings=Array.isArray(g.ingredienti)?g.ingredienti:[];
   const cooks=Array.isArray(g.cotture)?g.cotture:[];
-  const ingOpts=ings.length?ings:[null];
-  const cookOpts=cooks.length?cooks:[null];
+  const n=Math.max(ings.length,cooks.length,1);
   const out=[];
-  for(const ingrediente of ingOpts){
-    for(const cottura of cookOpts){
-      out.push({
-        categoria:g.categoria,
-        ingrediente:ingrediente?clone(ingrediente):null,
-        cottura:cottura?clone(cottura):null,
-        testo1:g.testo1||'',
-        testo2:g.testo2||'',
-        mostraNomi:!!g.mostraNomi
-      });
-    }
+  for(let i=0;i<n;i++){
+    const ingrediente=ings.length?ings[Math.min(i,ings.length-1)]:null;
+    const cottura=cooks.length?cooks[Math.min(i,cooks.length-1)]:null;
+    out.push({
+      categoria:g.categoria,
+      ingrediente:ingrediente?clone(ingrediente):null,
+      cottura:cottura?clone(cottura):null,
+      testo1:g.testo1||'',
+      testo2:g.testo2||'',
+      mostraNomi:!!g.mostraNomi
+    });
   }
   return out;
 }
@@ -599,6 +599,24 @@ async function poolAmmesso(data,opts){
 }
 function scegliCasuale(pool){ return pool.length?pool[Math.floor(Math.random()*pool.length)]:null; }
 
+function firmaCopertura(r){
+  return Array.from(copertura(r).tokens).sort().join('|');
+}
+function getRollSet(chiave){
+  if(!state.rollCicli.has(chiave)) state.rollCicli.set(chiave,new Set());
+  return state.rollCicli.get(chiave);
+}
+function azzeraRoll(chiave){
+  state.rollCicli.delete(chiave);
+}
+function realizzazioniDaRicette(ricette){
+  return (ricette||[]).map(r=>({
+    ricettaId:r.id,
+    recipeModelId:r.recipeModelId,
+    copertura:Array.from(copertura(r).tokens)
+  }));
+}
+
 async function prioritaInventario(pool){
   const [scad,avanzi,freezer]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getFreezerDisponibili()]);
   for(const src of [scad,avanzi,freezer]){
@@ -647,13 +665,6 @@ async function generaPianoSettimana(scarto,opzioni){
   let tab={};
   try{const r=await getOne('impostazioni','tabellaGiornoCategoria');tab=r&&r.valore||{};}catch(e){}
   const defaults=['carne','pesce','formaggi','uova','legumi','pesce','formaggi','carne','legumi','uova','pesce','formaggi','carne','legumi'];
-  const used=new Set();
-  for(const day of days){
-    for(const pasto of ['pranzo','cena']){
-      const old=await getOne('piano',day+'_'+pasto);
-      for(const x of old&&old.realizzazioni||[])if(x&&x.ricettaId)used.add(x.ricettaId);
-    }
-  }
   const generated=[];
   for(let di=0;di<days.length;di++){
     const day=days[di]; if(day<=today) continue;
@@ -663,16 +674,14 @@ async function generaPianoSettimana(scarto,opzioni){
       const old=await getOne('piano',id);
       if(old&&old.bloccata) continue;
       if(old&&!opzioni.forza&&old.realizzazioni&&old.realizzazioni.length) continue;
-      if(old&&opzioni.forza)for(const x of old.realizzazioni||[])if(x&&x.ricettaId)used.delete(x.ricettaId);
       const target=arr[mi]||defaults[di*2+mi];
-      const x=await generaPasto(target,day,{excludeRecipeIds:[...used]});
+      const x=await generaPasto(target,day,{});
       if(!x) continue;
       await put('piano',{
         id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),
         categoriaTarget:target
       });
-      for(const rr of x.ricette)used.add(rr.id);
       generated.push(id);
     }
   }
@@ -680,14 +689,100 @@ async function generaPianoSettimana(scarto,opzioni){
 }
 
 async function rigeneraPasto(giorno,pasto,target){
-  const id=giorno+'_'+pasto, old=typeof getOne==='function'?await getOne('piano',id):null;
+  const id=giorno+'_'+pasto;
+  const old=typeof getOne==='function'?await getOne('piano',id):null;
   target=target||(old&&old.categoriaTarget)||'legumi';
-  const exclude=(old&&old.realizzazioni||[]).map(x=>x&&x.ricettaId).filter(Boolean);
-  const x=await generaPasto(target,giorno,{ignoraCooldown:true,excludeRecipeIds:exclude});
+
+  const correnti=(old&&old.realizzazioni||[]).map(x=>x&&x.ricettaId).filter(Boolean);
+  const chiave='pasto|'+giorno+'|'+pasto+'|'+target;
+  const visti=getRollSet(chiave);
+  for(const rid of correnti) visti.add(rid);
+
+  let esclusi=new Set([...correnti,...visti]);
+  let x=await generaPasto(target,giorno,{excludeRecipeIds:[...esclusi]});
+
+  if(!x){
+    azzeraRoll(chiave);
+    esclusi=new Set(correnti);
+    x=await generaPasto(target,giorno,{excludeRecipeIds:[...esclusi]});
+    if(!x) x=await generaPasto(target,giorno,{});
+  }
   if(!x) return null;
-  const voce=Object.assign({},old||{id},{modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),categoriaTarget:target});
+
+  const nuovoSet=getRollSet(chiave);
+  for(const rr of x.ricette) nuovoSet.add(rr.id);
+
+  const voce=Object.assign({},old||{id},{
+    modo:'multi',
+    motoreNuovo:true,
+    realizzazioni:x.realizzazioni,
+    porzioni:old&&old.porzioni||1,
+    origine:'motore-nuovo',
+    programmatoIl:new Date().toISOString(),
+    categoriaTarget:target
+  });
   if(typeof put==='function') await put('piano',voce);
   return voce;
+}
+
+async function rollMirato(giorno,pasto,ricettaId){
+  const id=giorno+'_'+pasto;
+  const voce=typeof getOne==='function'?await getOne('piano',id):null;
+  if(!voce||!Array.isArray(voce.realizzazioni)||!voce.realizzazioni.length) return null;
+
+  const corrente=state.ricetteById.get(ricettaId);
+  if(!corrente) return null;
+
+  const firma=firmaCopertura(corrente);
+  const chiave='mirato|'+giorno+'|'+pasto+'|'+firma;
+  const visti=getRollSet(chiave);
+
+  const altriIds=new Set(
+    voce.realizzazioni
+      .map(x=>x&&x.ricettaId)
+      .filter(Boolean)
+      .filter(x=>x!==ricettaId)
+  );
+  visti.add(ricettaId);
+
+  let pool=(await poolAmmesso(giorno,{}))
+    .filter(r=>firmaCopertura(r)===firma)
+    .filter(r=>!altriIds.has(r.id))
+    .filter(r=>!visti.has(r.id));
+
+  pool=await prioritaInventario(pool);
+  let nuovo=scegliCasuale(pool);
+
+  if(!nuovo){
+    azzeraRoll(chiave);
+    pool=(await poolAmmesso(giorno,{}))
+      .filter(r=>firmaCopertura(r)===firma)
+      .filter(r=>!altriIds.has(r.id))
+      .filter(r=>r.id!==ricettaId);
+    pool=await prioritaInventario(pool);
+    nuovo=scegliCasuale(pool);
+    if(!nuovo){
+      pool=(await poolAmmesso(giorno,{}))
+        .filter(r=>firmaCopertura(r)===firma)
+        .filter(r=>!altriIds.has(r.id));
+      pool=await prioritaInventario(pool);
+      nuovo=scegliCasuale(pool);
+    }
+  }
+  if(!nuovo) return null;
+
+  getRollSet(chiave).add(nuovo.id);
+  const nuove=voce.realizzazioni.map(x=>{
+    if(!x||x.ricettaId!==ricettaId) return x;
+    return realizzazioniDaRicette([nuovo])[0];
+  });
+  const aggiornata=Object.assign({},voce,{
+    realizzazioni:nuove,
+    origine:'motore-nuovo',
+    programmatoIl:new Date().toISOString()
+  });
+  if(typeof put==='function') await put('piano',aggiornata);
+  return aggiornata;
 }
 
 async function inizializza(opts){
@@ -699,6 +794,7 @@ async function inizializza(opts){
   ]);
   state.dbRicette=rdb;
   state.ingredientiMap=idb.ingredienti||{};
+  state.rollCicli=new Map();
   await sincronizzaIngredientiIndexedDB();
   const concrete=[];
   for(const r of (rdb.ricette||[])){
@@ -722,7 +818,7 @@ global.DietaPlannerNuovoMotore={
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
-  generaPasto,generaPianoSettimana,rigeneraPasto,
+  generaPasto,generaPianoSettimana,rigeneraPasto,rollMirato,
   registraUtilizzo,copertura
 };
 })(window);
