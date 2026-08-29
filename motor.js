@@ -58,7 +58,7 @@ async function ricetteAmmesse(automatico){
     return true;
   });
 }
-async function filtraContorniPerVerdureAttive(contorni){const r=await getOne('impostazioni','verdureDisattivate');const off=new Set(r&&r.valore||[]);return (contorni||[]).filter(x=>!(x.ingredienti||[]).some(i=>off.has(i.variantId)));}
+async function filtraContorniPerVerdureAttive(contorni){const [r,legacy]=await Promise.all([getOne('impostazioni','setVerdureDisattivate'),getOne('impostazioni','verdureDisattivate')]),off=new Set(r&&r.valore!==undefined?r.valore:(legacy&&legacy.valore||[]));return (contorni||[]).filter(x=>!(x.ingredienti||[]).some(i=>off.has(i.variantId)));}
 function estraiSelezioneCarboidratiUtente(config,origini,stati,explicitZeroKeys){
   config=config||{};origini=origini||{};stati=stati||{};const counts={},hasOrigins=Object.values(origini).some(v=>Array.isArray(v)&&v.length);
   for(const [key,value] of Object.entries(config)){
