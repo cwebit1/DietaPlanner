@@ -157,11 +157,15 @@
     portionMax=portionMax===null?PDF_BASELINE.fruit.portionMaxGrams:portionMax;
 
     if(min<PDF_BASELINE.fruit.dailyMin){pushUnique(warnings,'Frutta: minimo giornaliero alzato al PDF.');min=PDF_BASELINE.fruit.dailyMin;}
+    if(min>PDF_BASELINE.fruit.dailyMax){pushUnique(errors,'Frutta: minimo giornaliero supera il massimo PDF.');min=PDF_BASELINE.fruit.dailyMax;}
     if(max>PDF_BASELINE.fruit.dailyMax){pushUnique(warnings,'Frutta: massimo giornaliero ridotto al PDF.');max=PDF_BASELINE.fruit.dailyMax;}
+    if(max<PDF_BASELINE.fruit.dailyMin){pushUnique(errors,'Frutta: massimo giornaliero sotto il minimo PDF.');max=PDF_BASELINE.fruit.dailyMin;}
     if(min>max){pushUnique(errors,'Frutta: minimo superiore al massimo.');max=min;}
 
     if(portionMin<PDF_BASELINE.fruit.portionMinGrams){pushUnique(warnings,'Frutta: porzione minima alzata al PDF.');portionMin=PDF_BASELINE.fruit.portionMinGrams;}
+    if(portionMin>PDF_BASELINE.fruit.portionMaxGrams){pushUnique(errors,'Frutta: porzione minima supera il massimo PDF.');portionMin=PDF_BASELINE.fruit.portionMaxGrams;}
     if(portionMax>PDF_BASELINE.fruit.portionMaxGrams){pushUnique(warnings,'Frutta: porzione massima ridotta al PDF.');portionMax=PDF_BASELINE.fruit.portionMaxGrams;}
+    if(portionMax<PDF_BASELINE.fruit.portionMinGrams){pushUnique(errors,'Frutta: porzione massima sotto il minimo PDF.');portionMax=PDF_BASELINE.fruit.portionMinGrams;}
     if(portionMin>portionMax){pushUnique(errors,'Frutta: porzione minima superiore alla massima.');portionMax=portionMin;}
 
     return {min,max,portionMin,portionMax};
