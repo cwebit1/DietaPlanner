@@ -55,9 +55,49 @@
     vegano:['carne','pesce','formaggi','uova']
   };
 
+  /* Metadata PDF contestuali. Gli alias per nome servono soltanto a collegare
+     il catalogo corrente alla baseline; il motore non deve dedurre regole dal nome.
+     Quando il catalogo avrà metadata espliciti, questi alias potranno essere migrati. */
+  const PDF_CONTEXT_RULES_EXACT={
+    'uova':{
+      colazione:{maxPerWeek:2,quantityDefault:1,quantityMin:1,quantityMax:2,unit:'pz'},
+      pastoPrincipale:{quantityDefault:2,quantityMin:2,quantityMax:2,unit:'pz'}
+    },
+    'ricotta':{
+      colazione:{quantityDefault:50,quantityMin:50,quantityMax:60,unit:'g'},
+      pastoPrincipale:{quantityDefault:100,quantityMin:100,quantityMax:100,unit:'g'}
+    },
+    'salmone affumicato':{
+      colazione:{quantityDefault:40,quantityMin:40,quantityMax:40,unit:'g'},
+      pastoPrincipale:{quantityDefault:100,quantityMin:100,quantityMax:100,unit:'g'}
+    },
+    'burro':{
+      colazione:{maxPerWeek:2,note:'1 cucchiaino; quantità in grammi da non inferire senza metadata unità'}
+    },
+    'crema di nocciole e cacao':{
+      colazione:{maxPerWeek:2,note:'1 cucchiaino; quantità in grammi da non inferire senza metadata unità'}
+    }
+  };
+  const PDF_CONTEXT_RULES_SUBTYPE={
+    affettati:{
+      colazione:{quantityDefault:40,quantityMin:40,quantityMax:40,unit:'g'},
+      pastoPrincipale:{quantityDefault:60,quantityMin:60,quantityMax:60,unit:'g'}
+    }
+  };
+
   function clone(value){
     if(value===undefined) return undefined;
     return JSON.parse(JSON.stringify(value));
+  }
+  function mergeContextRules(base,extra){
+    const out=clone(base||{});
+    for(const [context,rule] of Object.entries(extra||{}))out[context]=Object.assign({},out[context]||{},clone(rule));
+    return out;
+  }
+  function contextDefaultsForIngredient(meta){
+    meta=meta||{};
+    const name=String(meta.nome||meta.name||'').trim().toLowerCase(),subtype=meta.sottotipo||meta.subtype||null;
+    return mergeContextRules(PDF_CONTEXT_RULES_SUBTYPE[subtype],PDF_CONTEXT_RULES_EXACT[name]);
   }
   function own(obj,key){return !!obj&&Object.prototype.hasOwnProperty.call(obj,key);}
   function finite(value){const n=Number(value);return Number.isFinite(n)?n:null;}
@@ -454,6 +494,9 @@
     PDF_BASELINE:clone(PDF_BASELINE),
     APP_DEFAULTS:clone(APP_DEFAULTS),
     PROFILE_FORBIDDEN_MACROS:clone(PROFILE_FORBIDDEN_MACROS),
+    PDF_CONTEXT_RULES_EXACT:clone(PDF_CONTEXT_RULES_EXACT),
+    PDF_CONTEXT_RULES_SUBTYPE:clone(PDF_CONTEXT_RULES_SUBTYPE),
+    contextDefaultsForIngredient,
     normalizeCarbohydrateSelection,
     resolveCarbohydratePlan:function(input){const errors=[];const plan=resolveCarbohydratePlan(input,errors);return Object.assign({valid:errors.length===0,errors},plan);},
     vegetableCoverage,
