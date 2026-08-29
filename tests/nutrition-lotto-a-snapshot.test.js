@@ -86,9 +86,13 @@ assert(
   'Lotto A snapshot: il bridge frequenze Set non è più hardcoded; aggiornare audit e test.'
 );
 assert(
-  index.includes('await applicaQuantitaNutrizionistaAlleRicette();'),
-  'Lotto A snapshot: il salvataggio nutrizionista non richiama più la mutazione ricette; aggiornare audit e test.'
+  !index.includes('applicaQuantitaNutrizionistaAlleRicette'),
+  'Lotto D: il salvataggio nutrizionista non deve più contenere la mutazione globale delle ricette.'
 );
+assert(index.includes('configAvanzataDefaultCanonico'));
+assert(index.includes('risolviConfigNutrizionista'));
+assert(index.includes('data-vincolo-contesto'));
+assert(index.includes('Regole applicative APP-CWE'));
 
 // Chiavi configurazione: mismatch noto UI/motore e cap utente dormiente.
 assert(index.includes("chiave:'setVerdureDisattivate'"));
