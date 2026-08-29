@@ -28,7 +28,7 @@ const state = {
   ricetteById:new Map(),
   baseByName:new Map(),
   variantByName:new Map(),
-  tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}},
+  tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}, condimentoCursori:{}},
   propostaCicli:new Map()
 };
 
@@ -461,7 +461,7 @@ async function caricaTracking(){
   if(typeof getOne!=='function') return;
   try{
     const r=await getOne('impostazioni','motoreNuovoTracking');
-    if(r&&r.valore) state.tracking=Object.assign({ultimoUtilizzo:{},utilizziSettimanali:{}},r.valore);
+    if(r&&r.valore) state.tracking=Object.assign({ultimoUtilizzo:{},utilizziSettimanali:{},condimentoCursori:{}},r.valore);
   }catch(e){}
 }
 async function salvaTracking(){
@@ -679,6 +679,44 @@ function realizzazioniDaRicette(ricette){
     condimentoVarianteIndex:Number(r.condimentoVarianteIndex)||0
   }));
 }
+function chiaveSequenzaCondimenti(r){
+  const ingredienti=(r&&r.slot||[])
+    .map(s=>s&&s.ingrediente&&s.ingrediente.nome?String(s.ingrediente.nome):'')
+    .filter(Boolean);
+  return 'm'+(r&&r.recipeModelId||'')+'|'+ingredienti.join('|');
+}
+function numeroVariantiCondimentoRicetta(r){
+  if(!r) return 1;
+  const raw={slot:clone(r.slot||[]),condimenti:clone(r.condimentiDisponibili||r.condimenti||[])};
+  return Math.max(1,variantiCondimento(raw).length);
+}
+async function assegnaCondimentiSequenziali(risultato){
+  if(!risultato||!Array.isArray(risultato.realizzazioni)) return risultato;
+  if(!state.tracking.condimentoCursori) state.tracking.condimentoCursori={};
+
+  const realizzazioni=[];
+  let cambiato=false;
+  for(const real of risultato.realizzazioni){
+    const copia=clone(real);
+    const base=state.ricetteById.get(copia&&copia.ricettaId);
+    if(base){
+      const n=numeroVariantiCondimentoRicetta(base);
+      if(n>1){
+        const k=chiaveSequenzaCondimenti(base);
+        const cursor=Number(state.tracking.condimentoCursori[k])||0;
+        copia.condimentoVarianteIndex=((cursor%n)+n)%n;
+        state.tracking.condimentoCursori[k]=(cursor+1)%n;
+        cambiato=true;
+      }else{
+        copia.condimentoVarianteIndex=0;
+      }
+    }
+    realizzazioni.push(copia);
+  }
+  risultato.realizzazioni=realizzazioni;
+  if(cambiato) await salvaTracking();
+  return risultato;
+}
 
 async function livelliPrioritaInventario(){
   const [scad,avanzi,freezer]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getFreezerDisponibili()]);
@@ -763,7 +801,8 @@ async function generaCandidatiPasto(target,data,opts){
 }
 async function generaPasto(target,data,opts){
   const candidati=await generaCandidatiPasto(target,data,opts||{});
-  return scegliCasuale(candidati);
+  const scelto=scegliCasuale(candidati);
+  return scelto?await assegnaCondimentiSequenziali(scelto):null;
 }
 
 async function generaPianoSettimana(scarto,opzioni){
@@ -822,8 +861,9 @@ async function rigeneraPasto(giorno,pasto,target){
     if(!disponibili.length) disponibili=candidati.slice();
   }
 
-  const x=scegliCasuale(disponibili);
+  let x=scegliCasuale(disponibili);
   if(!x) return null;
+  x=await assegnaCondimentiSequenziali(x);
 
   getPropostaSet(chiave).add(x.firmaPasto);
 
