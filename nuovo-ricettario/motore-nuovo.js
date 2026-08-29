@@ -29,7 +29,7 @@ const state = {
   baseByName:new Map(),
   variantByName:new Map(),
   tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}},
-  rollCicli:new Map()
+  propostaCicli:new Map()
 };
 
 function slug(s){
@@ -116,6 +116,32 @@ function generaCombinazioni(ricetta){
     cotture:(g.cotture||[]).map(clone)
   }));
   return combinazioni.map(x=>({slot:x,condimenti:clone(condimenti)}));
+}
+
+function variantiCondimento(combinazione){
+  const gruppi=Array.isArray(combinazione&&combinazione.condimenti)?combinazione.condimenti:[];
+  if(!gruppi.length) return [[]];
+  const opzioni=gruppi.map(g=>{
+    const a=(g.ingredienti||[]).filter(x=>x&&x.nome);
+    return a.length?a:[null];
+  });
+  return prodottoCartesiano(opzioni);
+}
+
+function combinazioneConCondimento(combinazione,indice){
+  const tutte=variantiCondimento(combinazione);
+  const n=tutte.length||1;
+  const idx=((Number(indice)||0)%n+n)%n;
+  const scelte=tutte[idx]||[];
+  const condimenti=(combinazione.condimenti||[]).map((g,i)=>({
+    categoria:'Condimenti',
+    testo1:g.testo1||'',
+    testo2:g.testo2||'',
+    mostraNomi:!!g.mostraNomi,
+    ingredienti:scelte[i]?[clone(scelte[i])]:[],
+    cotture:(g.cotture||[]).map(clone)
+  }));
+  return {slot:clone(combinazione.slot||[]),condimenti,condimentoVarianteIndex:idx,numeroVariantiCondimento:n};
 }
 
 function estraiPartiRicetta(ricetta,combinazione){
@@ -335,8 +361,9 @@ function chiaviStack(combinazione,modelId){
 }
 
 async function compilaRicetta(ricetta,combinazione,index){
-  const n=costruisciNomeRicetta(ricetta,combinazione);
-  const ingredienti=await preparaIngredientiDettagliati(ricetta,combinazione);
+  const selezionata=combinazioneConCondimento(combinazione,0);
+  const n=costruisciNomeRicetta(ricetta,selezionata);
+  const ingredienti=await preparaIngredientiDettagliati(ricetta,selezionata);
   const nut=calcolaNutrienti(ingredienti);
   const classe=tokenClasse(ricetta);
   const id='nr_'+ricetta.id+'_'+index;
@@ -355,9 +382,12 @@ async function compilaRicetta(ricetta,combinazione,index){
     porzioni:1,
     fonte:'nuovo-db-compilato',
     motoreNuovo:true,
-    chiaviStack:chiaviStack(combinazione,ricetta.id),
+    chiaviStack:chiaviStack(selezionata,ricetta.id),
     slot:clone(combinazione.slot),
-    condimenti:clone(combinazione.condimenti)
+    condimenti:clone(selezionata.condimenti),
+    condimentiDisponibili:clone(combinazione.condimenti),
+    condimentoVarianteIndex:0,
+    numeroVariantiCondimento:selezionata.numeroVariantiCondimento
   };
 }
 
@@ -603,18 +633,19 @@ function scegliCasuale(pool){ return pool.length?pool[Math.floor(Math.random()*p
 function firmaCopertura(r){
   return Array.from(copertura(r).tokens).sort().join('|');
 }
-function getRollSet(chiave){
-  if(!state.rollCicli.has(chiave)) state.rollCicli.set(chiave,new Set());
-  return state.rollCicli.get(chiave);
+function getPropostaSet(chiave){
+  if(!state.propostaCicli.has(chiave)) state.propostaCicli.set(chiave,new Set());
+  return state.propostaCicli.get(chiave);
 }
-function azzeraRoll(chiave){
-  state.rollCicli.delete(chiave);
+function azzeraProposte(chiave){
+  state.propostaCicli.delete(chiave);
 }
 function realizzazioniDaRicette(ricette){
   return (ricette||[]).map(r=>({
     ricettaId:r.id,
     recipeModelId:r.recipeModelId,
-    copertura:Array.from(copertura(r).tokens)
+    copertura:Array.from(copertura(r).tokens),
+    condimentoVarianteIndex:Number(r.condimentoVarianteIndex)||0
   }));
 }
 
@@ -746,15 +777,15 @@ async function rigeneraPasto(giorno,pasto,target){
     .filter(Boolean);
   const firmaCorrente=firmaPastoDaRicette(correnti);
   const chiave='pasto|'+giorno+'|'+pasto+'|'+target;
-  let visti=getRollSet(chiave);
+  let visti=getPropostaSet(chiave);
   if(firmaCorrente) visti.add(firmaCorrente);
 
   const candidati=await generaCandidatiPasto(target,giorno,{});
   let disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
 
   if(!disponibili.length){
-    azzeraRoll(chiave);
-    visti=getRollSet(chiave);
+    azzeraProposte(chiave);
+    visti=getPropostaSet(chiave);
     if(firmaCorrente) visti.add(firmaCorrente);
     disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
     if(!disponibili.length) disponibili=candidati.slice();
@@ -763,7 +794,7 @@ async function rigeneraPasto(giorno,pasto,target){
   const x=scegliCasuale(disponibili);
   if(!x) return null;
 
-  getRollSet(chiave).add(x.firmaPasto);
+  getPropostaSet(chiave).add(x.firmaPasto);
 
   const voce=Object.assign({},old||{id},{
     modo:'multi',
@@ -778,59 +809,146 @@ async function rigeneraPasto(giorno,pasto,target){
   return voce;
 }
 
-async function rollMirato(giorno,pasto,ricettaId){
-  const id=giorno+'_'+pasto;
-  const voce=typeof getOne==='function'?await getOne('piano',id):null;
-  if(!voce||!Array.isArray(voce.realizzazioni)||!voce.realizzazioni.length) return null;
+function templateRicetta(id){
+  return state.dbRicette&&Array.isArray(state.dbRicette.ricette)
+    ? state.dbRicette.ricette.find(r=>String(r.id)===String(id))
+    : null;
+}
 
-  const corrente=state.ricetteById.get(ricettaId);
-  if(!corrente) return null;
+async function materializzaRicetta(base,condimentoVarianteIndex){
+  if(!base) return null;
+  const ricetta=templateRicetta(base.recipeModelId);
+  if(!ricetta) return clone(base);
+  const raw={
+    slot:clone(base.slot||[]),
+    condimenti:clone(base.condimentiDisponibili||base.condimenti||[])
+  };
+  const selezionata=combinazioneConCondimento(raw,condimentoVarianteIndex);
+  const n=costruisciNomeRicetta(ricetta,selezionata);
+  const ingredienti=await preparaIngredientiDettagliati(ricetta,selezionata);
+  const nut=calcolaNutrienti(ingredienti);
+  return Object.assign({},clone(base),{
+    nome:n.display,
+    partiRicetta:n.parti,
+    ingredienti,
+    nutrienti:nut,
+    nutrizioneManualeTotale:{kcal:nut.kcal,prot:nut.proteine,carb:nut.carboidrati,grassi:nut.grassi},
+    condimenti:clone(selezionata.condimenti),
+    condimentoVarianteIndex:selezionata.condimentoVarianteIndex,
+    numeroVariantiCondimento:selezionata.numeroVariantiCondimento
+  });
+}
 
-  const firma=firmaCopertura(corrente);
-  const chiave='mirato|'+giorno+'|'+pasto+'|'+firma;
-  const visti=getRollSet(chiave);
+async function materializzaRealizzazione(realizzazione){
+  if(!realizzazione||!realizzazione.ricettaId) return null;
+  const base=state.ricetteById.get(realizzazione.ricettaId);
+  return materializzaRicetta(base,Number(realizzazione.condimentoVarianteIndex)||0);
+}
 
-  const altriIds=new Set(
-    voce.realizzazioni
-      .map(x=>x&&x.ricettaId)
-      .filter(Boolean)
-      .filter(x=>x!==ricettaId)
-  );
-  visti.add(ricettaId);
+function firmaCotture(r){
+  return (r.slot||[]).map((s,i)=>i+':'+(s.categoria||'')+':'+(s.cottura&&s.cottura.nome||'')).join('|');
+}
+function firmaIngredienti(r){
+  return (r.slot||[]).map((s,i)=>i+':'+(s.categoria||'')+':'+(s.ingrediente&&s.ingrediente.nome||'')).join('|');
+}
 
-  let pool=(await poolAmmesso(giorno,{}))
-    .filter(r=>firmaCopertura(r)===firma)
-    .filter(r=>!altriIds.has(r.id))
-    .filter(r=>!visti.has(r.id));
+async function alternativeRollC(base,giorno,condimentoIndex){
+  if(!base) return [];
+  const pool=state.ricetteConcrete
+    .filter(r=>r.recipeModelId===base.recipeModelId)
+    .filter(r=>firmaCotture(r)===firmaCotture(base));
+  const out=[];
+  for(const r of pool){
+    const x=await materializzaRicetta(r,condimentoIndex);
+    if(await ricettaAmmessa(x,giorno,{})) out.push(r);
+  }
+  return out.sort((a,b)=>a.comboIndex-b.comboIndex);
+}
 
-  pool=await prioritaInventario(pool);
-  let nuovo=scegliCasuale(pool);
+async function alternativeRollP(base,giorno,condimentoIndex){
+  if(!base) return [];
+  const pool=state.ricetteConcrete
+    .filter(r=>r.recipeModelId===base.recipeModelId)
+    .filter(r=>firmaIngredienti(r)===firmaIngredienti(base));
+  const out=[];
+  for(const r of pool){
+    const x=await materializzaRicetta(r,condimentoIndex);
+    if(await ricettaAmmessa(x,giorno,{})) out.push(r);
+  }
+  return out.sort((a,b)=>a.comboIndex-b.comboIndex);
+}
 
-  if(!nuovo){
-    azzeraRoll(chiave);
-    pool=(await poolAmmesso(giorno,{}))
-      .filter(r=>firmaCopertura(r)===firma)
-      .filter(r=>!altriIds.has(r.id))
-      .filter(r=>r.id!==ricettaId);
-    pool=await prioritaInventario(pool);
-    nuovo=scegliCasuale(pool);
-    if(!nuovo){
-      pool=(await poolAmmesso(giorno,{}))
-        .filter(r=>firmaCopertura(r)===firma)
-        .filter(r=>!altriIds.has(r.id));
-      pool=await prioritaInventario(pool);
-      nuovo=scegliCasuale(pool);
+async function alternativeRollV(base,giorno){
+  if(!base) return [];
+  const n=Number(base.numeroVariantiCondimento)||1;
+  const out=[];
+  for(let idx=0;idx<n;idx++){
+    const x=await materializzaRicetta(base,idx);
+    if(await ricettaAmmessa(x,giorno,{})) out.push(idx);
+  }
+  return out;
+}
+
+async function proprietarioRoll(voce,tipo,giorno){
+  for(let i=0;i<(voce.realizzazioni||[]).length;i++){
+    const real=voce.realizzazioni[i];
+    const base=state.ricetteById.get(real&&real.ricettaId);
+    if(!base) continue;
+    const idx=Number(real.condimentoVarianteIndex)||0;
+    if(tipo==='C'){
+      const a=await alternativeRollC(base,giorno,idx);
+      if(a.length>1) return {indice:i,base,alternative:a};
+    }else if(tipo==='P'){
+      const a=await alternativeRollP(base,giorno,idx);
+      if(a.length>1) return {indice:i,base,alternative:a};
+    }else if(tipo==='V'){
+      const a=await alternativeRollV(base,giorno);
+      if(a.length>1) return {indice:i,base,alternative:a};
     }
   }
-  if(!nuovo) return null;
+  return null;
+}
 
-  getRollSet(chiave).add(nuovo.id);
-  const nuove=voce.realizzazioni.map(x=>{
-    if(!x||x.ricettaId!==ricettaId) return x;
-    return realizzazioniDaRicette([nuovo])[0];
-  });
+async function statoRollPasto(giorno,pasto){
+  const voce=typeof getOne==='function'?await getOne('piano',giorno+'_'+pasto):null;
+  if(!voce||!Array.isArray(voce.realizzazioni)) return {C:false,P:false,V:false};
+  return {
+    C:!!(await proprietarioRoll(voce,'C',giorno)),
+    P:!!(await proprietarioRoll(voce,'P',giorno)),
+    V:!!(await proprietarioRoll(voce,'V',giorno))
+  };
+}
+
+async function ruotaPasto(giorno,pasto,tipo){
+  tipo=String(tipo||'').toUpperCase();
+  if(!['C','P','V'].includes(tipo)) return null;
+  const id=giorno+'_'+pasto;
+  const voce=typeof getOne==='function'?await getOne('piano',id):null;
+  if(!voce||!Array.isArray(voce.realizzazioni)) return null;
+
+  const owner=await proprietarioRoll(voce,tipo,giorno);
+  if(!owner) return null;
+
+  const real=clone(voce.realizzazioni[owner.indice]);
+  const condIndex=Number(real.condimentoVarianteIndex)||0;
+
+  if(tipo==='V'){
+    const a=owner.alternative;
+    const pos=a.indexOf(condIndex);
+    real.condimentoVarianteIndex=a[(pos<0?0:pos+1)%a.length];
+  }else{
+    const a=owner.alternative;
+    const pos=a.findIndex(r=>r.id===real.ricettaId);
+    const prossimo=a[(pos<0?0:pos+1)%a.length];
+    real.ricettaId=prossimo.id;
+    real.recipeModelId=prossimo.recipeModelId;
+    real.copertura=Array.from(copertura(prossimo).tokens);
+    real.condimentoVarianteIndex=condIndex;
+  }
+
+  const realizzazioni=voce.realizzazioni.map((x,i)=>i===owner.indice?real:x);
   const aggiornata=Object.assign({},voce,{
-    realizzazioni:nuove,
+    realizzazioni,
     origine:'motore-nuovo',
     programmatoIl:new Date().toISOString()
   });
@@ -847,7 +965,7 @@ async function inizializza(opts){
   ]);
   state.dbRicette=rdb;
   state.ingredientiMap=idb.ingredienti||{};
-  state.rollCicli=new Map();
+  state.propostaCicli=new Map();
   await sincronizzaIngredientiIndexedDB();
   const concrete=[];
   for(const r of (rdb.ricette||[])){
@@ -871,7 +989,7 @@ global.DietaPlannerNuovoMotore={
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
-  generaPasto,generaPianoSettimana,rigeneraPasto,rollMirato,
+  generaPasto,generaPianoSettimana,rigeneraPasto,statoRollPasto,ruotaPasto,materializzaRealizzazione,
   registraUtilizzo,copertura
 };
 })(window);
