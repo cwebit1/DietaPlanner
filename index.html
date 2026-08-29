@@ -2860,15 +2860,13 @@ async function renderMantieniSwipe(renderFn){
 }
 
 async function renderSetPreferenzeMenu(){
-  const recLim=await getOne('impostazioni','setProteineLimitate');
-  const salvate=recLim&&Array.isArray(recLim.valore)?recLim.valore:[];
-  const esclusa=salvate.length?salvate[0]:null;
+  const [recLim,cfgProt]=await Promise.all([getOne('impostazioni','setProteineLimitate'),getConfigProteine()]);
+  const salvate=recLim&&Array.isArray(recLim.valore)?recLim.valore:[],esclusa=salvate.length?salvate[0]:null,ammesseProt=CATEGORIE_PROTEICHE_SET.filter(c=>!(cfgProt.frequenze[c.chiave]&&cfgProt.frequenze[c.chiave].max===0));
   const elLim=document.getElementById('setProteineLimitate');
   if(elLim){
-    elLim.innerHTML=CATEGORIE_PROTEICHE_SET.map(c=>`<button data-set-prot-lim="${c.chiave}" class="${esclusa===c.chiave?'active':''}">${c.label}</button>`).join('');
+    elLim.innerHTML=ammesseProt.map(c=>`<button data-set-prot-lim="${c.chiave}" class="${esclusa===c.chiave?'active':''}">${c.label}</button>`).join('');
     elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{
-      const k=b.dataset.setProtLim;
-      const nuova=(esclusa===k)?[]:[k];
+      const k=b.dataset.setProtLim,nuova=(esclusa===k)?[]:[k];
       await put('impostazioni',{chiave:'setProteineLimitate',valore:nuova});
       await renderMantieniSwipe(renderSetPreferenzeMenu);
     }));
@@ -2878,21 +2876,22 @@ async function renderSetPreferenzeMenu(){
   const elTempo=document.getElementById('setTempoMenu');
   if(elTempo){
     elTempo.innerHTML=`<button data-set-tempo="pranzo" class="${tempo.pranzo?'active':''}">Poco tempo a pranzo</button><button data-set-tempo="cena" class="${tempo.cena?'active':''}">Poco tempo a cena</button><button data-set-tempo="nessuno" class="${(!tempo.pranzo&&!tempo.cena)?'active':''}">Ho tempo</button>`;
-    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{ const k=b.dataset.setTempo; if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;} else tempo[k]=!tempo[k]; await put('impostazioni',{chiave:'setPocoTempo',valore:tempo}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
+    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{const k=b.dataset.setTempo;if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;}else tempo[k]=!tempo[k];await put('impostazioni',{chiave:'setPocoTempo',valore:tempo});await renderMantieniSwipe(renderSetPreferenzeMenu);}));
   }
-  const recV=await getOne('impostazioni','setVerdurePreferite'); const pref=new Set(recV&&recV.valore?recV.valore:[]);
+  const recV=await getOne('impostazioni','setVerdurePreferite'),pref=new Set(recV&&recV.valore?recV.valore:[]);
   const stag=verdureDiStagione(new Date());
-  const invPref=await getAll('inventario'); const varPref=await getAll('varianti');
+  const [invPref,varPref,basi,resolvedClinical]=await Promise.all([getAll('inventario'),getAll('varianti'),getAll('ingredienti'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
+  const baseBy=new Map(basi.map(b=>[b.id,b])),blockedNames=new Set(basi.filter(b=>ingredienteEsclusoClinicamenteNelSet(b,resolvedClinical)).map(b=>b.nome));
   const inCasaPref=new Set(invPref.filter(i=>i.stato==='disponibile'&&i.quantita>0).map(i=>i.variantId));
-  const nomiInCasa=varPref.filter(v=>inCasaPref.has(v.id)).map(v=>v.nome);
-  const listaPref=Array.from(new Set([...stag,...nomiInCasa]));
+  const nomiInCasa=varPref.filter(v=>inCasaPref.has(v.id)&&!ingredienteEsclusoClinicamenteNelSet(baseBy.get(v.ingredienteId),resolvedClinical)).map(v=>v.nome);
+  const listaPref=Array.from(new Set([...stag.filter(n=>!blockedNames.has(n)),...nomiInCasa]));
   const elV=document.getElementById('setVerdurePreferiteLista');
   if(elV){
-    const stagOrd=listaPref.sort((a,b)=>a.localeCompare(b,'it')); elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('') + `<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
-    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{ const v=b.dataset.setVerdPref; pref.has(v)?pref.delete(v):pref.add(v); await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]}); await renderMantieniSwipe(renderSetPreferenzeMenu); }));
-    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{ await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]}); await renderMantieniSwipe(renderSetPreferenzeMenu); });
+    const stagOrd=listaPref.sort((a,b)=>a.localeCompare(b,'it'));elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('')+`<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
+    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{const v=b.dataset.setVerdPref;pref.has(v)?pref.delete(v):pref.add(v);await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]});await renderMantieniSwipe(renderSetPreferenzeMenu);}));
+    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]});await renderMantieniSwipe(renderSetPreferenzeMenu);});
   }
-  const nota=document.getElementById('setVerdurePreferiteNota'); if(nota){ const alte=[...pref].filter(n=>ingredientiJsonMap[n]?.deperibilita==='alta'); nota.textContent=alte.length?'💡 Molto deperibili: '+alte.join(', ')+'; il motore può limitarle a fine settimana.':''; }
+  const nota=document.getElementById('setVerdurePreferiteNota');if(nota){const alte=[...pref].filter(n=>ingredientiJsonMap[n]?.deperibilita==='alta'&&!blockedNames.has(n));nota.textContent=alte.length?'💡 Molto deperibili: '+alte.join(', ')+'; il motore può limitarle a fine settimana.':'';}
 }
 
 document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async ()=>{
@@ -3596,10 +3595,10 @@ async function salvaLimitiPersonaliSet(mostraMessaggio){
   if(mostraMessaggio!==false)await avviso('Limiti personali salvati.');return {ok:true,resolved};
 }
 async function renderSetCerealiGradimento(){
-  const [basi,rec]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','cerealiNonGraditi')]),box=document.getElementById('setCerealiGradimento');if(!box)return;
-  const cereals=basi.filter(b=>b.gruppo==='carboidrati').sort((a,b)=>a.nome.localeCompare(b.nome,'it')),off=new Set(rec&&rec.valore||[]);
-  box.innerHTML=cereals.map(b=>`<button type="button" data-cereale-gradimento="${b.id}" class="${off.has(b.id)?'active':''}">${b.nome}</button>`).join('');
-  box.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',async()=>{const id=btn.dataset.cerealeGradimento;if(off.has(id))off.delete(id);else{if(off.size>=Math.max(0,cereals.length-1)){await avviso('Deve restare almeno un cereale disponibile.');return;}off.add(id);}await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[...off]});renderSetCerealiGradimento();}));
+  const [basi,rec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','cerealiNonGraditi'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]),box=document.getElementById('setCerealiGradimento');if(!box)return;
+  const cereals=basi.filter(b=>b.gruppo==='carboidrati').sort((a,b)=>a.nome.localeCompare(b.nome,'it')),off=new Set(rec&&rec.valore||[]),allowed=cereals.filter(b=>!ingredienteEsclusoClinicamenteNelSet(b,resolved)),allowedIds=new Set(allowed.map(b=>b.id));
+  box.innerHTML=cereals.map(b=>{const clinical=ingredienteEsclusoClinicamenteNelSet(b,resolved);return `<button type="button" data-cereale-gradimento="${b.id}" class="${clinical?'inactive-red piano':(off.has(b.id)?'active':'')}" ${clinical?'disabled title="Escluso dal piano nutrizionista"':''}>${b.nome}${clinical?' · piano':''}</button>`;}).join('');
+  box.querySelectorAll('[data-cereale-gradimento]:not([disabled])').forEach(btn=>btn.addEventListener('click',async()=>{const id=btn.dataset.cerealeGradimento;if(off.has(id))off.delete(id);else{const offAllowed=[...off].filter(x=>allowedIds.has(x));if(offAllowed.length>=Math.max(0,allowed.length-1)){await avviso('Deve restare almeno un cereale consentito dal piano disponibile.');return;}off.add(id);}await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[...off]});renderSetCerealiGradimento();}));
 }
 
 document.querySelectorAll('[data-close]').forEach(btn=>{
