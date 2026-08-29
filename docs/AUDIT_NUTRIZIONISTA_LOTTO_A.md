@@ -310,3 +310,30 @@ Restano aperti e NON vanno considerati risolti:
 - manuale/ricerca non ancora completamente unificati al resolver.
 
 Documento operativo corrente: `docs/LOTTO_C_MOTORE.md`.
+
+
+## 13. Aggiornamento stato dopo Lotto D
+
+Correzioni effettuate nel Lotto D:
+- il Setting nutrizionista usa `nutrition-config.js` come sorgente canonica per default, valori effettivi e validazione finale;
+- il salvataggio non richiama più `applicaQuantitaNutrizionistaAlleRicette()`;
+- la funzione di mutazione globale e la chiamata automatica all'avvio sono state rimosse;
+- reset e cap runtime già esistenti passano dalla configurazione canonica;
+- quantità/limiti contestuali `colazione`, `pastoPrincipale`, `spuntino` sono rappresentabili e salvabili;
+- sono esposti riferimenti PDF contestuali per Uova, Ricotta, Salmone affumicato, famiglia affettati, Burro e Crema di nocciole/cacao;
+- le frequenze delle macro escluse da vegetariano/vegano vengono disabilitate nella vista senza inventare nuovi range;
+- la vista distingue esplicitamente blocco PDF/piano nutrizionale e regole APP-CWE.
+
+Restano aperti dopo Lotto D:
+- Set proteine ancora hardcoded: Lotto E;
+- stato persistente carboidrati AUTO / 0 / FISSO: Lotto E;
+- cap utente per ingrediente: Lotto E;
+- quantità contestuali non ancora applicate a realizzazioni/nutrizione/inventario/spesa/storico;
+- Gallette/Crackers nella UI Set ancora da allineare;
+- classi carboidrati complessi/semplici non ancora propagate al Set/generatore;
+- frutta, olio, cooldown, deadline e altri parametri non ancora consumati in tutti i percorsi;
+- yogurt Müller/aromatizzato non presenti nel catalogo;
+- salsa di soia ancora senza unità contestuale strutturata;
+- stato soft `da limitare`.
+
+Documento operativo corrente: `docs/LOTTO_D_SETTING_NUTRIZIONISTA.md`.
