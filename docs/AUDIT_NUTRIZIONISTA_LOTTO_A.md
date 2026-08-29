@@ -125,11 +125,19 @@ Stato corrente di `CONFIG_CARB_TIPI` / `CARBOIDRATI_PASTO`:
 | Friselle | limitato 0-2 | limitato 0-2 | **OK** |
 | Taralli/Grissini/Crostini | limitato 0-2 | limitato 0-2 | **OK** |
 | Pasta sfoglia/brisée | limitato 0-2 | limitato 0-2 | **OK** |
-| Gallette | non limitato | non limitato | **OK** |
-| Crackers pasto | non limitato | non limitato | **OK** |
-| Piadina | **limitato 0-2** | **non limitata dal PDF** | **CONFLITTO** |
+| Gallette | **non limitato** | **limitato 0-2** | **CONFLITTO** |
+| Crackers pasto | **non limitato** | **limitato 0-2** | **CONFLITTO** |
+| Piadina | limitato 0-2 | limitato 0-2 | **OK** |
+
+**Correzione audit V1.1:** la pagina 14 è stata ricontrollata visivamente. La nota 0-2 è una cella unica che copre il blocco Gallette, Crackers, Friselle, Taralli/Grissini/Crostini e Piadina. La precedente lettura che lasciava fuori Gallette/Crackers/Piadina era errata.
 
 Il tetto globale `CONFIG_CARB_TETTO_LIMITATI = 3` / `limitedCarbTotalMax = 3` resta una regola **APP-CWE**, non PDF. Non viene toccato finché non viene deciso esplicitamente di rimuoverlo.
+
+### 6.1 Zero nel Set utente
+
+Requisito vincolante: **0 significa non proporre quel carboidrato nella generazione automatica**. Se l'utente imposta Piadina=0, la Piadina non può rientrare tramite fallback.
+
+Audit del motore attuale: `engine-core.js::chooseCarb()` quando `carbRemaining` non offre più voci ricostruisce un pool da `Object.keys(defs)` e può quindi riaprire voci senza residuo; inoltre esistono regole speciali che possono forzare un carboidrato. Stato: **RISCHIO BYPASS**. Va reso impossibile nel Lotto motore.
 
 ## 7. Verdure
 
@@ -140,6 +148,14 @@ UI Set:
 - leggono `verdureDisattivate`.
 
 Stato: **CONFLITTO CHIAVE**; la preferenza può non arrivare al motore nuovo.
+
+### 7.1 Copertura quantitativa e residuo verdura
+
+Il PDF richiede una porzione completa di verdura al pasto (200-250 g ortaggi oppure 70-80 g insalata) e consente di combinare alimenti dello stesso gruppo. La regola operativa confermata da Cwe è quindi quantitativa: la verdura presente in un primo/sugo contribuisce alla porzione e va aggiunto **solo il residuo**.
+
+Audit del motore attuale: `componiPastoModulare()` decide il contorno tramite `E.parseCoverage(protein)` e, se manca `V`, chiama `scegliContornoMotore()` per una porzione completa. Non calcola la quantità di verdura già contenuta nel primo o nel sugo. Stato: **CONFLITTO/RISCHIO SOVRADOSAGGIO**.
+
+La correzione dovrà usare una quota di porzione, non un semplice booleano `V`: 100 g di zucchine su target 200 g = 0,5 porzione; residuo = 0,5 porzione. Lo stesso principio vale a prescindere dal componente in cui la verdura è contenuta.
 
 Classificazioni dati verificate:
 - `Patate` → carboidrati: **OK**.
@@ -217,7 +233,9 @@ Mancavano test specifici per:
 - mismatch chiavi verdure;
 - side effect quantità;
 - ricette miste con Speck/salmone affumicato;
-- classificazione piadina;
+- classificazione blocco carboidrati 0-2 (in particolare Gallette/Crackers/Piadina);
+- semantica hard di `0` nel budget carboidrati;
+- calcolo quantitativo del residuo verdura nei sughi/primi;
 - distinzione default PDF/range PDF.
 
 Il Lotto A aggiunge una fixture normativa e uno snapshot tecnico. I test di comportamento desiderato verranno aggiunti **prima** delle singole correzioni nei Lotti successivi.
