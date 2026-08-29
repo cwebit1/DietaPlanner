@@ -1,4 +1,4 @@
-# DietaPlanner — Baseline nutrizionista PDF V1.1
+# DietaPlanner — Baseline nutrizionista PDF V1.2
 
 **Data baseline:** 2026-08-29  
 **Fonte nutrizionale primaria:** `PERCORSO ALIMENTARE MIRIA SPILLER.pdf` (22 pagine, letto integralmente e verificato visivamente nelle tabelle principali).  
@@ -227,6 +227,12 @@ Questi possono restare se approvati, ma devono essere distinti:
 52. **Non usare fallback che riattivano carboidrati a budget zero**: se la configurazione residua non consente una scelta, il motore deve risolvere l'incompatibilità o segnalare l'impossibilità; non può pescare da voci impostate a 0.
 53. **Rendere quantitativa la copertura verdura del pasto**: sommare la quota di porzione già presente in primo, sugo, proteina/ricetta completa e altri componenti validi.
 54. **Aggiungere soltanto la verdura residua necessaria**: `residuo = max(0, porzioneRichiesta - quotaEquivalenteGiàPresente)`. Esempio: un sugo con metà porzione di zucchine deve far aggiungere metà porzione di verdura, non una porzione intera. Se la porzione è già completa, nessun contorno aggiuntivo.
+55. **Distinguere nel Set carboidrati tre stati logici**, perché "non impostato" e "0 esplicito" non possono avere lo stesso significato: `AUTO` = il sistema può usare la voce; `0/ESCLUSO` = non deve mai proporla nell'automatico; `N>0/FISSO` = numero esatto di occorrenze settimanali richieste dall'utente.
+56. **Schema base automatico quando l'utente non imposta nulla**: costruire comunque i 14 slot carboidrato usando esclusivamente carboidrati senza tetto settimanale PDF e non esclusi dall'utente. I carboidrati con tetto settimanale non entrano mai nel riempimento automatico di base.
+57. **Se l'utente imposta quantità positive, quelle quantità sono esatte e prioritarie**. Esempio: Friselle=2 significa esattamente 2 friselle nella settimana; i restanti 12 slot vengono completati automaticamente con carboidrati senza tetto settimanale, rispettando eventuali esclusioni utente.
+58. **La natura e la disposizione dei posti auto-compilati sono casuali**: dopo aver fissato le occorrenze esplicite dell'utente, il sistema sceglie casualmente le tipologie ammesse per completare a 14 e distribuisce casualmente l'intero budget nei 14 slot pranzo/cena. Non deve aggiungere autonomamente una voce a tetto.
+59. **Nessun riempimento può violare uno 0 esplicito**. Se le esclusioni dell'utente lasciano un pool insufficiente a completare 14 slot, il sistema segnala configurazione impossibile invece di riattivare alimenti esclusi.
+60. **Il riempimento automatico non trasforma un tetto PDF in un obiettivo**: i carboidrati 0-2 sono disponibili soltanto se scelti dall'utente; il motore non deve "consumare il margine" solo perché esiste.
 
 ## 5. Ordine obbligatorio di lavoro anti-regressione
 
