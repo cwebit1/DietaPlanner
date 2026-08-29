@@ -2095,13 +2095,7 @@ function verdureDiStagione(data){
   return VERDURE_STAGIONALI[mese] || [];
 }
 
-const FREQUENZE_CONSIGLIATE = {
-  carne:    {min:1, max:3},
-  pesce:    {min:2, max:3},
-  formaggi: {min:2, max:3},
-  uova:     {min:1, max:2},
-  legumi:   {min:2, max:3}
-};
+const FREQUENZE_CONSIGLIATE=cloneConfigurazione(globalThis.DietaPlannerNutritionConfig&&globalThis.DietaPlannerNutritionConfig.PDF_BASELINE.proteinFrequencies||{});
 /* Sottotipo salvato su ricetta.gruppoProteico -> a quale tetto generale contribuisce */
 const SOTTOTIPO_A_GRUPPO = {
   carne_bianca:'carne', carne_rossa:'carne', affettati:'carne',
@@ -2110,9 +2104,7 @@ const SOTTOTIPO_A_GRUPPO = {
   uova:'uova', legumi:'legumi'
 };
 /* Tetti settimanali aggiuntivi per sottocategorie "da limitare" (motivo sodio/grassi saturi) */
-const EXTRA_CAP_SOTTOTIPI = {
-  carne_rossa: 1, affettati: 1, pesce_grande: 1, pesce_conservato: 1
-};
+const EXTRA_CAP_SOTTOTIPI=cloneConfigurazione(globalThis.DietaPlannerNutritionConfig&&globalThis.DietaPlannerNutritionConfig.PDF_BASELINE.subtypeCaps||{});
 /* Tetti settimanali per spuntini "da limitare" (B12). Patatine/Grisbi: alternative
    condivise, stesso tetto (max 1-2/sett. -> uso il limite superiore 2). Grana,
    crackers, pane+marmellata: ciascuno max 2-3/sett. (uso il limite superiore 3). */
