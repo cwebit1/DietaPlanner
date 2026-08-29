@@ -22,6 +22,10 @@
   .ingrediente-riga input[type=checkbox]{width:auto;flex:0 0 auto;}
   .ingrediente-riga .nome-ingr{flex:0 0 40%;font-size:0.8rem;}
   .ingrediente-riga input[type=text]{flex:1;}
+  .compat-condimenti{flex:0 0 100%;margin:5px 0 2px 22px;padding:6px 8px;background:var(--card2);border:1px solid var(--border);border-radius:6px;}
+  .compat-condimenti .titolo{font-size:0.68rem;color:var(--dim);margin-bottom:4px;}
+  .compat-condimenti .opzioni{display:flex;flex-wrap:wrap;gap:6px;}
+  .compat-condimenti label{display:flex;align-items:center;gap:4px;margin:0;font-size:0.7rem;color:var(--text);}
   .btn-add{background:var(--card2);border:1px dashed var(--border);color:var(--accent);border-radius:6px;padding:6px 10px;font-size:0.78rem;width:100%;margin-top:8px;}
   .btn-add:disabled{opacity:0.4;border-style:solid;color:var(--dim);}
   .btn-main{background:var(--accent);color:#12220a;border:none;border-radius:8px;padding:10px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;width:100%;margin-top:10px;}
@@ -310,16 +314,65 @@ function renderIngredientiGruppo(idGruppo, valore, preselezionati) {
     const stack = pre && pre.stack !== undefined ? pre.stack : 1;
     const roll = pre && pre.roll !== undefined ? pre.roll : 1;
     const dose = pre && pre.dose !== undefined ? pre.dose : '';
+    const condimentiCompatibili = pre && Array.isArray(pre.condimentiCompatibili) ? pre.condimentiCompatibili : null;
+    const condimentiEncoded = encodeURIComponent(JSON.stringify(condimentiCompatibili));
     return `
-    <div class="ingrediente-riga ingrediente-riga-due-colonne">
+    <div class="ingrediente-riga ingrediente-riga-due-colonne" data-condimenti-iniziali="${condimentiEncoded}">
       <label class="colonna-sx">
         <input type="checkbox" class="ingr-check" data-nome="${nome}" data-stack="${stack}" data-roll="${roll}" ${set.has(nome) ? 'checked' : ''}>
         <span class="nome-ingr">${nome}</span>
       </label>
       <input type="number" class="campo-dose colonna-dx" placeholder="g" value="${dose}">
+      <div class="compat-condimenti" style="display:none;"></div>
     </div>
   `;
   }).join('');
+  box.querySelectorAll('.ingr-check').forEach(chk => chk.addEventListener('change', aggiornaCompatibilitaCondimenti));
+  aggiornaCompatibilitaCondimenti();
+}
+
+function condimentiSelezionatiCorrenti() {
+  const out = [];
+  for (const id of ['gruppo1','gruppo2','gruppo3','gruppo4']) {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.categoriaAttiva !== 'Condimenti') continue;
+    el.querySelectorAll('.ingr-check:checked').forEach(chk => out.push(chk.dataset.nome));
+  }
+  return [...new Set(out)];
+}
+
+function aggiornaCompatibilitaCondimenti() {
+  const condimenti = condimentiSelezionatiCorrenti();
+  for (const id of ['gruppo1','gruppo2','gruppo3','gruppo4']) {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.categoriaAttiva === 'Condimenti' || el.dataset.categoriaAttiva === 'Nessuno') continue;
+
+    el.querySelectorAll('.ingrediente-riga').forEach(riga => {
+      const principale = riga.querySelector(':scope > label .ingr-check');
+      const box = riga.querySelector(':scope > .compat-condimenti');
+      if (!principale || !box) return;
+      if (!principale.checked || !condimenti.length) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      const correnti = [...box.querySelectorAll('.compat-cond-check:checked')].map(x => x.dataset.nome);
+      let iniziali = null;
+      try {
+        iniziali = JSON.parse(decodeURIComponent(riga.dataset.condimentiIniziali || 'null'));
+      } catch (e) {}
+      const scelti = correnti.length
+        ? new Set(correnti)
+        : new Set(Array.isArray(iniziali) ? iniziali : condimenti);
+
+      box.style.display = 'block';
+      box.innerHTML = '<div class="titolo">Condimenti compatibili con '+principale.dataset.nome+'</div><div class="opzioni">'+
+        condimenti.map(nome => '<label><input type="checkbox" class="compat-cond-check" data-nome="'+nome.replace(/"/g,'&quot;')+'" '+(scelti.has(nome)?'checked':'')+'> '+nome+'</label>').join('')+
+        '</div>';
+      riga.dataset.condimentiIniziali = encodeURIComponent(JSON.stringify([...scelti].filter(x => condimenti.includes(x))));
+    });
+  }
 }
 
 function leggiGruppo(idGruppo) {
@@ -332,6 +385,8 @@ function leggiGruppo(idGruppo) {
     const dose = campoDose && campoDose.value !== '' ? Number(campoDose.value) : undefined;
     const obj = { nome: chk.dataset.nome, stack: Number(chk.dataset.stack) || 1, roll: Number(chk.dataset.roll) || 1 };
     if (dose !== undefined) obj.dose = dose;
+    const compat = [...riga.querySelectorAll('.compat-cond-check:checked')].map(x => x.dataset.nome);
+    if (riga.querySelector('.compat-condimenti') && condimentiSelezionatiCorrenti().length) obj.condimentiCompatibili = compat;
     return obj;
   });
   const campoTesto2 = el.querySelector('.campo-testo2');
@@ -434,6 +489,7 @@ function modificaVoce(indice) {
   svuotaForm();
   const idGruppi = ['gruppo1', 'gruppo2', 'gruppo3', 'gruppo4'];
   (dati.gruppi || []).forEach((g, i) => scriviGruppo(idGruppi[i], g));
+  aggiornaCompatibilitaCondimenti();
   document.getElementById('btnAnnullaModifica').style.display = 'block';
   document.getElementById('titoloSalva').innerHTML = '2. Salva questa voce <span class="badge-editing">stai modificando id ' + dati.id + '</span>';
   window.scrollTo(0, 0);
