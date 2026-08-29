@@ -1900,6 +1900,38 @@ function labelGiornoConMese(iso){
 
 const ALLERGENI_UE=[['glutine','🌾','Glutine'],['crostacei','🦐','Crostacei'],['uova','🥚','Uova'],['pesce','🐟','Pesce'],['arachidi','🥜','Arachidi'],['soia','🌱','Soia'],['latte','🥛','Latte'],['frutta_guscio','🌰','Frutta a guscio'],['sedano','🥬','Sedano'],['senape','🟡','Senape'],['sesamo','⚪','Sesamo'],['solfiti','🍷','Solfiti'],['lupini','🫘','Lupini'],['molluschi','🐚','Molluschi']];
 const CONFIG_AVANZATA_DEFAULT={dietProfile:'onnivoro',proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},maxProteinSourcesPerDay:2,specialBreakfastMax:1,specialMealsMax:2,snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},snackDailyCaps:{frutta_secca_giornaliero:1},cooldownDays:{carboidrati:7,verdure:2},fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerMeal:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
+/* Fallback statico per bootstrap/legacy. Dalla v87 i controlli nutrizionista
+   usano il resolver canonico nutrition-config.js come sorgente effettiva. */
+function cloneConfigurazione(x){return typeof structuredClone==='function'?structuredClone(x):JSON.parse(JSON.stringify(x));}
+function configAvanzataDaRisolta(resolved,sorgente){
+  const out=cloneConfigurazione(sorgente||CONFIG_AVANZATA_DEFAULT),r=resolved||{};
+  if(r.profile&&r.profile.name)out.dietProfile=r.profile.name;
+  if(r.proteinFrequencies)out.proteinFrequencies=cloneConfigurazione(r.proteinFrequencies);
+  if(r.subtypeCaps)out.subtypeCaps=cloneConfigurazione(r.subtypeCaps);
+  if(r.fruit)out.fruit=cloneConfigurazione(r.fruit);
+  if(r.maxProteinSourcesPerDay!==undefined)out.maxProteinSourcesPerDay=r.maxProteinSourcesPerDay;
+  if(r.specialBreakfastMax!==undefined)out.specialBreakfastMax=r.specialBreakfastMax;
+  if(r.specialMealsMax!==undefined)out.specialMealsMax=r.specialMealsMax;
+  if(r.snackWeeklyCaps)out.snackWeeklyCaps=cloneConfigurazione(r.snackWeeklyCaps);
+  if(r.snackDailyCaps)out.snackDailyCaps=cloneConfigurazione(r.snackDailyCaps);
+  if(r.oilGramsPerMeal!==undefined)out.oilGramsPerMeal=r.oilGramsPerMeal;
+  if(r.cooldownDays)out.cooldownDays=cloneConfigurazione(r.cooldownDays);
+  if(r.deadlines)out.deadlines=cloneConfigurazione(r.deadlines);
+  return out;
+}
+function risolviConfigNutrizionista(config,vincoli,allergens,blocked){
+  const N=globalThis.DietaPlannerNutritionConfig;
+  if(!N)return {valid:true,errors:[],warnings:[],config:cloneConfigurazione(config||CONFIG_AVANZATA_DEFAULT),ingredientConstraints:{}};
+  return N.resolveNutritionConfig({nutritionist:{config:config||{},ingredientConstraints:vincoli||{},allergens:allergens||[],blockedIngredientIds:blocked||[]}});
+}
+function configAvanzataDefaultCanonico(){
+  const r=risolviConfigNutrizionista(CONFIG_AVANZATA_DEFAULT,{},[],[]);
+  return r&&r.profile?configAvanzataDaRisolta(r,CONFIG_AVANZATA_DEFAULT):cloneConfigurazione(CONFIG_AVANZATA_DEFAULT);
+}
+function configAvanzataEffettivaSalvata(raw){
+  const base=Object.assign(configAvanzataDefaultCanonico(),cloneConfigurazione(raw||{})),r=risolviConfigNutrizionista(base,{},[],[]);
+  return r&&r.profile?configAvanzataDaRisolta(r,base):base;
+}
 let vincoliIngredientiNutrizionistaDraft={};
 function macroNutrizionistaIngrediente(b){if(b.gruppo==='carboidrati')return 'carboidrati';if(b.gruppo==='proteine')return 'proteine';if(b.gruppo==='verdura')return 'verdure';return null;}
 function unitaRiferimentoIngrediente(b){return b.unitaPorzione==='pezzi'?'pz':'g';}
