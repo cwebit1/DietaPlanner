@@ -371,6 +371,10 @@ function aggiornaCompatibilitaCondimenti() {
         condimenti.map(nome => '<label><input type="checkbox" class="compat-cond-check" data-nome="'+nome.replace(/"/g,'&quot;')+'" '+(scelti.has(nome)?'checked':'')+'> '+nome+'</label>').join('')+
         '</div>';
       riga.dataset.condimentiIniziali = encodeURIComponent(JSON.stringify([...scelti].filter(x => condimenti.includes(x))));
+      box.querySelectorAll('.compat-cond-check').forEach(chk => chk.addEventListener('change', () => {
+        const attivi=[...box.querySelectorAll('.compat-cond-check:checked')].map(x=>x.dataset.nome);
+        riga.dataset.condimentiIniziali=encodeURIComponent(JSON.stringify(attivi));
+      }));
     });
   }
 }
