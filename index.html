@@ -9408,7 +9408,6 @@ window.addEventListener('load', async ()=>{
     }
     aggiornaLoader(50, 'Controllo aggiornamenti ricette...');
     const esitoRicette = await controllaAggiornamentoRicetteRemote();
-    await applicaQuantitaNutrizionistaAlleRicette();
     if(esitoRicette.aggiornato){
       aggiornaLoader(60, 'Ricette aggiornate a v' + esitoRicette.versione + ': +' + esitoRicette.aggiunte + ' nuove, ' + esitoRicette.aggiornate + ' agg.');
     } else if(esitoRicette.versione > 0){
