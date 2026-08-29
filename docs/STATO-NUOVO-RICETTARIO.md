@@ -137,3 +137,14 @@ legumi) ha un carboidrato nella stessa ricetta** — collo di bottiglia
 noto quando la griglia P richiede più PL della settimana di quante
 combinazioni C+PL dirette esistano.
 
+
+
+## Compatibilità Condimenti per ingrediente — 2026-08-29
+
+Aggiunto nel nuovo DB il campo opzionale `condimentiCompatibili` sugli
+ingredienti dei gruppi non-`Condimenti`. Il gruppo `Condimenti` continua a
+contenere il catalogo della ricetta e non moltiplica le combinazioni.
+Per la migrazione iniziale, nelle 8 ricette che avevano già un gruppo
+`Condimenti`, ogni ingrediente ha ricevuto l'elenco comune precedente: nessuna
+compatibilità è stata inventata o rimossa. Da questo punto le liste possono
+essere differenziate ingrediente per ingrediente.
