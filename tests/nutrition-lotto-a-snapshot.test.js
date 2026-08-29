@@ -70,8 +70,12 @@ assert(
   'Lotto A snapshot: il completamento corrente non usa più il bilanciamento per minimo; aggiornare audit e test.'
 );
 assert(
-  engine.includes("if(!pool.length)pool=Object.keys(defs).filter"),
-  'Lotto A snapshot: chooseCarb non usa più il fallback globale; aggiornare audit e test.'
+  !engine.includes("if(!pool.length)pool=Object.keys(defs).filter"),
+  'Lotto C: è riapparso il fallback globale dei carboidrati.'
+);
+assert(
+  engine.includes("if(!pool.length)return null"),
+  'Lotto C: chooseCarb deve fermarsi quando il budget residuo è esaurito.'
 );
 assert(
   motor.includes("const cov=E.parseCoverage(protein);let veg=null;if(!cov.veg&&!hasPotato)veg=await scegliContornoMotore"),
@@ -88,7 +92,8 @@ assert(
 
 // Chiavi configurazione: mismatch noto UI/motore e cap utente dormiente.
 assert(index.includes("chiave:'setVerdureDisattivate'"));
-assert(motor.includes("'verdureDisattivate'"));
+assert(motor.includes("'setVerdureDisattivate'"));
+assert(motor.includes("'verdureDisattivate'"),'fallback legacy verdure da preservare durante la migrazione');
 assert(motor.includes("getOne('impostazioni','tettiIngredienteSettimanali')"));
 assert(
   !index.includes("chiave:'tettiIngredienteSettimanali'"),
@@ -97,9 +102,14 @@ assert(
 
 // I cap ingrediente attuali sono soft-fallback: se tutto il pool sfora, il pool originale rientra.
 assert(
-  /return \{pool:allowed\.length\?allowed:all,exceeded:!allowed\.length&&all\.length>0\}/.test(engine),
-  'Lotto A snapshot: applyIngredientCaps ha cambiato semantica; aggiornare audit e test.'
+  /return \{pool:allowed,exceeded:allowed\.length<all\.length,blockedAll:all\.length>0&&!allowed\.length\}/.test(engine),
+  'Lotto C: applyIngredientCaps deve mantenere i massimi hard senza reintrodurre il pool originale.'
 );
+
+assert(motor.includes('caricaConfigurazioneNutrizionaleRisolta'));
+assert(motor.includes('N.resolveNutritionConfig'));
+assert(!motor.includes("cfg.proteinFrequencies.formaggi={min:3,max:6,target:5}"),'override vegetariano arbitrario non deve riapparire');
+assert(!motor.includes("cfg.proteinFrequencies.legumi={min:14,max:null,target:14}"),'override vegano arbitrario non deve riapparire');
 
 // Classificazioni base già corrette da preservare.
 assert.equal(ingredients.Speck && ingredients.Speck.sottotipo, 'affettati');
