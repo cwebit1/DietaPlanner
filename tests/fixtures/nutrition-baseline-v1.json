@@ -45,7 +45,17 @@
       "piadina",
       "pasta_sfoglia"
     ],
-    "notLimitedByPdf": [],
+    "notLimitedByPdf": [
+      "pasta",
+      "pasta_fresca",
+      "riso",
+      "farro",
+      "orzo",
+      "cous_cous",
+      "pane",
+      "patate",
+      "polenta"
+    ],
     "appCweGlobalLimitedCap": 3,
     "userZeroMeansAutomaticExclusion": true,
     "zeroBudgetFallbackForbidden": true
