@@ -157,3 +157,8 @@ realizzazione corrente: C varia solo gli slot C, P solo la cottura proteica, V
 solo il condimento compatibile. Se c'è una sola alternativa il relativo
 pulsante resta disattivato. La nuova estrazione dell'intero pasto avviene solo
 con **Proponi nuovo pasto**.
+
+
+## Speck / affettati — 2026-08-29
+
+`Speck` resta `sottotipo: affettati`, con `cooldownGiorni: 20`. Il conteggio del limite `affettati: 1` è ora aggregato per categoria (non per singolo nome ingrediente). Il peso probabilistico non è stato modificato perché il nuovo motore usa estrazione uniforme sul pool filtrato e non espone un peso separato.
