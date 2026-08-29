@@ -176,16 +176,31 @@
     userCaps=userCaps||{};
     const out={};
     const keys=new Set([...Object.keys(clinical),...Object.keys(userCaps)]);
+    const contexts=['colazione','pastoPrincipale','spuntino'];
     for(const id of keys){
       const c=clinical[id]||{},user=own(userCaps,id)?nonNegative(userCaps[id]):null;
+      const contextRules={};
+      for(const context of contexts){
+        const raw=c.contesti&&c.contesti[context]||{};
+        const q=raw.quantita===null||raw.quantita===undefined?null:positive(raw.quantita);
+        const mx=raw.max===null||raw.max===undefined?null:nonNegative(raw.max);
+        if(raw.quantita!==null&&raw.quantita!==undefined&&q===null)pushUnique(errors,'Ingrediente '+id+' ('+context+'): quantità contestuale non valida.');
+        if(raw.max!==null&&raw.max!==undefined&&mx===null)pushUnique(errors,'Ingrediente '+id+' ('+context+'): massimo contestuale non valido.');
+        contextRules[context]={quantity:q,max:mx};
+      }
       if(c.stato==='escluso'){
-        out[id]={state:'excluded',clinicalState:'escluso',min:null,max:0,quantity:null,userMax:user};
+        out[id]={state:'excluded',clinicalState:'escluso',min:null,max:0,quantity:null,contexts:contextRules,userMax:user};
         continue;
       }
       const clinicalLimited=c.stato==='limitato';
       let min=clinicalLimited&&c.min!==null&&c.min!==undefined?nonNegative(c.min):null;
       let clinicalMax=clinicalLimited&&c.max!==null&&c.max!==undefined?nonNegative(c.max):null;
       const quantity=clinicalLimited?positive(c.quantita):null;
+      if(clinicalLimited&&c.quantita!==null&&c.quantita!==undefined&&quantity===null)pushUnique(errors,'Ingrediente '+id+': quantità non valida.');
+      if(clinicalLimited&&min!==null&&clinicalMax!==null&&clinicalMax<min){
+        pushUnique(errors,'Ingrediente '+id+': minimo clinico '+min+' supera il massimo clinico '+clinicalMax+'.');
+        clinicalMax=min;
+      }
       let max=clinicalMax;
       if(user!==null) max=max===null?user:Math.min(max,user);
 
@@ -194,7 +209,7 @@
         max=min;
       }
       const state=clinicalLimited?'limited':(user!==null?'user_limited':'available');
-      out[id]={state,clinicalState:c.stato||'disponibile',min,max,quantity,userMax:user};
+      out[id]={state,clinicalState:c.stato||'disponibile',min,max,quantity,contexts:contextRules,userMax:user};
     }
     return out;
   }
