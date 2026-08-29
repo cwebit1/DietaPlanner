@@ -26,7 +26,11 @@ const recipes = JSON.parse(fs.readFileSync(path.join(root, 'ricette.json'), 'utf
 // Baseline PDF: fatti normativi indipendenti dal codice corrente.
 assert.deepEqual(baseline.proteinFrequencies.legumi, { min: 2, max: null });
 assert.equal(baseline.subtypeCaps.affettati, 1);
-assert(baseline.carbohydrates.notLimitedByPdf.includes('piadina'));
+assert(baseline.carbohydrates.limitedByPdf.includes('piadina'));
+assert(baseline.carbohydrates.limitedByPdf.includes('gallette'));
+assert(baseline.carbohydrates.limitedByPdf.includes('crackers'));
+assert.equal(baseline.carbohydrates.userZeroMeansAutomaticExclusion, true);
+assert.equal(baseline.vegetables.residualCompletion, true);
 assert.equal(baseline.breakfast.specialDefaultPerWeek, 1);
 assert.equal(baseline.breakfast.specialPdfMaxPerWeek, 2);
 assert.equal(baseline.oil.pdfMinTeaspoons, 2);
@@ -44,6 +48,22 @@ assert(
 assert(
   /\{\s*chiave:\s*'piadina',\s*label:\s*'Piadina',\s*limitato:\s*true/.test(index),
   'Lotto A snapshot: classificazione corrente della piadina è cambiata; aggiornare audit e test.'
+);
+assert(
+  /\{\s*chiave:\s*'gallette',\s*label:\s*'Gallette',\s*limitato:\s*false/.test(index),
+  'Lotto A snapshot: Gallette non sono più non-limitate nel codice; aggiornare audit e test.'
+);
+assert(
+  /\{\s*chiave:\s*'crackers',\s*label:\s*'Crackers',\s*limitato:\s*false/.test(index),
+  'Lotto A snapshot: Crackers non sono più non-limitati nel codice; aggiornare audit e test.'
+);
+assert(
+  engine.includes("if(!pool.length)pool=Object.keys(defs).filter"),
+  'Lotto A snapshot: chooseCarb non usa più il fallback globale; aggiornare audit e test.'
+);
+assert(
+  motor.includes("const cov=E.parseCoverage(protein);let veg=null;if(!cov.veg&&!hasPotato)veg=await scegliContornoMotore"),
+  'Lotto A snapshot: la copertura verdura nel pasto modulare è cambiata; aggiornare audit e test.'
 );
 assert(
   /getFrequenzeConsigliateEffettive\(\)\s*\{\s*return FREQUENZE_CONSIGLIATE;\s*\}/.test(index),
