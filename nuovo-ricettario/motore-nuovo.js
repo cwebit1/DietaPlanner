@@ -75,19 +75,20 @@ function groupOptions(g){
   if(!g || g.categoria==='Nessuno' || g.categoria==='Condimenti') return [];
   const ings=Array.isArray(g.ingredienti)?g.ingredienti:[];
   const cooks=Array.isArray(g.cotture)?g.cotture:[];
-  const n=Math.max(ings.length,cooks.length,1);
+  const ingOpts=ings.length?ings:[null];
+  const cookOpts=cooks.length?cooks:[null];
   const out=[];
-  for(let i=0;i<n;i++){
-    const ingrediente=ings.length?ings[Math.min(i,ings.length-1)]:null;
-    const cottura=cooks.length?cooks[Math.min(i,cooks.length-1)]:null;
-    out.push({
-      categoria:g.categoria,
-      ingrediente:ingrediente?clone(ingrediente):null,
-      cottura:cottura?clone(cottura):null,
-      testo1:g.testo1||'',
-      testo2:g.testo2||'',
-      mostraNomi:!!g.mostraNomi
-    });
+  for(const ingrediente of ingOpts){
+    for(const cottura of cookOpts){
+      out.push({
+        categoria:g.categoria,
+        ingrediente:ingrediente?clone(ingrediente):null,
+        cottura:cottura?clone(cottura):null,
+        testo1:g.testo1||'',
+        testo2:g.testo2||'',
+        mostraNomi:!!g.mostraNomi
+      });
+    }
   }
   return out;
 }
