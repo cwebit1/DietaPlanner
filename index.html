@@ -2980,109 +2980,42 @@ async function renderSetVerduraRicorrente(){
 }
 
 async function renderSetColazione(){
-  const contGruppi = document.getElementById('setColazioneGruppi');
-  const contGiorni = document.getElementById('setColazioneGiorni');
-  const contEsclusi = document.getElementById('setColazioneEsclusi');
-  if(!contGruppi || !contGiorni) return;
-  const varianti = await getAll('varianti');
-  const compRec = await getOne('impostazioni', 'colazionePreferita');
-  const giorniRec = await getOne('impostazioni', 'colazionePreferitaGiorni');
-  const esclusiRec = await getOne('impostazioni', 'colazioneIngredientiEsclusi');
-  let componenti = compRec && compRec.valore ? Object.assign({}, compRec.valore) : {};
-  const giorniAttivi = giorniRec && giorniRec.valore ? giorniRec.valore.slice() : [];
-  // Se non ci sono ancora componenti salvati, precarica i default (primo per gruppo obbligatorio)
+  const contGruppi=document.getElementById('setColazioneGruppi'),contGiorni=document.getElementById('setColazioneGiorni'),contEsclusi=document.getElementById('setColazioneEsclusi');if(!contGruppi||!contGiorni)return;
+  const [varianti,basi,compRec,giorniRec,esclusiRec,classiRec,resolved]=await Promise.all([getAll('varianti'),getAll('ingredienti'),getOne('impostazioni','colazionePreferita'),getOne('impostazioni','colazionePreferitaGiorni'),getOne('impostazioni','colazioneIngredientiEsclusi'),getOne('impostazioni','vincoliClassiCarboidrati'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
+  const baseBy=new Map(basi.map(b=>[b.id,b])),clinicalBlocked=v=>{const b=baseBy.get(v.ingredienteId);return b?ingredienteEsclusoClinicamenteNelSet(b,resolved):false;},variantiAmmesse=varianti.filter(v=>!clinicalBlocked(v)),allowedIds=new Set(variantiAmmesse.map(v=>v.id));
+  const semplici=classiRec&&classiRec.valore&&classiRec.valore.semplici||{},simpleMax=semplici.max!==null&&semplici.max!==undefined?Number(semplici.max):null,simpleMin=semplici.min!==null&&semplici.min!==undefined?Number(semplici.min):null;
+  let componenti=compRec&&compRec.valore?Object.assign({},compRec.valore):{};
+  const giorniAttivi=giorniRec&&giorniRec.valore?giorniRec.valore.slice():[];
+  for(const [k,id] of Object.entries(componenti)){if(id&&!allowedIds.has(id))componenti[k]=null;}
+  if(simpleMax===0)componenti.carboidrati_semplici=null;
   if(!Object.keys(componenti).length){
-    for(const gr of COLAZIONE_GRUPPI){
-      const opz = opzioniColazioneGruppo(gr, varianti);
-      componenti[gr.chiave] = gr.obbligatorio && opz.length ? opz[0].id : null;
-    }
+    for(const gr of COLAZIONE_GRUPPI){const opz=opzioniColazioneGruppo(gr,variantiAmmesse);componenti[gr.chiave]=gr.obbligatorio&&opz.length?opz[0].id:null;}
   }
-  // 4 gruppi componibili
-  let htmlGruppi = '';
-  const coloriGruppiColazione={proteine:'#2ecc71',bibita:'#ffffff',carboidrati:'#2ecc71',grassi:'#f1c40f',carboidrati_semplici:'#f39c12'};
+  let htmlGruppi='',colori={proteine:'#2ecc71',bibita:'#ffffff',carboidrati:'#2ecc71',grassi:'#f1c40f',carboidrati_semplici:'#f39c12'};
   for(const gr of COLAZIONE_GRUPPI){
-    const opzioni = opzioniColazioneGruppo(gr, varianti);
-    const selezionatoId = componenti[gr.chiave];
-    const coloreTitolo=coloriGruppiColazione[gr.chiave]||'var(--text-dim)';
-    htmlGruppi += `<div style="margin:10px 0 7px;"><span style="display:inline-block;border:1px solid ${coloreTitolo};color:${coloreTitolo};border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">${gr.label}</span></div>
-      <div class="colazione-gruppo-slide" data-set-col-gruppo="${gr.chiave}">
-        ${gr.consentiNessuno ? `<button data-set-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>` : ''}
-        ${opzioni.map(o=>`<button data-set-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}
-      </div>`;
+    let opzioni=opzioniColazioneGruppo(gr,variantiAmmesse);if(gr.chiave==='carboidrati_semplici'&&simpleMax===0)opzioni=[];
+    const selezionatoId=opzioni.some(o=>o.id===componenti[gr.chiave])?componenti[gr.chiave]:null,colore=colori[gr.chiave]||'var(--text-dim)',range=gr.chiave==='carboidrati_semplici'&&(simpleMin!==null||simpleMax!==null)?' · piano '+(simpleMin??0)+'–'+(simpleMax===null?'∞':simpleMax)+'/sett.':'';
+    htmlGruppi+=`<div style="margin:10px 0 7px;"><span style="display:inline-block;border:1px solid ${colore};color:${colore};border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">${gr.label}${range}</span></div><div class="colazione-gruppo-slide" data-set-col-gruppo="${gr.chiave}">${gr.consentiNessuno?`<button data-set-col-opt="" class="${!selezionatoId?'active':''}">— nessuno —</button>`:''}${opzioni.map(o=>`<button data-set-col-opt="${o.id}" class="${o.id===selezionatoId?'active':''}">${o.nome}</button>`).join('')}</div>`;
   }
-  contGruppi.innerHTML = htmlGruppi;
-  // Griglia giorni Lun-Dom, stessa struttura tabella-giorno della configurazione Set
-  const giorniColazione=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
-  const rigaIntestazioneCol = giorniColazione.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join('');
-  const celleCol = giorniColazione.map((g, idx)=>{
-    const attivo = giorniAttivi.includes(idx);
-    return `<td class="cella"><button data-set-colpref-giorno="${idx}" class="${attivo?'active':''}"></button></td>`;
-  }).join('');
-  contGiorni.innerHTML = `
-    <tr><th class="col-label"></th>${rigaIntestazioneCol}</tr>
-    <tr><td class="riga-label" style="text-align:left;padding-right:4px;">Colazione</td>${celleCol}</tr>`;
-  // Ingredienti esclusi dalle sole proposte automatiche.
+  contGruppi.innerHTML=htmlGruppi;
+  const giorniColazione=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],head=giorniColazione.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join(''),celle=giorniColazione.map((g,idx)=>`<td class="cella"><button data-set-colpref-giorno="${idx}" class="${giorniAttivi.includes(idx)?'active':''}"></button></td>`).join('');
+  contGiorni.innerHTML=`<tr><th class="col-label"></th>${head}</tr><tr><td class="riga-label" style="text-align:left;padding-right:4px;">Colazione</td>${celle}</tr>`;
   if(contEsclusi){
-    const esclusi=new Set(esclusiRec&&Array.isArray(esclusiRec.valore)?esclusiRec.valore:[]);
-    const gruppiEscludibili=new Set(['proteine','carboidrati','grassi','carboidrati_semplici']);
-    const nomiMatrice=[...new Set(varianti.filter(v=>gruppiEscludibili.has(v.colazioneGruppo)).map(v=>v.nome).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
-    contEsclusi.innerHTML=nomiMatrice.map(nome=>`<button data-col-escludi="${nome}" class="${esclusi.has(nome)?'inactive-red':'active'}">${nome}</button>`).join('');
-    contEsclusi.querySelectorAll('[data-col-escludi]').forEach(btn=>btn.addEventListener('click',async()=>{
-      const nome=btn.dataset.colEscludi;
-      const rec=await getOne('impostazioni','colazioneIngredientiEsclusi');
-      const lista=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);
-      if(lista.has(nome)) lista.delete(nome);
-      else {
-        // Non creare un Set contraddittorio: un ingrediente scelto nella colazione
-        // predefinita non può essere contemporaneamente marcato "da escludere".
-        const prefRec=await getOne('impostazioni','colazionePreferita');
-        const pref=prefRec&&prefRec.valore?prefRec.valore:{};
-        const selezionati=new Set(Object.values(pref).filter(Boolean).map(id=>varianti.find(v=>v.id===id)?.nome).filter(Boolean));
-        if(selezionati.has(nome)){
-          await avviso('Questo ingrediente è già selezionato nella colazione predefinita. Cambia prima quella selezione oppure lascialo disponibile.');
-          return;
-        }
-        lista.add(nome);
-      }
-      await put('impostazioni',{chiave:'colazioneIngredientiEsclusi',valore:[...lista]});
-      await renderMantieniSwipe(renderSetColazione);
-    }));
+    const esclusi=new Set(esclusiRec&&Array.isArray(esclusiRec.valore)?esclusiRec.valore:[]),gruppiEscludibili=new Set(['proteine','carboidrati','grassi','carboidrati_semplici']),nomiMatrice=[...new Set(varianti.filter(v=>gruppiEscludibili.has(v.colazioneGruppo)).map(v=>v.nome).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it'));
+    contEsclusi.innerHTML=nomiMatrice.map(nome=>{const matching=varianti.filter(v=>v.nome===nome),clinical=matching.length&&matching.every(clinicalBlocked);return `<button data-col-escludi="${nome}" class="${clinical?'inactive-red piano':(esclusi.has(nome)?'inactive-red':'active')}" ${clinical?'disabled title="Escluso dal piano nutrizionista"':''}>${nome}${clinical?' · piano':''}</button>`;}).join('');
+    contEsclusi.querySelectorAll('[data-col-escludi]:not([disabled])').forEach(btn=>btn.addEventListener('click',async()=>{const nome=btn.dataset.colEscludi,rec=await getOne('impostazioni','colazioneIngredientiEsclusi'),lista=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);if(lista.has(nome))lista.delete(nome);else{const prefRec=await getOne('impostazioni','colazionePreferita'),pref=prefRec&&prefRec.valore?prefRec.valore:{},selezionati=new Set(Object.values(pref).filter(Boolean).map(id=>varianti.find(v=>v.id===id)?.nome).filter(Boolean));if(selezionati.has(nome)){await avviso('Questo ingrediente è già selezionato nella colazione predefinita. Cambia prima quella selezione oppure lascialo disponibile.');return;}lista.add(nome);}await put('impostazioni',{chiave:'colazioneIngredientiEsclusi',valore:[...lista]});await renderMantieniSwipe(renderSetColazione);}));
   }
-  // Listener: selezione componenti gruppi (scrive direttamente in impostazioni)
-  contGruppi.querySelectorAll('[data-set-col-gruppo]').forEach(slide=>{
-    slide.querySelectorAll('[data-set-col-opt]').forEach(btn=>{
-      btn.addEventListener('click', async ()=>{
-        const gruppo = slide.dataset.setColGruppo;
-        const idScelto = btn.dataset.setColOpt || null;
-        if(idScelto){
-          const scelta=varianti.find(v=>v.id===idScelto);
-          const off=await getOne('impostazioni','colazioneIngredientiEsclusi');
-          const esclusi=new Set(off&&Array.isArray(off.valore)?off.valore:[]);
-          if(scelta&&esclusi.has(scelta.nome)){
-            await avviso('Questo ingrediente è escluso dalla colazione. Riattivalo prima in Ingredienti da escludere.');
-            return;
-          }
-        }
-        const rec = await getOne('impostazioni', 'colazionePreferita');
-        const comp = rec && rec.valore ? Object.assign({}, rec.valore) : {};
-        comp[gruppo] = idScelto;
-        await put('impostazioni', {chiave:'colazionePreferita', valore: comp});
-        await renderMantieniSwipe(renderSetColazione);
-      });
-    });
-  });
-  // Listener: toggle giorno (scrive direttamente in impostazioni)
-  contGiorni.querySelectorAll('[data-set-colpref-giorno]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const idx = parseInt(btn.dataset.setColprefGiorno);
-      const rec = await getOne('impostazioni', 'colazionePreferitaGiorni');
-      const arr = rec && rec.valore ? rec.valore.slice() : [];
-      const pos = arr.indexOf(idx);
-      if(pos>=0) arr.splice(pos,1); else arr.push(idx);
-      await put('impostazioni', {chiave:'colazionePreferitaGiorni', valore: arr});
-      await renderMantieniSwipe(renderSetColazione);
-    });
-  });
+  contGruppi.querySelectorAll('[data-set-col-gruppo]').forEach(slide=>slide.querySelectorAll('[data-set-col-opt]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const gruppo=slide.dataset.setColGruppo,idScelto=btn.dataset.setColOpt||null;
+    if(gruppo==='carboidrati_semplici'&&idScelto&&simpleMax!==null&&giorniAttivi.length>simpleMax){await avviso('Questa colazione è fissata in '+giorniAttivi.length+' giorni, oltre il massimo di carboidrati semplici del nutrizionista ('+simpleMax+'). Riduci prima i giorni oppure lascia nessuno.');return;}
+    if(idScelto){const scelta=variantiAmmesse.find(v=>v.id===idScelto),off=await getOne('impostazioni','colazioneIngredientiEsclusi'),esclusi=new Set(off&&Array.isArray(off.valore)?off.valore:[]);if(scelta&&esclusi.has(scelta.nome)){await avviso('Questo ingrediente è escluso dalla colazione. Riattivalo prima in Ingredienti da escludere.');return;}}
+    const rec=await getOne('impostazioni','colazionePreferita'),comp=rec&&rec.valore?Object.assign({},rec.valore):{};comp[gruppo]=idScelto;await put('impostazioni',{chiave:'colazionePreferita',valore:comp});await renderMantieniSwipe(renderSetColazione);
+  })));
+  contGiorni.querySelectorAll('[data-set-colpref-giorno]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const idx=parseInt(btn.dataset.setColprefGiorno),rec=await getOne('impostazioni','colazionePreferitaGiorni'),arr=rec&&rec.valore?rec.valore.slice():[],pos=arr.indexOf(idx);
+    if(pos>=0)arr.splice(pos,1);else{const prefRec=await getOne('impostazioni','colazionePreferita'),pref=prefRec&&prefRec.valore?prefRec.valore:{},simpleId=pref.carboidrati_semplici;if(simpleId&&allowedIds.has(simpleId)&&simpleMax!==null&&arr.length>=simpleMax){await avviso('Il massimo settimanale di carboidrati semplici definito dal nutrizionista è '+simpleMax+'.');return;}arr.push(idx);}
+    await put('impostazioni',{chiave:'colazionePreferitaGiorni',valore:arr});await renderMantieniSwipe(renderSetColazione);
+  }));
 }
 document.getElementById('btnResetColazionePref')?.addEventListener('click', async ()=>{
   await delKey('impostazioni', 'colazionePreferita');
