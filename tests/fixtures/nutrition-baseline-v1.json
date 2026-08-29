@@ -1,0 +1,77 @@
+{
+  "version": "PDF-V1",
+  "source": "PERCORSO ALIMENTARE MIRIA SPILLER.pdf",
+  "principles": {
+    "pdfIsPrimaryForNutrition": true,
+    "appRulesMustBeLabeledSeparately": true,
+    "defaultFromRangeUsesLowerBound": true
+  },
+  "proteinFrequencies": {
+    "carne": { "min": 1, "max": 3 },
+    "pesce": { "min": 2, "max": 3 },
+    "formaggi": { "min": 2, "max": 3 },
+    "uova": { "min": 1, "max": 2 },
+    "legumi": { "min": 2, "max": null }
+  },
+  "subtypeCaps": {
+    "carne_rossa": 1,
+    "affettati": 1,
+    "pesce_grande": 1,
+    "pesce_conservato": 1
+  },
+  "carbohydrates": {
+    "limitedByPdf": [
+      "gnocchi",
+      "pasta_ripiena",
+      "friselle",
+      "taralli",
+      "pasta_sfoglia"
+    ],
+    "notLimitedByPdf": [
+      "gallette",
+      "crackers",
+      "piadina"
+    ],
+    "appCweGlobalLimitedCap": 3
+  },
+  "fruit": {
+    "dailyMin": 2,
+    "dailyMax": 3,
+    "portionMinGrams": 150,
+    "portionMaxGrams": 200
+  },
+  "vegetables": {
+    "mealPresence": ["pranzo", "cena"],
+    "vegetablePortionMinGrams": 200,
+    "vegetablePortionMaxGrams": 250,
+    "saladPortionMinGrams": 70,
+    "saladPortionMaxGrams": 80
+  },
+  "breakfast": {
+    "requiredGroups": ["carboidrati", "proteine"],
+    "optionalGroups": ["grassi", "carboidrati_semplici"],
+    "specialDefaultPerWeek": 1,
+    "specialPdfMaxPerWeek": 2,
+    "contextualLimitedPdfMaxPerWeek": 2
+  },
+  "snacks": {
+    "granita": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
+    "grana": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
+    "crackers": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
+    "pane_marmellata": { "defaultPerWeek": 2, "pdfMaxPerWeek": 3 },
+    "frutta_secca": { "pdfMaxPerDay": 1 },
+    "patatine_grisbi": { "defaultPerWeek": 1, "pdfMaxPerWeek": 2 }
+  },
+  "oil": {
+    "defaultGramsPerMeal": 10,
+    "pdfMinTeaspoons": 2,
+    "pdfMaxTeaspoons": 3,
+    "approxGramsPerTeaspoon": 5
+  },
+  "precedence": {
+    "clinicalExclusionWins": true,
+    "clinicalMinimumRemainsRequired": true,
+    "effectiveMaxRule": "min(nutritionistMax,userMax) when both exist",
+    "userCanRestrictButNotLoosenClinicalLimits": true
+  }
+}
