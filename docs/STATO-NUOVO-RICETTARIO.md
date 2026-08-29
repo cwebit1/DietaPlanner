@@ -162,3 +162,8 @@ con **Proponi nuovo pasto**.
 ## Speck / affettati — 2026-08-29
 
 `Speck` resta `sottotipo: affettati`, con `cooldownGiorni: 20`. Il conteggio del limite `affettati: 1` è ora aggregato per categoria (non per singolo nome ingrediente). Il peso probabilistico non è stato modificato perché il nuovo motore usa estrazione uniforme sul pool filtrato e non espone un peso separato.
+
+
+## Sequenza automatica Condimenti — 2026-08-29
+
+La prima variante dei Condimenti non è più fissa. `motoreNuovoTracking` conserva `condimentoCursori`, indicizzati per template + ingredienti selezionati. Ogni proposta effettivamente scelta usa la variante successiva compatibile; a fine elenco il ciclo ricomincia. Roll V non consuma né sposta questo cursore.
