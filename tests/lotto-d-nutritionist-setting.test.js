@@ -19,8 +19,19 @@ assert(index.includes('data-vincolo-contesto-campo="max"'));
 assert(index.includes('data-vincolo-contesto-campo="quantita"'));
 assert(index.includes('Regole applicative APP-CWE'));
 assert(index.includes('PDF / piano nutrizionale'));
+assert(index.includes('Contesti PDF aggiuntivi'));
+assert(index.includes('aggiornaCampiProfiloNutrizionista'));
 assert(index.includes("const def=configAvanzataDefaultCanonico();await put('impostazioni',{chiave:'configAvanzata',valore:def})"));
 assert(index.includes('applicaConfigAvanzataRuntime(cfgEffettiva)'));
+
+{
+  const u=N.contextDefaultsForIngredient({nome:'Uova',sottotipo:'uova'});
+  assert.equal(u.colazione.maxPerWeek,2);
+  assert.equal(u.colazione.quantityDefault,1);
+  const aff=N.contextDefaultsForIngredient({nome:'Speck',sottotipo:'affettati'});
+  assert.equal(aff.colazione.quantityDefault,40);
+  assert.equal(aff.pastoPrincipale.quantityDefault,60);
+}
 
 {
   const r=N.resolveNutritionConfig({
