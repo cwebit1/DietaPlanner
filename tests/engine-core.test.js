@@ -27,6 +27,24 @@ const rng=E.seeded(42);
   assert.equal(second.variantId,'r');
 }
 {
+  const cfg={pasta:{limitato:false},pane:{limitato:false},friselle:{limitato:true,tettoSettimanale:2}};
+  const state={carbRemaining:{pasta:0,pane:0,friselle:0},carbsUsed:{},history:{}};
+  assert.equal(E.chooseCarb(state,cfg,{},E.seeded(1)),null,'nessun fallback fuori budget');
+}
+{
+  const state={carbRemaining:{pasta:1,pane:1},carbsUsed:{},history:{}};
+  const cfg={pasta:{limitato:false},pane:{limitato:false}};
+  const first=E.chooseCarb(state,cfg,{},E.seeded(1));
+  assert(['pasta','pane'].includes(first));
+  assert.equal((state.carbRemaining.pasta||0)+(state.carbRemaining.pane||0),1);
+}
+{
+  const r=E.resolveNutritionConfig({user:{carbohydrates:{counts:{friselle:2}}}});
+  assert.equal(r.valid,true);assert.equal(r.carbohydrates.fixedCounts.friselle,2);assert.equal(r.carbohydrates.remainingSlots,12);
+  const cov=E.vegetableCoverage([{kind:'vegetable',quantity:80}],{vegetablePortionGrams:200,saladPortionGrams:70});
+  assert.equal(cov.residualVegetableGrams,120);
+}
+{
   const recipes=[{id:'manual',soloManuale:true},{id:'normal'}],state={history:{}};
   assert.equal(E.chooseRecipe(recipes,state,{automatic:true},rng).id,'normal');
 }
@@ -49,8 +67,8 @@ const rng=E.seeded(42);
 }
 {
   const recipes=[{id:'a',ingredienti:[{variantId:'pom'}]},{id:'b',ingredienti:[{variantId:'zuc'}]}];
-  let r=E.applyIngredientCaps(recipes,{pom:2},{pom:2});assert.deepEqual(r.pool.map(x=>x.id),['b']);assert.equal(r.exceeded,false);
-  r=E.applyIngredientCaps([recipes[0]],{pom:2},{pom:2});assert.equal(r.pool[0].id,'a');assert.equal(r.exceeded,true);
+  let r=E.applyIngredientCaps(recipes,{pom:2},{pom:2});assert.deepEqual(r.pool.map(x=>x.id),['b']);assert.equal(r.exceeded,true);assert.equal(r.blockedAll,false);
+  r=E.applyIngredientCaps([recipes[0]],{pom:2},{pom:2});assert.equal(r.pool.length,0);assert.equal(r.exceeded,true);assert.equal(r.blockedAll,true);
   assert.equal(E.accumulateRecipeIngredients(recipes[0],{}).pom,1);
 }
 {
