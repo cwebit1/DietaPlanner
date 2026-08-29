@@ -1994,15 +1994,34 @@ async function renderVincoliIngredientiNutrizionista(){
   righe.querySelectorAll('[data-vincolo-contesto]').forEach(i=>i.addEventListener('input',()=>{const v=vincoliIngredientiNutrizionistaDraft[i.dataset.vincoloId]||(vincoliIngredientiNutrizionistaDraft[i.dataset.vincoloId]={stato:'limitato'}),ctx=v.contesti||(v.contesti={}),c=ctx[i.dataset.vincoloContesto]||(ctx[i.dataset.vincoloContesto]={});c[i.dataset.vincoloContestoCampo]=i.value===''?null:Number(i.value);}));
 }
 async function salvaConfigAvanzata(){
-  const old=await getOne('impostazioni','configAvanzata'),cfg=structuredClone(old&&old.valore||CONFIG_AVANZATA_DEFAULT),classi={complessi:{},semplici:{}};document.querySelectorAll('[data-cfg-avanzata]').forEach(i=>{let path=i.dataset.cfgAvanzata.split('.');if(path[0]==='vincoliClassiCarboidrati'){classi[path[1]][path[2]]=i.value===''?null:Number(i.value);return;}if(path[0]==='fruit'&&path[1]==='portion')path=['fruit',path[2]==='min'?'portionMin':'portionMax'];let target=cfg;for(let n=0;n<path.length-1;n++)target=target[path[n]]||(target[path[n]]={});target[path[path.length-1]]=i.value===''?null:(i.dataset.cfgTesto?i.value:Number(i.value));});
+  const old=await getOne('impostazioni','configAvanzata'),cfg=configAvanzataEffettivaSalvata(old&&old.valore||{}),classi={complessi:{},semplici:{}};
+  document.querySelectorAll('[data-cfg-avanzata]').forEach(i=>{let path=i.dataset.cfgAvanzata.split('.');if(path[0]==='vincoliClassiCarboidrati'){classi[path[1]][path[2]]=i.value===''?null:Number(i.value);return;}if(path[0]==='fruit'&&path[1]==='portion')path=['fruit',path[2]==='min'?'portionMin':'portionMax'];let target=cfg;for(let n=0;n<path.length-1;n++)target=target[path[n]]||(target[path[n]]={});target[path[path.length-1]]=i.value===''?null:(i.dataset.cfgTesto?i.value:Number(i.value));});
   cfg.dietProfile=document.getElementById('configProfiloAlimentare').value||'onnivoro';
   for(const f of Object.values(cfg.proteinFrequencies||{})){if(f&&f.min!==null&&f.max!==null&&Number(f.min)>Number(f.max)){await avviso('Una frequenza proteica ha il minimo superiore al massimo.');return;}}
   if(cfg.fruit&&cfg.fruit.min!==null&&cfg.fruit.max!==null&&Number(cfg.fruit.min)>Number(cfg.fruit.max)){await avviso('Il minimo della frutta non può superare il massimo.');return;}
   if(cfg.fruit&&cfg.fruit.portionMin!==null&&cfg.fruit.portionMax!==null&&Number(cfg.fruit.portionMin)>Number(cfg.fruit.portionMax)){await avviso('La porzione minima della frutta non può superare la massima.');return;}
   for(const c of Object.values(classi)){if(c.min!==null&&c.max!==null&&Number(c.min)>Number(c.max)){await avviso('Il minimo dei carboidrati non può superare il massimo.');return;}}
-  for(const v of Object.values(vincoliIngredientiNutrizionistaDraft)){if(v.stato==='limitato'&&v.min!==null&&v.max!==null&&Number(v.min)>Number(v.max)){await avviso('Il minimo non può superare il massimo.');return;}if(v.stato==='limitato'&&!(Number(v.quantita)>0)){await avviso('La quantità deve essere positiva.');return;}}
-  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene),basi=await getAll('ingredienti'),ingredientiEsclusi=basi.filter(b=>esclusionePianoIngrediente(b,cfg.dietProfile)||vincoliIngredientiNutrizionistaDraft[b.id]&&vincoliIngredientiNutrizionistaDraft[b.id].stato==='escluso').map(b=>b.id);await put('impostazioni',{chiave:'configAvanzata',valore:cfg});await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:vincoliIngredientiNutrizionistaDraft});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:classi});await put('impostazioni',{chiave:'ingredientiBloccati',valore:ingredientiEsclusi});await applicaQuantitaNutrizionistaAlleRicette();document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata.';
-  applicaConfigAvanzataRuntime(cfg);
+  for(const [id,v] of Object.entries(vincoliIngredientiNutrizionistaDraft)){
+    if(v.stato==='limitato'&&v.min!==null&&v.max!==null&&Number(v.min)>Number(v.max)){await avviso('Il minimo non può superare il massimo per '+id+'.');return;}
+    if(v.stato==='limitato'&&!(Number(v.quantita)>0)){await avviso('La quantità deve essere positiva per '+id+'.');return;}
+    for(const [ctx,c] of Object.entries(v.contesti||{})){
+      if(c.max!==null&&c.max!==undefined&&Number(c.max)<0){await avviso('Il massimo contestuale non può essere negativo ('+ctx+').');return;}
+      if(c.quantita!==null&&c.quantita!==undefined&&!(Number(c.quantita)>0)){await avviso('La quantità contestuale deve essere positiva ('+ctx+').');return;}
+    }
+  }
+  const allergens=[...document.querySelectorAll('#configAllergeniAttivi button.active')].map(b=>b.dataset.allergene),basi=await getAll('ingredienti'),ingredientiEsclusi=basi.filter(b=>esclusionePianoIngrediente(b,cfg.dietProfile)||vincoliIngredientiNutrizionistaDraft[b.id]&&vincoliIngredientiNutrizionistaDraft[b.id].stato==='escluso').map(b=>b.id);
+  const resolved=risolviConfigNutrizionista(cfg,vincoliIngredientiNutrizionistaDraft,allergens,ingredientiEsclusi);
+  if(!resolved.valid){await avviso('Configurazione non valida: '+resolved.errors.join(' '));return;}
+  const cfgEffettiva=configAvanzataDaRisolta(resolved,cfg);
+  await put('impostazioni',{chiave:'configAvanzata',valore:cfgEffettiva});
+  await put('impostazioni',{chiave:'allergeniAttivi',valore:allergens});
+  await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:cloneConfigurazione(vincoliIngredientiNutrizionistaDraft)});
+  await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:classi});
+  await put('impostazioni',{chiave:'ingredientiBloccati',valore:ingredientiEsclusi});
+  applicaConfigAvanzataRuntime(cfgEffettiva);
+  await renderConfigAvanzata();
+  const note=resolved.warnings&&resolved.warnings.length?' · valori ricondotti ai limiti PDF: '+resolved.warnings.join(' '):'';
+  document.getElementById('configAvanzataStato').textContent='✅ Configurazione salvata senza modificare il catalogo ricette'+note;
 }
 
 const NOMI_GIORNI_ESTESI = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
@@ -2096,7 +2115,12 @@ const FRUTTA_GIORNALIERA = {min:2, max:3};
 
 /* G: la colazione si compone a gruppi (guida Praderio), non è una "ricetta" fissa */
 let CAP_COLAZIONE_SPECIALE = 1;
-function applicaConfigAvanzataRuntime(cfg){cfg=cfg||CONFIG_AVANZATA_DEFAULT;CAP_SPUNTINO_SETTIMANALE=Object.assign({},CONFIG_AVANZATA_DEFAULT.snackWeeklyCaps,cfg.snackWeeklyCaps||{});CAP_SPUNTINO_GIORNALIERO=Object.assign({},CONFIG_AVANZATA_DEFAULT.snackDailyCaps,cfg.snackDailyCaps||{});CAP_COLAZIONE_SPECIALE=cfg.specialBreakfastMax??1;}
+function applicaConfigAvanzataRuntime(cfg){
+  const eff=configAvanzataEffettivaSalvata(cfg||{}),def=configAvanzataDefaultCanonico();
+  CAP_SPUNTINO_SETTIMANALE=Object.assign({},def.snackWeeklyCaps,eff.snackWeeklyCaps||{});
+  CAP_SPUNTINO_GIORNALIERO=Object.assign({},def.snackDailyCaps,eff.snackDailyCaps||{});
+  CAP_COLAZIONE_SPECIALE=eff.specialBreakfastMax??def.specialBreakfastMax??1;
+}
 const COLAZIONE_GRUPPI = [
   {chiave:'proteine', label:'Proteine', obbligatorio:true, consentiNessuno:true},
   {chiave:'bibita', label:'Bibita', obbligatorio:false, consentiNessuno:true, senzaNutrizione:true},
