@@ -103,7 +103,7 @@ Vedi `METODOLOGIA-CONVERSIONE-RICETTE.md` per il dettaglio (punti
 ## Report di copertura (agosto 2026, su 19 voci — da riverificare con le 26 attuali)
 
 - Combinazioni totali reali (prodotto ingredienti×cotture per gruppo,
-  condimenti NON moltiplicano — si usano sempre tutti insieme): 194
+  condimenti NON moltiplicano; il gruppo è un catalogo e la variante effettiva è scelta tramite `condimentiCompatibili`): 194
   su 19 voci.
 - Solo 2 ricette avevano C+P+V completo nella stessa ricetta (8
   combinazioni "giorno completo" in totale da quelle due).
@@ -148,3 +148,12 @@ Per la migrazione iniziale, nelle 8 ricette che avevano già un gruppo
 `Condimenti`, ogni ingrediente ha ricevuto l'elenco comune precedente: nessuna
 compatibilità è stata inventata o rimossa. Da questo punto le liste possono
 essere differenziate ingrediente per ingrediente.
+
+
+## Roll C/P/V — 2026-08-29
+
+Il vecchio roll generico fra ricette è superato. I tre roll sono locali alla
+realizzazione corrente: C varia solo gli slot C, P solo la cottura proteica, V
+solo il condimento compatibile. Se c'è una sola alternativa il relativo
+pulsante resta disattivato. La nuova estrazione dell'intero pasto avviene solo
+con **Proponi nuovo pasto**.
