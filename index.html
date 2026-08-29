@@ -3566,7 +3566,7 @@ function ingredienteEsclusoClinicamenteNelSet(base,resolved){
 }
 async function renderSetLimitiPersonaliIngredienti(){
   const box=document.getElementById('setLimitiPersonaliIngredienti'),stato=document.getElementById('setLimitiPersonaliStato');if(!box)return;
-  const [basi,capsRec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','tettiIngredienteSettimanali'),risolviSetUtenteCorrente()]);
+  const [basi,capsRec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','tettiIngredienteSettimanali'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
   limitiPersonaliIngredientiDraft=cloneConfigurazione(capsRec&&capsRec.valore||{});
   const gruppi=[['carboidrati','Carboidrati'],['proteine','Proteine'],['verdure','Verdure']],html=[];
   for(const [key,label] of gruppi){
