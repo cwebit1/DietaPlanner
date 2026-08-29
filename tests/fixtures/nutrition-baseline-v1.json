@@ -1,5 +1,5 @@
 {
-  "version": "PDF-V1.1",
+  "version": "PDF-V1.2",
   "source": "PERCORSO ALIMENTARE MIRIA SPILLER.pdf",
   "principles": {
     "pdfIsPrimaryForNutrition": true,
@@ -58,7 +58,25 @@
     ],
     "appCweGlobalLimitedCap": 3,
     "userZeroMeansAutomaticExclusion": true,
-    "zeroBudgetFallbackForbidden": true
+    "zeroBudgetFallbackForbidden": true,
+    "selectionSemantics": {
+      "auto": "eligible for automatic fill only if not weekly-capped",
+      "excluded": "explicit user zero; forbidden in automatic generation",
+      "fixedPositive": "exact weekly count selected by user"
+    },
+    "defaultFill": {
+      "totalSlots": 14,
+      "whenNoUserSelection": "fill all 14 from non-weekly-capped carbohydrates only",
+      "weeklyCappedAutoInsert": false,
+      "randomizeNature": true,
+      "randomizePlacement": true
+    },
+    "partialFill": {
+      "preserveExactUserCounts": true,
+      "example": "friselle=2 => exactly 2 friselle + 12 auto-filled non-weekly-capped slots",
+      "neverAutoAddWeeklyCapped": true,
+      "neverOverrideExplicitZero": true
+    }
   },
   "fruit": {
     "dailyMin": 2,
