@@ -2904,23 +2904,10 @@ async function renderSetPreferenzeMenu(){
 }
 
 document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async ()=>{
-  const stato = document.getElementById('setSalvaStato');
-  // 1. carboidrati: la UI reale è a caselle (statoCaselleCarb), non a slider —
-  // riuso lo stesso stato live e la stessa validazione (totale 14) della card
-  const totCarb = contaTotaleCaselleCarb();
-  if(totCarb !== CONFIG_CARB_TOTALE_OBBLIGATORIO){
-    if(stato){ stato.textContent = '⚠ Il totale carboidrati deve essere ' + CONFIG_CARB_TOTALE_OBBLIGATORIO + ' (attuale ' + totCarb + ')'; stato.style.color = 'var(--warn)'; }
-    return;
-  }
-  await put('impostazioni', {chiave: 'configCarboidrati', valore: statoCaselleCarb});
-  // 2. tetti alimenti limitati: non esiste una configurazione separata da
-  // slider — il tetto sui carboidrati limitati è già dentro statoCaselleCarb
-  // e già gestito interamente dalla card caselle (nessun salvataggio extra)
-  // 3. proteine: tabella giorno×categoria e preferenze sono salvate in tempo reale.
-  // verdure disattivate, verdura ricorrente, colazione preferita sono già
-  // salvate in tempo reale dai rispettivi moduli (batch 4/5/6)
-  if(stato){ stato.textContent='✅ Configurazione salvata.'; stato.style.color='var(--accent)';
-    setTimeout(()=>{ stato.textContent=''; }, 2500); }
+  const stato=document.getElementById('setSalvaStato'),carb=await salvaConfigCarboidratiSet(false);if(!carb.ok){if(stato){stato.textContent='⚠ '+carb.errori.join(' ');stato.style.color='var(--warn)';}return;}
+  const caps=await salvaLimitiPersonaliSet(false);if(!caps.ok){if(stato){stato.textContent='⚠ '+caps.errori.join(' ');stato.style.color='var(--warn)';}return;}
+  if(tabellaProteineDraft){const cfg=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft,cfg.frequenze,maxFontiProteicheGiornaliereSet);if(!fatt.ok){if(stato){stato.textContent='⚠ La tabella proteine non è compatibile con i limiti del nutrizionista.';stato.style.color='var(--warn)';}return;}await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:cloneConfigurazione(tabellaProteineDraft)});}
+  if(stato){stato.textContent='✅ Configurazione salvata. I carboidrati non fissati resteranno AUTO.';stato.style.color='var(--accent)';setTimeout(()=>{stato.textContent='';},3000);}
 });
 
 function tierDisponibilitaVerdura(v){const n=(v&&v.nome||'').toLowerCase();if(v&&v.categoria==='surgelato')return 'surgelato';if(/barattolo|scatola|craut/.test(n)||(v&&v.categoria==='conf'&&!['patate'].includes(n)))return 'confezionato';const freschi=new Set(['basilico fresco','cetriolo','fagiolini','funghi champignon','insalata mista','pomodoro fresco','radicchio','spinaci freschi','zucchine']);if(freschi.has(n))return 'fresco';return 'fresco_duraturo';}
@@ -3148,22 +3135,20 @@ document.getElementById('btnResetColazionePref')?.addEventListener('click', asyn
 
 /* Carica la configurazione salvata all'avvio */
 async function caricaConfigCarboidrati(){
-  const [rec,origini] = await Promise.all([getOne('impostazioni', 'configCarboidrati'),getOne('impostazioni','configCarboidratiOrigini')]);
-  if(rec && rec.valore){
-    statoCaselleCarb = rec.valore;
-    origineCaselleCarb = structuredClone(origini&&origini.valore||{});
-    // Assicura che tutte le chiavi esistano
-    for(const tipo of CONFIG_CARB_TIPI){
-      if(statoCaselleCarb[tipo.chiave] === undefined){
-        statoCaselleCarb[tipo.chiave] = 0;
-      }
-      if(!Array.isArray(origineCaselleCarb[tipo.chiave]))origineCaselleCarb[tipo.chiave]=Array(statoCaselleCarb[tipo.chiave]).fill('utente');
-    }
-  } else {
-    inizializzaStatoCaselleCarb();
+  const [rec,originiRec,statiRec,zeroRec]=await Promise.all([getOne('impostazioni','configCarboidrati'),getOne('impostazioni','configCarboidratiOrigini'),getOne('impostazioni','configCarboidratiStati'),getOne('impostazioni','configCarboidratiExplicitZeroKeys')]);
+  inizializzaStatoCaselleCarb();
+  const raw=rec&&rec.valore||{},origini=cloneConfigurazione(originiRec&&originiRec.valore||{}),hasOrigins=Object.values(origini).some(v=>Array.isArray(v)&&v.length),counts={};
+  for(const tipo of CONFIG_CARB_TIPI){
+    const key=tipo.chiave,n=Math.max(0,Math.trunc(Number(raw[key])||0));
+    if(hasOrigins){const userCount=(origini[key]||[]).filter(x=>x==='utente').length;if(userCount>0)counts[key]=userCount;}else if(n>0)counts[key]=n;
   }
-  renderCaselleCarboidrati();
-  aggiornaStatoConfigCarb();
+  const normalized=globalThis.DietaPlannerNutritionConfig.normalizeCarbohydrateSelection({counts,states:statiRec&&statiRec.valore||{},explicitZeroKeys:zeroRec&&zeroRec.valore||[]});
+  for(const tipo of CONFIG_CARB_TIPI){
+    const key=tipo.chiave,st=normalized[key]||{mode:'auto',count:0};statiCaselleCarb[key]={mode:st.mode,count:st.mode==='fixed'?st.count:0};
+    if(st.mode==='fixed'){statoCaselleCarb[key]=st.count;const old=Array.isArray(origini[key])?origini[key].slice(0,st.count):[];origineCaselleCarb[key]=old.length===st.count?old:Array(st.count).fill('utente');}
+    else{statoCaselleCarb[key]=0;origineCaselleCarb[key]=[];if(st.mode==='excluded')zeroEsplicitiCaselleCarb.add(key);}
+  }
+  renderCaselleCarboidrati();aggiornaStatoConfigCarb();
 }
 
 /* Funzione per il motore: ritorna la configurazione carboidrati salvata.
