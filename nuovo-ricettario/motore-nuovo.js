@@ -156,6 +156,7 @@ function estraiPartiRicetta(ricetta,combinazione){
   const parti=[];
   const gruppi=Array.isArray(ricetta.gruppi)?ricetta.gruppi:[];
   let indiceSlot=0;
+  let indiceCondimenti=0;
 
   for(let indiceGruppo=0; indiceGruppo<gruppi.length; indiceGruppo++){
     const gruppo=gruppi[indiceGruppo]||{};
@@ -171,7 +172,8 @@ function estraiPartiRicetta(ricetta,combinazione){
     }
 
     if(categoria==='Condimenti'){
-      for(const ingrediente of (gruppo.ingredienti||[])){
+      const gruppoSelezionato=(combinazione.condimenti||[])[indiceCondimenti++]||{ingredienti:[],cotture:[]};
+      for(const ingrediente of (gruppoSelezionato.ingredienti||[])){
         if(!ingrediente||!ingrediente.nome) continue;
         parti.push({
           tipo:'ingrediente',
@@ -182,7 +184,7 @@ function estraiPartiRicetta(ricetta,combinazione){
           mostraNomi:!!gruppo.mostraNomi
         });
       }
-      for(const cottura of (gruppo.cotture||[])){
+      for(const cottura of (gruppoSelezionato.cotture||[])){
         if(!cottura||!cottura.nome) continue;
         parti.push({
           tipo:'cottura',
