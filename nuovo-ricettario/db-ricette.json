@@ -1,5 +1,5 @@
 {
-  "versione": 66,
+  "versione": 67,
   "ricette": [
     {
       "gruppi": [
@@ -1010,22 +1010,34 @@
             {
               "nome": "Cous cous",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Basilico fresco"
+              ]
             },
             {
               "nome": "Farro perlato",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Basilico fresco"
+              ]
             },
             {
               "nome": "Orzo perlato",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Basilico fresco"
+              ]
             },
             {
               "nome": "Riso",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Basilico fresco"
+              ]
             }
           ],
           "cotture": [],
@@ -1039,7 +1051,10 @@
             {
               "nome": "Pomodorini",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Basilico fresco"
+              ]
             }
           ],
           "cotture": [],
@@ -1084,22 +1099,34 @@
             {
               "nome": "Cous cous",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Semi di sesamo"
+              ]
             },
             {
               "nome": "Farro perlato",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Semi di sesamo"
+              ]
             },
             {
               "nome": "Orzo perlato",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Semi di sesamo"
+              ]
             },
             {
               "nome": "Riso",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Semi di sesamo"
+              ]
             }
           ],
           "cotture": [],
@@ -1113,12 +1140,18 @@
             {
               "nome": "Salmone",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Semi di sesamo"
+              ]
             },
             {
               "nome": "Tonno",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Semi di sesamo"
+              ]
             }
           ],
           "cotture": [],
@@ -1242,27 +1275,52 @@
             {
               "nome": "Lattuga",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Radicchio",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Songino",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Spinaci freschi",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Valeriana",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             }
           ],
           "cotture": [],
@@ -1322,27 +1380,52 @@
             {
               "nome": "Carote",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Cetriolo",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Finocchi",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Peperoni",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Pomodoro fresco",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             }
           ],
           "cotture": [],
@@ -1356,17 +1439,32 @@
             {
               "nome": "Basilico fresco",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Cipolla rossa",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             },
             {
               "nome": "Sedano",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Aceto di mele",
+                "Limone"
+              ]
             }
           ],
           "cotture": [],
@@ -1418,7 +1516,10 @@
             {
               "nome": "Pomodoro fresco",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico"
+              ]
             }
           ],
           "cotture": [],
@@ -1722,27 +1823,52 @@
             {
               "nome": "Lattuga",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Radicchio",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Songino",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Spinaci freschi",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Valeriana",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             }
           ],
           "cotture": [],
@@ -1756,22 +1882,42 @@
             {
               "nome": "Carote",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Cipolla",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Finocchi",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             },
             {
               "nome": "Pomodorini",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Aceto balsamico",
+                "Arancia",
+                "Limone"
+              ]
             }
           ],
           "cotture": [],
@@ -2165,22 +2311,38 @@
             {
               "nome": "Ceci",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Olio extravergine oliva",
+                "Rosmarino"
+              ]
             },
             {
               "nome": "Fagioli borlotti",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Olio extravergine oliva",
+                "Rosmarino"
+              ]
             },
             {
               "nome": "Fagioli cannellini",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Olio extravergine oliva",
+                "Rosmarino"
+              ]
             },
             {
               "nome": "Lenticchie",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Olio extravergine oliva",
+                "Rosmarino"
+              ]
             }
           ],
           "cotture": [],
@@ -2285,7 +2447,10 @@
             {
               "nome": "Piselli surgelati",
               "stack": 1,
-              "roll": 1
+              "roll": 1,
+              "condimentiCompatibili": [
+                "Cipolla rossa"
+              ]
             }
           ],
           "cotture": [],
