@@ -7021,7 +7021,7 @@ async function proponiRicettaAutomatica(giorno, pasto, escludiId, forzatoVariant
       const sottotipo = r.gruppoProteico;
       const gruppo = sottotipo ? (SOTTOTIPO_A_GRUPPO[sottotipo] || sottotipo) : null;
       if(richiedeCategoriaGiorno && (!gruppo || !categorieGiornoRichieste.includes(gruppo))) continue;
-      if(gruppo && frequenzeEffettive[gruppo] && consumi[gruppo] >= frequenzeEffettive[gruppo].max){
+      if(gruppo && frequenzeEffettive[gruppo] && frequenzeEffettive[gruppo].max!==null && frequenzeEffettive[gruppo].max!==undefined && consumi[gruppo] >= frequenzeEffettive[gruppo].max){
         continue;
       }
       if(sottotipo && extraCapEffettivi[sottotipo] && consumiSottotipi[sottotipo] >= extraCapEffettivi[sottotipo]){
@@ -7247,7 +7247,7 @@ async function analizzaScostamenti(pasto, giorno, ricetteCandidate){
     const sottotipo = r.gruppoProteico;
     if(sottotipo){
       const gruppo = SOTTOTIPO_A_GRUPPO[sottotipo] || sottotipo;
-      if(frequenzeEffettive[gruppo] && (consumiData.gruppi[gruppo]||0) >= frequenzeEffettive[gruppo].max){
+      if(frequenzeEffettive[gruppo] && frequenzeEffettive[gruppo].max!==null && frequenzeEffettive[gruppo].max!==undefined && (consumiData.gruppi[gruppo]||0) >= frequenzeEffettive[gruppo].max){
         messaggi.push(`Tetto settimanale di "${gruppo}" già raggiunto: con "${r.nome}" saliresti a ${(consumiData.gruppi[gruppo]||0)+1}/${frequenzeEffettive[gruppo].max}`);
       }
       if(extraCapEffettivi[sottotipo] && (consumiData.sottotipi[sottotipo]||0) >= extraCapEffettivi[sottotipo]){
@@ -7724,11 +7724,12 @@ async function renderFrequenzeSettimana(){
   let html = Object.keys(frequenzeMostrate).map(k=>{
     const f = frequenzeMostrate[k];
     const c = gruppi[k]||0;
-    const over = c > f.max;
-    const pct = Math.min(100, (c/f.max)*100);
+    const hasMax=f.max!==null&&f.max!==undefined, over=hasMax&&c>Number(f.max);
+    const riferimento=hasMax?(Number(f.max)>0?Number(f.max):1):Math.max(1,Number(f.target||f.min||1));
+    const pct=Math.min(100,(c/riferimento)*100),range=hasMax?(f.min+'-'+f.max):('min '+f.min+' · senza max');
     return `<div style="margin-bottom:10px;">
       <div class="row"><span style="font-size:0.82rem;">${labels[k]}</span>
-        <span class="meta">${c} / ${f.min}-${f.max} sett.</span></div>
+        <span class="meta">${c} / ${range} sett.</span></div>
       <div class="freq-bar-wrap"><div class="freq-bar ${over?'over':''}" style="width:${pct}%"></div></div>
       ${over ? messaggioSoft(labels[k], c, f.max) : ''}
     </div>`;
