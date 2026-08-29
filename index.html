@@ -3466,9 +3466,9 @@ async function renderSetLimitiPersonaliIngredienti(){
   const box=document.getElementById('setLimitiPersonaliIngredienti'),stato=document.getElementById('setLimitiPersonaliStato');if(!box)return;
   const [basi,capsRec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','tettiIngredienteSettimanali'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
   limitiPersonaliIngredientiDraft=cloneConfigurazione(capsRec&&capsRec.valore||{});
-  const gruppi=[['carboidrati','Carboidrati'],['proteine','Proteine'],['verdure','Verdure']],html=[];
+  const gruppi=[['carboidrati','Carboidrati'],['proteine','Proteine'],['verdura','Verdure'],['frutta','Frutta'],['colazione','Colazione e spuntini'],['grassi','Grassi'],['condimento','Condimenti'],['speciale','Speciali']],html=[];
   for(const [key,label] of gruppi){
-    const items=basi.filter(b=>macroNutrizionistaIngrediente(b)===key).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;
+    const items=basi.filter(b=>b.gruppo===key).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;
     html.push('<details class="set-cap-group"><summary>'+label+'</summary><div>');
     for(const b of items){
       const rule=resolved.ingredientConstraints&&resolved.ingredientConstraints[b.id]||{},excluded=ingredienteEsclusoClinicamenteNelSet(b,resolved),clinicalMin=rule.min,clinicalMax=excluded?0:rule.max,hasUser=Object.prototype.hasOwnProperty.call(limitiPersonaliIngredientiDraft,b.id),userVal=hasUser?limitiPersonaliIngredientiDraft[b.id]:'',invalid=hasUser&&clinicalMin!==null&&clinicalMin!==undefined&&Number(userVal)<Number(clinicalMin);
