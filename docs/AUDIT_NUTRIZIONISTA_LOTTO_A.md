@@ -133,11 +133,42 @@ Stato corrente di `CONFIG_CARB_TIPI` / `CARBOIDRATI_PASTO`:
 
 Il tetto globale `CONFIG_CARB_TETTO_LIMITATI = 3` / `limitedCarbTotalMax = 3` resta una regola **APP-CWE**, non PDF. Non viene toccato finché non viene deciso esplicitamente di rimuoverlo.
 
-### 6.1 Zero nel Set utente
+### 6.1 Zero, AUTO e valore fisso nel Set utente
 
 Requisito vincolante: **0 significa non proporre quel carboidrato nella generazione automatica**. Se l'utente imposta Piadina=0, la Piadina non può rientrare tramite fallback.
 
+Per rendere compatibile questa regola con il nuovo default "se non seleziono nulla, genera comunque 14 carboidrati", il dato dovrà distinguere:
+- **AUTO/non impostato**: il sistema può usare il carboidrato se non ha tetto settimanale;
+- **0/ESCLUSO**: esclusione hard dall'automatico;
+- **N>0/FISSO**: numero esatto di occorrenze richieste.
+
 Audit del motore attuale: `engine-core.js::chooseCarb()` quando `carbRemaining` non offre più voci ricostruisce un pool da `Object.keys(defs)` e può quindi riaprire voci senza residuo; inoltre esistono regole speciali che possono forzare un carboidrato. Stato: **RISCHIO BYPASS**. Va reso impossibile nel Lotto motore.
+
+### 6.2 Schema base e completamento automatico
+
+Regola confermata:
+- nessuna selezione utente → **14 slot auto**;
+- pool auto di base → **solo carboidrati senza tetto settimanale PDF**;
+- carboidrati 0-2 → **mai inseriti automaticamente**;
+- quantità positive utente → **esatte**;
+- resto fino a 14 → compilato casualmente con sole voci AUTO non limitate e non escluse;
+- disposizione settimanale → casuale.
+
+Esempio normativo: **Friselle=2** → esattamente 2 slot Friselle; gli altri 12 vengono scelti casualmente tra carboidrati senza tetto e poi distribuiti casualmente nei 14 pasti.
+
+### 6.3 Stato del codice corrente
+
+`completaCaselleCarboidrati()` è già parzialmente coerente perché:
+- individua i limitati attivati dall'utente;
+- non aggiunge automaticamente un limitato mai attivato;
+- completa fino a 14.
+
+Ma oggi:
+- usa il **minimo conteggio** per bilanciare i carboidrati, quindi non realizza la "natura casuale" richiesta;
+- lo stato iniziale è numericamente `0` per tutto e non distingue ancora **AUTO** da **0 esplicito**;
+- `chooseCarb()` ha un fallback capace di riaprire voci fuori budget.
+
+Stato complessivo: **PARZIALE**, da correggere senza perdere il comportamento già valido di completamento a 14.
 
 ## 7. Verdure
 
