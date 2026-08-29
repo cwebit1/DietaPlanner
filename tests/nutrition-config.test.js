@@ -201,4 +201,15 @@ assert.deepEqual(
   assert.deepEqual(r.safety.blockedIngredientIds,['a','b']);
 }
 
+{
+  const r=N.resolveNutritionConfig({
+    nutritionist:{config:{fruit:{min:9,max:9,portionMin:999,portionMax:999}}}
+  });
+  assert.equal(r.valid,false);
+  assert.equal(r.fruit.min,3);
+  assert.equal(r.fruit.max,3);
+  assert.equal(r.fruit.portionMin,200);
+  assert.equal(r.fruit.portionMax,200);
+}
+
 console.log('nutrition-config resolver: ok');
