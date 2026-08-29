@@ -121,8 +121,16 @@ function generaCombinazioni(ricetta){
 function variantiCondimento(combinazione){
   const gruppi=Array.isArray(combinazione&&combinazione.condimenti)?combinazione.condimenti:[];
   if(!gruppi.length) return [[]];
+
+  const vincoli=(combinazione.slot||[])
+    .map(s=>s&&s.ingrediente&&Array.isArray(s.ingrediente.condimentiCompatibili)
+      ? new Set(s.ingrediente.condimentiCompatibili.map(String))
+      : null)
+    .filter(Boolean);
+
   const opzioni=gruppi.map(g=>{
-    const a=(g.ingredienti||[]).filter(x=>x&&x.nome);
+    let a=(g.ingredienti||[]).filter(x=>x&&x.nome);
+    if(vincoli.length) a=a.filter(x=>vincoli.every(v=>v.has(String(x.nome))));
     return a.length?a:[null];
   });
   return prodottoCartesiano(opzioni);
@@ -845,18 +853,28 @@ async function materializzaRealizzazione(realizzazione){
   return materializzaRicetta(base,Number(realizzazione.condimentoVarianteIndex)||0);
 }
 
-function firmaCotture(r){
-  return (r.slot||[]).map((s,i)=>i+':'+(s.categoria||'')+':'+(s.cottura&&s.cottura.nome||'')).join('|');
+function firmaPerRollC(r){
+  return (r.slot||[]).map((s,i)=>{
+    const cat=s.categoria||'';
+    const ing=cat==='C'?'*':(s.ingrediente&&s.ingrediente.nome||'');
+    const cot=s.cottura&&s.cottura.nome||'';
+    return i+':'+cat+':'+ing+':'+cot;
+  }).join('|');
 }
-function firmaIngredienti(r){
-  return (r.slot||[]).map((s,i)=>i+':'+(s.categoria||'')+':'+(s.ingrediente&&s.ingrediente.nome||'')).join('|');
+function firmaPerRollP(r){
+  return (r.slot||[]).map((s,i)=>{
+    const cat=s.categoria||'';
+    const ing=s.ingrediente&&s.ingrediente.nome||'';
+    const cot=TOKEN_P.has(cat)?'*':(s.cottura&&s.cottura.nome||'');
+    return i+':'+cat+':'+ing+':'+cot;
+  }).join('|');
 }
 
 async function alternativeRollC(base,giorno,condimentoIndex){
   if(!base) return [];
   const pool=state.ricetteConcrete
     .filter(r=>r.recipeModelId===base.recipeModelId)
-    .filter(r=>firmaCotture(r)===firmaCotture(base));
+    .filter(r=>firmaPerRollC(r)===firmaPerRollC(base));
   const out=[];
   for(const r of pool){
     const x=await materializzaRicetta(r,condimentoIndex);
@@ -869,7 +887,7 @@ async function alternativeRollP(base,giorno,condimentoIndex){
   if(!base) return [];
   const pool=state.ricetteConcrete
     .filter(r=>r.recipeModelId===base.recipeModelId)
-    .filter(r=>firmaIngredienti(r)===firmaIngredienti(base));
+    .filter(r=>firmaPerRollP(r)===firmaPerRollP(base));
   const out=[];
   for(const r of pool){
     const x=await materializzaRicetta(r,condimentoIndex);
