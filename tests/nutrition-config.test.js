@@ -9,6 +9,18 @@ const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures','nutriti
 
 assert.equal(N.VERSION,fixture.version);
 assert.deepEqual(N.PDF_BASELINE.proteinFrequencies,fixture.proteinFrequencies);
+{
+  const u=N.contextDefaultsForIngredient({nome:'Uova',sottotipo:'uova'});
+  assert.equal(u.colazione.maxPerWeek,2);
+  assert.equal(u.colazione.quantityDefault,1);
+  assert.equal(u.pastoPrincipale.quantityDefault,2);
+  const aff=N.contextDefaultsForIngredient({nome:'Speck',sottotipo:'affettati'});
+  assert.equal(aff.colazione.quantityDefault,40);
+  assert.equal(aff.pastoPrincipale.quantityDefault,60);
+  const ric=N.contextDefaultsForIngredient({nome:'Ricotta',sottotipo:'formaggio_fresco'});
+  assert.equal(ric.colazione.quantityDefault,50);
+  assert.equal(ric.pastoPrincipale.quantityDefault,100);
+}
 assert.equal(N.PDF_BASELINE.subtypeCaps.affettati,fixture.subtypeCaps.affettati);
 assert.deepEqual(
   Object.keys(N.PDF_BASELINE.carbohydrateWeeklyCaps).sort(),
