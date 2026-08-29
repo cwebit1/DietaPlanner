@@ -1934,15 +1934,30 @@ function configAvanzataEffettivaSalvata(raw){
 }
 let vincoliIngredientiNutrizionistaDraft={};
 function macroNutrizionistaIngrediente(b){if(b.gruppo==='carboidrati')return 'carboidrati';if(b.gruppo==='proteine')return 'proteine';if(b.gruppo==='verdura')return 'verdure';return null;}
-function unitaRiferimentoIngrediente(b){return b.unitaPorzione==='pezzi'?'pz':'g';}
-function quantitaRiferimentoIngrediente(b){return Number(b.porzione||b.pesoPorzioneGrammi||b.pesoPezzo||0)||'';}
+function unitaRiferimentoIngrediente(b){if(b&&b.unitaPorzione==='pezzi')return 'pz';if(b&&b.unitaPorzione==='ml')return 'ml';if(b&&b.unitaPorzione==='fette')return 'fette';return 'g';}
+function quantitaRiferimentoIngrediente(b){return Number(b&&b.porzione||b&&b.pesoPorzioneGrammi||b&&b.pesoPezzo||0)||'';}
+function quantitaRiferimentoContestoIngrediente(b,contesto){
+  if(contesto==='colazione'&&b&&b.ancheColazione){const q=Number(b.ancheColazione.porzioneMin||b.ancheColazione.porzione||0);if(q>0)return q;}
+  if(contesto==='pastoPrincipale')return quantitaRiferimentoIngrediente(b);
+  return '';
+}
+function rigaContestiIngredienteNutrizionista(b,v){
+  if(!v||v.stato!=='limitato')return '';
+  const unit=unitaRiferimentoIngrediente(b),ctx=v.contesti||{},labels=[['colazione','Colazione'],['pastoPrincipale','Pasto principale'],['spuntino','Spuntino']];
+  let html='<div class="nutri-contexts" data-contesti-id="'+b.id+'"><div class="nutri-context-title">Override contestuali facoltativi · vuoto = quantità/frequenza generale</div>';
+  for(const [key,label] of labels){
+    const c=ctx[key]||{},q=c.quantita!==undefined&&c.quantita!==null?c.quantita:quantitaRiferimentoContestoIngrediente(b,key);
+    html+='<div class="nutri-context-row"><span>'+label+'</span>';
+    html+='<label class="nutri-context-field"><input type="number" min="0" data-vincolo-contesto="'+key+'" data-vincolo-contesto-campo="max" data-vincolo-id="'+b.id+'" value="'+(c.max??'')+'" aria-label="'+b.nome+' '+label+' massimo"><span class="nutri-unit">max/sett.</span></label>';
+    html+='<label class="nutri-context-field"><input type="number" min="0" step="any" data-vincolo-contesto="'+key+'" data-vincolo-contesto-campo="quantita" data-vincolo-id="'+b.id+'" value="'+(q??'')+'" aria-label="'+b.nome+' '+label+' quantità"><span class="nutri-unit">'+unit+'</span></label></div>';
+  }
+  return html+'</div>';
+}
 function macroProteicoDaBase(b){return typeof motoreCategoriaDiSottotipo==='function'?motoreCategoriaDiSottotipo(b.sottotipo):null;}
 function esclusionePianoIngrediente(b,profilo){const macro=macroProteicoDaBase(b);if(profilo==='vegetariano')return macro==='carne'||macro==='pesce';if(profilo==='vegano')return ['carne','pesce','formaggi','uova'].includes(macro)||(b.allergeni||[]).some(a=>['latte','uova','pesce','crostacei','molluschi'].includes(a));return false;}
 function rigaNumericaConfig(path,label,min,max,extra){return `<div class="nutri-row"><span class="nutri-name">${label}</span><span class="nutri-unit">${extra||'sett.'}</span><input type="number" data-cfg-avanzata="${path}.min" value="${min??''}" aria-label="${label} minimo"><input type="number" data-cfg-avanzata="${path}.max" value="${max??''}" aria-label="${label} massimo"></div>`;}
 function unitaQuantitaMacroDaIngredienti(basi,macro){const unita=[...new Set((basi||[]).filter(b=>macroProteicoDaBase(b)===macro).map(unitaRiferimentoIngrediente))];return unita.length===1?unita[0]:unita.join('/')||'g';}
 function rigaFrequenzaProteica(path,label,valori,unita){return `<div class="nutri-row nutri-vincolo"><span class="nutri-name">${label}</span><span class="nutri-unit">sett.</span><input type="number" data-cfg-avanzata="${path}.min" value="${valori.min??''}" aria-label="${label} minimo"><input type="number" data-cfg-avanzata="${path}.max" value="${valori.max??''}" aria-label="${label} massimo"><label class="nutri-quantity"><input type="number" data-cfg-avanzata="${path}.quantita" value="${valori.quantita??''}" aria-label="${label} quantità"><span class="nutri-unit">${unita}</span></label></div>`;}
-function quantitaNutrizionistaInGrammi(base,quantita){const q=Number(quantita)||0;if(base&&base.unitaPorzione==='pezzi'){const peso=Number(base.pesoPezzo||(base.pesoPorzioneGrammi&&base.porzione?base.pesoPorzioneGrammi/base.porzione:0))||0;return q*peso;}return q;}
-async function applicaQuantitaNutrizionistaAlleRicette(){const [rec,cfgRec,basi,varianti,ricette]=await Promise.all([getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','configAvanzata'),getAll('ingredienti'),getAll('varianti'),getAll('ricette')]),vincoli=rec&&rec.valore||{},cfg=cfgRec&&cfgRec.valore||{},bBy=new Map(basi.map(b=>[b.id,b])),vBy=new Map(varianti.map(v=>[v.id,v]));for(const ricetta of ricette){let cambiata=false;for(const ing of ricetta.ingredienti||[]){const variante=vBy.get(ing.variantId),base=variante&&bBy.get(variante.ingredienteId);if(!base)continue;const vincolo=vincoli[base.id],macro=macroProteicoDaBase(base),quantitaIngrediente=vincolo&&vincolo.stato==='limitato'?Number(vincolo.quantita)||0:0,quantitaMacro=macro&&cfg.proteinFrequencies&&cfg.proteinFrequencies[macro]?Number(cfg.proteinFrequencies[macro].quantita)||0:0,quantita=quantitaIngrediente||quantitaMacro;if(!(quantita>0))continue;const nuova=quantitaNutrizionistaInGrammi(base,quantita)*(Number(ricetta.porzioni)||1);if(nuova>0&&Number(ing.quantita)!==nuova){ing.quantita=nuova;cambiata=true;}}if(cambiata)await put('ricette',ricetta);}}
 async function renderConfigAvanzata(){
   const [rec,a,vincoliRec,classiRec,basi]=await Promise.all([getOne('impostazioni','configAvanzata'),getOne('impostazioni','allergeniAttivi'),getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','vincoliClassiCarboidrati'),getAll('ingredienti')]);
   const cfg=Object.assign({},CONFIG_AVANZATA_DEFAULT,rec&&rec.valore||{}),box=document.getElementById('configAvanzataCampi');if(!box)return;
