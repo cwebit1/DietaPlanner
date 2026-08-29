@@ -28,7 +28,7 @@ const state = {
   ricetteById:new Map(),
   baseByName:new Map(),
   variantByName:new Map(),
-  tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}, condimentoCursori:{}},
+  tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}, condimentoRotazione:{contatore:0,ultimo:{}}},
   propostaCicli:new Map()
 };
 
@@ -461,7 +461,7 @@ async function caricaTracking(){
   if(typeof getOne!=='function') return;
   try{
     const r=await getOne('impostazioni','motoreNuovoTracking');
-    if(r&&r.valore) state.tracking=Object.assign({ultimoUtilizzo:{},utilizziSettimanali:{},condimentoCursori:{}},r.valore);
+    if(r&&r.valore) state.tracking=Object.assign({ultimoUtilizzo:{},utilizziSettimanali:{},condimentoRotazione:{contatore:0,ultimo:{}}},r.valore);
   }catch(e){}
 }
 async function salvaTracking(){
@@ -679,20 +679,45 @@ function realizzazioniDaRicette(ricette){
     condimentoVarianteIndex:Number(r.condimentoVarianteIndex)||0
   }));
 }
-function chiaveSequenzaCondimenti(r){
-  const ingredienti=(r&&r.slot||[])
-    .map(s=>s&&s.ingrediente&&s.ingrediente.nome?String(s.ingrediente.nome):'')
-    .filter(Boolean);
-  return 'm'+(r&&r.recipeModelId||'')+'|'+ingredienti.join('|');
+function nomiVarianteCondimento(raw,indice){
+  const tutte=variantiCondimento(raw);
+  const v=tutte[indice]||[];
+  return v.map(x=>x&&x.nome?String(x.nome):'').filter(Boolean);
 }
-function numeroVariantiCondimentoRicetta(r){
-  if(!r) return 1;
-  const raw={slot:clone(r.slot||[]),condimenti:clone(r.condimentiDisponibili||r.condimenti||[])};
-  return Math.max(1,variantiCondimento(raw).length);
+function punteggioRecenzaCondimento(nomi,rotazione){
+  if(!nomi.length) return -1;
+  const ultimo=rotazione&&rotazione.ultimo||{};
+  return Math.max(...nomi.map(nome=>Number(ultimo[nome])||0));
 }
-async function assegnaCondimentiSequenziali(risultato){
+async function scegliCondimentoGlobale(base,data){
+  if(!base) return 0;
+  const raw={slot:clone(base.slot||[]),condimenti:clone(base.condimentiDisponibili||base.condimenti||[])};
+  const tutte=variantiCondimento(raw);
+  if(tutte.length<=1) return 0;
+
+  const valide=[];
+  for(let idx=0;idx<tutte.length;idx++){
+    const x=await materializzaRicetta(base,idx);
+    if(await ricettaAmmessa(x,data,{})) valide.push(idx);
+  }
+  if(valide.length<=1) return valide.length?valide[0]:0;
+
+  if(!state.tracking.condimentoRotazione) state.tracking.condimentoRotazione={contatore:0,ultimo:{}};
+  const rot=state.tracking.condimentoRotazione;
+  let scelto=valide[0], score=punteggioRecenzaCondimento(nomiVarianteCondimento(raw,scelto),rot);
+
+  for(const idx of valide.slice(1)){
+    const s=punteggioRecenzaCondimento(nomiVarianteCondimento(raw,idx),rot);
+    if(s<score){
+      scelto=idx;
+      score=s;
+    }
+  }
+  return scelto;
+}
+async function assegnaCondimentiRotazioneGlobale(risultato,data){
   if(!risultato||!Array.isArray(risultato.realizzazioni)) return risultato;
-  if(!state.tracking.condimentoCursori) state.tracking.condimentoCursori={};
+  if(!state.tracking.condimentoRotazione) state.tracking.condimentoRotazione={contatore:0,ultimo:{}};
 
   const realizzazioni=[];
   let cambiato=false;
@@ -700,13 +725,18 @@ async function assegnaCondimentiSequenziali(risultato){
     const copia=clone(real);
     const base=state.ricetteById.get(copia&&copia.ricettaId);
     if(base){
-      const n=numeroVariantiCondimentoRicetta(base);
-      if(n>1){
-        const k=chiaveSequenzaCondimenti(base);
-        const cursor=Number(state.tracking.condimentoCursori[k])||0;
-        copia.condimentoVarianteIndex=((cursor%n)+n)%n;
-        state.tracking.condimentoCursori[k]=(cursor+1)%n;
-        cambiato=true;
+      const raw={slot:clone(base.slot||[]),condimenti:clone(base.condimentiDisponibili||base.condimenti||[])};
+      const tutte=variantiCondimento(raw);
+      if(tutte.length>1){
+        const idx=await scegliCondimentoGlobale(base,data);
+        copia.condimentoVarianteIndex=idx;
+        const nomi=nomiVarianteCondimento(raw,idx);
+        if(nomi.length){
+          const rot=state.tracking.condimentoRotazione;
+          rot.contatore=(Number(rot.contatore)||0)+1;
+          for(const nome of nomi) rot.ultimo[nome]=rot.contatore;
+          cambiato=true;
+        }
       }else{
         copia.condimentoVarianteIndex=0;
       }
@@ -802,7 +832,7 @@ async function generaCandidatiPasto(target,data,opts){
 async function generaPasto(target,data,opts){
   const candidati=await generaCandidatiPasto(target,data,opts||{});
   const scelto=scegliCasuale(candidati);
-  return scelto?await assegnaCondimentiSequenziali(scelto):null;
+  return scelto?await assegnaCondimentiRotazioneGlobale(scelto,data):null;
 }
 
 async function generaPianoSettimana(scarto,opzioni){
@@ -863,7 +893,7 @@ async function rigeneraPasto(giorno,pasto,target){
 
   let x=scegliCasuale(disponibili);
   if(!x) return null;
-  x=await assegnaCondimentiSequenziali(x);
+  x=await assegnaCondimentiRotazioneGlobale(x,giorno);
 
   getPropostaSet(chiave).add(x.firmaPasto);
 
