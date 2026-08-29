@@ -618,45 +618,90 @@ function realizzazioniDaRicette(ricette){
   }));
 }
 
-async function prioritaInventario(pool){
+async function livelliPrioritaInventario(){
   const [scad,avanzi,freezer]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getFreezerDisponibili()]);
-  for(const src of [scad,avanzi,freezer]){
-    if(!src.length)continue;
-    const ids=new Set(src.map(x=>x.variantId));
+  return [scad,avanzi,freezer]
+    .filter(src=>src.length)
+    .map(src=>new Set(src.map(x=>x.variantId)));
+}
+function applicaPrioritaInventario(pool,livelli){
+  for(const ids of (livelli||[])){
     const p=pool.filter(r=>(r.ingredienti||[]).some(i=>i.variantId&&ids.has(i.variantId)));
     if(p.length)return p;
   }
   return pool;
 }
-async function generaPasto(target,data,opts){
+async function prioritaInventario(pool){
+  return applicaPrioritaInventario(pool,await livelliPrioritaInventario());
+}
+function firmaPastoDaRicette(ricette){
+  return (ricette||[]).map(r=>r.id).sort().join('||');
+}
+function pastoCompletoPerToken(ricette,token){
+  const tokens=new Set();
+  for(const r of (ricette||[])) for(const t of copertura(r).tokens) tokens.add(t);
+  return tokens.has(token) && tokens.has('C') && tokens.has('V');
+}
+function risultatoPasto(token,ricette){
+  return {
+    targetToken:token,
+    firmaPasto:firmaPastoDaRicette(ricette),
+    realizzazioni:realizzazioniDaRicette(ricette),
+    ricette
+  };
+}
+async function generaCandidatiPasto(target,data,opts){
   opts=opts||{};
   const token=PROTEIN_MACRO_TO_TOKEN[target]||SUBTYPE_TO_TOKEN[target]||target;
   const exclude=new Set(opts.excludeRecipeIds||[]);
-  let pool=(await poolAmmesso(data,opts)).filter(r=>!exclude.has(r.id));
+  const pool=(await poolAmmesso(data,opts)).filter(r=>!exclude.has(r.id));
   let prot=pool.filter(r=>copertura(r).tokens.has(token));
-  if(!prot.length) return null;
+  if(!prot.length) return [];
+
   const maxScore=Math.max(...prot.map(r=>scoreCopertura(r,token)));
   prot=prot.filter(r=>scoreCopertura(r,token)===maxScore);
-  prot=await prioritaInventario(prot);
-  const primo=scegliCasuale(prot);
-  const scelti=[primo];
-  let have=copertura(primo);
-  if(!have.C){
-    let carb=pool.filter(r=>copertura(r).C&&!copertura(r).P&&!scelti.includes(r));
-    carb=await prioritaInventario(carb);
-    const r=scegliCasuale(carb); if(r) scelti.push(r);
+
+  const livelli=await livelliPrioritaInventario();
+  prot=applicaPrioritaInventario(prot,livelli);
+
+  const risultati=[];
+  const firme=new Set();
+
+  for(const primo of prot){
+    let carbChoices=[null];
+    if(!copertura(primo).C){
+      let carb=pool.filter(r=>copertura(r).C&&!copertura(r).P&&r.id!==primo.id);
+      carb=applicaPrioritaInventario(carb,livelli);
+      carbChoices=carb.length?carb:[null];
+    }
+
+    for(const carb of carbChoices){
+      const base=[primo].concat(carb?[carb]:[]);
+      const haV=base.some(r=>copertura(r).V);
+      const haVParziale=base.some(r=>copertura(r).Vparziale);
+      let vegChoices=[null];
+
+      if(!haV || haVParziale){
+        let veg=pool.filter(r=>copertura(r).V&&!copertura(r).P&&!base.some(x=>x.id===r.id));
+        veg=applicaPrioritaInventario(veg,livelli);
+        vegChoices=veg.length?veg:[null];
+      }
+
+      for(const veg of vegChoices){
+        const ricette=base.concat(veg?[veg]:[]);
+        if(!pastoCompletoPerToken(ricette,token)) continue;
+        const firma=firmaPastoDaRicette(ricette);
+        if(firme.has(firma)) continue;
+        firme.add(firma);
+        risultati.push(risultatoPasto(token,ricette));
+      }
+    }
   }
-  have={C:scelti.some(r=>copertura(r).C),V:scelti.some(r=>copertura(r).V),Vparziale:scelti.some(r=>copertura(r).Vparziale)};
-  if(!have.V || have.Vparziale){
-    let veg=pool.filter(r=>copertura(r).V&&!copertura(r).P&&!scelti.includes(r));
-    veg=await prioritaInventario(veg);
-    const r=scegliCasuale(veg); if(r) scelti.push(r);
-  }
-  return {
-    targetToken:token,
-    realizzazioni:scelti.map(r=>({ricettaId:r.id,recipeModelId:r.recipeModelId,copertura:Array.from(copertura(r).tokens)})),
-    ricette:scelti
-  };
+  return risultati;
+}
+async function generaPasto(target,data,opts){
+  const candidati=await generaCandidatiPasto(target,data,opts||{});
+  return scegliCasuale(candidati);
 }
 
 async function generaPianoSettimana(scarto,opzioni){
@@ -694,24 +739,31 @@ async function rigeneraPasto(giorno,pasto,target){
   const old=typeof getOne==='function'?await getOne('piano',id):null;
   target=target||(old&&old.categoriaTarget)||'legumi';
 
-  const correnti=(old&&old.realizzazioni||[]).map(x=>x&&x.ricettaId).filter(Boolean);
+  const correnti=(old&&old.realizzazioni||[])
+    .map(x=>x&&x.ricettaId)
+    .filter(Boolean)
+    .map(rid=>state.ricetteById.get(rid))
+    .filter(Boolean);
+  const firmaCorrente=firmaPastoDaRicette(correnti);
   const chiave='pasto|'+giorno+'|'+pasto+'|'+target;
-  const visti=getRollSet(chiave);
-  for(const rid of correnti) visti.add(rid);
+  let visti=getRollSet(chiave);
+  if(firmaCorrente) visti.add(firmaCorrente);
 
-  let esclusi=new Set([...correnti,...visti]);
-  let x=await generaPasto(target,giorno,{excludeRecipeIds:[...esclusi]});
+  const candidati=await generaCandidatiPasto(target,giorno,{});
+  let disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
 
-  if(!x){
+  if(!disponibili.length){
     azzeraRoll(chiave);
-    esclusi=new Set(correnti);
-    x=await generaPasto(target,giorno,{excludeRecipeIds:[...esclusi]});
-    if(!x) x=await generaPasto(target,giorno,{});
+    visti=getRollSet(chiave);
+    if(firmaCorrente) visti.add(firmaCorrente);
+    disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
+    if(!disponibili.length) disponibili=candidati.slice();
   }
+
+  const x=scegliCasuale(disponibili);
   if(!x) return null;
 
-  const nuovoSet=getRollSet(chiave);
-  for(const rr of x.ricette) nuovoSet.add(rr.id);
+  getRollSet(chiave).add(x.firmaPasto);
 
   const voce=Object.assign({},old||{id},{
     modo:'multi',
@@ -819,7 +871,7 @@ global.DietaPlannerNuovoMotore={
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
-  generaPasto,generaPianoSettimana,rigeneraPasto,rollMirato,
+  generaCandidatiPasto,generaPasto,generaPianoSettimana,rigeneraPasto,rollMirato,
   registraUtilizzo,copertura
 };
 })(window);
