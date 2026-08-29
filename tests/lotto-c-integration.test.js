@@ -49,9 +49,9 @@ assert(motor.includes("'setVerdureDisattivate'"));
 assert(!motor.includes("cfg.proteinFrequencies.formaggi={min:3,max:6,target:5}"));
 assert(!motor.includes("cfg.proteinFrequencies.legumi={min:14,max:null,target:14}"));
 
-const n=index.indexOf('nutrition-config.js?v=86');
-const e=index.indexOf('engine-core.js?v=86');
-const m=index.indexOf('motor.js?v=86');
+const n=index.indexOf('nutrition-config.js?v=87');
+const e=index.indexOf('engine-core.js?v=87');
+const m=index.indexOf('motor.js?v=87');
 assert(n>=0&&e>n&&m>e,'ordine script resolver -> engine -> motor');
 
 console.log('lotto-c integration: ok');
