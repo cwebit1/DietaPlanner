@@ -2656,169 +2656,130 @@ async function getConfigTettiAlimenti(){
    Totale obbligatorio: 14 (7 giorni × 2 pasti).
    Alimenti a tetto: max 3 caselle totali tra tutti i limitati.
    ========================================================= */
-const CONFIG_CARB_TIPI = [
-  { chiave: 'pasta', label: 'Pasta (secca)', limitato: false },
-  { chiave: 'pasta_fresca', label: 'Pasta fresca', limitato: false },
-  { chiave: 'riso', label: 'Riso', limitato: false },
-  { chiave: 'farro', label: 'Farro', limitato: false },
-  { chiave: 'orzo', label: 'Orzo', limitato: false },
-  { chiave: 'cous_cous', label: 'Cous cous', limitato: false },
-  { chiave: 'pane', label: 'Pane', limitato: false },
-  { chiave: 'patate', label: 'Patate', limitato: false },
-  { chiave: 'polenta', label: 'Polenta', limitato: false },
-  { chiave: 'friselle', label: 'Friselle', limitato: true, maxIndividuale: 2 },
-  { chiave: 'gnocchi', label: 'Gnocchi', limitato: true, maxIndividuale: 2 },
-  { chiave: 'pasta_ripiena', label: 'Pasta ripiena', limitato: true, maxIndividuale: 2 },
-  { chiave: 'gallette', label: 'Gallette', limitato: false },
-  { chiave: 'crackers', label: 'Crackers', limitato: false },
-  { chiave: 'taralli', label: 'Taralli / Grissini / Crostini', limitato: true, maxIndividuale: 2 },
-  { chiave: 'piadina', label: 'Piadina', limitato: true, maxIndividuale: 2 },
-  { chiave: 'pasta_sfoglia', label: 'Pasta sfoglia / brisée', limitato: true, maxIndividuale: 2 }
+const CONFIG_CARB_TIPI_BASE = [
+  {chiave:'pasta',label:'Pasta (secca)'},{chiave:'pasta_fresca',label:'Pasta fresca'},
+  {chiave:'riso',label:'Riso'},{chiave:'farro',label:'Farro'},{chiave:'orzo',label:'Orzo'},
+  {chiave:'cous_cous',label:'Cous cous'},{chiave:'pane',label:'Pane'},{chiave:'patate',label:'Patate'},
+  {chiave:'polenta',label:'Polenta'},{chiave:'friselle',label:'Friselle'},{chiave:'gnocchi',label:'Gnocchi'},
+  {chiave:'pasta_ripiena',label:'Pasta ripiena'},{chiave:'gallette',label:'Gallette'},{chiave:'crackers',label:'Crackers'},
+  {chiave:'taralli',label:'Taralli / Grissini / Crostini'},{chiave:'piadina',label:'Piadina'},{chiave:'pasta_sfoglia',label:'Pasta sfoglia / brisée'}
 ];
-const CONFIG_CARB_MAX_CASELLE = 6;
-const CONFIG_CARB_TOTALE_OBBLIGATORIO = 14;
-const CONFIG_CARB_TETTO_LIMITATI = 3;
+const NUTRITION_CONFIG_SET=globalThis.DietaPlannerNutritionConfig;
+const CONFIG_CARB_MAX_CASELLE=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.carbCellMax||6;
+const CONFIG_CARB_TOTALE_OBBLIGATORIO=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.carbSlots||14;
+const CONFIG_CARB_TETTO_LIMITATI=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.limitedCarbTotalMax||3;
+const CONFIG_CARB_TIPI=CONFIG_CARB_TIPI_BASE.map(t=>{
+  const cap=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.PDF_BASELINE.carbohydrateWeeklyCaps[t.chiave];
+  return Object.assign({},t,{limitato:cap!==undefined,maxIndividuale:cap!==undefined?Number(cap):CONFIG_CARB_MAX_CASELLE});
+});
 
-/* Stato corrente delle caselle: chiave -> numero di caselle cliccate */
-let statoCaselleCarb = {};
-let origineCaselleCarb = {};
+/* Stato canonico Set carboidrati: AUTO / EXCLUDED / FIXED.
+   configCarboidrati e configCarboidratiOrigini restano scritti per compatibilità legacy. */
+let statoCaselleCarb={};
+let origineCaselleCarb={};
+let statiCaselleCarb={};
+let zeroEsplicitiCaselleCarb=new Set();
 
 function inizializzaStatoCaselleCarb(){
-  statoCaselleCarb = {};
-  origineCaselleCarb = {};
-  for(const tipo of CONFIG_CARB_TIPI){
-    statoCaselleCarb[tipo.chiave] = 0;
-    origineCaselleCarb[tipo.chiave] = [];
+  statoCaselleCarb={};origineCaselleCarb={};statiCaselleCarb={};zeroEsplicitiCaselleCarb=new Set();
+  for(const tipo of CONFIG_CARB_TIPI){statoCaselleCarb[tipo.chiave]=0;origineCaselleCarb[tipo.chiave]=[];statiCaselleCarb[tipo.chiave]={mode:'auto',count:0};}
+}
+function modalitaCarb(chiave){
+  const st=statiCaselleCarb[chiave];
+  if(st&&['auto','excluded','fixed'].includes(st.mode))return st;
+  const n=Math.max(0,Math.trunc(Number(statoCaselleCarb[chiave])||0));
+  return n>0?{mode:'fixed',count:n}:{mode:zeroEsplicitiCaselleCarb.has(chiave)?'excluded':'auto',count:0};
+}
+function impostaModalitaCarb(chiave,mode,count,origine){
+  const tipo=CONFIG_CARB_TIPI.find(t=>t.chiave===chiave);if(!tipo)return;
+  if(mode==='fixed'){
+    const max=tipo.maxIndividuale??CONFIG_CARB_MAX_CASELLE,n=Math.max(1,Math.min(max,Math.trunc(Number(count)||1)));
+    statoCaselleCarb[chiave]=n;statiCaselleCarb[chiave]={mode:'fixed',count:n};zeroEsplicitiCaselleCarb.delete(chiave);
+    origineCaselleCarb[chiave]=Array(n).fill(origine||'utente');
+  }else{
+    statoCaselleCarb[chiave]=0;origineCaselleCarb[chiave]=[];statiCaselleCarb[chiave]={mode:mode==='excluded'?'excluded':'auto',count:0};
+    if(mode==='excluded')zeroEsplicitiCaselleCarb.add(chiave);else zeroEsplicitiCaselleCarb.delete(chiave);
   }
 }
-
 function contaTotaleCaselleCarb(){
-  let totale = 0;
-  for(const chiave of Object.keys(statoCaselleCarb)){
-    totale += statoCaselleCarb[chiave];
-  }
-  return totale;
+  return CONFIG_CARB_TIPI.reduce((tot,t)=>{const st=modalitaCarb(t.chiave);return tot+(st.mode==='fixed'?st.count:0);},0);
 }
-
 function contaCaselleLimitateCarb(){
-  let totale = 0;
-  for(const tipo of CONFIG_CARB_TIPI){
-    if(tipo.limitato){
-      totale += statoCaselleCarb[tipo.chiave] || 0;
-    }
-  }
-  return totale;
+  return CONFIG_CARB_TIPI.filter(t=>t.limitato).reduce((tot,t)=>{const st=modalitaCarb(t.chiave);return tot+(st.mode==='fixed'?st.count:0);},0);
+}
+function inputCarboidratiCanonicoSet(){
+  const states={};for(const t of CONFIG_CARB_TIPI){const st=modalitaCarb(t.chiave);states[t.chiave]={mode:st.mode,count:st.mode==='fixed'?st.count:0};}
+  return {counts:cloneConfigurazione(statoCaselleCarb),states,explicitZeroKeys:[...zeroEsplicitiCaselleCarb]};
+}
+async function validaClassiCarboidratiSet(){
+  const rec=await getOne('impostazioni','vincoliClassiCarboidrati'),lim=rec&&rec.valore&&rec.valore.complessi||{},totalePasti=CONFIG_CARB_TOTALE_OBBLIGATORIO;
+  if(lim.min!==null&&lim.min!==undefined&&totalePasti<Number(lim.min))return 'I '+totalePasti+' pasti principali non raggiungono il minimo di carboidrati complessi definito dal nutrizionista ('+lim.min+').';
+  if(lim.max!==null&&lim.max!==undefined&&totalePasti>Number(lim.max))return 'I '+totalePasti+' pasti principali superano il massimo di carboidrati complessi definito dal nutrizionista ('+lim.max+').';
+  return null;
+}
+async function salvaConfigCarboidratiSet(mostraMessaggio){
+  const N=globalThis.DietaPlannerNutritionConfig,input=inputCarboidratiCanonicoSet(),resolved=N.resolveNutritionConfig({user:{carbohydrates:input}});
+  if(!resolved.valid){if(mostraMessaggio!==false)await avviso('Configurazione carboidrati non valida: '+resolved.errors.join(' '));return {ok:false,errori:resolved.errors};}
+  const erroreClasse=await validaClassiCarboidratiSet();if(erroreClasse){if(mostraMessaggio!==false)await avviso(erroreClasse);return {ok:false,errori:[erroreClasse]};}
+  await put('impostazioni',{chiave:'configCarboidrati',valore:cloneConfigurazione(statoCaselleCarb)});
+  await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:cloneConfigurazione(origineCaselleCarb)});
+  await put('impostazioni',{chiave:'configCarboidratiStati',valore:cloneConfigurazione(input.states)});
+  await put('impostazioni',{chiave:'configCarboidratiExplicitZeroKeys',valore:[...zeroEsplicitiCaselleCarb]});
+  if(mostraMessaggio!==false)await avviso('Tabella carboidrati salvata: '+resolved.carbohydrates.fixedTotal+' fissi, '+resolved.carbohydrates.remainingSlots+' AUTO.');
+  return {ok:true,resolved};
 }
 
 function renderCaselleCarboidrati(){
-  const contenitore=document.getElementById('cfgCarboidratiContenuto');
-  if(!contenitore) return;
-
-  const totaleAttuale=contaTotaleCaselleCarb();
-  const limiteRaggiunto=totaleAttuale>=CONFIG_CARB_TOTALE_OBBLIGATORIO;
-  const limitateUsate=contaCaselleLimitateCarb();
-  const tettoLimitatiRaggiunto=limitateUsate>=CONFIG_CARB_TETTO_LIMITATI;
-
-  const renderGruppo=(tipi,titolo,tipoGruppo)=>{
-    const eLimitati=tipoGruppo==='limitati';
-    const colore=eLimitati?'#f39c12':'#2ecc71';
-    const contatore=eLimitati?` <span style="font-weight:800;margin-left:7px;">${limitateUsate}/${CONFIG_CARB_TETTO_LIMITATI}</span>`:'';
-    let html=`<div style="margin:12px 0 9px;">
-      <span style="display:inline-block;border:1px solid ${colore};color:${colore};border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">${titolo}${contatore}</span>
-    </div><div class="set-carb-grid">`;
-
+  const contenitore=document.getElementById('cfgCarboidratiContenuto');if(!contenitore)return;
+  const totaleAttuale=contaTotaleCaselleCarb(),limiteRaggiunto=totaleAttuale>=CONFIG_CARB_TOTALE_OBBLIGATORIO,limitateUsate=contaCaselleLimitateCarb(),tettoLimitatiRaggiunto=limitateUsate>=CONFIG_CARB_TETTO_LIMITATI;
+  const renderGruppo=(tipi,titolo,eLimitati)=>{
+    const colore=eLimitati?'#f39c12':'#2ecc71',contatore=eLimitati?' <span style="font-weight:800;margin-left:7px;">'+limitateUsate+'/'+CONFIG_CARB_TETTO_LIMITATI+'</span>':'';
+    let html='<div style="margin:12px 0 9px;"><span style="display:inline-block;border:1px solid '+colore+';color:'+colore+';border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:700;line-height:1.2;">'+titolo+contatore+'</span></div><div class="set-carb-grid">';
     for(const tipo of tipi){
-      const cliccate=statoCaselleCarb[tipo.chiave]||0;
-      const maxIndividuale=Number.isFinite(tipo.maxIndividuale)?tipo.maxIndividuale:CONFIG_CARB_MAX_CASELLE;
-      const puoAggiungere=!limiteRaggiunto && (!tipo.limitato || (!tettoLimitatiRaggiunto && cliccate<maxIndividuale));
-      const badgeLimitato=tipo.limitato?`<span style="font-size:0.62rem;color:var(--warn);margin-left:3px;">⚠ max ${maxIndividuale}</span>`:'';
-
-      html+=`<div class="set-carb-item"><div style="font-weight:600;font-size:0.78rem;margin-bottom:4px;white-space:normal;">${tipo.label}${badgeLimitato}</div><div class="set-carb-celle">`;
+      const st=modalitaCarb(tipo.chiave),cliccate=st.mode==='fixed'?st.count:0,maxIndividuale=tipo.maxIndividuale??CONFIG_CARB_MAX_CASELLE;
+      const puoAggiungere=!limiteRaggiunto&&cliccate<maxIndividuale&&(!tipo.limitato||!tettoLimitatiRaggiunto);
+      const badge=tipo.limitato?'<span style="font-size:.62rem;color:var(--warn);margin-left:3px;">⚠ max '+maxIndividuale+'</span>':'';
+      const modeLabel=st.mode==='excluded'?'0 · ESCLUSO':(st.mode==='fixed'?'FISSO '+st.count:'AUTO'),modeClass=st.mode==='excluded'?'excluded':(st.mode==='fixed'?'fixed':'auto');
+      html+='<div class="set-carb-item"><div class="set-carb-head"><div style="font-weight:600;font-size:.78rem;white-space:normal;">'+tipo.label+badge+'</div><button type="button" class="set-carb-mode '+modeClass+'" data-carb-mode="'+tipo.chiave+'">'+modeLabel+'</button></div><div class="set-carb-celle">';
       for(let i=0;i<CONFIG_CARB_MAX_CASELLE;i++){
-        const attiva=i<cliccate;
-        const cliccabile=attiva || puoAggiungere;
-        const origine=origineCaselleCarb[tipo.chiave]?.[i]||'utente';
-        html+=`<button data-casella-carb="${tipo.chiave}" data-casella-idx="${i}" class="${attiva?'active':''}"
-          style="cursor:${cliccabile?'pointer':'not-allowed'};opacity:${attiva&&origine==='sistema'?'.58':(cliccabile?'1':'0.35')};transition:background .15s,border-color .15s;"
-          ${cliccabile?'':'disabled'}></button>`;
+        const oltreMax=i>=maxIndividuale,attiva=i<cliccate,cliccabile=!oltreMax&&(attiva||puoAggiungere),origine=origineCaselleCarb[tipo.chiave]&&origineCaselleCarb[tipo.chiave][i]||'utente';
+        html+='<button data-casella-carb="'+tipo.chiave+'" data-casella-idx="'+i+'" class="'+(attiva?'active':'')+'" style="cursor:'+(cliccabile?'pointer':'not-allowed')+';opacity:'+(attiva&&origine==='sistema'?'.58':(cliccabile?'1':'0.35'))+';transition:background .15s,border-color .15s;" '+(cliccabile?'':'disabled')+'></button>';
       }
       html+='</div></div>';
     }
     return html+'</div>';
   };
-
-  const normali=CONFIG_CARB_TIPI.filter(t=>!t.limitato);
-  const limitati=CONFIG_CARB_TIPI.filter(t=>t.limitato);
-  contenitore.innerHTML=
-    renderGruppo(normali,'Carboidrati complessi','normali')+
-    renderGruppo(limitati,'Carboidrati complessi razionati','limitati');
-
-  contenitore.querySelectorAll('[data-casella-carb]').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const chiave=btn.dataset.casellaCarb;
-      const idx=parseInt(btn.dataset.casellaIdx);
-      const tipo=CONFIG_CARB_TIPI.find(t=>t.chiave===chiave);
-      if(!tipo) return;
-      const cliccateAttuali=statoCaselleCarb[chiave]||0;
-
-      if(idx<cliccateAttuali){
-        statoCaselleCarb[chiave]=cliccateAttuali-1;
-        origineCaselleCarb[chiave].splice(cliccateAttuali-1,1);
-      }else{
-        if(contaTotaleCaselleCarb()>=CONFIG_CARB_TOTALE_OBBLIGATORIO) return;
-        if(tipo.limitato){
-          if(contaCaselleLimitateCarb()>=CONFIG_CARB_TETTO_LIMITATI) return;
-          const maxIndividuale=Number.isFinite(tipo.maxIndividuale)?tipo.maxIndividuale:CONFIG_CARB_MAX_CASELLE;
-          if(cliccateAttuali>=maxIndividuale) return;
-        }
-        statoCaselleCarb[chiave]=cliccateAttuali+1;
-        origineCaselleCarb[chiave].push('utente');
-      }
-
-      renderCaselleCarboidrati();
-      aggiornaStatoConfigCarb();
-    });
-  });
+  contenitore.innerHTML=renderGruppo(CONFIG_CARB_TIPI.filter(t=>!t.limitato),'Carboidrati complessi AUTO',false)+renderGruppo(CONFIG_CARB_TIPI.filter(t=>t.limitato),'Carboidrati con tetto PDF · solo se scelti',true);
+  contenitore.querySelectorAll('[data-carb-mode]').forEach(btn=>btn.addEventListener('click',()=>{const key=btn.dataset.carbMode,st=modalitaCarb(key);if(st.mode==='fixed')impostaModalitaCarb(key,'auto');else if(st.mode==='auto')impostaModalitaCarb(key,'excluded');else impostaModalitaCarb(key,'auto');renderCaselleCarboidrati();aggiornaStatoConfigCarb();}));
+  contenitore.querySelectorAll('[data-casella-carb]').forEach(btn=>btn.addEventListener('click',()=>{
+    const key=btn.dataset.casellaCarb,idx=parseInt(btn.dataset.casellaIdx),tipo=CONFIG_CARB_TIPI.find(t=>t.chiave===key);if(!tipo)return;
+    const st=modalitaCarb(key),corrente=st.mode==='fixed'?st.count:0,desiderato=idx<corrente?idx:idx+1,max=tipo.maxIndividuale??CONFIG_CARB_MAX_CASELLE;
+    if(desiderato<=0){impostaModalitaCarb(key,'excluded');renderCaselleCarboidrati();aggiornaStatoConfigCarb();return;}
+    if(desiderato>max)return;
+    const nuovoTotale=contaTotaleCaselleCarb()-corrente+desiderato;if(nuovoTotale>CONFIG_CARB_TOTALE_OBBLIGATORIO)return;
+    const nuoviLimitati=contaCaselleLimitateCarb()-(tipo.limitato?corrente:0)+(tipo.limitato?desiderato:0);if(tipo.limitato&&nuoviLimitati>CONFIG_CARB_TETTO_LIMITATI)return;
+    impostaModalitaCarb(key,'fixed',desiderato,'utente');renderCaselleCarboidrati();aggiornaStatoConfigCarb();
+  }));
 }
-
 function aggiornaStatoConfigCarb(){
-  const totale = contaTotaleCaselleCarb();
-  const elTotale = document.getElementById('cfgCarboidratiTotale');
-  if(elTotale){
-    elTotale.textContent = 'Totale: ' + totale + ' / ' + CONFIG_CARB_TOTALE_OBBLIGATORIO;
-    elTotale.style.color = totale === CONFIG_CARB_TOTALE_OBBLIGATORIO ? 'var(--accent)' : 'var(--warn)';
-  }
+  const fissi=contaTotaleCaselleCarb(),auto=Math.max(0,CONFIG_CARB_TOTALE_OBBLIGATORIO-fissi),esclusi=CONFIG_CARB_TIPI.filter(t=>modalitaCarb(t.chiave).mode==='excluded').length,el=document.getElementById('cfgCarboidratiTotale');
+  if(el){el.textContent='Fissi: '+fissi+' / '+CONFIG_CARB_TOTALE_OBBLIGATORIO+' · AUTO completerà '+auto+(esclusi?' · esclusi '+esclusi:'');el.style.color=fissi<=CONFIG_CARB_TOTALE_OBBLIGATORIO?'var(--accent)':'var(--warn)';}
 }
-
-/* Reset */
-document.getElementById('btnResetConfigCarboidrati')?.addEventListener('click', async ()=>{
-  inizializzaStatoCaselleCarb();
-  await delKey('impostazioni', 'configCarboidrati');
-  renderCaselleCarboidrati();
-  aggiornaStatoConfigCarb();
-});
-
+document.getElementById('btnResetConfigCarboidrati')?.addEventListener('click',async()=>{inizializzaStatoCaselleCarb();for(const k of ['configCarboidrati','configCarboidratiOrigini','configCarboidratiStati','configCarboidratiExplicitZeroKeys'])await delKey('impostazioni',k);renderCaselleCarboidrati();aggiornaStatoConfigCarb();});
 function completaCaselleCarboidrati(daZero){
-  if(daZero)inizializzaStatoCaselleCarb();
-  const attivatiLimitati=new Set(CONFIG_CARB_TIPI.filter(t=>t.limitato&&(statoCaselleCarb[t.chiave]||0)>0).map(t=>t.chiave));
-  let guardia=500;
+  if(daZero)inizializzaStatoCaselleCarb();let guardia=500;
   while(contaTotaleCaselleCarb()<CONFIG_CARB_TOTALE_OBBLIGATORIO&&guardia-->0){
-    const pool=CONFIG_CARB_TIPI.filter(t=>{
-      const n=statoCaselleCarb[t.chiave]||0,max=t.maxIndividuale??CONFIG_CARB_MAX_CASELLE;
-      return n<max&&(!t.limitato||(attivatiLimitati.has(t.chiave)&&contaCaselleLimitateCarb()<CONFIG_CARB_TETTO_LIMITATI));
-    });
+    const pool=CONFIG_CARB_TIPI.filter(t=>!t.limitato&&modalitaCarb(t.chiave).mode!=='excluded'&&(modalitaCarb(t.chiave).mode!=='fixed'||modalitaCarb(t.chiave).count<t.maxIndividuale));
     if(!pool.length)break;
-    const min=Math.min(...pool.map(t=>statoCaselleCarb[t.chiave]||0));
-    const pari=pool.filter(t=>(statoCaselleCarb[t.chiave]||0)===min),t=pari[Math.floor(Math.random()*pari.length)];
-    statoCaselleCarb[t.chiave]++;origineCaselleCarb[t.chiave].push('sistema');
+    const min=Math.min(...pool.map(t=>modalitaCarb(t.chiave).mode==='fixed'?modalitaCarb(t.chiave).count:0)),pari=pool.filter(t=>(modalitaCarb(t.chiave).mode==='fixed'?modalitaCarb(t.chiave).count:0)===min),t=pari[Math.floor(Math.random()*pari.length)],st=modalitaCarb(t.chiave),n=(st.mode==='fixed'?st.count:0)+1;
+    impostaModalitaCarb(t.chiave,'fixed',n,'sistema');
   }
   renderCaselleCarboidrati();aggiornaStatoConfigCarb();
 }
 document.getElementById('btnPulisciCarboidrati')?.addEventListener('click',()=>{inizializzaStatoCaselleCarb();renderCaselleCarboidrati();aggiornaStatoConfigCarb();});
 document.getElementById('btnCompletaCarboidrati')?.addEventListener('click',()=>completaCaselleCarboidrati(false));
 document.getElementById('btnCasualeCarboidrati')?.addEventListener('click',()=>completaCaselleCarboidrati(true));
-document.getElementById('btnSalvaCarboidrati')?.addEventListener('click',async()=>{if(contaTotaleCaselleCarb()!==14)completaCaselleCarboidrati(false);const rec=await getOne('impostazioni','vincoliClassiCarboidrati'),lim=rec&&rec.valore&&rec.valore.complessi||{},tot=contaTotaleCaselleCarb();if(lim.min!==null&&lim.min!==undefined&&tot<Number(lim.min)){await avviso('Il totale dei carboidrati complessi è inferiore al minimo definito dal nutrizionista.');return;}if(lim.max!==null&&lim.max!==undefined&&tot>Number(lim.max)){await avviso('Il totale dei carboidrati complessi supera il massimo definito dal nutrizionista.');return;}await put('impostazioni',{chiave:'configCarboidrati',valore:structuredClone(statoCaselleCarb)});await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:structuredClone(origineCaselleCarb)});await avviso('Tabella carboidrati salvata.');});
-
+document.getElementById('btnSalvaCarboidrati')?.addEventListener('click',()=>salvaConfigCarboidratiSet(true));
 const CONFIG_PROTEINE_DEFAULT = {
   carne:3, pesce:3, formaggi:3, uova:2, legumi:3,
   carne_rossa:1, affettati:1, pesce_grande:1, pesce_conservato:1
