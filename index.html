@@ -3566,12 +3566,58 @@ document.querySelectorAll('nav.tabbar button').forEach(btn=>{
 async function renderSet(){
   await renderSetTabellaGiorno();
   await renderSetPreferenzeMenu();
+  await renderSetLimitiPersonaliIngredienti();
   await renderSetVerdure();
   await renderSetVerduraRicorrente();
   await renderSetColazione();
   await renderSetCerealiGradimento();
 }
 
+let limitiPersonaliIngredientiDraft=null;
+async function risolviSetUtenteCorrente(userOverride){
+  const [cfgRec,vincoliRec,allRec,blockedRec,capsRec]=await Promise.all([getOne('impostazioni','configAvanzata'),getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','allergeniAttivi'),getOne('impostazioni','ingredientiBloccati'),getOne('impostazioni','tettiIngredienteSettimanali')]);
+  const user=Object.assign({ingredientWeeklyCaps:capsRec&&capsRec.valore||{}},userOverride||{});
+  return globalThis.DietaPlannerNutritionConfig.resolveNutritionConfig({nutritionist:{config:cfgRec&&cfgRec.valore||{},ingredientConstraints:vincoliRec&&vincoliRec.valore||{},allergens:allRec&&allRec.valore||[],blockedIngredientIds:blockedRec&&blockedRec.valore||[]},user});
+}
+function ingredienteEsclusoClinicamenteNelSet(base,resolved){
+  if(!base||!resolved)return false;
+  const rule=resolved.ingredientConstraints&&resolved.ingredientConstraints[base.id];
+  if(rule&&(rule.state==='excluded'||rule.max===0))return true;
+  if(resolved.safety&&resolved.safety.blockedIngredientIds&&resolved.safety.blockedIngredientIds.includes(base.id))return true;
+  if((base.allergeni||[]).some(a=>resolved.safety&&resolved.safety.allergens&&resolved.safety.allergens.includes(a)))return true;
+  return esclusionePianoIngrediente(base,resolved.profile&&resolved.profile.name||'onnivoro');
+}
+async function renderSetLimitiPersonaliIngredienti(){
+  const box=document.getElementById('setLimitiPersonaliIngredienti'),stato=document.getElementById('setLimitiPersonaliStato');if(!box)return;
+  const [basi,capsRec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','tettiIngredienteSettimanali'),risolviSetUtenteCorrente()]);
+  limitiPersonaliIngredientiDraft=cloneConfigurazione(capsRec&&capsRec.valore||{});
+  const gruppi=[['carboidrati','Carboidrati'],['proteine','Proteine'],['verdure','Verdure']],html=[];
+  for(const [key,label] of gruppi){
+    const items=basi.filter(b=>macroNutrizionistaIngrediente(b)===key).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;
+    html.push('<details class="set-cap-group"><summary>'+label+'</summary><div>');
+    for(const b of items){
+      const rule=resolved.ingredientConstraints&&resolved.ingredientConstraints[b.id]||{},excluded=ingredienteEsclusoClinicamenteNelSet(b,resolved),clinicalMin=rule.min,clinicalMax=excluded?0:rule.max,hasUser=Object.prototype.hasOwnProperty.call(limitiPersonaliIngredientiDraft,b.id),userVal=hasUser?limitiPersonaliIngredientiDraft[b.id]:'',invalid=hasUser&&clinicalMin!==null&&clinicalMin!==undefined&&Number(userVal)<Number(clinicalMin);
+      let hint=excluded?'Escluso dal piano':((clinicalMin!==null&&clinicalMin!==undefined?'min '+clinicalMin+' · ':'')+(clinicalMax!==null&&clinicalMax!==undefined?'max '+clinicalMax:'nessun max clinico'));
+      html.push('<div class="set-cap-row '+(excluded?'clinical-excluded ':'')+(invalid?'invalid':'')+'"><div class="set-cap-name">'+b.nome+'<small>'+hint+'</small></div><input type="number" min="'+(clinicalMin!==null&&clinicalMin!==undefined?clinicalMin:0)+'" '+(clinicalMax!==null&&clinicalMax!==undefined?'max="'+clinicalMax+'" ':'')+'step="1" data-set-user-cap="'+b.id+'" value="'+(userVal??'')+'" placeholder="—" '+(excluded?'disabled':'')+' aria-label="'+b.nome+' massimo personale settimanale"></div>');
+    }
+    html.push('</div></details>');
+  }
+  box.innerHTML=html.join('');
+  box.querySelectorAll('[data-set-user-cap]').forEach(input=>input.addEventListener('input',()=>{const id=input.dataset.setUserCap;if(input.value==='')delete limitiPersonaliIngredientiDraft[id];else limitiPersonaliIngredientiDraft[id]=Number(input.value);const n=Object.keys(limitiPersonaliIngredientiDraft).length;if(stato)stato.textContent=n?'Limiti personali impostati: '+n+'. Salva la configurazione per applicarli.':'Nessun limite personale aggiuntivo.';}));
+  if(stato){const n=Object.keys(limitiPersonaliIngredientiDraft).length;stato.textContent=n?'Limiti personali attivi: '+n+'.':'Nessun limite personale aggiuntivo.';}
+}
+async function salvaLimitiPersonaliSet(mostraMessaggio){
+  const caps=cloneConfigurazione(limitiPersonaliIngredientiDraft||{}),[basi,resolvedClinical]=await Promise.all([getAll('ingredienti'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
+  for(const b of basi){
+    if(!Object.prototype.hasOwnProperty.call(caps,b.id))continue;
+    const n=Number(caps[b.id]);if(!Number.isFinite(n)||n<0||Math.trunc(n)!==n){const msg='Il limite personale di '+b.nome+' deve essere un numero intero non negativo.';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
+    const rule=resolvedClinical.ingredientConstraints&&resolvedClinical.ingredientConstraints[b.id]||{},clinicalMax=ingredienteEsclusoClinicamenteNelSet(b,resolvedClinical)?0:rule.max;
+    if(clinicalMax!==null&&clinicalMax!==undefined&&n>Number(clinicalMax)){const msg='Il limite personale di '+b.nome+' non può superare il massimo del nutrizionista ('+clinicalMax+').';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
+  }
+  const resolved=await risolviSetUtenteCorrente({ingredientWeeklyCaps:caps});if(!resolved.valid){if(mostraMessaggio!==false)await avviso('Limiti personali non compatibili con il piano: '+resolved.errors.join(' '));return {ok:false,errori:resolved.errors};}
+  await put('impostazioni',{chiave:'tettiIngredienteSettimanali',valore:caps});limitiPersonaliIngredientiDraft=caps;
+  if(mostraMessaggio!==false)await avviso('Limiti personali salvati.');return {ok:true,resolved};
+}
 async function renderSetCerealiGradimento(){
   const [basi,rec]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','cerealiNonGraditi')]),box=document.getElementById('setCerealiGradimento');if(!box)return;
   const cereals=basi.filter(b=>b.gruppo==='carboidrati').sort((a,b)=>a.nome.localeCompare(b.nome,'it')),off=new Set(rec&&rec.valore||[]);
