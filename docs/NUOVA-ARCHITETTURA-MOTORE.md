@@ -839,3 +839,8 @@ ciclo fra ricette/candidati.
 ### Sequenza automatica dei Condimenti — decisione 2026-08-29
 
 Nelle nuove proposte il condimento iniziale non è più sempre l'elemento 0. Per ogni combinazione concreta di ingredienti il motore mantiene un cursore separato sui `condimentiCompatibili`: proposta 1 → variante 1, proposta successiva della stessa combinazione → variante 2, e così via; esaurito l'array riparte dalla prima. Il cursore avanza solo quando il motore sceglie davvero quella proposta, non durante la costruzione del pool candidati. Il Roll V manuale resta indipendente e non modifica il cursore automatico.
+
+
+### Rotazione globale dei Condimenti — decisione 2026-08-29
+
+La scelta automatica del condimento non è legata a ricetta, template o ingrediente. Tra i `Condimenti` compatibili con la proposta corrente, il motore preferisce quello usato meno recentemente a livello globale. I condimenti mai usati hanno priorità sui già usati; quando tutti sono passati, continua scegliendo il meno recente. La compatibilità resta obbligatoria: se una proposta ammette un solo condimento, quello può ripetersi perché non esiste alternativa valida. Il Roll V manuale resta separato e non modifica questa rotazione automatica.
