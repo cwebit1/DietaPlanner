@@ -1,19 +1,24 @@
 (function(global){
 'use strict';
 
+const N=global.DietaPlannerNutritionConfig||(typeof module!=='undefined'&&module.exports?require('./nutrition-config.js'):null);
+if(!N)throw new Error('DietaPlannerNutritionConfig non caricato');
+
 const DEFAULTS=Object.freeze({
   proteinFrequencies:{
-    carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},
-    formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},
-    legumi:{min:2,max:null,target:3}
+    carne:{min:N.PDF_BASELINE.proteinFrequencies.carne.min,max:N.PDF_BASELINE.proteinFrequencies.carne.max,target:N.APP_DEFAULTS.proteinTargets.carne},
+    pesce:{min:N.PDF_BASELINE.proteinFrequencies.pesce.min,max:N.PDF_BASELINE.proteinFrequencies.pesce.max,target:N.APP_DEFAULTS.proteinTargets.pesce},
+    formaggi:{min:N.PDF_BASELINE.proteinFrequencies.formaggi.min,max:N.PDF_BASELINE.proteinFrequencies.formaggi.max,target:N.APP_DEFAULTS.proteinTargets.formaggi},
+    uova:{min:N.PDF_BASELINE.proteinFrequencies.uova.min,max:N.PDF_BASELINE.proteinFrequencies.uova.max,target:N.APP_DEFAULTS.proteinTargets.uova},
+    legumi:{min:N.PDF_BASELINE.proteinFrequencies.legumi.min,max:N.PDF_BASELINE.proteinFrequencies.legumi.max,target:N.APP_DEFAULTS.proteinTargets.legumi}
   },
-  subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},
-  maxProteinSourcesPerDay:2,
-  carbSlots:14,carbCellMax:6,limitedCarbTotalMax:3,
-  fruit:{min:2,max:3,portionMin:150,portionMax:200},
-  specialBreakfastMax:1,specialMealsMax:2,
-  cooldownDays:{carboidrati:7,verdure:2},oilGramsPerMeal:10,
-  deadlines:{pranzo:'15:00',cena:'22:00'}
+  subtypeCaps:Object.assign({},N.PDF_BASELINE.subtypeCaps),
+  maxProteinSourcesPerDay:N.APP_DEFAULTS.maxProteinSourcesPerDay,
+  carbSlots:N.APP_DEFAULTS.carbSlots,carbCellMax:N.APP_DEFAULTS.carbCellMax,limitedCarbTotalMax:N.APP_DEFAULTS.limitedCarbTotalMax,
+  fruit:{min:N.PDF_BASELINE.fruit.dailyMin,max:N.PDF_BASELINE.fruit.dailyMax,portionMin:N.PDF_BASELINE.fruit.portionMinGrams,portionMax:N.PDF_BASELINE.fruit.portionMaxGrams},
+  specialBreakfastMax:N.APP_DEFAULTS.specialBreakfastMax,specialMealsMax:N.APP_DEFAULTS.specialMealsMax,
+  cooldownDays:Object.assign({},N.APP_DEFAULTS.cooldownDays),oilGramsPerMeal:N.APP_DEFAULTS.oilGramsPerMeal,
+  deadlines:Object.assign({},N.APP_DEFAULTS.deadlines)
 });
 
 const SUBTYPE_TO_MACRO=Object.freeze({
@@ -107,10 +112,17 @@ function chooseCarb(state,carbConfig,options,rng){
   const opts=options||{},defs=carbConfig||{},used=state.carbsUsed||(state.carbsUsed={}),remaining=state.carbRemaining||(state.carbRemaining={});
   let pool=Object.keys(defs).filter(k=>(remaining[k]||0)>0);
   if(opts.quick){const quick=pool.filter(k=>['pane','friselle'].includes(k));if(quick.length)pool=quick;}
-  if(opts.proteinSubtype==='affettati'&&defs.pane)pool=['pane'];
-  if(!pool.length)pool=Object.keys(defs).filter(k=>!defs[k].limitato||(used[k]||0)<(defs[k].tettoSettimanale||2));
-  pool=pool.filter(k=>!defs[k].limitato||(used[k]||0)<(defs[k].tettoSettimanale||2));if(!pool.length)return null;
-  const pick=oldest(pool,state.history&&state.history.lastCarb,used,rng);used[pick]=(used[pick]||0)+1;if((remaining[pick]||0)>0)remaining[pick]--;return pick;
+  if(opts.proteinSubtype==='affettati'&&defs.pane){
+    if(!pool.includes('pane'))return null;
+    pool=['pane'];
+  }
+  pool=pool.filter(k=>!defs[k].limitato||(used[k]||0)<(defs[k].tettoSettimanale||2));
+  if(!pool.length)return null;
+  const pick=shuffle(pool,rng)[0]||null;
+  if(!pick)return null;
+  used[pick]=(used[pick]||0)+1;
+  remaining[pick]=Math.max(0,(remaining[pick]||0)-1);
+  return pick;
 }
 function inventoryUrgency(recipe,inventoryByVariant,now){
   let score=0;const today=now||Date.now();for(const ing of recipe&&recipe.ingredienti||[]){const rows=inventoryByVariant&&inventoryByVariant[ing.variantId]||[];for(const row of rows){if(row.stato==='esaurito'||Number(row.quantita)<=0)continue;if(row.scadenza){const dd=(Date.parse(row.scadenza+'T12:00:00')-today)/86400000;if(dd<=2)score=Math.max(score,300);}if(row.avanzoScomodo)score=Math.max(score,200);if(row.zona==='freezer')score=Math.max(score,100);}}return score;
@@ -150,7 +162,7 @@ function recipeIngredientKeys(recipe){return (recipe&&recipe.ingredienti||[]).ma
 function applyIngredientCaps(pool,weeklyCounts,caps){
   const limits=caps||{},counts=weeklyCounts||{},all=(pool||[]).slice();
   const allowed=all.filter(r=>recipeIngredientKeys(r).every(k=>limits[k]===undefined||(counts[k]||0)<Number(limits[k])));
-  return {pool:allowed.length?allowed:all,exceeded:!allowed.length&&all.length>0};
+  return {pool:allowed,exceeded:allowed.length<all.length,blockedAll:all.length>0&&!allowed.length};
 }
 function accumulateRecipeIngredients(recipe,counts){const out=counts||{};for(const k of new Set(recipeIngredientKeys(recipe)))out[k]=(out[k]||0)+1;return out;}
 function shoppingDeficits(requirements,inventory,variantMeta){
@@ -163,6 +175,8 @@ function countSpecialMeals(records){return (records||[]).filter(x=>x&&x.piattoSp
 function withinWeeklyCap(current,max){return max==null||Number(current)<Number(max);}
 function profileAllowsRecipe(recipe,profile){const macro=macroOf(recipe&&recipe.gruppoProteico);if(profile==='vegano')return !['carne','pesce','formaggi','uova'].includes(macro);if(profile==='vegetariano')return !['carne','pesce'].includes(macro);return true;}
 
-const api={DEFAULTS,SUBTYPE_TO_MACRO,PROTEIN_CODE,mergeConfig,macroOf,seeded,shuffle,oldest,recipeBlocked,parseCoverage,requiredCoverage,unionCoverage,missingCoverage,coverageSatisfies,coverageForRecipe,buildProteinGrid,validateCarbBudget,chooseCarb,inventoryUrgency,chooseRecipe,vegetableTier,chooseVegetable,composeMeal,automaticDayAllowed,buildCarbGrid,recipeIngredientKeys,applyIngredientCaps,accumulateRecipeIngredients,shoppingDeficits,hasMealContent,automaticConsumptionAllowed,countSpecialMeals,withinWeeklyCap,profileAllowsRecipe};
+function resolveNutritionConfig(input){return N.resolveNutritionConfig(input);}
+function vegetableCoverage(entries,portionConfig){return N.vegetableCoverage(entries,portionConfig);}
+const api={DEFAULTS,SUBTYPE_TO_MACRO,PROTEIN_CODE,mergeConfig,macroOf,seeded,shuffle,oldest,recipeBlocked,parseCoverage,requiredCoverage,unionCoverage,missingCoverage,coverageSatisfies,coverageForRecipe,buildProteinGrid,validateCarbBudget,chooseCarb,inventoryUrgency,chooseRecipe,vegetableTier,chooseVegetable,composeMeal,automaticDayAllowed,buildCarbGrid,recipeIngredientKeys,applyIngredientCaps,accumulateRecipeIngredients,shoppingDeficits,hasMealContent,automaticConsumptionAllowed,countSpecialMeals,withinWeeklyCap,profileAllowsRecipe,resolveNutritionConfig,vegetableCoverage};
 global.DietaPlannerEngine=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
