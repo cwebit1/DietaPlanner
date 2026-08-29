@@ -284,3 +284,29 @@ Prima di modificarlo:
 6. non modificare UI, ricette o ingredienti nel Lotto B.
 
 Il resolver dovrà prima essere testabile in isolamento; soltanto dopo il motore verrà collegato ad esso.
+
+
+## 12. Aggiornamento stato dopo Lotto C
+
+Il presente audit resta la fotografia del Lotto A, ma i seguenti punti sono stati corretti nel Lotto C e non vanno più letti come difetti correnti:
+
+- **fallback massimi ingrediente**: corretto; `applyIngredientCaps()` non reintroduce più il pool originale se tutti superano il tetto;
+- **fallback carboidrati fuori budget**: corretto; `chooseCarb()` restituisce `null` quando il residuo è esaurito;
+- **override vegetariano/vegano delle frequenze**: rimossi dal motore; il profilo ora esclude macro senza inventare nuovi range;
+- **chiave verdure disattivate**: il motore legge `setVerdureDisattivate` con fallback legacy a `verdureDisattivate`;
+- **resolver comune**: `engine-core.js` e `motor.js` consumano `nutrition-config.js`;
+- **conteggi sottotipi settimanali**: il cap viene calcolato sulla settimana target e aggiornato durante la generazione, non sul totale storico a vita;
+- **ricette miste affettati/pesce conservato**: il contatore settimanale considera anche il sottotipo degli ingredienti, quindi Speck e salmone affumicato non possono più nascondersi dietro una `gruppoProteico` dominante diversa;
+- **conteggi dei pasti preservati**: consumi e slot bloccati (o tutti gli slot mantenuti nelle generazioni non forzate) entrano nei conteggi prima della rigenerazione.
+
+Restano aperti e NON vanno considerati risolti:
+- Set proteine ancora basato su `FREQUENZE_CONSIGLIATE` hardcoded;
+- UI cap utente ingrediente non ancora ripristinata;
+- distinzione persistente AUTO / zero esplicito / fisso nei carboidrati non ancora esposta nel Set;
+- Gallette/Crackers ancora classificati in modo legacy nella UI, anche se il resolver conosce il tetto PDF;
+- quantità contestuali e rimozione di `applicaQuantitaNutrizionistaAlleRicette()`;
+- residuo verdura non ancora propagato alle quantità effettive di realizzazioni/inventario/nutrizione/spesa/storico;
+- fruit/oil/cooldown/deadlines e altri parametri salvati ma non ancora collegati a tutti i percorsi;
+- manuale/ricerca non ancora completamente unificati al resolver.
+
+Documento operativo corrente: `docs/LOTTO_C_MOTORE.md`.
