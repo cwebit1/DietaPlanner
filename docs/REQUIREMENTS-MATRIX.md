@@ -56,6 +56,15 @@
 | MIG-01 | Chiavi legacy leggibili senza reset distruttivo | HARD | adattatore IndexedDB | Lotto H |
 | MIG-02 | Conteggi C legacy migrano in AUTO/FIXED correttamente | HARD | motor v12 | Lotto C + browser |
 | PWA-01 | Cache include soltanto asset attivi | HARD | `sw.js` | source audit + browser |
+| AUTH-01 | Login Google persistente fino al logoff | HARD | Firebase Auth | Lotto I + browser |
+| AUTH-02 | Modalità locale non persistente al riavvio | HARD | bootstrap account | Lotto I + browser |
+| RBAC-01 | Account senza whitelist non ottiene privilegi | HARD | access resolver/Rules | Lotto I + emulator |
+| RBAC-02 | Permessi granulari, nessun controllo email hardcoded | HARD | access resolver | Lotto I unit test |
+| RBAC-03 | Setting nutrizionista invisibile e inaccessibile ai non autorizzati | HARD | UI/Rules | Lotto I DOM + emulator |
+| CLOUD-01 | Migrazione non distruttiva e idempotente da IndexedDB | HARD | migration service | Lotto I stress/browser |
+| CLOUD-02 | Cataloghi e cache compilate non duplicati per utente | HARD | cloud repository | source/schema audit |
+| CLOUD-03 | Storico eventi append-only con ID idempotente | HARD | event repository | Lotto I stress |
+| CLOUD-04 | Rollback per dominio verso IndexedDB | HARD | repository/feature flags | Lotto I browser |
 | REL-01 | Nessuna release prima dello stress test | HARD | processo | stato lotti |
 | REL-02 | Release soltanto con autorizzazione esplicita di Cwe | HARD | processo | checklist release |
 

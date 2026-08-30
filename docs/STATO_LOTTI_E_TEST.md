@@ -13,6 +13,7 @@
 | F — catalogo | verificato sui dati correnti | 39 template, 157 ingredienti, referenze coerenti |
 | G — generazione/manuale/UI | implementato e verificato automaticamente | quantità atomiche, residuo, deperibilità, pasto odierno, C/P/V |
 | H — stress test/release | release v2 autorizzata | 12/12 automatici passati; gate browser locale non eseguibile nell'ambiente cloud, pubblicazione richiesta esplicitamente da Cwe |
+| I — accessi/RBAC/Firestore | progettato, non implementato | `LOTTO_I_ACCESSI_RBAC_E_MIGRAZIONE_FIRESTORE.md`; esecuzione per fasi con rollback |
 
 ## Cataloghi correnti
 
@@ -40,6 +41,7 @@
 - `tests/lotto-h-pwa-source-contract.test.js`;
 - `tests/lotto-h-stress-migrations.test.js`.
 - `tests/lotto-h-approved-recipe-conversion.test.js`.
+- `tests/lotto-i-google-auth-contract.test.js` (login corrente; RBAC ancora da implementare).
 
 Ultima esecuzione: 12/12 test passati, più controllo sintattico di resolver,
 engine e motore e `git diff --check`.
