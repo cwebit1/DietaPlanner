@@ -1046,6 +1046,19 @@ const DB_VERSION = 3;
 let db;
 let modalitaLocaleSessione=false;
 
+function apriModalInAlto(target){
+  const overlay=typeof target==='string'?document.getElementById(target):target;
+  if(!overlay)return;
+  overlay.classList.remove('hidden');
+  const reset=()=>{
+    overlay.scrollTop=0;
+    const pannello=overlay.querySelector('.modal');
+    if(pannello)pannello.scrollTop=0;
+  };
+  reset();
+  requestAnimationFrame(reset);
+}
+
 function escAuth(value){
   return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
@@ -1073,7 +1086,7 @@ function renderAccount(user){
     content.innerHTML='<div class="meta">Accedi con Google per associare nome e storico al tuo profilo.</div><button class="primary" id="btnLoginGoogle" style="margin-top:12px;">Accedi con Google</button>';
     document.getElementById('btnLoginGoogle')?.addEventListener('click',loginGoogle);
     if(!modalitaLocaleSessione){
-      document.getElementById('modalAccessoIniziale')?.classList.remove('hidden');
+      apriModalInAlto('modalAccessoIniziale');
     }
   }
 }
@@ -5224,7 +5237,7 @@ async function apriModalDettaglioColazione(componenti, colazioneSpecialeId){
       ? `<div style="font-weight:700;font-size:0.95rem;">🎂 ${cs.nome}</div>
          <div class="meta" style="margin-top:6px;">Colazione speciale — concessa 1-2 volte a settimana.</div>`
       : '<div class="meta">Nessuna colazione speciale trovata.</div>';
-    document.getElementById('modalDettaglio').classList.remove('hidden');
+    apriModalInAlto('modalDettaglio');
     return;
   }
   const varianti = await getAll('varianti');
@@ -5242,7 +5255,7 @@ async function apriModalDettaglioColazione(componenti, colazioneSpecialeId){
   document.getElementById('modalDettaglioTitolo').textContent = 'Colazione';
   document.getElementById('modalDettaglioContenuto').innerHTML =
     (righe ? `<ul class="plain">${righe}</ul>` : '<div class="meta">Nessun alimento selezionato.</div>');
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
 }
 
 async function apriModalInfoColazione(componenti, colazioneSpecialeId){
@@ -5287,7 +5300,7 @@ async function apriModalInfoColazione(componenti, colazioneSpecialeId){
       <div><div class="num">${Math.round(nutri.carb)}g</div><div class="lbl">carboidrati</div></div>
       <div><div class="num">${Math.round(nutri.grassi)}g</div><div class="lbl">grassi</div></div>
     </div>`;
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
 }
 
 /* =========================================================
@@ -5500,7 +5513,7 @@ async function apriModalEditorPasto(giorno, pasto){
     `<div class="meta" style="margin-bottom:10px;">Seleziona la ricetta che hai effettivamente mangiato:</div>
     <input type="text" id="editorRicerca" placeholder="Cerca ricetta..." style="margin-bottom:10px;">
     <div id="editorLista" style="max-height:50vh;overflow-y:auto;"></div>`;
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
   function renderLista(filtro){
     const f = (filtro||'').toLowerCase();
     const filtrate = f ? candidate.filter(r=>r.nome.toLowerCase().includes(f)) : candidate;
@@ -5564,7 +5577,7 @@ async function apriModalEditorColazione(giorno){
       </div>`;
   }
   elGruppi.innerHTML = htmlGruppi;
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
   document.getElementById('modalDettaglioContenuto').querySelectorAll('[data-editor-col-speciale]').forEach(b=>{
     b.addEventListener('click', async ()=>{
       const pianoId = giorno+'_colazione';
@@ -7395,7 +7408,7 @@ function mostraModaleAvviso(msg, pulsanti){
     const wrap = document.getElementById('avvisoBottoni');
     wrap.innerHTML = pulsanti.map((p,i)=>`<button class="${p.classe||'secondary'}" data-i="${i}" style="flex:1;">${p.testo}</button>`).join('');
     const overlay = document.getElementById('modalAvviso');
-    overlay.classList.remove('hidden');
+    apriModalInAlto(overlay);
     wrap.querySelectorAll('button').forEach((b,i)=>{
       b.addEventListener('click', ()=>{
         overlay.classList.add('hidden');
@@ -7427,7 +7440,7 @@ async function mostraModalSalvafrigo(ricette, origine, callback){
     `<div class="meta" style="margin-bottom:12px;">${labelOrigine} — scegli una delle ${ricette.length} proposte per recuperare ingredienti:</div>` +
     htmlProposte +
     `<button class="secondary" data-sf-annulla="1" style="margin-top:8px;">Annulla</button>`;
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
   document.getElementById('modalDettaglioContenuto').querySelector('[data-sf-annulla]').addEventListener('click', ()=>{
     document.getElementById('modalDettaglio').classList.add('hidden');
   });
@@ -7595,7 +7608,7 @@ async function apriModalDettaglioRicetta(ricetta, voceOPorzioni, modalitaModific
   }
 
   document.getElementById('modalDettaglioContenuto').innerHTML = corpoHtml;
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
 
   document.getElementById('modalDettaglioPorzioni').addEventListener('change', async (e)=>{
     const nuove = parseInt(e.target.value);
@@ -7700,7 +7713,7 @@ async function apriModalInfoNutrizionale(ricetta){
       <div><div class="num">${Math.round(nutri.grassi)}g</div><div class="lbl">grassi</div></div>
     </div>
   `;
-  document.getElementById('modalDettaglio').classList.remove('hidden');
+  apriModalInAlto('modalDettaglio');
 }
 
 async function renderNutrizioneGiorno(){
@@ -7971,7 +7984,7 @@ document.getElementById('btnNuovaRicetta').addEventListener('click', ()=>{
   document.querySelector('#nrCerealeTab [data-nr-cereale="libero"]').classList.add('active');
   document.getElementById('nrConfrontoKcalProt').textContent='';
   document.getElementById('nrConfrontoCarbGrassi').textContent='';
-  document.getElementById('modalNuovaRicetta').classList.remove('hidden');
+  apriModalInAlto('modalNuovaRicetta');
 });
 // Listener: tipo portata → mostra/nascondi sezione cereale
 document.getElementById('nrTipoPortata').addEventListener('change', (e)=>{
@@ -8128,7 +8141,7 @@ async function apriModalAssegnaAPasto(ricettaId){
     });
   });
 
-  document.getElementById('modalAssegnaAPasto').classList.remove('hidden');
+  apriModalInAlto('modalAssegnaAPasto');
 }
 
 function renderAssegnaGiorni(){
@@ -8519,7 +8532,7 @@ document.getElementById('btnSalvaRicettaManuale').addEventListener('click', asyn
 document.getElementById('btnAggiungiIngrediente').addEventListener('click', ()=>{
   resetFormIngrediente();
   document.getElementById('modalIngredienteTitolo').textContent = 'Nuovo ingrediente';
-  document.getElementById('modalIngrediente').classList.remove('hidden');
+  apriModalInAlto('modalIngrediente');
 });
 
 function resetFormIngrediente(){
@@ -8586,7 +8599,7 @@ async function apriModalModificaVariante(varianteId){
   document.getElementById('ingGrassi').value = v.grassi100 || '';
   renderAllergeniIngrediente(base&&base.allergeni||[]);
 
-  document.getElementById('modalIngrediente').classList.remove('hidden');
+  apriModalInAlto('modalIngrediente');
 }
 
 async function renderInventario(){
@@ -8978,7 +8991,7 @@ document.getElementById('fileImportaRicette').addEventListener('change', async (
 async function controllaModalImportaRicetteIniziale(){
   const ricette = await getAll('ricette');
   if(ricette.length) return;
-  document.getElementById('modalImportaRicetteIniziale').classList.remove('hidden');
+  apriModalInAlto('modalImportaRicetteIniziale');
 }
 document.getElementById('btnModalImportaRicette').addEventListener('click', ()=>{
   document.getElementById('fileImportaRicette').click();
@@ -9160,7 +9173,7 @@ async function controllaPromemoriaGiovedi(){
   const rec = await getOne('impostazioni', 'ultimoPromptGiovedi');
   if(rec && rec.valore === oggiISO) return; // già chiesto oggi
 
-  document.getElementById('modalGiovedi').classList.remove('hidden');
+  apriModalInAlto('modalGiovedi');
 
   const segnaChiesto = async ()=>{
     await put('impostazioni', {chiave:'ultimoPromptGiovedi', valore: oggiISO});
@@ -9225,7 +9238,7 @@ document.getElementById('btnCalendarioSalto').addEventListener('click', ()=>{
 async function apriCalendarioVisuale(){
   calMeseCorrente = new Date(giornoSelezionato + 'T00:00:00');
   await renderCalendarioVisuale();
-  document.getElementById('modalCalendario').classList.remove('hidden');
+  apriModalInAlto('modalCalendario');
 }
 
 /* Legge lo stato di un giorno e ritorna le icone da mostrare nelle due metà
