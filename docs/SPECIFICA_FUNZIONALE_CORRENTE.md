@@ -208,8 +208,10 @@ flusso testuale continuo.
 
 ## 14. Account e dati personali
 
-- L'accesso Google è facoltativo: l'app locale continua a funzionare senza
-  account.
+- All'avvio senza una scelta precedente, l'app chiede prima l'accesso Google;
+  si entra senza account soltanto scegliendo esplicitamente la modalità locale.
+- La scelta locale resta memorizzata sul dispositivo e può essere sostituita
+  in seguito accedendo dalla sezione Account.
 - Il profilo cloud usa l'UID Firebase come confine di sicurezza; un utente può
   leggere e scrivere soltanto i documenti sotto `users/{uid}`.
 - Il primo collegamento non sovrascrive né importa automaticamente IndexedDB.

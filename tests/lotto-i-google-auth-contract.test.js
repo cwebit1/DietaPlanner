@@ -12,6 +12,10 @@ test('lotto I: login Google visibile e configurazione Firebase separata',()=>{
   assert.match(html,/type="module" src="firebase-auth\.js\?v=2"/);
   assert.match(html,/id="btnLoginGoogle"/);
   assert.match(html,/id="btnLogoutGoogle"/);
+  assert.match(html,/id="modalAccessoIniziale"/);
+  assert.match(html,/id="btnLoginGoogleIniziale"/);
+  assert.match(html,/id="btnContinuaLocale"/);
+  assert.match(html,/dietaplannerModalitaLocale/);
   assert.match(auth,/GoogleAuthProvider/);
   assert.match(auth,/signInWithPopup/);
   assert.doesNotMatch(auth,/serviceAccount|private_key/);

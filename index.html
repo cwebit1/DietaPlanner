@@ -609,6 +609,16 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <div class="loader-testo" id="loaderTesto">Avvio...</div>
 </div>
 
+<div class="modal-overlay hidden" id="modalAccessoIniziale">
+  <div class="modal" style="text-align:center;">
+    <div style="font-size:2.4rem;margin-bottom:8px;">👤</div>
+    <h3>Benvenuto in DietaPlanner</h3>
+    <div class="meta" style="margin:10px 0 16px;">Accedi con Google per usare il tuo nome e collegare in seguito personalizzazioni e storico. Puoi anche scegliere di usare soltanto i dati locali di questo dispositivo.</div>
+    <button class="primary" id="btnLoginGoogleIniziale">Accedi con Google</button>
+    <button class="secondary" id="btnContinuaLocale" style="margin-top:10px;">Continua in locale</button>
+  </div>
+</div>
+
 <header>
   <div class="header-copy">
     <div class="title">Dieta<span>·</span>Planner <span id="headerVersione" style="font-size:0.58rem;font-weight:400;color:var(--text-dim);vertical-align:super;margin-left:4px;"></span></div>
@@ -1032,6 +1042,8 @@ function renderAccount(user){
   const headerButton=document.getElementById('btnAccountHeader');
   if(!content||!headerButton)return;
   if(user){
+    localStorage.removeItem('dietaplannerModalitaLocale');
+    document.getElementById('modalAccessoIniziale')?.classList.add('hidden');
     const avatar=user.photoURL?`<img src="${escAuth(user.photoURL)}" alt="">`:'👤';
     headerButton.innerHTML=avatar;
     content.innerHTML=`<div class="account-status">${avatar}<div class="account-identity"><strong>${escAuth(user.displayName||'Utente')}</strong><span class="meta">${escAuth(user.email)}</span></div></div><button class="secondary" id="btnLogoutGoogle" style="margin-top:12px;">Esci dall’account</button><div class="meta" style="margin-top:8px;">Account collegato. La sincronizzazione completa verrà attivata dopo la verifica dello schema storico.</div>`;
@@ -1042,6 +1054,9 @@ function renderAccount(user){
     headerButton.textContent='👤';
     content.innerHTML='<div class="meta">Accedi con Google per associare nome e storico al tuo profilo.</div><button class="primary" id="btnLoginGoogle" style="margin-top:12px;">Accedi con Google</button>';
     document.getElementById('btnLoginGoogle')?.addEventListener('click',loginGoogle);
+    if(localStorage.getItem('dietaplannerModalitaLocale')!=='1'){
+      document.getElementById('modalAccessoIniziale')?.classList.remove('hidden');
+    }
   }
 }
 async function loginGoogle(){
@@ -1054,6 +1069,11 @@ async function loginGoogle(){
   }
 }
 window.addEventListener('dietaplanner-auth-changed',e=>renderAccount(e.detail.user));
+document.getElementById('btnLoginGoogleIniziale')?.addEventListener('click',loginGoogle);
+document.getElementById('btnContinuaLocale')?.addEventListener('click',()=>{
+  localStorage.setItem('dietaplannerModalitaLocale','1');
+  document.getElementById('modalAccessoIniziale')?.classList.add('hidden');
+});
 document.getElementById('btnAccountHeader')?.addEventListener('click',()=>{
   document.querySelector('[data-view="impostazioni"]')?.click();
   document.getElementById('accountCard')?.scrollIntoView({behavior:'smooth',block:'start'});
