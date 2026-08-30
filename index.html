@@ -51,13 +51,19 @@ header{
   background:var(--bg);
   padding:16px 16px 10px;
   border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
 }
 header .title{font-size:1.15rem;font-weight:800;letter-spacing:-0.01em;}
 header .title span{color:var(--accent);}
 header .sub{font-size:0.75rem;color:var(--text-dim);margin-top:2px;}
-.header-copy{min-width:0;flex:1;}
-.account-button{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;overflow:hidden;flex:0 0 auto;font-size:1rem;}
+.header-app{min-width:0;flex:1;padding-top:2px;}
+.header-user{min-width:132px;display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:4px;}
+.account-button{width:42px;height:42px;border-radius:50%;padding:0;display:grid;place-items:center;overflow:hidden;flex:0 0 auto;font-size:1rem;}
 .account-button img{width:100%;height:100%;object-fit:cover;}
+.header-greeting{max-width:190px;font-size:.72rem;line-height:1.2;color:var(--text);font-weight:600;white-space:normal;}
 .account-status{display:flex;align-items:center;gap:10px;min-width:0;}
 .account-status img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 auto;}
 .account-identity{min-width:0;flex:1;}
@@ -620,11 +626,14 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 </div>
 
 <header>
-  <div class="header-copy">
+  <div class="header-app">
     <div class="title">Dieta<span>·</span>Planner <span id="headerVersione" style="font-size:0.58rem;font-weight:400;color:var(--text-dim);vertical-align:super;margin-left:4px;"></span></div>
     <div class="sub">Pranzo e cena, senza sprechi</div>
   </div>
-  <button class="account-button" id="btnAccountHeader" aria-label="Account Google" title="Account Google">👤</button>
+  <div class="header-user">
+    <button class="account-button" id="btnAccountHeader" aria-label="Account Google" title="Account Google">👤</button>
+    <div class="header-greeting hidden" id="headerGreeting"></div>
+  </div>
 </header>
 
 <main>
@@ -1041,18 +1050,24 @@ function escAuth(value){
 function renderAccount(user){
   const content=document.getElementById('accountContent');
   const headerButton=document.getElementById('btnAccountHeader');
-  if(!content||!headerButton)return;
+  const greeting=document.getElementById('headerGreeting');
+  if(!content||!headerButton||!greeting)return;
   if(user){
     modalitaLocaleSessione=false;
     document.getElementById('modalAccessoIniziale')?.classList.add('hidden');
     const avatar=user.photoURL?`<img src="${escAuth(user.photoURL)}" alt="">`:'👤';
     headerButton.innerHTML=avatar;
+    const nome=String(user.displayName||'').trim().split(/\s+/)[0]||'Utente';
+    greeting.textContent=`Ciao ${nome}, Buon appetito 🥂`;
+    greeting.classList.remove('hidden');
     content.innerHTML=`<div class="account-status">${avatar}<div class="account-identity"><strong>${escAuth(user.displayName||'Utente')}</strong><span class="meta">${escAuth(user.email)}</span></div></div><button class="secondary" id="btnLogoutGoogle" style="margin-top:12px;">Esci dall’account</button><div class="meta" style="margin-top:8px;">Account collegato. La sincronizzazione completa verrà attivata dopo la verifica dello schema storico.</div>`;
     document.getElementById('btnLogoutGoogle')?.addEventListener('click',async()=>{
       try{await window.DietaPlannerCloud.logout();}catch(err){await avviso('Uscita non riuscita: '+err.message);}
     });
   }else{
     headerButton.textContent='👤';
+    greeting.textContent='';
+    greeting.classList.add('hidden');
     content.innerHTML='<div class="meta">Accedi con Google per associare nome e storico al tuo profilo.</div><button class="primary" id="btnLoginGoogle" style="margin-top:12px;">Accedi con Google</button>';
     document.getElementById('btnLoginGoogle')?.addEventListener('click',loginGoogle);
     if(!modalitaLocaleSessione){
