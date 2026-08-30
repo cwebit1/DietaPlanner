@@ -56,6 +56,11 @@ assert.equal(eggPeas.gruppi.find(g=>g.categoria==='PL').ingredienti[0].nome,'Pis
 (async()=>{
   await M.inizializza({basePath:''});
   const concrete=M.getRicette();
+  const gratinati=concrete.find(r=>r.recipeModelId===5);
+  assert(gratinati);
+  assert.equal(gratinati.nome,'Pomodori gratinati');
+  assert.deepEqual(gratinati.classe,['V','C']);
+  assert.deepEqual(gratinati.ingredienti.map(i=>i.nome),['Pomodori gratinati']);
   const coldConcrete=concrete.filter(r=>r.stackScope==='insalate_fredde_cereali');
   assert(coldConcrete.length>0);
   for(const r of coldConcrete){

@@ -56,7 +56,7 @@ variante reale. Il riepilogo della Programmazione usa la stessa separazione.
 - `tests/lotto-g-atomic-realizations.test.js`;
 - `tests/lotto-g-weekly-generation.test.js`.
 
-Il test settimanale inizializza realmente i cataloghi v21/v68 e ripete 20
+Il test settimanale inizializza realmente i cataloghi v21/v69 e ripete 20
 generazioni complete da 14 pasti con inventario vuoto, snapshot quantitativi e
 copertura verdura completa.
 

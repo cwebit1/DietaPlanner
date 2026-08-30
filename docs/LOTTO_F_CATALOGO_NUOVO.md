@@ -1,7 +1,7 @@
 # DietaPlanner — Lotto F: catalogo dati nuovo
 
 **Data:** 2026-08-30
-**Cataloghi attivi:** `ingredienti-new.json` v21, `db-ricette.json` v68
+**Cataloghi attivi:** `ingredienti-new.json` v21, `db-ricette.json` v69
 
 ## Scopo
 

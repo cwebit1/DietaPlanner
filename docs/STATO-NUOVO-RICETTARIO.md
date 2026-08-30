@@ -12,7 +12,7 @@ Ultimo aggiornamento: 2026-08-30.
 - `maschera-ricette.html` — lo strumento di
   composizione, unico modo per creare/modificare voci (mai scrivere
   JSON a mano).
-- `db-ricette.json` v68 — ricette nel nuovo formato a gruppi: **39
+- `db-ricette.json` v69 — ricette nel nuovo formato a gruppi: **39
   template**.
 - `ingredienti-new.json` v21 — **157 ingredienti** per il nuovo
   sistema. La root è ora l'unica applicazione corrente; il catalogo 1.0 è
@@ -102,7 +102,7 @@ Vedi `METODOLOGIA-CONVERSIONE-RICETTE.md` per il dettaglio (punti
 Il vecchio conteggio di 194 combinazioni su 19 voci è soltanto storico e non
 descrive i 39 template correnti. I test verificano 218 referenze ingrediente,
 comprese 17 composizioni fisse, senza errori. Il test settimanale rigenera 20
-settimane complete sul catalogo v68.
+settimane complete sul catalogo v69.
 
 ## Prossimi passi possibili
 

@@ -15,7 +15,7 @@ const expectedGroup = {
 };
 
 assert.equal(ingredientsFile.versione, 21);
-assert.equal(recipesFile.versione, 68);
+assert.equal(recipesFile.versione, 69);
 assert.equal(Object.keys(ingredients).length, 157);
 assert.equal(recipes.length, 39);
 

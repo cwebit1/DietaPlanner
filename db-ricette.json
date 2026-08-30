@@ -1,5 +1,5 @@
 {
-  "versione": 68,
+  "versione": 69,
   "ricette": [
     {
       "gruppi": [
@@ -218,7 +218,7 @@
     {
       "gruppi": [
         {
-          "testo1": "Pomodori",
+          "testo1": "",
           "categoria": "V",
           "ingredienti": [
             {
@@ -236,13 +236,7 @@
           "testo1": "",
           "categoria": "C",
           "ingredienti": [],
-          "cotture": [
-            {
-              "nome": "gratinati",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
+          "cotture": [],
           "testo2": "",
           "mostraNomi": false
         },

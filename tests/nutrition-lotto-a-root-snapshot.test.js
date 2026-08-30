@@ -49,7 +49,7 @@ assert(!motor.includes("loadJson(base+'ingredienti.json')"));
 // Snapshot strutturale dei due cataloghi correnti.
 assert.equal(ingredientsDb.versione, 21);
 assert.equal(Object.keys(ingredientsDb.ingredienti).length, 157);
-assert.equal(recipesDb.versione, 68);
+assert.equal(recipesDb.versione, 69);
 assert.equal(recipesDb.ricette.length, 39);
 assert.equal(new Set(recipesDb.ricette.map((recipe) => recipe.id)).size, recipesDb.ricette.length);
 assert(recipesDb.ricette.every((recipe) => Array.isArray(recipe.gruppi)));

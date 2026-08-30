@@ -17,13 +17,14 @@
 ## Cataloghi correnti
 
 - `ingredienti-new.json` v21: 157 ingredienti.
-- `db-ricette.json` v68: 39 template.
+- `db-ricette.json` v69: 39 template.
 - Tutte le 218 referenze ingrediente, comprese le composizioni fisse, risolvono
   nel catalogo.
 - Nessuna sorgente runtime usa i cataloghi della versione 1.0.
 - Il confronto delle 20 voci del formato intermedio archiviato è registrato in
   `AUDIT_CONVERSIONE_RICETTARIO_SOSPESO.md`: tutte le destinazioni sono state
-  decise e le conversioni approvate sono applicate e validate nella v68.
+  decise e le conversioni approvate sono applicate; la correzione nominale
+  "Pomodori gratinati" è validata nella v69.
 
 ## Suite automatica corrente
 

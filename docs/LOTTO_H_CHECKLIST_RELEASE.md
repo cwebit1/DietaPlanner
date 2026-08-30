@@ -24,7 +24,7 @@ e deve generare un caso di regressione prima della correzione.
   `AUDIT_CONVERSIONE_RICETTARIO_SOSPESO.md`.
 - [x] Definire la destinazione di tutte le voci non equivalenti.
 - [x] Applicare le conversioni approvate, validare il catalogo e completare la
-  conversione sufficiente del ricettario: v68, 39 template.
+  conversione sufficiente del ricettario: v69, 39 template.
 
 ## 2. Migrazione e persistenza browser
 
