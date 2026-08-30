@@ -1,4 +1,16 @@
-# DietaPlanner — Lotto D: Setting nutrizionista
+# DietaPlanner — Lotto D: Setting nutrizionista [STORICO CONSOLIDATO]
+
+> Il risultato corrente è consolidato in `STATO_LOTTI_E_TEST.md`,
+> `SPECIFICA_FUNZIONALE_CORRENTE.md` e `ARCHITETTURA_MOTOR_V12.md`. I
+> riferimenti successivi a file/test 1.0 sono soltanto cronologia.
+
+## Verifica sulla nuova root — 30 agosto 2026
+
+L'`index.html` completo del Lotto D è stato unificato con l'integrazione del
+nuovo ricettario. Restano verificati il resolver canonico, i campi contestuali,
+la separazione PDF/APP-CWE e soprattutto l'assenza di qualsiasi riscrittura del
+catalogo al salvataggio. Il contratto corrente è coperto da
+`tests/lotto-d-root-nutritionist-setting.test.js`.
 
 **Data:** 2026-08-29  
 **Versione applicativa di verifica:** v87  

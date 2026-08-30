@@ -1,5 +1,5 @@
 {
-  "versione": 67,
+  "versione": 68,
   "ricette": [
     {
       "gruppi": [
@@ -548,6 +548,8 @@
       "id": 9
     },
     {
+      "id": 10,
+      "stackScope": "insalate_fredde_cereali",
       "gruppi": [
         {
           "testo1": "insalata fredda di",
@@ -586,6 +588,16 @@
               "nome": "Emmental",
               "stack": 1,
               "roll": 1
+            },
+            {
+              "nome": "Mozzarella",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Feta",
+              "stack": 1,
+              "roll": 1
             }
           ],
           "cotture": [],
@@ -595,17 +607,75 @@
         {
           "testo1": "",
           "categoria": "V",
-          "ingredienti": [
-            {
-              "nome": "Pomodoro fresco",
-              "stack": 1,
-              "roll": 1,
-              "dose": 200
-            }
-          ],
+          "ingredienti": [],
           "cotture": [],
           "testo2": "",
-          "mostraNomi": true
+          "mostraNomi": true,
+          "composizioni": [
+            {
+              "nome": "pomodorini e cetriolo",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Cetriolo",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodorini e carote",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Carote",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodorini e peperoni",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Peperoni",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            }
+          ]
         },
         {
           "testo1": "",
@@ -620,8 +690,7 @@
         "C",
         "PF",
         "V"
-      ],
-      "id": 10
+      ]
     },
     {
       "gruppi": [
@@ -1002,131 +1071,32 @@
       "id": 14
     },
     {
+      "id": 16,
+      "stackScope": "insalate_fredde_cereali",
       "gruppi": [
         {
-          "testo1": "Insalata fredda di",
+          "testo1": "insalata fredda di",
           "categoria": "C",
           "ingredienti": [
             {
               "nome": "Cous cous",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Basilico fresco"
-              ]
-            },
-            {
-              "nome": "Farro perlato",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Basilico fresco"
-              ]
-            },
-            {
-              "nome": "Orzo perlato",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Basilico fresco"
-              ]
-            },
-            {
-              "nome": "Riso",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Basilico fresco"
-              ]
-            }
-          ],
-          "cotture": [],
-          "testo2": "con",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "V",
-          "ingredienti": [
-            {
-              "nome": "Pomodorini",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Basilico fresco"
-              ]
-            }
-          ],
-          "cotture": [],
-          "testo2": "e",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Condimenti",
-          "ingredienti": [
-            {
-              "nome": "Basilico fresco",
               "stack": 1,
               "roll": 1
-            }
-          ],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        }
-      ],
-      "classe": [
-        "C",
-        "V"
-      ],
-      "id": 15
-    },
-    {
-      "gruppi": [
-        {
-          "testo1": "Insalata fredda di",
-          "categoria": "C",
-          "ingredienti": [
-            {
-              "nome": "Cous cous",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Semi di sesamo"
-              ]
             },
             {
               "nome": "Farro perlato",
               "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Semi di sesamo"
-              ]
+              "roll": 1
             },
             {
               "nome": "Orzo perlato",
               "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Semi di sesamo"
-              ]
+              "roll": 1
             },
             {
               "nome": "Riso",
               "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Semi di sesamo"
-              ]
+              "roll": 1
             }
           ],
           "cotture": [],
@@ -1138,25 +1108,92 @@
           "categoria": "PP",
           "ingredienti": [
             {
-              "nome": "Salmone",
-              "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Semi di sesamo"
-              ]
-            },
-            {
               "nome": "Tonno",
               "stack": 1,
-              "roll": 1,
-              "condimentiCompatibili": [
-                "Semi di sesamo"
-              ]
+              "roll": 1
+            },
+            {
+              "nome": "Salmone affumicato",
+              "stack": 1,
+              "roll": 1
             }
           ],
           "cotture": [],
           "testo2": "e",
-          "mostraNomi": false
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true,
+          "composizioni": [
+            {
+              "nome": "pomodorini e cetriolo",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Cetriolo",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodorini e carote",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Carote",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodorini e peperoni",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Peperoni",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            }
+          ]
         },
         {
           "testo1": "",
@@ -1171,100 +1208,13 @@
           "cotture": [],
           "testo2": "",
           "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
         }
       ],
       "classe": [
         "C",
-        "PP"
-      ],
-      "id": 16
-    },
-    {
-      "gruppi": [
-        {
-          "testo1": "",
-          "categoria": "C",
-          "ingredienti": [
-            {
-              "nome": "Cous cous",
-              "stack": 1,
-              "roll": 1
-            },
-            {
-              "nome": "Farro perlato",
-              "stack": 1,
-              "roll": 1
-            },
-            {
-              "nome": "Orzo perlato",
-              "stack": 1,
-              "roll": 1
-            },
-            {
-              "nome": "Riso",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "cotture": [],
-          "testo2": "con",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "V",
-          "ingredienti": [
-            {
-              "nome": "Melanzane",
-              "stack": 1,
-              "roll": 1
-            },
-            {
-              "nome": "Zucchine",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "cotture": [
-            {
-              "nome": "saltate in padella",
-              "stack": 1,
-              "roll": 1
-            }
-          ],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        },
-        {
-          "testo1": "",
-          "categoria": "Nessuno",
-          "ingredienti": [],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": false
-        }
-      ],
-      "classe": [
-        "C",
+        "PP",
         "V"
-      ],
-      "id": 17
+      ]
     },
     {
       "gruppi": [
@@ -2803,6 +2753,488 @@
       ],
       "classe": "PP",
       "id": 41
+    },
+    {
+      "id": 42,
+      "stackScope": "insalate_fredde_cereali",
+      "gruppi": [
+        {
+          "testo1": "insalata fredda di",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Cous cous",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Farro perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orzo perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Riso",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Tofu",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "e",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true,
+          "composizioni": [
+            {
+              "nome": "pomodorini e cetriolo",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Cetriolo",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodorini e carote",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Carote",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodorini e peperoni",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Peperoni",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 112.5,
+                  "categoria": "V"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PL",
+        "V"
+      ]
+    },
+    {
+      "id": 43,
+      "stackScope": "sughi_verdure",
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Pasta corta",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Tagliolini all'uovo",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Pasta integrale",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Riso",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orzo perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Farro perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Cous cous",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Ravioli ricotta e spinaci",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Gnocchi",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true,
+          "composizioni": [
+            {
+              "nome": "zucchine e melanzane",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Zucchine",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Melanzane",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "zucchine e carote",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Zucchine",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Carote",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "zucchine e pomodoro",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Zucchine",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Pomodoro fresco",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodoro e melanzane",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodoro fresco",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Melanzane",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "piselli e carote",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Piselli surgelati",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Carote",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "piselli e pomodoro fresco",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Piselli surgelati",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Pomodoro fresco",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 40,
+                  "categoria": "V"
+                }
+              ]
+            },
+            {
+              "nome": "pomodoro e basilico",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Pomodoro fresco",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 70,
+                  "categoria": "V"
+                },
+                {
+                  "nome": "Basilico fresco",
+                  "stack": 1,
+                  "roll": 1,
+                  "categoria": "Condimenti"
+                }
+              ]
+            },
+            {
+              "nome": "aglio, olio e pomodorini",
+              "stack": 1,
+              "roll": 1,
+              "ingredienti": [
+                {
+                  "nome": "Aglio",
+                  "stack": 1,
+                  "roll": 1,
+                  "categoria": "Condimenti"
+                },
+                {
+                  "nome": "Olio extravergine oliva",
+                  "stack": 1,
+                  "roll": 1,
+                  "categoria": "Condimenti"
+                },
+                {
+                  "nome": "Pomodorini",
+                  "stack": 1,
+                  "roll": 1,
+                  "dose": 70,
+                  "categoria": "V"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "Nessuno",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "V"
+      ]
+    },
+    {
+      "id": 44,
+      "stackScope": "uovo_piselli",
+      "gruppi": [
+        {
+          "testo1": "",
+          "categoria": "C",
+          "ingredienti": [
+            {
+              "nome": "Riso",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Orzo perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Farro perlato",
+              "stack": 1,
+              "roll": 1
+            },
+            {
+              "nome": "Cous cous",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "cotture": [],
+          "testo2": "con",
+          "mostraNomi": false
+        },
+        {
+          "testo1": "",
+          "categoria": "PU",
+          "ingredienti": [
+            {
+              "nome": "Uova",
+              "stack": 1,
+              "roll": 1,
+              "dose": 1
+            }
+          ],
+          "cotture": [
+            {
+              "nome": "strapazzate",
+              "stack": 1,
+              "roll": 1
+            }
+          ],
+          "testo2": "e",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "PL",
+          "ingredienti": [
+            {
+              "nome": "Piselli surgelati",
+              "stack": 1,
+              "roll": 1,
+              "dose": 60
+            }
+          ],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": true
+        },
+        {
+          "testo1": "",
+          "categoria": "V",
+          "ingredienti": [],
+          "cotture": [],
+          "testo2": "",
+          "mostraNomi": false
+        }
+      ],
+      "classe": [
+        "C",
+        "PU",
+        "PL",
+        "V"
+      ]
     }
   ]
 }

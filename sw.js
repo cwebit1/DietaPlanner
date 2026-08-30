@@ -4,7 +4,7 @@
    Questo garantisce che l'app installata veda sempre l'ultima
    versione caricata su GitHub, senza dover reinstallare nulla. */
 
-const CACHE_NAME = 'dieta-planner-v81';
+const CACHE_NAME = 'dieta-planner-v2';
 
 /* All'attivazione: cancella le cache vecchie e prende il
    controllo di tutte le pagine aperte immediatamente. */
@@ -29,7 +29,7 @@ self.addEventListener('install', (event) => {
 /* Ad ogni richiesta:
    - HTML (index.html, la pagina stessa): SEMPRE dalla rete.
      Solo se sei completamente offline, usa l'ultima copia.
-   - JSON (ingredienti.json, ricette.json): SEMPRE dalla rete,
+   - JSON (ingredienti-new.json, db-ricette.json): SEMPRE dalla rete,
      con fallback alla cache se offline.
    - manifest.json e icone: cache-first (cambiano raramente).
    - Tutto il resto: network-first con fallback. */
@@ -61,7 +61,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  /* File JSON (ingredienti.json, ricette.json): network-first */
+  /* File JSON (ingredienti-new.json, db-ricette.json): network-first */
   if (url.pathname.endsWith('.json') && !url.pathname.includes('manifest')) {
     event.respondWith(
       fetch(event.request)

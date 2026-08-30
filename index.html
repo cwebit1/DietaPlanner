@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#181c14">
-<link rel="manifest" href="./manifest.json?v=1">
+<link rel="manifest" href="./manifest.json?v=2">
 <title>Dieta</title>
 <style>
 :root{
@@ -652,7 +652,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <!-- ============ VIEW: RICETTE ============ -->
 <section class="view" id="view-ricette">
   <div id="filtroAlfabetico" class="filtro-alfabetico"></div>
-  <button class="primary" id="btnNuovaRicetta" style="margin-bottom:12px;">+ Aggiungi ricetta manuale</button>
+  <button class="primary" id="btnNuovaRicetta" style="display:none;">+ Aggiungi ricetta manuale</button>
   <details class="pasto-sub-panel" id="pannelloFiltroTipo">
     <summary id="riepilogoFiltroTipo">Tipo di portata: in tutto 0 ricette</summary>
     <div class="contenuto"><div class="tabgroup" id="filtroTipoRicette"></div></div>
@@ -744,8 +744,8 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
   <div class="card">
     <h3 style="margin-bottom:10px;">Libreria ricette</h3>
-    <div class="meta" style="margin-bottom:10px;">Le ricette non sono più incluse nel file dell'app: vivono in un file separato (ricette.json) da importare qui. Puoi reimportarlo quante volte vuoi: aggiorna quelle già presenti (per nome) senza mai duplicarle, e non tocca ricette generate con l'AI o modificate a mano.</div>
-    <button class="primary" id="btnImportaRicette" style="margin-bottom:8px;">Importa ricette (JSON)</button>
+    <div class="meta" style="margin-bottom:10px;">Questa copia usa direttamente db-ricette.json e ingredienti-new.json della cartella nuovo-ricettario. IndexedDB conserva solo la cache compilata e i dati operativi del test.</div>
+    <button class="primary" id="btnImportaRicette" style="display:none;">Importa ricette (JSON)</button>
     <input type="file" id="fileImportaRicette" accept="application/json" class="hidden">
     <div id="statusImportaRicette" class="meta" style="margin-top:8px;"></div>
   </div>
@@ -997,11 +997,15 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 </div>
 
+<script src="nutrition-config.js?v=2"></script>
+<script src="engine-core.js?v=2"></script>
+<script src="motor-v12.js?v=2"></script>
+
 <script>
 /* =========================================================
    DB — IndexedDB minimale
    ========================================================= */
-const DB_NAME = 'dieta-app';
+const DB_NAME = 'dieta-app-nuovo-ricettario';
 const DB_VERSION = 3;
 let db;
 
@@ -1650,8 +1654,8 @@ async function seedIfEmpty(){
      https://raw.githubusercontent.com/TUO-USER/TUO-REPO/main/ingredienti.json
      https://raw.githubusercontent.com/TUO-USER/TUO-REPO/main/ricette.json
    ========================================================= */
-const URL_INGREDIENTI_REMOTE = 'ingredienti.json';
-const URL_RICETTE_REMOTE = 'ricette.json';
+const URL_INGREDIENTI_REMOTE = 'ingredienti-new.json';
+const URL_RICETTE_REMOTE = 'db-ricette.json';
 
 async function leggiVersioneRemota(chiaveImpostazione){
   const rec = await getOne('impostazioni', chiaveImpostazione);
@@ -1663,22 +1667,16 @@ let ingredientiJsonMap = {};
    a = versione ingredienti, b = versione ricette. Letta da impostazioni
    (salvate dalla Modifica 26). */
 async function renderVersioneHeader(){
-  const el = document.getElementById('headerVersione');
-  if(!el) return;
-  const verIng = await getOne('impostazioni', 'versioneIngredientiRemote');
-  const verRic = await getOne('impostazioni', 'versioneRicetteRemote');
-  const vIng = verIng ? verIng.valore : 0;
-  const vRic = verRic ? verRic.valore : 0;
-  console.log('[DEBUG versione]', {verIng, verRic, vIng, vRic});
-  if(vIng === 0 && vRic === 0){
-    el.textContent = 'v.1.0.0 ⚠';
-    el.title = 'Versione non aggiornata: verifica che ingredienti.json e ricette.json su GitHub abbiano il campo "versione"';
-  } else {
-    el.textContent = 'v.1.' + vIng + '.' + vRic;
-    el.title = '';
+  const el=document.getElementById('headerVersione');
+  if(!el)return;
+  const st=window.DietaPlannerMotorV12&&DietaPlannerMotorV12.stato?DietaPlannerMotorV12.stato():null;
+  el.textContent='v2';
+  if(st&&st.pronto){
+    el.title='Versione 2 · ricettario '+st.versioneRicette+' · '+st.ricetteConcrete+' ricette concrete';
+  }else{
+    el.title='Versione 2';
   }
 }
-
 
 async function sincronizzaCatalogoIngredientiJson(){
   const basi=await getAll('ingredienti');
@@ -3957,7 +3955,7 @@ async function scalaInventarioPerRicetta(ricetta, porzioniSel){
   const scala = (porzioniSel||1) / (ricetta.porzioni || 2);
   const inventario = await getAll('inventario');
   for(const ing of ricetta.ingredienti){
-    if(!ing.variantId) continue;
+    if(!ing.variantId||ing.nonRichiedeInventario) continue;
     let restante = (ing.quantita||0) * scala;
     if(restante<=0) continue;
     const voci = inventario.filter(x=>x.variantId===ing.variantId && x.stato==='disponibile').sort((a,b)=>a.quantita-b.quantita);
@@ -3992,21 +3990,7 @@ async function annullaScalaInventarioPerRicetta(ricetta, porzioniSel){
 
 /* Elenco ingredienti la cui scadenza stimata è entro 2 giorni (B4) */
 async function getScadenzeImminenti(){
-  const inventario = await getAll('inventario');
-  const varianti = await getAll('varianti');
-  const risultato = [];
-  const oggi = new Date(todayISO()+'T00:00:00');
-  for(const voce of inventario){
-    if(voce.stato!=='disponibile' || voce.quantita<=0 || !voce.dataApertura) continue;
-    const scadenza = await calcolaScadenzaStimata(voce);
-    if(!scadenza) continue;
-    const giorniRimanenti = Math.round((new Date(scadenza+'T00:00:00') - oggi) / 86400000);
-    if(giorniRimanenti <= 2){
-      const v = varianti.find(x=>x.id===voce.variantId);
-      risultato.push({variantId:voce.variantId, nome: v?v.nome:'?', giorniRimanenti});
-    }
-  }
-  return risultato.sort((a,b)=>a.giorniRimanenti-b.giorniRimanenti);
+  return window.DietaPlannerMotorV12 ? await DietaPlannerMotorV12.getScadenzeImminenti() : [];
 }
 
 function domaniISO(){
@@ -4131,9 +4115,16 @@ primoSugoId:voce.primoSugoId||null,
 componenti:voce.componenti||null,
 colazioneSpecialeId:voce.colazioneSpecialeId||null,
 porzioni:voce.porzioni||1,
+realizzazioni:voce.realizzazioni?structuredClone(voce.realizzazioni):[],
 nutrizioneTotale,
 registratoIl:new Date().toISOString()
 });
+if(voce.motoreNuovo&&window.DietaPlannerMotorV12){
+  for(const real of (voce.realizzazioni||[])){
+    const rr=await ricettaNuovoDaRealizzazione(real);
+    if(rr)await DietaPlannerMotorV12.registraUtilizzo(rr,voce.dataConsumato||giorno);
+  }
+}
 }
 
 function aggiungiNutrizione(tot,n){
@@ -4162,7 +4153,14 @@ async function calcolaNutrizioneVoceConsumata(voce){
     return aggiungiNutrizione(tot,r?await nutrizionePerPersona(r):null);
   }
   if(voce.realizzazioni&&voce.realizzazioni.length){
-    for(const id of [...new Set(voce.realizzazioni.map(x=>x.ricettaId).filter(Boolean))]){const r=await getOne('ricette',id);if(r)aggiungiNutrizione(tot,await nutrizionePerPersona(r));}
+    if(voce.motoreNuovo&&window.DietaPlannerMotorV12){
+      for(const real of voce.realizzazioni){
+        const r=await ricettaNuovoDaRealizzazione(real);
+        if(r)aggiungiNutrizione(tot,await nutrizionePerPersona(r));
+      }
+    }else{
+      for(const id of [...new Set(voce.realizzazioni.map(x=>x.ricettaId).filter(Boolean))]){const r=await getOne('ricette',id);if(r)aggiungiNutrizione(tot,await nutrizionePerPersona(r));}
+    }
     return tot;
   }
   const primo=voce.primoId?await getOne('ricette',voce.primoId):null;
@@ -4626,6 +4624,7 @@ async function renderAlertCongelamento(){
       const voci = inventario.filter(i=>i.variantId===b.dataset.congela && i.stato==='disponibile');
       for(const voce of voci){
         voce.zona = 'freezer';
+        voce.dataCongelamento = todayISO();
         voce.dataApertura = null; // il congelamento "mette in pausa" il conto alla rovescia
         await put('inventario', voce);
       }
@@ -4773,7 +4772,14 @@ async function elaboraConsumoAutomatico(){
     }
     const speciale=idRicette.length===1?ricettePerId[idRicette[0]]:null;
     if(!(speciale&&speciale.piattoSpeciale)){
-      for(const rid of idRicette){const ricetta=ricettePerId[rid];if(ricetta)await scalaInventarioPerRicetta(ricetta,voce.porzioni);}
+      if(voce.motoreNuovo&&voce.realizzazioni&&voce.realizzazioni.length&&window.DietaPlannerMotorV12){
+        for(const real of voce.realizzazioni){
+          const ricetta=await ricettaNuovoDaRealizzazione(real);
+          if(ricetta)await scalaInventarioPerRicetta(ricetta,voce.porzioni);
+        }
+      }else{
+        for(const rid of idRicette){const ricetta=ricettePerId[rid];if(ricetta)await scalaInventarioPerRicetta(ricetta,voce.porzioni);}
+      }
     }
     voce.consumato=true;
     voce.dataConsumato=giorno;
@@ -5512,6 +5518,109 @@ async function apriModalEditorColazione(giorno){
   });
 }
 
+async function targetNuovoMotorePerPasto(giorno,pasto){
+  const idx=((new Date(giorno+'T12:00:00').getDay()+6)%7);
+  const rec=await getOne('impostazioni','tabellaGiornoCategoria');
+  const a=rec&&rec.valore&&rec.valore['giorno_'+idx]||[];
+  return a[pasto==='cena'?1:0]||['carne','pesce','formaggi','uova','legumi'][(idx*2+(pasto==='cena'?1:0))%5];
+}
+
+async function ricettaNuovoDaRealizzazione(realizzazione){
+  if(!realizzazione||!realizzazione.ricettaId)return null;
+  if(window.DietaPlannerMotorV12&&DietaPlannerMotorV12.materializzaRealizzazione){
+    return await DietaPlannerMotorV12.materializzaRealizzazione(realizzazione);
+  }
+  return await getOne('ricette',realizzazione.ricettaId);
+}
+
+async function renderBloccoNuovoMotore(pasto,giorno,elementId){
+  giorno=giorno||giornoSelezionato;
+  const el=document.getElementById(elementId||(pasto==='pranzo'?'blocPranzo':'blocCena'));
+  if(!el)return;
+  const id=giorno+'_'+pasto;
+  const voce=await getOne('piano',id);
+  const title=ICONA_PASTO[pasto]+' '+LABEL_PASTO[pasto];
+  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
+    if(giorno<todayISO()){el.innerHTML='<div class="pasto-header">'+title+'</div><div class="meta">Nessun pasto registrato.</div>';return;}
+    el.innerHTML='<div class="pasto-header">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
+    el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
+      const target=await targetNuovoMotorePerPasto(giorno,pasto);
+      await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target);
+      await renderBloccoNuovoMotore(pasto,giorno,elementId);
+    });
+    return;
+  }
+
+  const statoRoll=!voce.consumato&&giorno>=todayISO()
+    ? await DietaPlannerMotorV12.statoRollPasto(giorno,pasto)
+    : {C:false,P:false,V:false};
+
+  let html='<div class="pasto-header">'+title+'</div>';
+  let kcal=0;
+  const materializzate=[];
+  for(const x of voce.realizzazioni){
+    const rr=await ricettaNuovoDaRealizzazione(x);
+    if(!rr)continue;
+    materializzate.push(rr);
+    kcal+=Number(rr.nutrienti&&rr.nutrienti.kcal||0);
+  }
+
+  const righeMacro=[
+    {tipo:'C',icona:'🍞',label:'Carboidrato',match:t=>t==='C'},
+    {tipo:'P',icona:'🥩',label:'Proteina',match:t=>['PC','PP','PF','PU','PL'].includes(t)},
+    {tipo:'V',icona:'🥬',label:'Verdura',match:t=>t==='V'||t==='V-'}
+  ];
+  for(const riga of righeMacro){
+    const proprietarie=materializzate.filter(rr=>(Array.isArray(rr.classe)?rr.classe:[rr.classe]).some(riga.match));
+    const ricette=[...new Set(proprietarie.map(rr=>rr.nome).filter(Boolean))];
+    const ingredienti=[...new Set(proprietarie.flatMap(rr=>(rr.ingredienti||[]).filter(i=>{
+      if(riga.tipo==='C')return i.categoria==='C';
+      if(riga.tipo==='P')return ['PC','PP','PF','PU','PL'].includes(i.categoria);
+      return i.categoria==='V'||i.categoria==='V-';
+    }).map(i=>i.nome)).filter(Boolean))];
+    const valore=ricette.length?ricette.join(' · '):'Seleziona pasto';
+    const dettaglio=ingredienti.length?'<div class="meta">'+esc(ingredienti.join(' · '))+'</div>':'';
+    const roll=(!voce.consumato&&giorno>=todayISO())
+      ?'<button type="button" data-nm-roll-tipo="'+riga.tipo+'" title="Cambia '+riga.label.toLowerCase()+'" '+(statoRoll[riga.tipo]?'':'disabled')+'>🔄</button>'
+      :'';
+    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+riga.icona+' '+riga.label+'</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore">'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+'</span><span class="pasto-riga-azioni">'+roll+'</span></div>'+dettaglio+'</div>';
+  }
+
+  html+='<div class="meta" style="margin-top:8px;">'+Math.round(kcal)+' kcal · nuovo DB</div>';
+
+  if(voce.programmatoOriginale&&Array.isArray(voce.programmatoOriginale.realizzazioni)){
+    const originali=[];
+    for(const real of voce.programmatoOriginale.realizzazioni){const rr=await ricettaNuovoDaRealizzazione(real);if(rr&&rr.nome)originali.push(rr.nome);}
+    if(originali.length)html+='<div class="meta" style="margin-top:6px;">Programmato: '+esc([...new Set(originali)].join(' · '))+'</div>';
+  }
+
+  if(!voce.consumato&&giorno>=todayISO()){
+    html+='<div class="row" style="margin-top:10px;gap:7px;"><button class="secondary" data-nm-rigenera>Proponi nuovo pasto</button><button class="secondary" data-nm-salvafrigo>♻️ Salvafrigo</button></div>';
+  }
+
+  el.innerHTML=html;
+
+  el.querySelectorAll('[data-nm-roll-tipo]').forEach(btn=>btn.addEventListener('click',async()=>{
+    if(btn.disabled)return;
+    const aggiornata=await DietaPlannerMotorV12.ruotaPasto(giorno,pasto,btn.dataset.nmRollTipo);
+    if(!aggiornata)return;
+    await renderBloccoNuovoMotore(pasto,giorno,elementId);
+  }));
+
+  el.querySelector('[data-nm-rigenera]')?.addEventListener('click',async()=>{
+    const target=voce.categoriaTarget||await targetNuovoMotorePerPasto(giorno,pasto);
+    await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target);
+    await renderBloccoNuovoMotore(pasto,giorno,elementId);
+  });
+
+  el.querySelector('[data-nm-salvafrigo]')?.addEventListener('click',async()=>{
+    const target=voce.categoriaTarget||await targetNuovoMotorePerPasto(giorno,pasto);
+    const aggiornata=await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target,{usaInventario:true});
+    if(!aggiornata){await avviso('Nessuna alternativa Salvafrigo compatibile con il piano odierno.');return;}
+    await renderBloccoNuovoMotore(pasto,giorno,elementId);
+  });
+}
 async function renderBloccoCompleto(pasto, giorno, elementId){
   giorno = giorno || giornoSelezionato;
   const chiaveStato = giorno+'_'+pasto;
@@ -5519,6 +5628,7 @@ async function renderBloccoCompleto(pasto, giorno, elementId){
   if(!el) return;
   const pianoId = giorno+'_'+pasto;
   let voce = await getOne('piano', pianoId);
+  if(window.DietaPlannerMotorV12) return renderBloccoNuovoMotore(pasto,giorno,elementId);
   voce = Object.assign({id:pianoId, modo:'multi', fascia:'facile', porzioni:1}, voce||{});
 
   // I pasti già consumati o ormai trascorsi restano immutabili.
@@ -6766,21 +6876,7 @@ async function garantisciRicettaSlot(giorno, pasto, voce, ignoraCopertura, prefe
    olio o biscotti per settimane, non è mai un'urgenza. Usati come filtro Salvafrigo
    nella scheda Ricette — questo, e non "tutto ciò che hai", è il criterio corretto. */
 async function getAvanziScomodi(){
-  const inventario = await getAll('inventario');
-  const varianti = await getAll('varianti');
-  const mappa = {};
-  for(const item of inventario){
-    if(item.stato!=='disponibile' || item.quantita<=0) continue;
-    const v = varianti.find(x=>x.id===item.variantId);
-    if(!v || !v.formato || v.formato<=0) continue; // sfuso: non applicabile
-    if(v.categoria!=='fresco' && v.categoria!=='surgelato') continue; // conf: mai urgente
-    if(item.quantita >= v.formato) continue; // confezione piena/intera: non è un avanzo
-    mappa[item.variantId] = (mappa[item.variantId]||0) + item.quantita;
-  }
-  return Object.entries(mappa).map(([variantId, quantita])=>{
-    const v = varianti.find(x=>x.id===variantId);
-    return {variantId, nome:v.nome, quantita, prioritaVerdura:v&&v.categoria==='fresco'?0:3};
-  }).sort((a,b)=> a.prioritaVerdura-b.prioritaVerdura || a.nome.localeCompare(b.nome,'it'));
+  return window.DietaPlannerMotorV12 ? await DietaPlannerMotorV12.getAvanziScomodi() : [];
 }
 
 /* Cerca tutte le ricette (di qualsiasi tipoPortata, o filtrate) che contengono un dato
@@ -7847,199 +7943,52 @@ document.getElementById('cercaRicette').addEventListener('input', (e)=>{
 });
 
 async function renderRicette(){
-const mappaStatiDisp=await mappaStatiDisponibilita();
-  // ---- filtro Salvafrigo: solo ingredienti con avanzo scomodo da confezione ----
-  const disponibili = await getAvanziScomodi();
-  const salvafrigoEl = document.getElementById('filtroSalvafrigo');
-  const nomeVarianteSalvafrigo = filtroSalvafrigoVariante ? disponibili.find(i=>i.variantId===filtroSalvafrigoVariante)?.nome : null;
-  document.getElementById('riepilogoFiltroSalvafrigo').textContent = 'Salvafrigo: ' +
-    (nomeVarianteSalvafrigo ? nomeVarianteSalvafrigo
-      : !disponibili.length ? 'nessun avanzo al momento'
-      : 'nessun filtro (' + disponibili.length + ' disponibili)');
-  if(!disponibili.length){
-    salvafrigoEl.innerHTML = '<div class="meta">Nessun avanzo scomodo al momento: tutte le confezioni aperte sono piene o esaurite.</div>';
-  } else {
-    salvafrigoEl.innerHTML = disponibili.map(i=>
-      `<span style="display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:20px;overflow:hidden;margin:2px 4px 2px 0;">
-        <button data-sf="${i.variantId}" style="border:none;padding:6px 10px;cursor:pointer;border-radius:0;background:${filtroSalvafrigoVariante===i.variantId?'var(--accent)':'transparent'};color:${filtroSalvafrigoVariante===i.variantId?'#fff':'inherit'};">${i.nome}</button>
-        <button data-sf-consuma="${i.variantId}" title="Consumato da altri in casa" style="border:none;border-left:1px solid var(--border);padding:6px 8px;cursor:pointer;background:transparent;color:var(--warn);">✕</button>
-      </span>`
-    ).join('') + (filtroSalvafrigoVariante ? `<button data-sf-reset="1">✕ Rimuovi filtro</button>` : '');
-    salvafrigoEl.querySelectorAll('[data-sf]').forEach(b=>{
-      b.addEventListener('click', ()=>{
-        filtroSalvafrigoVariante = (filtroSalvafrigoVariante===b.dataset.sf) ? null : b.dataset.sf;
-        renderRicette();
-      });
-    });
-    salvafrigoEl.querySelectorAll('[data-sf-consuma]').forEach(b=>{
-      b.addEventListener('click', async (e)=>{
-        e.stopPropagation();
-        const vid = b.dataset.sfConsuma;
-        const inventario = await getAll('inventario');
-        for(const voce of inventario.filter(i=>i.variantId===vid && i.stato==='disponibile')){
-          voce.stato = 'esaurito';
-          await put('inventario', voce);
-        }
-        if(filtroSalvafrigoVariante===vid) filtroSalvafrigoVariante = null;
-        renderRicette();
-      });
-    });
-    salvafrigoEl.querySelector('[data-sf-reset]')?.addEventListener('click', ()=>{
-      filtroSalvafrigoVariante = null;
-      renderRicette();
-    });
-  }
+  const all=window.DietaPlannerMotorV12?DietaPlannerMotorV12.getRicette():[];
+  const esc=x=>{const d=document.createElement('div');d.textContent=String(x??'');return d.innerHTML;};
+  const macro=r=>{
+    const c=new Set((Array.isArray(r.classe)?r.classe:[r.classe]).filter(Boolean));
+    const p=['PC','PP','PF','PU','PL'].some(x=>c.has(x));
+    return (c.has('C')?'C':'')+(p?'P':'')+(c.has('V')||c.has('V-')?'V':'')||'Altro';
+  };
+  const tipi=[['tutte','Tutte'],['C','Carboidrati'],['P','Proteine'],['V','Verdure'],['CP','C + P'],['CV','C + V'],['PV','P + V'],['CPV','C + P + V']];
+  if(!tipi.some(x=>x[0]===filtroTipoRicette))filtroTipoRicette='tutte';
+  const ft=document.getElementById('filtroTipoRicette');
+  ft.innerHTML=tipi.map(x=>'<button data-t="'+x[0]+'" class="'+(filtroTipoRicette===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
+  ft.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{filtroTipoRicette=btn.dataset.t;renderRicette();}));
+  const count=filtroTipoRicette==='tutte'?all.length:all.filter(r=>macro(r)===filtroTipoRicette).length;
+  document.getElementById('riepilogoFiltroTipo').textContent='Copertura: '+(filtroTipoRicette==='tutte'?'tutte · '+count:filtroTipoRicette+' · '+count);
 
-  // ---- filtro tipo portata ----
-  // Conteggio SEMPRE sull'intera libreria (indipendente da ricerca/fascia/Salvafrigo):
-  // il riepilogo di questo filtro deve rispondere solo "quante ricette ha questo tipo",
-  // non "quante ne restano incrociando gli altri filtri attivi"
-  const tutteLeRicette = await getAll('ricette');
-  const tipi = [['tutte','Tutte'],['unico','Unico'],['primo','Primo'],['secondo','Secondo'],['contorno','Contorno'],['colazione','Colazione'],['spuntino','Spuntino'],['modulare','🧩 Modulari']];
-  const nomeTipoDescrittivo = {tutte:'', unico:'Piatto Unico', primo:'Primo', secondo:'Secondo', contorno:'Contorno', colazione:'Colazione', spuntino:'Spuntino', modulare:'Modulo componibile'};
-  document.getElementById('filtroTipoRicette').innerHTML = tipi.map(([v,l])=>
-    `<button data-t="${v}" class="${filtroTipoRicette===v?'active':''}">${l}</button>`
-  ).join('');
-  const conteggioTipoSelezionato = filtroTipoRicette==='tutte'
-    ? tutteLeRicette.length
-    : tutteLeRicette.filter(r=>(r.tipoPortata||'unico')===filtroTipoRicette).length;
-  document.getElementById('riepilogoFiltroTipo').textContent = 'Tipo di portata: ' + (filtroTipoRicette==='tutte'
-    ? `in tutto ${conteggioTipoSelezionato} ricette`
-    : `${conteggioTipoSelezionato} ricette di ${nomeTipoDescrittivo[filtroTipoRicette]}`);
-  document.querySelectorAll('#filtroTipoRicette button').forEach(b=>{
-    b.addEventListener('click', ()=>{ filtroTipoRicette=b.dataset.t; renderRicette(); });
-  });
+  const disponibili=await getAvanziScomodi();
+  const sfBox=document.getElementById('filtroSalvafrigo');
+  const nomeSf=new Map(disponibili.map(x=>[String(x.variantId),x.nome]));
+  sfBox.innerHTML=disponibili.map(x=>'<button data-sf="'+esc(x.variantId)+'" class="'+(String(filtroSalvafrigoVariante)===String(x.variantId)?'active':'')+'">'+esc(x.nome)+'</button>').join('')+(filtroSalvafrigoVariante?'<button data-sf-reset="1">✕</button>':'');
+  sfBox.querySelectorAll('[data-sf]').forEach(btn=>btn.addEventListener('click',()=>{filtroSalvafrigoVariante=String(filtroSalvafrigoVariante)===btn.dataset.sf?null:btn.dataset.sf;renderRicette();}));
+  sfBox.querySelector('[data-sf-reset]')?.addEventListener('click',()=>{filtroSalvafrigoVariante=null;renderRicette();});
+  document.getElementById('riepilogoFiltroSalvafrigo').textContent='Salvafrigo: '+(filtroSalvafrigoVariante?(nomeSf.get(String(filtroSalvafrigoVariante))||'ingrediente selezionato'):'nessun filtro');
 
-  // ---- filtro fascia ----
-  const fasce = ['tutte','facile','medio','difficile'];
-  document.getElementById('filtroFasceRicette').innerHTML = fasce.map(f=>
-    `<button data-f="${f}" class="${f===filtroFasciaRicette?'active':''}">${f}</button>`
-  ).join('');
-  document.getElementById('riepilogoFiltroFascia').textContent = 'Fascia di tempo: ' + (filtroFasciaRicette==='tutte' ? 'Tutte' : filtroFasciaRicette.charAt(0).toUpperCase()+filtroFasciaRicette.slice(1));
-  document.querySelectorAll('#filtroFasceRicette button').forEach(b=>{
-    b.addEventListener('click', ()=>{ filtroFasciaRicette=b.dataset.f; renderRicette(); });
-  });
+  let list=all.slice();
+  if(filtroTipoRicette!=='tutte')list=list.filter(r=>macro(r)===filtroTipoRicette);
+  if(filtroSalvafrigoVariante)list=list.filter(r=>(r.ingredienti||[]).some(i=>String(i.variantId)===String(filtroSalvafrigoVariante)));
+  if(filtroTestoRicette)list=list.filter(r=>String(r.nome||'').toLowerCase().includes(filtroTestoRicette));
+  if(filtroLetteraRicette)list=list.filter(r=>String(r.nome||'').toUpperCase().startsWith(filtroLetteraRicette));
+  list.sort((x,y)=>String(x.nome||'').localeCompare(String(y.nome||''),'it'));
 
-  // ---- applica i filtri combinati (tranne la lettera, serve prima per sapere quali lettere hanno risultati) ----
-  let ricette = filtroSalvafrigoVariante
-    ? await cercaRicetteConIngrediente(filtroSalvafrigoVariante)
-    : await getAll('ricette');
+  const lettere=[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
+  const presenti=new Set(all.map(r=>String(r.nome||'').charAt(0).toUpperCase()));
+  const alfa=document.getElementById('filtroAlfabetico');
+  alfa.innerHTML=lettere.map(l=>'<button data-lettera="'+l+'" class="'+(filtroLetteraRicette===l?'active ':'')+(presenti.has(l)?'':'senza-ricette')+'">'+l+'</button>').join('');
+  alfa.querySelectorAll('[data-lettera]').forEach(btn=>btn.addEventListener('click',()=>{filtroLetteraRicette=filtroLetteraRicette===btn.dataset.lettera?null:btn.dataset.lettera;renderRicette();}));
 
-  if(filtroFasciaRicette!=='tutte') ricette = ricette.filter(r=>r.fascia===filtroFasciaRicette);
-  if(filtroTipoRicette!=='tutte') ricette = ricette.filter(r=>(r.tipoPortata||'unico')===filtroTipoRicette);
-  if(filtroTestoRicette){
-    ricette = ricette.filter(r=> r.nome.toLowerCase().includes(filtroTestoRicette));
-  }
-
-  // ---- filtro alfabetico: striscia fissa A-Z sul bordo destro ----
-  const lettereConRisultati = new Set(ricette.map(r=>r.nome.charAt(0).toUpperCase()));
-  const alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  const elAlfabeto = document.getElementById('filtroAlfabetico');
-  elAlfabeto.innerHTML = `<button data-lettera="" class="${!filtroLetteraRicette?'active':''}">↕</button>` +
-    alfabeto.map(l=>{
-      const disponibile = lettereConRisultati.has(l);
-      return `<button data-lettera="${l}" class="${filtroLetteraRicette===l?'active':''} ${disponibile?'':'senza-ricette'}">${l}</button>`;
-    }).join('');
-  elAlfabeto.querySelectorAll('button').forEach(b=>{
-    b.addEventListener('click', ()=>{
-      filtroLetteraRicette = b.dataset.lettera || null;
-      renderRicette();
-    });
-  });
-  if(filtroLetteraRicette){
-    ricette = ricette.filter(r=> r.nome.charAt(0).toUpperCase()===filtroLetteraRicette);
-  }
-
-  if(!filtroSalvafrigoVariante){
-    ricette = ricette.slice().sort((a,b)=> a.nome.localeCompare(b.nome));
-  }
-
-  const el = document.getElementById('listaRicette');
-  if(!ricette.length){
-    const primaDelFiltro = await getAll('ricette');
-    el.innerHTML = primaDelFiltro.length
-      ? '<div class="meta">Nessuna ricetta corrisponde ai filtri scelti.</div>'
-      : '<div class="meta">Nessuna ricetta in libreria: vai su Impostazioni → Libreria ricette e importa ricette.json.</div>';
-    return;
-  }
-
-  el.innerHTML = '';
-  for(const r of ricette){
-    const nutri = await nutrizionePerPersona(r);
-    const isColazione = (r.tipoPortata||'unico')==='colazione';
-    const isUnico = (r.tipoPortata||'unico')==='unico';
-    const quasi=ricettaHaQuasiEsaurito(r,mappaStatiDisp);
-    const div = document.createElement('div');
-    div.className='card';
-    div.innerHTML = `
-      ${fasciaBadgeColorata(r.fascia)}
-      <span class="pill dim" style="margin-left:6px;">${r.tipoPortata||'unico'}</span>
-      ${r.fonte==='ai'?'<span class="pill dim" style="margin-left:6px;">generata AI</span>':''}
-      ${r.piattoSpeciale?'<span class="pill dim" style="margin-left:6px;">🍽 piatto speciale</span>':''}
-      ${r.esclusa?'<span class="pill dim" style="margin-left:6px;">🚫 esclusa</span>':''}
-      ${r.componente==='proteina'?'<span class="pill dim" style="margin-left:6px;background:#c0792a;">Base proteica</span>':r.componente==='contorno'?'<span class="pill dim" style="margin-left:6px;background:#5e9c63;">Contorno</span>':''}
-      ${r.tipoPortata==='modulare' ? '<span class="pill dim" style="margin-left:6px;background:#6a4ac2;">🧩 ' + (r.sottoCategoriaModulare||'') + '</span>' : ''}
-      ${r.preparazione?`<span class="pill dim" style="margin-left:6px;">${r.preparazione}</span>`:''}
-      <div class="row" style="margin-top:6px;${r.esclusa?'opacity:0.55;':''}"><h3 style="flex:1;">${r.nome}</h3>${quasi?WARN_QUASI:''}${stellaBtn(r)}</div>
-      <div class="meta">${Math.round(nutri.kcal)} kcal (per 1 persona)</div>
-      ${nutrizioneInaffidabile(r) ? '<div class="warn-tag">⚠ nutrizione non compilata — conta 0 nel computo giornaliero, compilala manualmente nella modifica</div>' : ''}
-      ${isColazione ? '<div class="meta" style="margin-top:6px;">Spunto per la colazione — componila dalla scheda Piano, scegliendo gli alimenti a gruppi.</div>' : ''}
-      <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap;">
-        <button class="small" data-vedi="${r.id}">Ricetta</button>
-        ${isColazione ? '' : `<button class="small accent" data-usa="${r.id}">Usa in un pasto</button>`}
-        ${isUnico ? `<button class="small" data-speciale="${r.id}">${r.piattoSpeciale?'🍽 Togli speciale':'🍽 Piatto speciale'}</button>` : ''}
-        <button class="small" data-escludi="${r.id}">${r.esclusa?'Riattiva':'🚫 Escludi'}</button>
-        <button class="small" data-del="${r.id}">Elimina</button>
-      </div>
-    `;
-    // I4: event delegation — nessun listener individuale sulla card.
-    // Un singolo listener sul contenitore padre (#listaRicette) gestisce
-    // tutti i click tramite closest() sull'attributo data-*.
-    el.appendChild(div);
-  }
+  const box=document.getElementById('listaRicette');
+  if(!list.length){box.innerHTML='<div class="card"><div class="meta">Nessuna combinazione corrispondente.</div></div>';return;}
+  box.innerHTML=list.map(r=>{
+    const n=r.nutrienti||{};
+    const classe=(Array.isArray(r.classe)?r.classe:[r.classe]).filter(Boolean).join(' + ');
+    const ingredienti=(r.ingredienti||[]).map(i=>i.nome+(Number(i.quantita)>0?' '+Math.round(i.quantita)+(i.unita||'g'):'')).join(' · ');
+    return '<div class="card"><div class="row" style="align-items:flex-start;gap:8px;"><div style="flex:1;min-width:0;"><div style="font-weight:800;">'+esc(r.nome)+'</div><div class="meta">Template '+esc(r.recipeModelId)+' · '+esc(classe)+'</div><div class="meta" style="margin-top:5px;">'+esc(ingredienti)+'</div><div class="meta" style="margin-top:5px;">'+Math.round(n.kcal||0)+' kcal · P '+Math.round(n.proteine||0)+'g · C '+Math.round(n.carboidrati||0)+'g · G '+Math.round(n.grassi||0)+'g</div></div><button class="icon-info-btn" data-info-new="'+esc(r.id)+'">ⓘ</button></div></div>';
+  }).join('');
+  box.querySelectorAll('[data-info-new]').forEach(btn=>btn.addEventListener('click',async()=>{const rr=await getOne('ricette',btn.dataset.infoNew);if(rr)apriModalInfoNutrizionale(rr);}));
 }
-
-/* I4: event delegation — un singolo listener sul contenitore padre (#listaRicette)
-   gestisce tutti i click sui bottoni delle card ricetta. Registrato UNA SOLA VOLTA
-   qui (fuori da renderRicette), non viene duplicato ad ogni cambio filtro. */
-document.getElementById('listaRicette').addEventListener('click', async (e)=>{
-  const btnVedi = e.target.closest('[data-vedi]');
-  if(btnVedi){
-    const rc = await getOne('ricette', btnVedi.dataset.vedi);
-    apriModalDettaglioRicetta(rc, 1);
-    return;
-  }
-  const btnStar = e.target.closest('[data-star]');
-  if(btnStar){
-    await toggleFavorito(btnStar.dataset.star);
-    renderRicette();
-    return;
-  }
-  const btnUsa = e.target.closest('[data-usa]');
-  if(btnUsa){
-    apriModalAssegnaAPasto(btnUsa.dataset.usa);
-    return;
-  }
-  const btnSpeciale = e.target.closest('[data-speciale]');
-  if(btnSpeciale){
-    await togglePiattoSpeciale(btnSpeciale.dataset.speciale);
-    renderRicette();
-    return;
-  }
-  const btnEscludi = e.target.closest('[data-escludi]');
-  if(btnEscludi){
-    await toggleEsclusa(btnEscludi.dataset.escludi);
-    renderRicette();
-    return;
-  }
-  const btnDel = e.target.closest('[data-del]');
-  if(btnDel){
-    await delKey('ricette', btnDel.dataset.del);
-    renderRicette();
-    return;
-  }
-});
-
 /* =========================================================
    MODAL: assegna una ricetta della libreria a un giorno/pasto specifico
    (azione deliberata dell'utente: scrive subito come pasto PROGRAMMATO)
@@ -8200,18 +8149,16 @@ const CATEGORIE_PROTEICHE_SET = [
   {chiave:'formaggi', label:'Formaggi'}, {chiave:'uova', label:'Uova'}, {chiave:'legumi', label:'Legumi'}
 ];
 
+async function generaPianoSettimana(scartoSettimane,opzioni){
+  return await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,opzioni||{});
+}
 async function generaMenuDaConfigSet(scartoSettimane){
-  scartoSettimane=scartoSettimane||0; menuSettimanaScarto=scartoSettimane; mostraVista('menu');
-  const recTab=await getOne('impostazioni','tabellaGiornoCategoria'); const tab=recTab&&recTab.valore?recTab.valore:{};
-  const giorniGen=giorniSettimana(scartoSettimane), giornoCategoria={};
-  giorniGen.forEach((g,i)=>{ const a=tab['giorno_'+i]; if(a&&a.length) giornoCategoria[g]=a.slice(); });
-  const recPrefV=await getOne('impostazioni','setVerdurePreferite'); const nomiV=recPrefV&&recPrefV.valore?recPrefV.valore:[];
-  const varianti=await getAll('varianti'); const verdureVariantIds=nomiV.map(n=>varianti.find(v=>v.nome===n)?.id).filter(Boolean);
-  const recLim=await getOne('impostazioni','setProteineLimitate');
-  const recTempo=await getOne('impostazioni','setPocoTempo'); const t=Object.assign({pranzo:false,cena:false},recTempo&&recTempo.valore?recTempo.valore:{});
-  const preferenze={giornoCategoria,verdureVariantIds,proteineLimitate:recLim&&recLim.valore?recLim.valore:[],pocoTempoPranzo:!!t.pranzo,pocoTempoCena:!!t.cena};
-  await generaPianoSettimana(scartoSettimane,{ignoraCopertura:false,forza:true,preferenze});
-  await renderMenuSettimanale(); await renderPiano();
+  scartoSettimane=scartoSettimane||0;
+  menuSettimanaScarto=scartoSettimane;
+  mostraVista('menu');
+  await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,{forza:true});
+  await renderMenuSettimanale();
+  await renderPiano();
 }
 
 document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)=>{
@@ -8249,6 +8196,22 @@ async function riepilogoTestualePasto(giorno, pasto){
   }
   if(voce.modo==='multi'){
     const nomi = [];
+    if(voce.realizzazioni&&voce.realizzazioni.length){
+      const materializzate=[];
+      for(const x of voce.realizzazioni){
+        const rr=await ricettaNuovoDaRealizzazione(x);
+        if(rr)materializzate.push(rr);
+      }
+      const righe=[
+        ['🍞','C',t=>t==='C'],
+        ['🥩','P',t=>['PC','PP','PF','PU','PL'].includes(t)],
+        ['🥬','V',t=>t==='V'||t==='V-']
+      ].map(([icona,tipo,match])=>{
+        const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(match)).map(r=>r.nome).filter(Boolean))];
+        return '<span class="menu-riepilogo-macro" data-menu-macro="'+tipo+'">'+icona+' '+(valori.length?valori.join(' · '):'Seleziona pasto')+'</span>';
+      });
+      return materializzate.length ? prefisso + righe.join('<br>') : testoVuoto;
+    }
     for(const chiave of ['primoId','secondoId','contornoId']){
       if(voce[chiave]){
         const r = await getOne('ricette', voce[chiave]);
@@ -8602,6 +8565,7 @@ async function renderInventario(){
       });
       row.querySelector('[data-congela-manuale]')?.addEventListener('click', async ()=>{
         voce.zona = 'freezer';
+        voce.dataCongelamento = todayISO();
         voce.dataApertura = null; // il congelamento mette in pausa il conto alla rovescia
         await put('inventario', voce);
         renderInventario();
@@ -8714,16 +8678,28 @@ async function aggiornaListaSpesaAutomatica(scartoSettimane){
       }
 
       const porzioniSel = voce.porzioni||1;
-      const idRicette = voce.modo==='multi'
-        ? [...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId, voce.secondoId, voce.contornoId]).filter(Boolean))]
-        : [voce.ricettaId].filter(Boolean);
-      for(const rid of idRicette){
-        const ricetta = await getOne('ricette', rid);
-        if(!ricetta || ricetta.piattoSpeciale) continue;
-        const scala = porzioniSel / (ricetta.porzioni || 2);
-        for(const ing of ricetta.ingredienti){
-          if(!ing.variantId) continue;
-          fabbisogno[ing.variantId] = (fabbisogno[ing.variantId]||0) + ing.quantita*scala;
+      if(voce.motoreNuovo&&voce.realizzazioni&&voce.realizzazioni.length&&window.DietaPlannerMotorV12){
+        for(const real of voce.realizzazioni){
+          const ricetta=await ricettaNuovoDaRealizzazione(real);
+          if(!ricetta||ricetta.piattoSpeciale)continue;
+          const scala=porzioniSel/(ricetta.porzioni||1);
+          for(const ing of ricetta.ingredienti||[]){
+            if(!ing.variantId||ing.nonRichiedeInventario)continue;
+            fabbisogno[ing.variantId]=(fabbisogno[ing.variantId]||0)+ing.quantita*scala;
+          }
+        }
+      }else{
+        const idRicette = voce.modo==='multi'
+          ? [...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId, voce.secondoId, voce.contornoId]).filter(Boolean))]
+          : [voce.ricettaId].filter(Boolean);
+        for(const rid of idRicette){
+          const ricetta = await getOne('ricette', rid);
+          if(!ricetta || ricetta.piattoSpeciale) continue;
+          const scala = porzioniSel / (ricetta.porzioni || 2);
+          for(const ing of ricetta.ingredienti){
+            if(!ing.variantId) continue;
+            fabbisogno[ing.variantId] = (fabbisogno[ing.variantId]||0) + ing.quantita*scala;
+          }
         }
       }
       // Condimento: se il secondo di questo pasto è una base proteica componibile,
@@ -8937,21 +8913,15 @@ async function renderInfoVersioniRemote(){
     (dataRic ? ' · aggiornato il ' + dataRic.valore : '');
 }
 document.getElementById('btnControllaAggiornamenti')?.addEventListener('click', async ()=>{
-  const btn = document.getElementById('btnControllaAggiornamenti');
-  btn.disabled = true;
-  btn.textContent = '⏳ Controllo in corso...';
-  const esitoIng = await caricaIngredientiJson();
-  const esitoRic = await controllaAggiornamentoRicetteRemote();
-  btn.disabled = false;
-  btn.textContent = 'Controlla aggiornamenti ora';
-  await renderInfoVersioniRemote();
-  let msg = '';
-  msg += 'Ingredienti: ' + (esitoIng.aggiornato ? 'aggiornati a v' + esitoIng.versione : 'già aggiornati') + '\n';
-  msg += 'Ricette: ' + (esitoRic.aggiornato ? 'aggiornate a v' + esitoRic.versione + ' (+' + esitoRic.aggiunte + ' nuove)' : esitoRic.motivo);
-  await avviso(msg);
-  if(esitoRic.aggiornato) renderRicette();
+  const btn=document.getElementById('btnControllaAggiornamenti');
+  btn.disabled=true;btn.textContent='⏳ Ricarico nuovo DB...';
+  try{
+    const esito=await DietaPlannerMotorV12.inizializza({basePath:''});
+    await renderVersioneHeader();
+    if(document.getElementById('view-ricette').classList.contains('active'))await renderRicette();
+    await avviso('Nuovo ricettario ricaricato: '+esito.template+' template -> '+esito.concrete+' combinazioni concrete.');
+  }finally{btn.disabled=false;btn.textContent='Controlla aggiornamenti ora';}
 });
-
 document.getElementById('btnEsporta').addEventListener('click', async ()=>{
   const stores = ['ingredienti','varianti','inventario','ricette','piano','impostazioni'];
   const backup = {};
@@ -9292,43 +9262,24 @@ document.getElementById('calMeseSucc').addEventListener('click', async ()=>{
 window.addEventListener('load', async ()=>{
   if('scrollRestoration' in history)history.scrollRestoration='manual';
   try{
-    aggiornaLoader(5, 'Apro il database...');
+    aggiornaLoader(5, 'Apro il database di prova...');
     await openDB();
     {const cfgRuntime=await getOne('impostazioni','configAvanzata');applicaConfigAvanzataRuntime(cfgRuntime&&cfgRuntime.valore||{});}
-    aggiornaLoader(15, 'Preparo la struttura base...');
-    await seedIfEmpty();
-    aggiornaLoader(30, 'Scarico la tabella nutrizionale...');
-    const esitoIngredienti = await caricaIngredientiJson();
-    if(esitoIngredienti.caricato){
-      aggiornaLoader(40, 'Nutrizione: ' + esitoIngredienti.conteggio + ' ingredienti' + (esitoIngredienti.aggiornato ? ' (aggiornati a v' + esitoIngredienti.versione + ')' : ''));
-    } else {
-      aggiornaLoader(40, 'Nutrizione: non disponibile (no rete)');
-    }
-    aggiornaLoader(50, 'Controllo aggiornamenti ricette...');
-    const esitoRicette = await controllaAggiornamentoRicetteRemote();
-    if(esitoRicette.aggiornato){
-      aggiornaLoader(60, 'Ricette aggiornate a v' + esitoRicette.versione + ': +' + esitoRicette.aggiunte + ' nuove, ' + esitoRicette.aggiornate + ' agg.');
-    } else if(esitoRicette.versione > 0){
-      aggiornaLoader(60, 'Ricette v' + esitoRicette.versione + ': ' + esitoRicette.motivo);
-    } else {
-      aggiornaLoader(60, 'Ricette: ' + (esitoRicette.motivo || 'nessun aggiornamento'));
-    }
-    aggiornaLoader(70, 'Controllo l\'inventario...');
+    aggiornaLoader(25, 'Carico nuovo ricettario...');
+    const esito=await DietaPlannerMotorV12.inizializza({basePath:''});
+    aggiornaLoader(60, 'Compilo '+esito.template+' template -> '+esito.concrete+' ricette...');
     await consolidaInventarioDuplicato();
-    aggiornaLoader(75, 'Carico configurazione carboidrati...');
     await caricaConfigCarboidrati();
     aggiornaLoader(85, 'Preparo la schermata...');
     await renderPiano();
-    await controllaPromemoriaGiovedi();
-    await controllaModalImportaRicetteIniziale();
     aggiornaLoader(100, 'Pronto!');
     await renderVersioneHeader();
-  } finally{
-    const loader = document.getElementById('loaderApp');
-    if(loader){
-      loader.classList.add('nascosto');
-      setTimeout(()=>{ loader.remove(); }, 450);
-    }
+  }catch(err){
+    console.error('[nuovo-ricettario]',err);
+    await avviso('Errore avvio nuovo ricettario: '+err.message);
+  }finally{
+    const loader=document.getElementById('loaderApp');
+    if(loader){loader.classList.add('nascosto');setTimeout(()=>loader.remove(),450);}
     requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}));
   }
 });
@@ -9347,7 +9298,7 @@ window.addEventListener('load', async ()=>{
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js?v=78').catch(err=>{
+    navigator.serviceWorker.register('./sw.js?v=2').catch(err=>{
       console.warn('Service worker non registrato:', err);
     });
     /* Il nuovo SW entra in controllo senza ricaricare immediatamente la pagina.
@@ -9397,10 +9348,6 @@ if('serviceWorker' in navigator){
   }
 })();
 </script>
-
-<script src="nutrition-config.js?v=87"></script>
-<script src="engine-core.js?v=87"></script>
-<script src="motor.js?v=87"></script>
 
 </body>
 </html>

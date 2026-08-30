@@ -90,6 +90,8 @@
 <section>
   <h2>Composizione ricetta</h2>
   <div class="stato" id="statoIngredienti">Ingredienti non ancora caricati.</div>
+  <label>Ambito stack condiviso (opzionale)</label>
+  <input type="text" id="campoStackScope" placeholder="es. sughi_verdure">
   <div id="gruppo1"></div>
   <div id="gruppo2"></div>
   <div id="gruppo3"></div>
@@ -105,8 +107,8 @@
 </section>
 
 <section>
-  <h2>3. Voci salvate (<span id="contatoreVoci">0</span>) — nuovo-ricettario/db-ricette.json</h2>
-  <button class="btn-secondary" onclick="caricaRicetteDaGithub()">⬇️ Carica ricette.json da GitHub</button>
+  <h2>3. Voci salvate (<span id="contatoreVoci">0</span>) — db-ricette.json</h2>
+  <button class="btn-secondary" onclick="caricaRicetteDaGithub()">⬇️ Carica db-ricette.json da GitHub</button>
   <button class="btn-main" onclick="salvaRicetteSuGithub()">⬆️ Salva tutte le voci su GitHub</button>
   <div class="stato" id="statoRicetteGh"></div>
   <div id="listaVociSalvate" style="margin-top:8px;"><div class="stato">Nessuna voce salvata ancora.</div></div>
@@ -234,6 +236,7 @@ function creaGruppo(idGruppo) {
         ${OPZIONI_SELETTORE.map(o => `<button type="button" class="opzione-selettore" data-valore="${o}" onclick="selezionaOpzione('${idGruppo}','${o}')">${o}</button>`).join('')}
       </div>
       <div class="array-block campo-ingredienti"><div class="stato">Seleziona una categoria.</div></div>
+      <div class="campo-composizioni" style="display:none;"></div>
       ${isCondimenti ? '' : `
       <label>Cotture compatibili</label>
       <div style="display:flex; gap:6px;">
@@ -399,11 +402,22 @@ function leggiGruppo(idGruppo) {
     nome: chk.dataset.nome, stack: Number(chk.dataset.stack) || 1, roll: Number(chk.dataset.roll) || 1
   }));
   const mostraNomi = el.querySelector('.campo-flag-mostra').checked;
-  return { testo1, categoria, ingredienti, cotture, testo2, mostraNomi };
+  let composizioni=[];
+  try { composizioni=JSON.parse(decodeURIComponent(el.dataset.composizioni||'%5B%5D')); } catch(e) {}
+  const out={ testo1, categoria, ingredienti, cotture, testo2, mostraNomi };
+  if(composizioni.length)out.composizioni=composizioni;
+  return out;
 }
 
 function scriviGruppo(idGruppo, dati) {
   const el = document.getElementById(idGruppo);
+  const composizioni=Array.isArray(dati.composizioni)?dati.composizioni:[];
+  el.dataset.composizioni=encodeURIComponent(JSON.stringify(composizioni));
+  const boxComposizioni=el.querySelector('.campo-composizioni');
+  if(boxComposizioni&&composizioni.length){
+    boxComposizioni.style.display='block';
+    boxComposizioni.innerHTML='<div class="stato">Composizioni fisse: '+composizioni.map(c=>c.nome+' ['+(c.ingredienti||[]).map(i=>i.nome+(i.dose!==undefined?' '+i.dose+'g':'')).join(' + ')+']').join(' · ')+'</div>';
+  }
   el.querySelector('.campo-testo1').value = dati.testo1 || '';
   const campoTesto2 = el.querySelector('.campo-testo2');
   if (campoTesto2) campoTesto2.value = dati.testo2 || '';
@@ -429,11 +443,14 @@ function leggiFormCorrente() {
   const classiUsate = new Set();
   gruppi.forEach(g => { if (g.categoria && g.categoria !== 'Nessuno' && g.categoria !== 'Condimenti') classiUsate.add(g.categoria); });
   const out = { gruppi };
+  const stackScope = document.getElementById('campoStackScope').value.trim();
+  if (stackScope) out.stackScope = stackScope;
   if (classiUsate.size) out.classe = classiUsate.size === 1 ? [...classiUsate][0] : [...classiUsate];
   return out;
 }
 
 function svuotaForm() {
+  document.getElementById('campoStackScope').value = '';
   creaGruppo('gruppo1');
   creaGruppo('gruppo2');
   creaGruppo('gruppo3');
@@ -469,7 +486,7 @@ async function salvaVoce() {
   try {
     const nuovaVersione = (RICETTE_DATA.versione || 1) + 1;
     const output = Object.assign({}, RICETTE_DATA, { versione: nuovaVersione, ricette: VOCI });
-    const resJson = await ghSave('nuovo-ricettario/db-ricette.json', output, RICETTE_SHA, `Maschera: ${creata ? 'creo' : 'aggiorno'} id ${dati.id}`);
+    const resJson = await ghSave('db-ricette.json', output, RICETTE_SHA, `Maschera: ${creata ? 'creo' : 'aggiorno'} id ${dati.id}`);
     RICETTE_SHA = resJson.content.sha;
     RICETTE_DATA = output;
     if (statoSalva) { statoSalva.textContent = `${creata ? 'Creata' : 'Aggiornata'} id${dati.id} — salvata online su GitHub, commit ${resJson.commit.sha.slice(0,7)}.`; statoSalva.className = 'stato ok'; }
@@ -491,6 +508,7 @@ function modificaVoce(indice) {
   INDICE_IN_MODIFICA = indice;
   const dati = VOCI[indice];
   svuotaForm();
+  document.getElementById('campoStackScope').value = dati.stackScope || '';
   const idGruppi = ['gruppo1', 'gruppo2', 'gruppo3', 'gruppo4'];
   (dati.gruppi || []).forEach((g, i) => scriviGruppo(idGruppi[i], g));
   aggiornaCompatibilitaCondimenti();
@@ -581,12 +599,12 @@ function mostraJSONTotale() {
   document.getElementById('outputTotale').value = JSON.stringify(VOCI, null, 2);
 }
 
-// ============== 3. Lettura/salvataggio ricette.json su GitHub ==============
+// ============== 3. Lettura/salvataggio db-ricette.json su GitHub ==============
 async function caricaRicetteDaGithub() {
   const stato = document.getElementById('statoRicetteGh');
   stato.textContent = 'Carico...'; stato.className = 'stato';
   try {
-    const { json, sha } = await ghLoad('nuovo-ricettario/db-ricette.json');
+    const { json, sha } = await ghLoad('db-ricette.json');
     RICETTE_DATA = json;
     RICETTE_SHA = sha;
     VOCI = json.ricette || [];
@@ -603,12 +621,12 @@ async function caricaRicetteDaGithub() {
 
 async function salvaRicetteSuGithub() {
   const stato = document.getElementById('statoRicetteGh');
-  if (!RICETTE_SHA) { stato.textContent = 'Carica prima ricette.json da GitHub (serve lo sha per aggiornare).'; stato.className = 'stato err'; return; }
+  if (!RICETTE_SHA) { stato.textContent = 'Carica prima db-ricette.json da GitHub (serve lo sha per aggiornare).'; stato.className = 'stato err'; return; }
   stato.textContent = 'Salvo...'; stato.className = 'stato';
   try {
     const nuovaVersione = (RICETTE_DATA.versione || 1) + 1;
     const output = Object.assign({}, RICETTE_DATA, { versione: nuovaVersione, ricette: VOCI });
-    const resJson = await ghSave('nuovo-ricettario/db-ricette.json', output, RICETTE_SHA, `Maschera: aggiorno ricette.json (${VOCI.length} voci, v${nuovaVersione})`);
+    const resJson = await ghSave('db-ricette.json', output, RICETTE_SHA, `Maschera: aggiorno db-ricette.json (${VOCI.length} voci, v${nuovaVersione})`);
     RICETTE_SHA = resJson.content.sha;
     RICETTE_DATA = output;
     stato.textContent = `Salvato — commit ${resJson.commit.sha.slice(0,7)}, versione ${nuovaVersione}.`;
@@ -619,7 +637,7 @@ async function salvaRicetteSuGithub() {
   }
 }
 
-// ============== 5. Gestione ingredienti.json: elimina, rinomina, aggiungi ==============
+// ============== 5. Gestione ingredienti-new.json: elimina, rinomina, aggiungi ==============
 let INGREDIENTI_ELIMINATI = new Set();
 function eliminaRigaIngrediente(btn) {
   const riga = btn.closest('.ingr-full-riga');
@@ -633,7 +651,7 @@ async function caricaIngredientiDaGithub() {
   const stato = document.getElementById('statoIngredientiGh');
   stato.textContent = 'Carico...'; stato.className = 'stato';
   try {
-    const { json, sha } = await ghLoad('nuovo-ricettario/ingredienti-new.json');
+    const { json, sha } = await ghLoad('ingredienti-new.json');
     INGREDIENTI_FULL = json;
     INGREDIENTI_SHA = sha;
     INGREDIENTI_ELIMINATI = new Set();
@@ -747,7 +765,7 @@ async function salvaIngredientiSuGithub() {
     }
     const nuovaVersione = (INGREDIENTI_FULL.versione || 1) + 1;
     const output = Object.assign({}, INGREDIENTI_FULL, { versione: nuovaVersione, ingredienti: nuovi });
-    const resJson = await ghSave('nuovo-ricettario/ingredienti-new.json', output, INGREDIENTI_SHA, `Maschera: aggiorno ingredienti-new.json (v${nuovaVersione})`);
+    const resJson = await ghSave('ingredienti-new.json', output, INGREDIENTI_SHA, `Maschera: aggiorno ingredienti-new.json (v${nuovaVersione})`);
     INGREDIENTI_SHA = resJson.content.sha;
     INGREDIENTI_FULL = output;
     INGREDIENTI_ELIMINATI = new Set();

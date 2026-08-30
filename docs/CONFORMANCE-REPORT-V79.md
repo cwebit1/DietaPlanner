@@ -1,4 +1,7 @@
-# DietaPlanner — Conformance report v79
+# DietaPlanner — Conformance report v79 [STORICO 1.0]
+
+> Documento non normativo, conservato soltanto come cronologia. Per lo stato
+> corrente usare `STATO_LOTTI_E_TEST.md`.
 
 ## Ambito
 

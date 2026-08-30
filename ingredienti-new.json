@@ -1,5 +1,5 @@
 {
-  "versione": 20,
+  "versione": 21,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -928,6 +928,7 @@
       "grassi": 0,
       "gruppo": "colazione",
       "deperibilita": "bassa",
+      "conservazione": "surgelato",
       "sottoCategoriaColazione": "spuntino",
       "gradimento": 1,
       "quantificabile": false,
@@ -2328,7 +2329,7 @@
       "grassi": 29,
       "gruppo": "proteine",
       "deperibilita": "alta",
-      "sottotipo": "carne_rossa",
+      "sottotipo": "affettati",
       "conservazione": "fresco",
       "porzione": 60,
       "gradimento": 1,
@@ -2348,7 +2349,7 @@
       "grassi": 10,
       "gruppo": "proteine",
       "deperibilita": "alta",
-      "sottotipo": "carne_bianca",
+      "sottotipo": "affettati",
       "conservazione": "fresco",
       "porzione": 60,
       "gradimento": 1,
@@ -2433,6 +2434,7 @@
       "grassi": 1.5,
       "gruppo": "speciale",
       "deperibilita": "bassa",
+      "conservazione": "lunga",
       "gradimento": 1,
       "quantificabile": false,
       "stock": 1,

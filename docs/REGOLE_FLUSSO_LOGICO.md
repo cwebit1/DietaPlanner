@@ -1,4 +1,8 @@
-# DIETAPLANNER — REGOLE DEL FLUSSO LOGICO (unificato)
+# DIETAPLANNER — REGOLE DEL FLUSSO LOGICO [STORICO CONSOLIDATO]
+
+> Le decisioni ancora valide sono state consolidate in
+> `SPECIFICA_FUNZIONALE_CORRENTE.md`. Questo documento conserva il dettaglio
+> cronologico della versione 1.0 e non è più una fonte normativa.
 
 ## REGOLA OPERATIVA VINCOLANTE PER OGNI INTERVENTO
 

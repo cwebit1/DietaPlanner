@@ -2,7 +2,7 @@
 
 **Data baseline:** 2026-08-29  
 **Fonte nutrizionale primaria:** `PERCORSO ALIMENTARE MIRIA SPILLER.pdf` (22 pagine, letto integralmente e verificato visivamente nelle tabelle principali).  
-**Scopo:** documento di riferimento anti-regressione per tutti gli interventi su Setting nutrizionista, Set utente, `motor.js`, `engine-core.js`, `ingredienti.json` e `ricette.json`.
+**Scopo:** documento di riferimento anti-regressione per tutti gli interventi su Setting nutrizionista, Set utente, `motor-v12.js`, `engine-core.js`, `ingredienti-new.json` e `db-ricette.json`.
 
 > Questo file NON applica ancora le correzioni al codice. Congela ciò che deve essere corretto, ciò che va preservato e l'ordine di intervento.
 
@@ -173,7 +173,7 @@ Questi possono restare se approvati, ma devono essere distinti:
 
 ## 4. Interventi numerati da eseguire
 
-1. **Creare una sorgente unica di configurazione risolta** usata da UI, Set, `motor.js` ed `engine-core.js`; niente più costanti concorrenti.
+1. **Creare una sorgente unica di configurazione risolta** usata da UI, Set, `motor-v12.js` ed `engine-core.js`; niente più costanti concorrenti.
 2. **Separare i metadati del PDF dai default applicativi**: `pdfMin/pdfMax` o equivalente non devono essere confusi con il valore iniziale configurato.
 3. **Eliminare la duplicazione delle frequenze proteiche** tra `CONFIG_AVANZATA_DEFAULT`, `FREQUENZE_CONSIGLIATE`, `CONFIG_PROTEINE_DEFAULT`, default engine e override motore.
 4. **Correggere legumi**: minimo 2, massimo clinico non definito; non imporre `max:3` come regola PDF.
@@ -248,7 +248,7 @@ Questi possono restare se approvati, ma devono essere distinti:
 - Nessuna UI nuova finché il resolver non è testato.
 
 ### Lotto C — Motore
-- Fare leggere `motor.js` ed `engine-core.js` dallo stesso resolver.
+- Fare leggere `motor-v12.js` ed `engine-core.js` dallo stesso resolver.
 - Eliminare duplicazioni/hardcode solo dopo test equivalenti.
 - Non toccare UI o cataloghi in questo lotto.
 
@@ -264,7 +264,7 @@ Questi possono restare se approvati, ma devono essere distinti:
 
 ### Lotto F — Catalogo dati
 - Solo dopo resolver e UI: correggere classificazioni/metadata verificati.
-- Ogni variazione di `ingredienti.json` o `ricette.json` deve essere separata e verificata.
+- Ogni variazione di `ingredienti-new.json` o `db-ricette.json` deve essere separata e verificata.
 - Nessuna quantità di ricetta viene cambiata automaticamente solo perché cambia il Setting.
 
 ### Lotto G — Generazione e manuale
@@ -298,11 +298,13 @@ Questi possono restare se approvati, ma devono essere distinti:
 
 Prima di ogni lotto:
 1. rileggere `AGENTS.md`;
-2. rileggere le sezioni pertinenti di `docs/REGOLE_FLUSSO_LOGICO.md`;
+2. rileggere le sezioni pertinenti di `docs/SPECIFICA_FUNZIONALE_CORRENTE.md`;
 3. rileggere **questo file**;
 4. indicare quali punti numerati del presente file si stanno implementando;
 5. modificare solo i file indispensabili a quei punti;
 6. eseguire test e diff;
 7. non correggere "già che ci siamo" altri punti senza autorizzazione.
 
-Se una regola del vecchio `REGOLE_FLUSSO_LOGICO.md` attribuisce al PDF un dato in contrasto con questa baseline verificata direttamente sul PDF, per la parte nutrizionale prevale questa baseline, salvo successiva istruzione esplicita di Cwe.
+Se una regola applicativa attribuisce al PDF un dato in contrasto con questa
+baseline verificata direttamente sul PDF, per la parte nutrizionale prevale
+questa baseline, salvo successiva istruzione esplicita di Cwe.

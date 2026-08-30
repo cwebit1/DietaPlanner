@@ -1,4 +1,7 @@
-# DietaPlanner — piano di ricostruzione integrale
+# DietaPlanner — piano di ricostruzione integrale [SUPERATO]
+
+> Piano storico sostituito da `PIANO_REVISIONE_ROOT_NUOVO_DB.md`. Non usarlo
+> per stabilire file, ordine dei lotti o stato corrente.
 
 ## 1. Fonti e precedenza
 

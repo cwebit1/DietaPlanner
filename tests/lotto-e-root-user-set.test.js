@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('assert');const fs=require('fs');const path=require('path');
+const root=path.join(__dirname,'..'),index=fs.readFileSync(path.join(root,'index.html'),'utf8'),motor=fs.readFileSync(path.join(root,'motor-v12.js'),'utf8'),N=require('../nutrition-config.js');
+for(const marker of ['async function risolviSetUtenteCorrente(userOverride)','configCarboidratiStati','configCarboidratiExplicitZeroKeys',"['auto','excluded','fixed'].includes(st.mode)","st.mode==='excluded'?'0 · ESCLUSO'",'renderSetLimitiPersonaliIngredienti','salvaLimitiPersonaliSet',"document.getElementById('btnSalvaSetCompleto')"])assert(index.includes(marker),marker);
+assert(index.includes('NUTRITION_CONFIG_SET.PDF_BASELINE.carbohydrateWeeklyCaps[t.chiave]'),'il Set deve classificare i carboidrati dalla baseline canonica');
+assert(index.indexOf('nutrition-config.js?v=2')<index.indexOf('const NUTRITION_CONFIG_SET='),'il resolver deve esistere prima dell’inizializzazione del Set');
+assert(motor.includes("'configCarboidratiStati'"));assert(motor.includes("'configCarboidratiExplicitZeroKeys'"));
+const defaults=N.resolveNutritionConfig({user:{carbohydrates:{states:{}}}});assert.equal(defaults.carbohydrates.remainingSlots,14);for(const k of Object.keys(N.PDF_BASELINE.carbohydrateWeeklyCaps))assert(!defaults.carbohydrates.autoEligibleKeys.includes(k));
+const custom=N.resolveNutritionConfig({user:{carbohydrates:{states:{friselle:{mode:'fixed',count:2},piadina:{mode:'excluded',count:0}}}}});assert.equal(custom.valid,true);assert.equal(custom.carbohydrates.fixedCounts.friselle,2);assert.equal(custom.carbohydrates.selection.piadina.mode,'excluded');
+console.log('lotto-e root user set: ok');

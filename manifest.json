@@ -1,6 +1,7 @@
 {
   "name": "Dieta Planner",
   "short_name": "DietaPlanner",
+  "version": "2",
   "start_url": ".",
   "display": "fullscreen",
   "background_color": "#181c14",
@@ -11,4 +12,3 @@
     {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"}
   ]
 }
-

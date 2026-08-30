@@ -1,0 +1,1644 @@
+{
+  "versione": 15,
+  "ricette": [
+    {
+      "nome": "Uova strapazzate con zucchine trifolate",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "uova",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Uova",
+          120
+        ],
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Parmigiano grattugiato",
+          10
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia le zucchine a rondelle sottili o grattugiale con una grattugia a fori larghi.",
+        "Scalda l'olio in una padella antiaderente a fuoco medio-alto e salta le zucchine 3-4 minuti, mescolando spesso, finché dorate e ancora leggermente croccanti.",
+        "Sbatti le uova in una ciotola con una presa di sale e il parmigiano grattugiato.",
+        "Abbassa il fuoco a medio-basso, versa le uova nella padella con le zucchine e mescola con una spatola per 2-3 minuti, staccando delicatamente dal fondo, finché rapprese ma ancora morbide.",
+        "Servi subito: la cottura delle uova prosegue anche fuori dal fuoco."
+      ],
+      "copertura": "PU+V",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte",
+        "uova"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "pane",
+        "gallette",
+        "crackers",
+        "taralli"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Insalata di tonno, pomodoro e mozzarella",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_conservato",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Tonno in scatola",
+          100
+        ],
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Mozzarella",
+          90
+        ],
+        [
+          "Insalata mista",
+          40
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Scola bene il tonno dal liquido di conservazione, sminuzzandolo leggermente con una forchetta.",
+        "Taglia i pomodori a spicchi e la mozzarella a cubetti di circa 1,5 cm.",
+        "Lava e asciuga bene l'insalata (l'acqua residua diluirebbe il condimento).",
+        "Componi il piatto disponendo insalata, pomodori, mozzarella e tonno.",
+        "Condisci con olio, un pizzico di sale e origano a piacere, mescolando solo al momento di servire per non scaldare la mozzarella."
+      ],
+      "copertura": "PF+V",
+      "richiedeCottura": false,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte",
+        "pesce"
+      ],
+      "piattoSpeciale": true,
+      "carboidratiCompatibili": [
+        "pane",
+        "gallette",
+        "crackers",
+        "taralli"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "con zucchine, pancetta e pomodorini",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "affettati",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Pasta corta",
+          75
+        ],
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Pancetta a cubetti",
+          60
+        ],
+        [
+          "Pomodoro fresco",
+          50
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Porta a bollore abbondante acqua salata (circa 10g di sale per litro) e cuoci la pasta secondo i tempi indicati sulla confezione.",
+        "Nel frattempo taglia le zucchine a rondelle sottili e i pomodorini a metà.",
+        "In una padella ampia rosola la pancetta a fuoco medio senza aggiungere olio (rilascia già il proprio grasso) per 4-5 minuti finché croccante.",
+        "Aggiungi le zucchine e cuoci altri 5 minuti a fuoco medio-alto, poi unisci i pomodorini negli ultimi 2 minuti.",
+        "Scola la pasta al dente conservando un mestolo di acqua di cottura, versala in padella e manteca a fuoco vivace per un minuto, allungando con acqua di cottura se risulta asciutta."
+      ],
+      "copertura": "C+V",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "pastaduro",
+        "farro",
+        "orzo",
+        "couscous"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Petto di pollo",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "carne_bianca",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Petto di pollo",
+          125
+        ],
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Insalata mista",
+          40
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia il petto di pollo a listarelle regolari di circa 1 cm, così cuoce in modo uniforme.",
+        "Scalda metà dell'olio in una padella antiaderente a fuoco alto e rosola il pollo 5-6 minuti, girandolo a metà cottura, finché dorato fuori e non più rosa dentro.",
+        "Sala solo a fine cottura (il sale in anticipo fa perdere liquidi alla carne) e tienilo da parte al caldo.",
+        "Nella stessa padella salta le zucchine a rondelle con l'olio rimasto per 4-5 minuti a fuoco medio-alto, finché dorate.",
+        "Componi il piatto con pollo, zucchine e insalata condita a crudo con olio."
+      ],
+      "copertura": "PC",
+      "richiedeCottura": false,
+      "soloManuale": false,
+      "allergeniPresenti": [],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": [
+        "alla_piastra",
+        "al_limone",
+        "alla_griglia",
+        "ai_ferri"
+      ]
+    },
+    {
+      "nome": "con ceci e pomodoro",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Pasta corta",
+          75
+        ],
+        [
+          "Ceci in barattolo",
+          135
+        ],
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Cipolla",
+          20
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Trita finemente la cipolla e soffriggila in una casseruola con metà dell'olio a fuoco basso per 4-5 minuti, finché appassita.",
+        "Aggiungi il pomodoro a pezzi e cuoci 8-10 minuti a fuoco medio, schiacciando leggermente per creare un sughetto.",
+        "Scola e sciacqua i ceci, uniscili al sugo e cuoci altri 5 minuti; se vuoi un sugo più cremoso, frullane un mestolo direttamente in pentola.",
+        "Cuoci la pasta in acqua bollente salata, scolandola un minuto prima del tempo indicato.",
+        "Termina la cottura della pasta nel sugo di ceci per 1-2 minuti, aggiungendo l'olio rimasto e un mestolo di acqua di cottura se serve."
+      ],
+      "copertura": "PL+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "pastaduro",
+        "pastainteg",
+        "farro",
+        "orzo",
+        "couscous"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Filetto di nasello con patate al forno",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_bianco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Filetto di nasello surgelato",
+          165
+        ],
+        [
+          "Patate",
+          325
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Preriscalda il forno a 200°C in modalità statica.",
+        "Sbuccia le patate e tagliale a spicchi regolari di circa 2 cm.",
+        "Disponile su una teglia foderata di carta forno, condisci con metà dell'olio e sale, e inforna 20 minuti.",
+        "Estrai la teglia, aggiungi il nasello scongelato tra le patate, condisci con l'olio rimasto.",
+        "Inforna altri 15-18 minuti, finché il pesce si sfalda facilmente con una forchetta e le patate sono dorate."
+      ],
+      "copertura": "PP+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "pesce"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "patate"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Frittata con zucchine e patate",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "uova",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Uova",
+          120
+        ],
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Patate",
+          325
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Sbuccia le patate e tagliale a dadini piccoli (circa 1 cm), così cuociono più in fretta.",
+        "Scalda l'olio in una padella antiaderente e cuoci le patate a fuoco medio per 8-10 minuti, mescolando spesso, finché tenere e dorate.",
+        "Aggiungi le zucchine a rondelle sottili e cuoci altri 4-5 minuti.",
+        "Sbatti le uova con un pizzico di sale, versale in padella distribuendole sulle verdure.",
+        "Cuoci a fuoco basso con coperchio 6-7 minuti finché la superficie è quasi rappresa, gira la frittata aiutandoti con un piatto e cuoci ancora 2-3 minuti."
+      ],
+      "copertura": "PU+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "uova"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "patate"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "e lenticchie con carote",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Riso Originario",
+          75
+        ],
+        [
+          "Lenticchie in barattolo",
+          135
+        ],
+        [
+          "Carote",
+          50
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia le carote a rondelle sottili o a dadini piccoli.",
+        "Cuoci il riso in abbondante acqua salata secondo i tempi indicati, scolandolo al dente.",
+        "Nel frattempo scalda le lenticchie scolate e sciacquate in un tegame con le carote e metà dell'olio, a fuoco medio per 8-10 minuti, aggiungendo un mestolo d'acqua se serve.",
+        "Unisci il riso scolato al tegame con lenticchie e carote, mescolando bene.",
+        "Completa con l'olio rimasto e, se gradito, una macinata di pepe."
+      ],
+      "copertura": "PL+C+V",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "riso",
+        "farro",
+        "orzo",
+        "couscous"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "piselli e pancetta",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "affettati",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Riso Originario",
+          75
+        ],
+        [
+          "Piselli surgelati",
+          90
+        ],
+        [
+          "Pancetta a cubetti",
+          60
+        ],
+        [
+          "Cipolla",
+          30
+        ],
+        [
+          "Parmigiano grattugiato",
+          15
+        ]
+      ],
+      "procedimento": [
+        "Trita finemente la cipolla. In una casseruola ampia rosola la pancetta a fuoco medio 3-4 minuti finché comincia a dorarsi, poi aggiungi la cipolla e fai appassire 3-4 minuti.",
+        "Versa il riso e tostalo 2 minuti mescolando continuamente, finché i chicchi sono traslucidi ai bordi.",
+        "Aggiungi i piselli e inizia a versare acqua calda (o brodo) un mestolo alla volta, mescolando spesso e aggiungendo altro liquido solo quando il precedente è assorbito.",
+        "Continua la cottura per 16-18 minuti totali, assaggiando per verificare che il riso resti al dente al cuore.",
+        "Spegni il fuoco, manteca energicamente con il parmigiano e lascia riposare 2 minuti con coperchio: il risotto deve risultare all'onda."
+      ],
+      "copertura": "PC+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "pastauovo",
+        "pastaduro",
+        "pastainteg",
+        "riso",
+        "farro",
+        "orzo",
+        "couscous"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "e fagioli",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Pasta corta",
+          75
+        ],
+        [
+          "Fagioli borlotti in barattolo",
+          135
+        ],
+        [
+          "Carote",
+          40
+        ],
+        [
+          "Cipolla",
+          30
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Trita cipolla e carote a dadini piccoli e soffriggile in una casseruola con metà dell'olio a fuoco basso 5-6 minuti, finché morbide.",
+        "Aggiungi i fagioli scolati e sciacquati, copri con circa 300ml di acqua calda e porta a bollore.",
+        "Cuoci a fuoco medio 12-15 minuti, poi frulla un terzo del composto direttamente in pentola con un frullatore a immersione, per addensare mantenendo pezzi interi.",
+        "Aggiungi la pasta direttamente nel tegame (con altra acqua calda se serve per coprirla) e cuoci mescolando spesso finché al dente, 8-10 minuti.",
+        "Lascia riposare 2 minuti fuori dal fuoco (si addensa raffreddandosi) e completa con l'olio rimasto a crudo."
+      ],
+      "copertura": "PL+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [
+        "pastaduro",
+        "pastainteg"
+      ],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Gamberetti saltati con peperoni e riso",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "crostacei",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Gamberetti surgelati",
+          175
+        ],
+        [
+          "Peperoni",
+          100
+        ],
+        [
+          "Riso Originario",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il riso in acqua salata secondo i tempi indicati, scolalo al dente e tienilo da parte.",
+        "Taglia i peperoni a listarelle sottili.",
+        "Scalda l'olio in una padella ampia a fuoco alto e salta i peperoni 5-6 minuti, finché ammorbiditi ma ancora croccanti.",
+        "Aggiungi i gamberetti scongelati e cuoci altri 3-4 minuti a fuoco vivace, finché opachi e rosati (non stracuocerli, diventano gommosi).",
+        "Servi i gamberetti e i peperoni sul letto di riso, con un filo d'olio a crudo."
+      ],
+      "copertura": "PP+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Melanzane alla parmigiana leggera",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Melanzane",
+          150
+        ],
+        [
+          "Mozzarella",
+          90
+        ],
+        [
+          "Parmigiano grattugiato",
+          15
+        ],
+        [
+          "Pomodoro fresco",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia le melanzane a fette di circa 1 cm e grigliale su una piastra o padella antiaderente ben calda, 3-4 minuti per lato, finché segnate e morbide.",
+        "Prepara un sugo veloce scaldando il pomodoro a pezzi in un tegame con un filo d'olio per 8-10 minuti.",
+        "Preriscalda il forno a 200°C.",
+        "In una teglia alterna strati di melanzane grigliate, sugo, mozzarella a cubetti e parmigiano, terminando con parmigiano in superficie.",
+        "Inforna 15-18 minuti finché dorata e filante; lascia riposare 5 minuti prima di servire."
+      ],
+      "copertura": "PF+V",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Lasagna di verdure con besciamella",
+      "fascia": "difficile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Zucchine",
+          100
+        ],
+        [
+          "Melanzane",
+          100
+        ],
+        [
+          "Mozzarella",
+          90
+        ],
+        [
+          "Latte intero",
+          200
+        ],
+        [
+          "Farina 00",
+          15
+        ],
+        [
+          "Burro",
+          15
+        ],
+        [
+          "Parmigiano grattugiato",
+          20
+        ],
+        [
+          "Sfoglie di lasagna",
+          75
+        ]
+      ],
+      "procedimento": [
+        "Prepara la besciamella: sciogli il burro in un pentolino a fuoco basso, aggiungi la farina tutta in una volta e mescola con una frusta 1-2 minuti per cuocere il roux senza farlo colorire.",
+        "Versa il latte caldo poco alla volta, continuando a mescolare con la frusta per evitare grumi; cuoci a fuoco basso 6-8 minuti finché la besciamella si addensa e vela il dorso di un cucchiaio.",
+        "Taglia zucchine e melanzane a fette sottili e grigliale su una piastra calda, 3-4 minuti per lato, finché morbide.",
+        "Preriscalda il forno a 200°C.",
+        "In una teglia componi gli strati alternando sfoglie di lasagna, besciamella, verdure grigliate e mozzarella a cubetti, ripetendo fino a esaurimento degli ingredienti e terminando con besciamella e parmigiano in superficie.",
+        "Inforna 30-35 minuti (le sfoglie devono cuocere assorbendo liquido) finché dorata in superficie; lascia riposare 10 minuti fuori dal forno prima di tagliare, per far assestare gli strati."
+      ],
+      "copertura": "PF+V",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Polenta con stracchino e radicchio",
+      "fascia": "difficile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Farina per polenta",
+          75
+        ],
+        [
+          "Stracchino",
+          90
+        ],
+        [
+          "Radicchio",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Porta a bollore circa 800ml di acqua salata in una pentola dai bordi alti.",
+        "Versa la farina per polenta a pioggia, mescolando continuamente con una frusta per evitare grumi.",
+        "Cuoci a fuoco basso mescolando spesso con un cucchiaio di legno per circa 40 minuti, finché la polenta si stacca dai bordi della pentola.",
+        "Nel frattempo taglia il radicchio a listarelle e saltalo in padella con l'olio a fuoco medio-alto 3-4 minuti, finché appassito e leggermente caramellato.",
+        "Versa la polenta nei piatti, distribuisci lo stracchino a pezzi sopra (fonderà a contatto col calore) e completa con il radicchio saltato."
+      ],
+      "copertura": "PF+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Cous cous con zucchine, ceci e menta",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Cous cous",
+          75
+        ],
+        [
+          "Zucchine",
+          100
+        ],
+        [
+          "Ceci in barattolo",
+          135
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Metti il cous cous in una ciotola, copri con pari volume di acqua bollente salata, copri con coperchio o pellicola e lascia riposare 5 minuti.",
+        "Sgrana il cous cous con una forchetta per separare i chicchi.",
+        "Nel frattempo taglia le zucchine a dadini piccoli e saltale in padella con l'olio a fuoco alto 5-6 minuti, finché dorate.",
+        "Scola e sciacqua i ceci, uniscili alle zucchine e scalda insieme 2 minuti.",
+        "Versa il condimento sul cous cous, mescola bene e profuma con foglie di menta fresca spezzettate a mano al momento di servire."
+      ],
+      "copertura": "PL+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pollo al limone e rosmarino con verdura e pane",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "carne_bianca",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Petto di pollo",
+          125
+        ],
+        [
+          "Limone",
+          25
+        ],
+        [
+          "Panino",
+          100
+        ],
+        [
+          "Insalata mista",
+          40
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia il pollo a fettine sottili o bocconcini regolari.",
+        "In una ciotola prepara la marinata con succo di mezzo limone, olio e aghi di rosmarino tritati; lascia marinare il pollo almeno 10 minuti.",
+        "Scalda una padella antiaderente a fuoco medio-alto e cuoci il pollo con tutta la marinata 6-7 minuti, girandolo a metà cottura, finché dorato e cotto.",
+        "Se il fondo si asciuga, sfuma con un goccio d'acqua per creare un fondo di cottura saporito.",
+        "Servi con verdura di contorno condita a crudo con olio, e pane a fette."
+      ],
+      "copertura": "PC+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Frittata con spinaci, verdura e pane",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "uova",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Uova",
+          120
+        ],
+        [
+          "Spinaci freschi",
+          100
+        ],
+        [
+          "Panino",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Se usi spinaci freschi, lavali; saltali in padella con un filo d'olio a fuoco medio 3-4 minuti finché appassiti, poi strizzali leggermente.",
+        "Sbatti le uova con un pizzico di sale.",
+        "Rimetti gli spinaci in padella, versa le uova sbattute e distribuiscile bene.",
+        "Cuoci a fuoco basso con coperchio 6-7 minuti finché la base è dorata e la superficie quasi rappresa, poi gira la frittata e cuoci altri 2-3 minuti.",
+        "Servi con verdura di contorno a piacere e pane."
+      ],
+      "copertura": "PU+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pasta con zucchine, pomodorini e brie a cubetti",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Pasta corta",
+          75
+        ],
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Pomodoro fresco",
+          50
+        ],
+        [
+          "Brie",
+          90
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Cuoci la pasta in acqua bollente salata secondo i tempi indicati.",
+        "Nel frattempo taglia le zucchine a rondelle sottili e saltale in padella con l'olio a fuoco medio-alto 5 minuti.",
+        "Aggiungi i pomodorini a metà e cuoci altri 2-3 minuti.",
+        "Scola la pasta al dente conservando un mestolo di acqua di cottura, versala in padella e spegni il fuoco.",
+        "Aggiungi subito il brie a cubetti e manteca velocemente: il calore residuo lo scioglierà parzialmente creando una crema; allunga con acqua di cottura se serve."
+      ],
+      "copertura": "PF+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Nodino di maiale con verdura e patate",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "carne_rossa",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Nodino di maiale",
+          125
+        ],
+        [
+          "Patate",
+          325
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Preriscalda il forno a 200°C. Sbuccia le patate e tagliale a spicchi regolari.",
+        "Disponi le patate su una teglia con metà dell'olio e sale, inforna 20 minuti.",
+        "Nel frattempo scalda una padella antiaderente a fuoco medio-alto con l'olio rimasto e rosola il nodino 4-5 minuti per lato, finché ben dorato.",
+        "Trasferisci il nodino sulla teglia con le patate (o continua in padella a fuoco medio-basso altri 8-10 minuti) finché non è più rosato al centro.",
+        "Lascia riposare la carne 3-4 minuti fuori dal calore prima di affettarla. Servi con verdura di contorno a scelta."
+      ],
+      "copertura": "PC+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Farro con zucchine e gamberetti",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "crostacei",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Farro perlato",
+          75
+        ],
+        [
+          "Zucchine",
+          75
+        ],
+        [
+          "Gamberetti surgelati",
+          175
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il farro in abbondante acqua salata per il tempo indicato sulla confezione (di solito 20-25 minuti), poi scolalo.",
+        "Taglia le zucchine a dadini e saltale in padella con metà dell'olio a fuoco alto 5 minuti, finché dorate.",
+        "Aggiungi i gamberetti scongelati e cuoci altri 3-4 minuti, finché rosati e opachi.",
+        "Unisci il farro scolato in padella e manteca a fuoco vivace 1-2 minuti.",
+        "Completa con l'olio rimasto a crudo prima di servire."
+      ],
+      "copertura": "PP+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "crostacei",
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Ramen con tofu e verdura",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Noodles per ramen",
+          75
+        ],
+        [
+          "Tofu",
+          190
+        ],
+        [
+          "Carote",
+          50
+        ],
+        [
+          "Broccoli",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          8
+        ]
+      ],
+      "procedimento": [
+        "Cuoci i noodles in acqua bollente per il tempo indicato sulla confezione (di solito 3-4 minuti), scolali e mettili da parte.",
+        "Taglia il tofu a cubetti e saltalo in padella con un filo d'olio a fuoco medio-alto 5-6 minuti, girandolo, finché dorato su più lati.",
+        "Nella stessa padella salta carote a listarelle e broccoli a cimette 5-6 minuti, aggiungendo un mestolo d'acqua e coprendo un paio di minuti per ammorbidirli.",
+        "Scalda un mestolo di acqua di cottura dei noodles (o acqua calda) come brodo leggero.",
+        "Componi la ciotola con i noodles, versa il brodo caldo e disponi sopra tofu e verdure saltate."
+      ],
+      "copertura": "PL+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "soia"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Insalata mista con uova sode e pane",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "uova",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Insalata mista",
+          40
+        ],
+        [
+          "Uova",
+          120
+        ],
+        [
+          "Panino",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Metti le uova in un pentolino, copri con acqua fredda e porta a bollore; da quando bolle, cuoci 9 minuti per un tuorlo sodo ma non gessoso.",
+        "Scola e raffredda subito le uova sotto acqua fredda per fermare la cottura, poi sgusciale e tagliale a spicchi.",
+        "Lava e asciuga bene l'insalata.",
+        "Componi il piatto con l'insalata e adagia sopra gli spicchi d'uovo.",
+        "Condisci con olio e un pizzico di sale, servendo con pane a parte."
+      ],
+      "copertura": "PU+C",
+      "richiedeCottura": false,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Farro con pomodorini, feta sbriciolata e basilico",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Farro perlato",
+          75
+        ],
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Feta",
+          90
+        ],
+        [
+          "Basilico fresco",
+          5
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Cuoci il farro in acqua salata per il tempo indicato, scolalo e lascialo intiepidire.",
+        "Taglia i pomodorini a metà.",
+        "In una ciotola capiente unisci il farro, i pomodorini e la feta sbriciolata a mano.",
+        "Condisci con l'olio e mescola delicatamente per non spappolare troppo la feta.",
+        "Completa con foglie di basilico fresco spezzettate a mano al momento di servire."
+      ],
+      "copertura": "PF+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Prosciutto crudo e melone con pane",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "affettati",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Prosciutto crudo",
+          60
+        ],
+        [
+          "Melone",
+          200
+        ],
+        [
+          "Panino",
+          100
+        ]
+      ],
+      "procedimento": [
+        "Taglia il melone a metà, elimina i semi con un cucchiaio e tagliane la polpa a fette sottili o a cubotti, eliminando la buccia.",
+        "Disponi le fette di melone su un piatto da portata.",
+        "Adagia sopra o accanto le fette di prosciutto crudo, senza sovrapporle troppo (si scaldano e perdono consistenza).",
+        "Servi subito, a temperatura ambiente, accompagnato da pane, grissini o friselle."
+      ],
+      "copertura": "PC+C",
+      "richiedeCottura": false,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Friselle con pomodori, cetrioli e fagioli cannellini",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "legumi",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Friselle",
+          40
+        ],
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Cetriolo",
+          50
+        ],
+        [
+          "Fagioli cannellini in barattolo",
+          135
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Passa velocemente le friselle sotto un filo d'acqua fredda (o bagnale con le mani), solo per ammorbidirle in superficie senza inzupparle.",
+        "Taglia pomodoro e cetriolo a dadini piccoli.",
+        "Scola e sciacqua i fagioli sotto acqua corrente.",
+        "In una ciotola unisci pomodoro, cetriolo e fagioli, condisci con olio, sale e origano.",
+        "Distribuisci il composto sulle friselle appena prima di servire, così restano leggermente croccanti al centro."
+      ],
+      "copertura": "PL",
+      "richiedeCottura": false,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Sogliola con verdura e pane",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "pesce_bianco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Sogliola surgelata",
+          165
+        ],
+        [
+          "Panino",
+          100
+        ],
+        [
+          "Insalata mista",
+          40
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Scongela la sogliola se surgelata, idealmente in frigorifero con qualche ora di anticipo.",
+        "Scalda una padella antiaderente con l'olio a fuoco medio.",
+        "Cuoci la sogliola 3-4 minuti per lato (i filetti sono sottili, cuociono in fretta): è pronta quando la carne si sfalda facilmente e non è più traslucida.",
+        "Sala solo a fine cottura per non far rilasciare troppa acqua al pesce.",
+        "Servi con verdura di contorno condita a crudo con un filo d'olio, e pane a parte."
+      ],
+      "copertura": "PP+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "pesce"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pasta con melanzane, pomodorini e mozzarella a cubetti",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_fresco",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Pasta corta",
+          75
+        ],
+        [
+          "Melanzane",
+          100
+        ],
+        [
+          "Pomodoro fresco",
+          75
+        ],
+        [
+          "Mozzarella",
+          90
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia le melanzane a dadini piccoli (circa 1,5 cm) e saltale in padella con metà dell'olio a fuoco medio-alto 8-10 minuti, mescolando spesso, finché morbide e dorate.",
+        "Aggiungi i pomodorini a metà e cuoci altri 3-4 minuti.",
+        "Nel frattempo cuoci la pasta in acqua bollente salata.",
+        "Scola la pasta al dente, versala in padella con le verdure e manteca a fuoco vivace un minuto con l'olio rimasto.",
+        "Spegni il fuoco, aggiungi subito la mozzarella a cubetti e mescola velocemente: il calore la ammorbidirà senza scioglierla del tutto."
+      ],
+      "copertura": "PF+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Ramen con pollo e verdura",
+      "fascia": "medio",
+      "porzioni": 1,
+      "gruppoProteico": "carne_bianca",
+      "tipoPortata": "unico",
+      "ingredienti": [
+        [
+          "Noodles per ramen",
+          75
+        ],
+        [
+          "Petto di pollo",
+          125
+        ],
+        [
+          "Carote",
+          50
+        ],
+        [
+          "Broccoli",
+          75
+        ],
+        [
+          "Olio extravergine oliva",
+          8
+        ]
+      ],
+      "procedimento": [
+        "Taglia il pollo a listarelle sottili.",
+        "Cuoci i noodles in acqua bollente per il tempo indicato, scolali e tienili da parte.",
+        "Scalda l'olio in una padella a fuoco alto e cuoci il pollo 5-6 minuti, finché dorato e cotto internamente.",
+        "Nella stessa padella salta carote a listarelle e broccoli a cimette 5-6 minuti, aggiungendo un goccio d'acqua e coprendo brevemente.",
+        "Componi la ciotola con i noodles, un mestolo di brodo caldo, il pollo e le verdure saltate sopra."
+      ],
+      "copertura": "PC+C",
+      "richiedeCottura": true,
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Latte con cereali e frutta",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "ingredienti": [
+        [
+          "Latte parzialmente scremato",
+          200
+        ],
+        [
+          "Cereali da colazione",
+          30
+        ],
+        [
+          "Mela",
+          150
+        ]
+      ],
+      "procedimento": [
+        "Versa il latte in una ciotola.",
+        "Aggiungi i cereali.",
+        "Lava e taglia la mela a pezzi, servendola a parte o unita ai cereali."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Latte con biscotti e frutta",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "ingredienti": [
+        [
+          "Latte parzialmente scremato",
+          200
+        ],
+        [
+          "Biscotti secchi",
+          30
+        ],
+        [
+          "Banana",
+          120
+        ]
+      ],
+      "procedimento": [
+        "Versa il latte in una tazza o ciotola.",
+        "Accompagna con i biscotti, da inzuppare o mangiare a parte.",
+        "Sbuccia la banana e tagliala a rondelle."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pane con marmellata e latte",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "ingredienti": [
+        [
+          "Latte parzialmente scremato",
+          200
+        ],
+        [
+          "Panino",
+          50
+        ],
+        [
+          "Marmellata",
+          15
+        ]
+      ],
+      "procedimento": [
+        "Scalda il latte se lo preferisci caldo, oppure servilo freddo.",
+        "Taglia il pane a fette, se preferisci tostalo leggermente.",
+        "Spalma la marmellata in uno strato uniforme."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pane con ricotta e miele",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "ingredienti": [
+        [
+          "Panino",
+          50
+        ],
+        [
+          "Miele",
+          10
+        ],
+        [
+          "Ricotta",
+          55
+        ]
+      ],
+      "procedimento": [
+        "Taglia il pane a fette.",
+        "Spalma la ricotta con un cucchiaio, lavorandola brevemente per renderla più cremosa.",
+        "Completa con un filo di miele."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Yogurt con fette biscottate e frutta",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "ingredienti": [
+        [
+          "Yogurt bianco",
+          125
+        ],
+        [
+          "Fette biscottate",
+          20
+        ],
+        [
+          "Pera",
+          150
+        ]
+      ],
+      "procedimento": [
+        "Versa lo yogurt in una ciotola.",
+        "Sbuccia e taglia la pera a cubetti, unendola allo yogurt.",
+        "Accompagna con le fette biscottate."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Colazione salata con uova e pane",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "colazione",
+      "ingredienti": [
+        [
+          "Uova",
+          60
+        ],
+        [
+          "Panino",
+          50
+        ],
+        [
+          "Olio extravergine oliva",
+          5
+        ]
+      ],
+      "procedimento": [
+        "Sbatti le uova con un pizzico di sale.",
+        "Scalda l'olio in una padella antiaderente a fuoco medio-basso.",
+        "Strapazza le uova mescolando con una spatola 2-3 minuti, finché morbide e appena rapprese.",
+        "Servi con il pane, tostato se preferisci."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine",
+        "uova"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Frutta fresca",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "spuntino",
+      "ingredienti": [
+        [
+          "Mela",
+          150
+        ]
+      ],
+      "procedimento": [
+        "Lava bene la mela sotto acqua corrente.",
+        "Asciugala e mangiala con la buccia, dove si concentra buona parte delle fibre."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Yogurt bianco",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "spuntino",
+      "ingredienti": [
+        [
+          "Yogurt bianco",
+          125
+        ]
+      ],
+      "procedimento": [
+        "Versa lo yogurt in una ciotolina.",
+        "Mescolalo brevemente con un cucchiaio se si è separato in superficie, poi servi."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Grana o parmigiano a cubetti",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "formaggio_stagionato",
+      "tipoPortata": "spuntino",
+      "sottotipoSpuntino": "grana_spuntino",
+      "ingredienti": [
+        [
+          "Parmigiano grattugiato",
+          20
+        ]
+      ],
+      "procedimento": [
+        "Taglia il parmigiano a cubetti regolari con un coltello robusto.",
+        "Disponili in una ciotolina e servi a temperatura ambiente."
+      ],
+      "copertura": "PF",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "latte"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pane con marmellata (spuntino)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "spuntino",
+      "sottotipoSpuntino": "pane_marmellata_spuntino",
+      "ingredienti": [
+        [
+          "Panino",
+          25
+        ],
+        [
+          "Marmellata",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Taglia il pane a fette, se preferisci tostalo leggermente.",
+        "Spalma la marmellata in uno strato uniforme."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "glutine"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Frutta secca mista",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "spuntino",
+      "sottotipoSpuntino": "frutta_secca_giornaliero",
+      "ingredienti": [
+        [
+          "Noci e mandorle",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Porziona la frutta secca in una ciotolina, senza eccedere nella quantità: è calorica anche in piccole dosi."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [
+        "frutta_guscio"
+      ],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Cioccolato fondente (spuntino)",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "spuntino",
+      "ingredienti": [
+        [
+          "Cioccolato fondente",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Spezza il cioccolato in quadratini regolari.",
+        "Servilo a temperatura ambiente: il sapore risulta più pieno che freddo di frigo."
+      ],
+      "copertura": "",
+      "soloManuale": false,
+      "allergeniPresenti": [],
+      "piattoSpeciale": false,
+      "carboidratiCompatibili": [],
+      "tipiCotturaCompatibili": []
+    },
+    {
+      "nome": "Pasta al pomodoro",
+      "fascia": "facile",
+      "porzioni": 1,
+      "gruppoProteico": "",
+      "tipoPortata": "primo",
+      "ingredienti": [
+        [
+          "Pasta corta",
+          75
+        ],
+        [
+          "Pomodoro fresco",
+          100
+        ],
+        [
+          "Olio extravergine oliva",
+          10
+        ]
+      ],
+      "procedimento": [
+        "Porta a bollore abbondante acqua salata e cuoci la pasta secondo i tempi indicati.",

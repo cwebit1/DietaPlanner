@@ -1,0 +1,47 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.join(__dirname,'..');
+const stores={};
+for(const name of ['ingredienti','varianti','ricette','impostazioni','piano','consumoGiorno','inventario'])stores[name]=new Map();
+global.getAll=async name=>[...(stores[name]||new Map()).values()].map(value=>structuredClone(value));
+global.getOne=async(name,key)=>{const value=(stores[name]||new Map()).get(key);return value?structuredClone(value):null;};
+global.put=async(name,value)=>{(stores[name]||new Map()).set(value.id??value.chiave,structuredClone(value));return value;};
+global.delKey=async(name,key)=>(stores[name]||new Map()).delete(key);
+global.fetch=async url=>({ok:true,json:async()=>JSON.parse(fs.readFileSync(path.join(root,String(url).split('?')[0]),'utf8'))});
+global.todayISO=()=> '2026-08-30';
+global.giorniSettimana=()=>['2026-08-31','2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06'];
+require('../motor-v12.js');
+const M=global.DietaPlannerMotorV12;
+
+(async()=>{
+  const init=await M.inizializza({basePath:''});
+  assert.equal(init.template,39);
+  assert(init.concrete>39);
+
+  for(let iteration=0;iteration<20;iteration++){
+    const result=await M.generaPianoSettimana(0,{forza:true});
+    assert.deepEqual(result.errori,[],`generazione ${iteration+1}`);
+    assert.equal(result.generati.length,14);
+    const records=await global.getAll('piano');
+    assert.equal(records.length,14);
+    for(const record of records){
+      assert(record.realizzazioni.length);
+      assert(record.realizzazioni.every(r=>r.schemaQuantita===1));
+      const recipes=[];
+      for(const real of record.realizzazioni){
+        const recipe=await M.materializzaRealizzazione(real);
+        assert(recipe);
+        recipes.push(recipe);
+        assert.deepEqual(recipe.ingredienti,real.ingredientiEffettivi);
+        assert.deepEqual(recipe.nutrienti,real.nutrientiEffettivi);
+      }
+      const coverage=M.coperturaVerduraRicette(recipes,{vegetablePortionGrams:200,saladPortionGrams:70});
+      assert(coverage.remainingFraction<0.000001,record.id+' residuo verdura non completato');
+    }
+  }
+
+  assert.equal((await global.getAll('inventario')).length,0,'inventario vuoto non blocca la programmazione');
+  console.log('lotto G generazione settimanale nuovo DB: ok');
+})().catch(error=>{console.error(error);process.exit(1);});

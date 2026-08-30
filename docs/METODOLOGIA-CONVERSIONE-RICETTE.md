@@ -3,8 +3,8 @@
 > Regola data da Cwe il 2026-08-25/26, dopo errori ripetuti di Claude nella
 > conversione manuale (parole di collegamento dimenticate, gruppi separati
 > confusi tra loro). Leggere **sempre** prima di convertire qualunque
-> ricetta dal vecchio `ricette.json` / `nuovo-ricettario/ricette.json` al
-> nuovo `nuovo-ricettario/db-ricette.json` (formato a gruppi, gestito dalla
+> ricetta dal vecchio `ricette.json` / `Vecchia versione 1.0/ricette-nuovo-formato-precedente.json` al
+> nuovo `db-ricette.json` (formato a gruppi, gestito dalla
 > maschera).
 
 ## Principio assoluto
@@ -107,12 +107,15 @@ collegamento tipo "con"/"e") — sono stati proprio quelli a causare errori.
    conversione proposta per intero, con ogni punto ambiguo elencato a
    parte e ben visibile, e aspetto conferma esplicita.
 
-6. **Solo dopo conferma**, compongo la voce usando la maschera vera
-   (clic reali dentro il tool, mai uno script che scrive JSON a mano) e
-   salvo. **Verifico ogni nome ingrediente contro `ingredienti-new.json`
-   reale prima di proporlo** — se manca, lo segnalo (o lo cerco e lo
-   aggiungo con dati nutrizionali reali, se esplicitamente richiesto),
-   mai un nome a caso o un sostituto plausibile non verificato.
+6. **Solo dopo conferma**, applico la voce al catalogo nuovo. La
+   `maschera-ricette.html` è lo strumento interattivo creato per comporre e
+   mantenere il database, non una dipendenza runtime né un vincolo sul metodo
+   tecnico di aggiornamento. Un aggiornamento diretto controllato è ammesso se
+   preserva lo stesso schema, incrementa la versione ed è validato dai test.
+   **Verifico ogni nome ingrediente contro `ingredienti-new.json` reale prima
+   di proporlo** — se manca, lo segnalo (o lo cerco e lo aggiungo con dati
+   nutrizionali reali, se esplicitamente richiesto), mai un nome a caso o un
+   sostituto plausibile non verificato.
 
 ## Cosa NON faccio mai, senza eccezioni
 

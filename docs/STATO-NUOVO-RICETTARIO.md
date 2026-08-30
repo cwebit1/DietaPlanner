@@ -1,25 +1,22 @@
 # STATO NUOVO RICETTARIO — quadro generale
 
 > **Leggere questo file per primo** se si riprende il lavoro sul nuovo
-> ricettario, anche da un altro account. Aggiornato ad ogni chiusura di
-> processo (regola 8 in `METODOLOGIA-LAVORO.md`). Non sostituisce i
-> documenti di dettaglio (`NUOVA-ARCHITETTURA-MOTORE.md`,
-> `METODOLOGIA-CONVERSIONE-RICETTE.md`) — li riassume per orientarsi
-> velocemente.
+> ricettario, anche da un altro account. Va aggiornato a ogni chiusura di
+> processo. Non sostituisce `ARCHITETTURA_MOTOR_V12.md` o
+> `METODOLOGIA-CONVERSIONE-RICETTE.md`: li riassume per orientarsi.
 
-Ultimo aggiornamento: 2026-08-26.
+Ultimo aggiornamento: 2026-08-30.
 
-## File del sistema (tutti separati dal vecchio, mai mescolati)
+## File del sistema nella root attiva
 
-- `nuovo-ricettario/maschera-ricette.html` — lo strumento di
+- `maschera-ricette.html` — lo strumento di
   composizione, unico modo per creare/modificare voci (mai scrivere
   JSON a mano).
-- `nuovo-ricettario/db-ricette.json` — le ricette nel nuovo formato a
-  gruppi. **26 voci** ad oggi (id1-id26).
-- `nuovo-ricettario/ingredienti-new.json` — ingredienti per il nuovo
-  sistema, copia separata del vecchio `ingredienti.json` (quello resta
-  intatto per l'app in uso). Rinomine fatte qui (nessun rischio,
-  file separato): Sogliola/Nasello/Orata/Branzino (tolto
+- `db-ricette.json` v68 — ricette nel nuovo formato a gruppi: **39
+  template**.
+- `ingredienti-new.json` v21 — **157 ingredienti** per il nuovo
+  sistema. La root è ora l'unica applicazione corrente; il catalogo 1.0 è
+  archiviato. Rinomine consolidate: Sogliola/Nasello/Orata/Branzino (tolto
   surgelato/a), Fagioli borlotti/cannellini e Lenticchie (tolto "in
   barattolo", info conservata in campo `formato`), Tonno (da "in
   scatola"), Riso (da "Originario", voluto da Cwe). Nuovi ingredienti
@@ -28,7 +25,7 @@ Ultimo aggiornamento: 2026-08-26.
   Cipolla rossa, e i condimenti Semi di sesamo/Aceto balsamico/Aceto
   di mele/Arancia (questi ultimi senza dati nutrizionali — non
   servono per i condimenti).
-- Il vecchio `nuovo-ricettario/ricette.json` (20 voci, formato
+- Il vecchio `Vecchia versione 1.0/ricette-nuovo-formato-precedente.json` (20 voci, formato
   precedente) resta **sospeso, non convertito**, solo riferimento
   storico — **non riferirsi mai alle sue voci con "id"+numero**, solo
   per nome/testo originale (regola data da Cwe dopo confusione ripetuta
@@ -100,33 +97,24 @@ Vedi `METODOLOGIA-CONVERSIONE-RICETTE.md` per il dettaglio (punti
   (es. due categorie uguali), è il motore a saperlo da solo, non la
   ricetta a doverlo dire.
 
-## Report di copertura (agosto 2026, su 19 voci — da riverificare con le 26 attuali)
+## Report di copertura
 
-- Combinazioni totali reali (prodotto ingredienti×cotture per gruppo,
-  condimenti NON moltiplicano; il gruppo è un catalogo e la variante effettiva è scelta tramite `condimentiCompatibili`): 194
-  su 19 voci.
-- Solo 2 ricette avevano C+P+V completo nella stessa ricetta (8
-  combinazioni "giorno completo" in totale da quelle due).
-- Carenza più diffusa: V assente in 9 ricette su 17 incomplete.
+Il vecchio conteggio di 194 combinazioni su 19 voci è soltanto storico e non
+descrive i 39 template correnti. I test verificano 218 referenze ingrediente,
+comprese 17 composizioni fisse, senza errori. Il test settimanale rigenera 20
+settimane complete sul catalogo v68.
 
 ## Prossimi passi possibili
 
-- Continuare la conversione delle voci rimaste nel vecchio elenco:
-  "in bianco con parmigiano", "con verdure" (8 coppie fisse), "con
-  piselli" (fatto), "zuppa di cereali e legumi" (fatto).
 - Implementare il selettore Off/V/V- nella maschera (deciso, mai
   scritto nel codice).
-- Rifare il report di copertura/carenze con le voci attuali (33+).
+- Eseguire il gate browser reale del Lotto H.
 
-## Algoritmo di generazione settimanale — vedi NUOVA-ARCHITETTURA-MOTORE.md
+## Algoritmo di generazione settimanale
 
-Sezione dedicata scritta il 2026-08-26 dopo che l'intera logica (griglia
-P fissa 14 caselle, griglia C fissa casuale, query progressiva con
-completamento multi-buco, esclusione solo pasto successivo) era rimasta
-per un'ora solo in script Python temporanei, mai salvata — causa diretta
-di correzioni ripetute sullo stesso errore da parte di Cwe. **Leggere
-quella sezione per intero prima di toccare di nuovo la generazione
-settimanale.**
+Il contratto corrente è consolidato in `ARCHITETTURA_MOTOR_V12.md` e nella
+matrice requisiti. La v12 usa due sequenze settimanali, query di combinazioni
+strutturate e salvataggio atomico dell'intera generazione.
 
 ## Ingredienti PL nel database (per riferimento rapido)
 
