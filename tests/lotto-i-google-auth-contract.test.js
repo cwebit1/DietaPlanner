@@ -19,6 +19,7 @@ test('lotto I: login Google visibile e configurazione Firebase separata',()=>{
   assert.match(html,/class="header-user"/);
   assert.match(html,/id="headerGreeting"/);
   assert.match(html,/Ciao \$\{nome\}, Buon appetito 🥂/);
+  assert.match(html,/backdrop-filter:blur\(5px\) saturate\(\.72\)/);
   assert.match(html,/let modalitaLocaleSessione=false/);
   assert.doesNotMatch(html,/localStorage\.setItem\('dietaplannerModalitaLocale'/);
   assert.match(auth,/GoogleAuthProvider/);

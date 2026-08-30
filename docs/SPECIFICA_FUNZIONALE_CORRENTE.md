@@ -217,6 +217,9 @@ flusso testuale continuo.
   viene nuovamente richiesto l'accesso.
 - La futura whitelist delle email autorizzate e le funzioni ridotte per utenti
   non autenticati o locali restano da definire con Cwe prima di implementarle.
+- Ogni finestra sovrapposta che attende una risposta attenua e sfoca il
+  contenuto sottostante, mantenendo nitido il pannello attivo. Lo stesso
+  linguaggio visivo verrà riutilizzato nella futura guida di benvenuto.
 - Il profilo cloud usa l'UID Firebase come confine di sicurezza; un utente può
   leggere e scrivere soltanto i documenti sotto `users/{uid}`.
 - Il primo collegamento non sovrascrive né importa automaticamente IndexedDB.
