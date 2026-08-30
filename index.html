@@ -55,6 +55,13 @@ header{
 header .title{font-size:1.15rem;font-weight:800;letter-spacing:-0.01em;}
 header .title span{color:var(--accent);}
 header .sub{font-size:0.75rem;color:var(--text-dim);margin-top:2px;}
+.header-copy{min-width:0;flex:1;}
+.account-button{width:38px;height:38px;border-radius:50%;padding:0;display:grid;place-items:center;overflow:hidden;flex:0 0 auto;font-size:1rem;}
+.account-button img{width:100%;height:100%;object-fit:cover;}
+.account-status{display:flex;align-items:center;gap:10px;min-width:0;}
+.account-status img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 auto;}
+.account-identity{min-width:0;flex:1;}
+.account-identity strong,.account-identity span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 /* Tabs bottom nav */
 nav.tabbar{
@@ -603,8 +610,11 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 </div>
 
 <header>
-  <div class="title">Dieta<span>·</span>Planner <span id="headerVersione" style="font-size:0.58rem;font-weight:400;color:var(--text-dim);vertical-align:super;margin-left:4px;"></span></div>
-  <div class="sub">Pranzo e cena, senza sprechi</div>
+  <div class="header-copy">
+    <div class="title">Dieta<span>·</span>Planner <span id="headerVersione" style="font-size:0.58rem;font-weight:400;color:var(--text-dim);vertical-align:super;margin-left:4px;"></span></div>
+    <div class="sub">Pranzo e cena, senza sprechi</div>
+  </div>
+  <button class="account-button" id="btnAccountHeader" aria-label="Account Google" title="Account Google">👤</button>
 </header>
 
 <main>
@@ -737,6 +747,10 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 
 <!-- ============ VIEW: IMPOSTAZIONI ============ -->
 <section class="view" id="view-impostazioni">
+  <div class="card" id="accountCard">
+    <h3 style="margin-bottom:10px;">Account</h3>
+    <div id="accountContent"><div class="meta">Caricamento account…</div></div>
+  </div>
   <div class="card">
     <h3 style="margin-bottom:10px;">Configurazione avanzata nutrizionista</h3>
     <div class="meta" style="margin-bottom:12px;">Area separata dal Set utente, predisposta per una futura protezione.</div>
@@ -997,6 +1011,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 </div>
 
+<script type="module" src="firebase-auth.js?v=2"></script>
 <script src="nutrition-config.js?v=2"></script>
 <script src="engine-core.js?v=2"></script>
 <script src="motor-v12.js?v=2"></script>
@@ -1008,6 +1023,41 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 const DB_NAME = 'dieta-app-nuovo-ricettario';
 const DB_VERSION = 3;
 let db;
+
+function escAuth(value){
+  return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+function renderAccount(user){
+  const content=document.getElementById('accountContent');
+  const headerButton=document.getElementById('btnAccountHeader');
+  if(!content||!headerButton)return;
+  if(user){
+    const avatar=user.photoURL?`<img src="${escAuth(user.photoURL)}" alt="">`:'👤';
+    headerButton.innerHTML=avatar;
+    content.innerHTML=`<div class="account-status">${avatar}<div class="account-identity"><strong>${escAuth(user.displayName||'Utente')}</strong><span class="meta">${escAuth(user.email)}</span></div></div><button class="secondary" id="btnLogoutGoogle" style="margin-top:12px;">Esci dall’account</button><div class="meta" style="margin-top:8px;">Account collegato. La sincronizzazione completa verrà attivata dopo la verifica dello schema storico.</div>`;
+    document.getElementById('btnLogoutGoogle')?.addEventListener('click',async()=>{
+      try{await window.DietaPlannerCloud.logout();}catch(err){await avviso('Uscita non riuscita: '+err.message);}
+    });
+  }else{
+    headerButton.textContent='👤';
+    content.innerHTML='<div class="meta">Accedi con Google per associare nome e storico al tuo profilo.</div><button class="primary" id="btnLoginGoogle" style="margin-top:12px;">Accedi con Google</button>';
+    document.getElementById('btnLoginGoogle')?.addEventListener('click',loginGoogle);
+  }
+}
+async function loginGoogle(){
+  try{
+    if(!window.DietaPlannerCloud)throw new Error('Servizio account non ancora caricato');
+    await window.DietaPlannerCloud.login();
+  }catch(err){
+    console.error('[login Google]',err);
+    await avviso('Accesso Google non riuscito: '+(err.message||err));
+  }
+}
+window.addEventListener('dietaplanner-auth-changed',e=>renderAccount(e.detail.user));
+document.getElementById('btnAccountHeader')?.addEventListener('click',()=>{
+  document.querySelector('[data-view="impostazioni"]')?.click();
+  document.getElementById('accountCard')?.scrollIntoView({behavior:'smooth',block:'start'});
+});
 
 function openDB(){
   return new Promise((resolve, reject)=>{

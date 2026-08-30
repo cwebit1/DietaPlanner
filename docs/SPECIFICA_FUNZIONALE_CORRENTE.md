@@ -206,7 +206,17 @@ flusso testuale continuo.
 - La configurazione nutrizionista deve restare utilizzabile entro la larghezza
   del display mobile e non produrre tabelle fuori schermo.
 
-## 14. Criteri di chiusura
+## 14. Account e dati personali
+
+- L'accesso Google è facoltativo: l'app locale continua a funzionare senza
+  account.
+- Il profilo cloud usa l'UID Firebase come confine di sicurezza; un utente può
+  leggere e scrivere soltanto i documenti sotto `users/{uid}`.
+- Il primo collegamento non sovrascrive né importa automaticamente IndexedDB.
+- La sincronizzazione completa e lo storico relazionale vengono attivati solo
+  dopo avere definito migrazione, conflitti e tracciamento degli eventi.
+
+## 15. Criteri di chiusura
 
 - Ogni vincolo funzionale deve avere un test automatico.
 - DOM e IndexedDB richiedono anche prova browser reale.
