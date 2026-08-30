@@ -213,8 +213,9 @@ flusso testuale continuo.
 - La scelta locale vale soltanto per l'apertura corrente e non viene
   memorizzata: a ogni nuovo avvio senza sessione Google l'app ripropone
   l'accesso.
-- Anche la sessione Google vale soltanto per l'esecuzione corrente: al riavvio
-  viene nuovamente richiesto l'accesso.
+- La sessione Google è persistente e resta valida ai riavvii finché l'utente
+  non preme esplicitamente `Esci dall'account`; soltanto la modalità locale
+  termina alla chiusura o al riavvio dell'app.
 - La futura whitelist delle email autorizzate e le funzioni ridotte per utenti
   non autenticati o locali restano da definire con Cwe prima di implementarle.
 - Ogni finestra sovrapposta che attende una risposta attenua e sfoca il

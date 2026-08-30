@@ -1,8 +1,8 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
 import {
   GoogleAuthProvider,
+  browserLocalPersistence,
   getAuth,
-  inMemoryPersistence,
   onAuthStateChanged,
   setPersistence,
   signInWithPopup,
@@ -61,7 +61,7 @@ function emitAuth(){
 }
 
 async function login(){
-  await setPersistence(auth,inMemoryPersistence);
+  await setPersistence(auth,browserLocalPersistence);
   const result=await signInWithPopup(auth,provider);
   return publicUser(result.user);
 }
@@ -78,7 +78,7 @@ window.DietaPlannerCloud = {
   getFirestore:()=>firestore
 };
 
-setPersistence(auth,inMemoryPersistence)
+setPersistence(auth,browserLocalPersistence)
   .catch(err=>console.warn('[auth persistence]',err));
 
 onAuthStateChanged(auth,async user=>{

@@ -26,8 +26,8 @@ test('lotto I: login Google visibile e configurazione Firebase separata',()=>{
   assert.doesNotMatch(html,/localStorage\.setItem\('dietaplannerModalitaLocale'/);
   assert.match(auth,/GoogleAuthProvider/);
   assert.match(auth,/signInWithPopup/);
-  assert.match(auth,/inMemoryPersistence/);
-  assert.doesNotMatch(auth,/browserLocalPersistence/);
+  assert.match(auth,/browserLocalPersistence/);
+  assert.doesNotMatch(auth,/inMemoryPersistence/);
   assert.doesNotMatch(auth,/serviceAccount|private_key/);
 });
 
