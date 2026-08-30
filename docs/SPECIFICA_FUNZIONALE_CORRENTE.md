@@ -210,8 +210,13 @@ flusso testuale continuo.
 
 - All'avvio senza una scelta precedente, l'app chiede prima l'accesso Google;
   si entra senza account soltanto scegliendo esplicitamente la modalità locale.
-- La scelta locale resta memorizzata sul dispositivo e può essere sostituita
-  in seguito accedendo dalla sezione Account.
+- La scelta locale vale soltanto per l'apertura corrente e non viene
+  memorizzata: a ogni nuovo avvio senza sessione Google l'app ripropone
+  l'accesso.
+- Anche la sessione Google vale soltanto per l'esecuzione corrente: al riavvio
+  viene nuovamente richiesto l'accesso.
+- La futura whitelist delle email autorizzate e le funzioni ridotte per utenti
+  non autenticati o locali restano da definire con Cwe prima di implementarle.
 - Il profilo cloud usa l'UID Firebase come confine di sicurezza; un utente può
   leggere e scrivere soltanto i documenti sotto `users/{uid}`.
 - Il primo collegamento non sovrascrive né importa automaticamente IndexedDB.

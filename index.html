@@ -1033,6 +1033,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 const DB_NAME = 'dieta-app-nuovo-ricettario';
 const DB_VERSION = 3;
 let db;
+let modalitaLocaleSessione=false;
 
 function escAuth(value){
   return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
@@ -1042,7 +1043,7 @@ function renderAccount(user){
   const headerButton=document.getElementById('btnAccountHeader');
   if(!content||!headerButton)return;
   if(user){
-    localStorage.removeItem('dietaplannerModalitaLocale');
+    modalitaLocaleSessione=false;
     document.getElementById('modalAccessoIniziale')?.classList.add('hidden');
     const avatar=user.photoURL?`<img src="${escAuth(user.photoURL)}" alt="">`:'👤';
     headerButton.innerHTML=avatar;
@@ -1054,7 +1055,7 @@ function renderAccount(user){
     headerButton.textContent='👤';
     content.innerHTML='<div class="meta">Accedi con Google per associare nome e storico al tuo profilo.</div><button class="primary" id="btnLoginGoogle" style="margin-top:12px;">Accedi con Google</button>';
     document.getElementById('btnLoginGoogle')?.addEventListener('click',loginGoogle);
-    if(localStorage.getItem('dietaplannerModalitaLocale')!=='1'){
+    if(!modalitaLocaleSessione){
       document.getElementById('modalAccessoIniziale')?.classList.remove('hidden');
     }
   }
@@ -1071,7 +1072,7 @@ async function loginGoogle(){
 window.addEventListener('dietaplanner-auth-changed',e=>renderAccount(e.detail.user));
 document.getElementById('btnLoginGoogleIniziale')?.addEventListener('click',loginGoogle);
 document.getElementById('btnContinuaLocale')?.addEventListener('click',()=>{
-  localStorage.setItem('dietaplannerModalitaLocale','1');
+  modalitaLocaleSessione=true;
   document.getElementById('modalAccessoIniziale')?.classList.add('hidden');
 });
 document.getElementById('btnAccountHeader')?.addEventListener('click',()=>{
