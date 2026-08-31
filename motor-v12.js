@@ -1317,6 +1317,18 @@ async function generaPianoSettimana(scarto,opzioni){
   return {generati:generated,errori:[],diagnostica:{nodiRicerca:soluzione.nodi,tentativoCompleto:Number(opzioni._retryCompatibilita)||0}};
 }
 
+async function verduraRicorrenteRichiesta(giorno,pasto){
+  if(typeof getOne!=='function')return null;
+  const data=new Date(giorno+'T12:00:00');
+  const indiceGiorno=(data.getDay()+6)%7;
+  const [scelta,pasti]=await Promise.all([
+    getOne('impostazioni','verduraRicorrente'),
+    getOne('impostazioni','verduraRicorrentePasti')
+  ]);
+  const selezionati=new Set(pasti&&Array.isArray(pasti.valore)?pasti.valore:[]);
+  return scelta&&scelta.valore&&selezionati.has(pasto+'_'+indiceGiorno)?scelta.valore:null;
+}
+
 async function rigeneraPasto(giorno,pasto,target,opzioni){
   opzioni=opzioni||{};
   const id=giorno+'_'+pasto;
@@ -1335,7 +1347,12 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
 
   const requiredCarbKey=old&&old.carboidratoPianificato||null;
   const resolved=await caricaConfigurazioneNutrizionaleRisolta();
-  const opzioniCandidato={vegetablePortions:resolved.vegetables,usaInventario:!!opzioni.usaInventario};
+  const requiredVegetableVariantId=await verduraRicorrenteRichiesta(giorno,pasto);
+  const opzioniCandidato={
+    vegetablePortions:resolved.vegetables,
+    usaInventario:!!opzioni.usaInventario,
+    requiredVegetableVariantId
+  };
   if(requiredCarbKey)opzioniCandidato.carbBudget={requiredKey:requiredCarbKey};
   const candidati=await generaCandidatiPasto(target,giorno,opzioniCandidato);
   let disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
@@ -1560,6 +1577,15 @@ async function ruotaPasto(giorno,pasto,tipo){
   let realizzazioni=voce.realizzazioni.map((x,i)=>i===owner.indice?real:x);
   const resolved=await caricaConfigurazioneNutrizionaleRisolta();
   realizzazioni=await normalizzaRealizzazioniVerdura(realizzazioni,giorno,resolved.vegetables);
+  const requiredVegetableVariantId=await verduraRicorrenteRichiesta(giorno,pasto);
+  if(requiredVegetableVariantId){
+    let mantieneVincolo=false;
+    for(const realizzazione of realizzazioni){
+      const ricetta=await materializzaRealizzazione(realizzazione);
+      if(ricetta&&(ricetta.ingredienti||[]).some(i=>i.variantId===requiredVegetableVariantId)){mantieneVincolo=true;break;}
+    }
+    if(!mantieneVincolo)return null;
+  }
   const aggiornata=Object.assign({},voce,{
     realizzazioni,
     origine:'motore-nuovo',

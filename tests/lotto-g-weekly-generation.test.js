@@ -77,6 +77,12 @@ const M=global.DietaPlannerMotorV12;
     const ricette=[];for(const real of voce.realizzazioni)ricette.push(await M.materializzaRealizzazione(real));
     assert(ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===pomodoro.id)),day+' deve contenere Pomodoro fresco');
   }
+  const pranzoDaCambiare='2026-09-02';
+  const primaCambio=await global.getOne('piano',pranzoDaCambiare+'_pranzo');
+  const cambiato=await M.rigeneraPasto(pranzoDaCambiare,'pranzo',primaCambio.categoriaTarget);
+  assert(cambiato&&cambiato.realizzazioni.length,'la proposta alternativa deve esistere');
+  const ricetteCambiate=[];for(const real of cambiato.realizzazioni)ricetteCambiate.push(await M.materializzaRealizzazione(real));
+  assert(ricetteCambiate.some(r=>(r.ingredienti||[]).some(i=>i.variantId===pomodoro.id)),'Proponi nuovo pasto deve mantenere la verdura ricorrente del Set');
 
   assert.equal((await global.getAll('inventario')).length,0,'inventario vuoto non blocca la programmazione');
   console.log('lotto G generazione settimanale nuovo DB: ok');

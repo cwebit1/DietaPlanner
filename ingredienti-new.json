@@ -2785,6 +2785,7 @@
       "gradimento": 1,
       "porzione": 2,
       "unitaPorzione": "pezzi",
+      "pesoPorzioneGrammi": 120,
       "stock": 1,
       "formatoRiordino": {
         "valore": null,
