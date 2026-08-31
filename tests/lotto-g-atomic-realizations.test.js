@@ -42,6 +42,11 @@ assert(index.includes("{tipo:'C',icona:'🍞',label:'Carboidrato'"));
 assert(index.includes("{tipo:'P',icona:'🥩',label:'Proteina'"));
 assert(index.includes("{tipo:'V',icona:'🥬',label:'Verdura'"));
 assert(index.includes('data-menu-macro'));
+assert(index.includes('grid-template-columns:72px minmax(0,1fr) 34px'),'Menù e Pasto devono usare la griglia compatta icone/testo/comando');
+assert(index.includes('riepilogoGrigliaPastoMenu(g,pasto,iconaBloccoMenu)'),'il Menù deve rendere C/P/V su tre righe strutturate');
+assert(index.includes("LABEL_PASTO[pasto].toUpperCase()+':'"),'Pasto deve mostrare PRANZO/CENA su una riga propria');
+assert(index.includes('await generaColazioniSettimanaCorrente(scartoSettimane,opzioni)'),'la generazione corrente deve includere le colazioni');
+assert(index.includes("getOne('impostazioni','colazionePreferitaGiorni')"),'le colazioni generate devono rispettare i giorni ricorrenti del Set');
 assert(index.includes("rigeneraPasto(giorno,pasto,target,{usaInventario:true})"));
 assert(index.includes('programmatoOriginale'));
 

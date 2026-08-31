@@ -516,9 +516,21 @@ details{margin-top:14px;}
 .pasto-livello-switch .fascia-badge{width:120px;box-sizing:border-box;}
 .pasto-riga-essenziale{padding:8px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent);}
 .pasto-riga-essenziale:last-child{border-bottom:none;}
+.pasto-titolo-compatto{font-size:.9rem;font-weight:800;letter-spacing:.035em;margin:0 0 7px;}
+.pasto-griglia-compatta{display:grid;gap:0;}
+.pasto-riga-griglia{display:grid;grid-template-columns:72px minmax(0,1fr) 34px;align-items:center;gap:7px;min-height:36px;padding:5px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 70%,transparent);}
+.pasto-riga-griglia:last-child{border-bottom:none;}
+.pasto-riga-icone{font-size:1rem;line-height:1;white-space:nowrap;}
+.pasto-riga-piatto{font-size:.88rem;font-weight:700;line-height:1.25;min-width:0;overflow-wrap:anywhere;}
+.pasto-riga-comando{display:flex;align-items:center;justify-content:center;width:34px;}
+.pasto-riga-comando button{background:none;border:none;color:var(--text);cursor:pointer;font-size:1rem;line-height:1;padding:5px;min-width:30px;}
+.pasto-riga-comando button:disabled{opacity:.3;cursor:default;}
+.menu-pasto-summary{display:block!important;}
+.menu-pasto-summary::marker{font-size:.75rem;}
+.menu-pasto-summary .pasto-titolo-compatto{padding-left:2px;}
 .pasto-riga-etichetta{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);margin-bottom:3px;}
 .pasto-riga-valore{font-size:.9rem;font-weight:700;min-width:0;flex:1;}
-.pasto-riga-valore.avviso-programmazione,.menu-riepilogo-macro.avviso-programmazione{color:#f1c40f;}
+.pasto-riga-valore.avviso-programmazione,.pasto-riga-piatto.avviso-programmazione,.menu-riepilogo-macro.avviso-programmazione{color:#f1c40f;}
 .pasto-riga-azioni{display:flex;align-items:center;gap:4px;flex:0 0 auto;}
 .pasto-riga-azioni button{background:none;border:none;color:var(--text);cursor:pointer;font-size:.9rem;padding:5px;min-width:30px;}
 .pasto-selettori{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
@@ -5678,11 +5690,11 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   if(!el)return;
   const id=giorno+'_'+pasto;
   const voce=await getOne('piano',id);
-  const title=ICONA_PASTO[pasto]+' '+LABEL_PASTO[pasto];
+  const title=LABEL_PASTO[pasto].toUpperCase()+':';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
-    if(giorno<todayISO()){el.innerHTML='<div class="pasto-header">'+title+'</div><div class="meta">Nessun pasto registrato.</div>';return;}
-    el.innerHTML='<div class="pasto-header">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
+    if(giorno<todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta">Nessun pasto registrato.</div>';return;}
+    el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
     el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
       const target=await targetNuovoMotorePerPasto(giorno,pasto);
       await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target);
@@ -5695,7 +5707,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     ? await DietaPlannerMotorV12.statoRollPasto(giorno,pasto)
     : {C:false,P:false,V:false};
 
-  let html='<div class="pasto-header">'+title+'</div>';
+  let html='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-griglia-compatta">';
   let kcal=0;
   const materializzate=[];
   for(const x of voce.realizzazioni){
@@ -5719,14 +5731,14 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
       return i.categoria==='V'||i.categoria==='V-';
     }).map(i=>i.nome)).filter(Boolean))];
     const valore=ricette.length?ricette.join(' · '):'Seleziona pasto';
-    const dettaglio=ingredienti.length?'<div class="meta">'+esc(ingredienti.join(' · '))+'</div>':'';
+    const dettaglio=ingredienti.length?'<div class="meta" style="margin-top:2px;">'+esc(ingredienti.join(' · '))+'</div>':'';
     const roll=(!voce.consumato&&giorno>=todayISO())
       ?'<button type="button" data-nm-roll-tipo="'+riga.tipo+'" title="Cambia '+riga.label.toLowerCase()+'" '+(statoRoll[riga.tipo]?'':'disabled')+'>🔄</button>'
       :'';
     const avvisoCarb=riga.tipo==='C'&&voce.avvisoProgrammazione,classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(voce.avvisoProgrammazione.messaggio)+'"':'';
-    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+riga.icona+' '+riga.label+'</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore'+classeAvviso+'"'+titoloAvviso+'>'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+(avvisoCarb?' ⚠':'')+'</span><span class="pasto-riga-azioni">'+roll+'</span></div>'+dettaglio+'</div>';
+    html+='<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icona+'</span><span class="pasto-riga-piatto'+classeAvviso+'"'+titoloAvviso+'>'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+(avvisoCarb?' ⚠':'')+dettaglio+'</span><span class="pasto-riga-comando">'+roll+'</span></div>';
   }
-
+  html+='</div>';
   html+='<div class="meta" style="margin-top:8px;">'+Math.round(kcal)+' kcal · nuovo DB</div>';
 
   if(voce.programmatoOriginale&&Array.isArray(voce.programmatoOriginale.realizzazioni)){
@@ -8303,6 +8315,29 @@ const CATEGORIE_PROTEICHE_SET = [
   {chiave:'formaggi', label:'Formaggi'}, {chiave:'uova', label:'Uova'}, {chiave:'legumi', label:'Legumi'}
 ];
 
+async function generaColazioniSettimanaCorrente(scartoSettimane,opzioni){
+  const giorni=giorniSettimana(scartoSettimane),varianti=await getAll('varianti');
+  const [prefRec,giorniPrefRec,esclusiRec]=await Promise.all([
+    getOne('impostazioni','colazionePreferita'),
+    getOne('impostazioni','colazionePreferitaGiorni'),
+    getOne('impostazioni','colazioneIngredientiEsclusi')
+  ]);
+  const giorniPref=new Set((giorniPrefRec&&Array.isArray(giorniPrefRec.valore)?giorniPrefRec.valore:[]).map(Number));
+  const firmaPref=prefRec&&prefRec.valore?firmaComponentiColazione(componentiColazioneDaSet(prefRec.valore,varianti)):null;
+  for(const giorno of giorni){
+    if(giorno<=todayISO())continue;
+    const id=giorno+'_colazione',esistente=await getOne('piano',id);
+    if(esistente&&esistente.colazioneSpecialeId)continue;
+    if(esistente&&esistente.componenti&&!opzioni.forza)continue;
+    const indice=(new Date(giorno+'T12:00:00').getDay()+6)%7;
+    const usaPreferita=!!(prefRec&&prefRec.valore)&&(giorniPref.size>=7||giorniPref.has(indice));
+    const componenti=usaPreferita
+      ?componentiColazioneDaSet(prefRec.valore,varianti)
+      :scegliColazioneAutomaticaCoerente(varianti,[firmaPref],esclusiRec&&Array.isArray(esclusiRec.valore)?esclusiRec.valore:[]);
+    if(componenti)await put('piano',{id,componenti,colazioneSpecialeId:null,programmatoIl:new Date().toISOString()});
+  }
+}
+
 async function generaPianoSettimana(scartoSettimane,opzioni){
   opzioni=opzioni||{};
   const precedente=document.getElementById('loaderGenerazioneMenu');if(precedente)precedente.remove();
@@ -8318,7 +8353,11 @@ async function generaPianoSettimana(scartoSettimane,opzioni){
     if(barra)barra.style.width=Math.round(stato.completati/stato.totale*100)+'%';
     if(typeof opzioni.onProgress==='function')opzioni.onProgress(stato);
   };
-  try{return await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,Object.assign({},opzioni,{onProgress}));}
+  try{
+    const esito=await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,Object.assign({},opzioni,{onProgress}));
+    if(esito&&Array.isArray(esito.generati)&&esito.generati.length)await generaColazioniSettimanaCorrente(scartoSettimane,opzioni);
+    return esito;
+  }
   finally{loader.remove();}
 }
 async function mostraFeedbackGenerazioneMenu(esito){
@@ -8422,6 +8461,23 @@ async function riepilogoTestualePasto(giorno, pasto){
   return testoVuoto;
 }
 
+async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
+  const voce=await getOne('piano',giorno+'_'+pasto),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const materializzate=[];
+  if(voce&&Array.isArray(voce.realizzazioni))for(const real of voce.realizzazioni){const r=await ricettaNuovoDaRealizzazione(real);if(r)materializzate.push(r);}
+  const righe=[
+    {tipo:'C',icone:'🍞',match:t=>t==='C'},
+    {tipo:'P',icone:'🥩',match:t=>['PC','PP','PF','PU','PL'].includes(t)},
+    {tipo:'V',icone:'🥬',match:t=>t==='V'||t==='V-'}
+  ];
+  return righe.map(riga=>{
+    const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(riga.match)).map(r=>r.nome).filter(Boolean))];
+    const avviso=riga.tipo==='C'&&voce&&voce.avvisoProgrammazione,classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(voce.avvisoProgrammazione.messaggio||'')+'"':'';
+    const stato=voce&&voce.consumato?'✓ ':voce&&voce.origine==='utente'?'⭐ ':'';
+    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+stato+esc(valori.length?valori.join(' · '):'— non ancora programmato —')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+azioneHtml+'</span></div>';
+  }).join('');
+}
+
 async function renderMenuSettimanale(){
   const mieGen = ++menuRenderGen;
   const giorni = giorniSettimana(menuSettimanaScarto);
@@ -8445,7 +8501,7 @@ async function renderMenuSettimanale(){
     // Gli spuntini sono facoltativi e vivono solo nella sezione giornaliera (Piano):
     // qui nel Menù settimanale mostriamo solo i pasti principali.
     for(const pasto of ['colazione','pranzo','cena']){
-      const riepilogo = await riepilogoTestualePasto(g, pasto);
+      let riepilogo = '';
       // Il lucchetto vive nel summary (sempre visibile, senza aprire il dettaglio):
       // la logica del giudizio "mi piace/non mi piace" si fa leggendo il riepilogo,
       // non aprendo il pasto — bloccare deve essere possibile da lì direttamente.
@@ -8459,8 +8515,9 @@ async function renderMenuSettimanale(){
         iconaBloccoMenu = `<button data-blocca-menu="${g}|${pasto}" title="${bloccataOra?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
           style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;flex-shrink:0;margin-left:auto;">${iconaBloccoGlifo(bloccataOra)}</button>`;
       }
+      riepilogo=pasto==='colazione'?await riepilogoTestualePasto(g,pasto):await riepilogoGrigliaPastoMenu(g,pasto,iconaBloccoMenu);
       html += `<details class="pasto-sub-panel" data-menu-giorno="${g}" data-menu-pasto="${pasto}">
-        <summary><span style="flex:1;">${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}${iconaStatoMenu}</span>${iconaBloccoMenu}</summary>
+        <summary class="${pasto==='colazione'?'':'menu-pasto-summary'}">${pasto==='colazione'?`<span style="flex:1;">${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}${iconaStatoMenu}</span>`:`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="pasto-griglia-compatta">${riepilogo}</div>`}</summary>
         <div class="contenuto" id="menuBloc_${g}_${pasto}"></div>
       </details>`;
     }
@@ -8499,8 +8556,10 @@ async function renderMenuSettimanale(){
         // (renderMenuSettimanale) qui non serve a nulla per un singolo lucchetto,
         // e riapre/ricarica da capo qualsiasi altro pannello fosse aperto altrove
         // nella pagina — causando un flash visibile senza motivo.
-        btn.innerHTML = iconaBloccoGlifo(voce.bloccata);
-        btn.title = voce.bloccata ? 'Sblocca questo pasto (tornerà rigenerabile)' : 'Blocca questo pasto (non verrà sostituito alla rigenerazione)';
+        giornoDiv.querySelectorAll(`[data-blocca-menu="${giorno}|${pasto}"]`).forEach(b=>{
+          b.innerHTML=iconaBloccoGlifo(voce.bloccata);
+          b.title=voce.bloccata?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)';
+        });
       });
     });
   }
