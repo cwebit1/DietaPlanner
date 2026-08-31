@@ -1740,16 +1740,41 @@ async function inizializza(opts){
   state.ingredientiMap=idb.ingredienti||{};
   state.propostaCicli=new Map();
   await sincronizzaIngredientiIndexedDB();
-  const concrete=[];
-  for(const r of (rdb.ricette||[])){
-    const comb=generaCombinazioni(r);
-    for(let i=0;i<comb.length;i++) concrete.push(await compilaRicetta(r,comb[i],i));
+
+  /* J.5: le combinazioni concrete cambiano solo quando cambia db-ricette.json
+     o ingredienti-new.json. Se la versione combinata coincide con l'ultima
+     gia' sincronizzata, si carica lo stato compilato direttamente dalla
+     cache IndexedDB (store 'ricette', solo fonte:'nuovo-db-compilato')
+     invece di rigenerare da zero generaCombinazioni+compilaRicetta per ogni
+     template ad ogni avvio. */
+  const versioneCache=String(rdb.versione||0)+'_'+String(idb.versione||0);
+  let concrete=null;
+  if(typeof getOne==='function'&&typeof getAll==='function'){
+    try{
+      const rec=await getOne('impostazioni','versioneRicetteCache');
+      if(rec&&rec.valore===versioneCache){
+        const cache=(await getAll('ricette')||[]).filter(r=>r&&r.fonte==='nuovo-db-compilato');
+        if(cache.length) concrete=cache;
+      }
+    }catch(e){}
   }
-  state.compatibilitaCP=creaMappaCompatibilitaCP(concrete);
-  concrete.push(...await compilaContorniBaseCatalogo(),...await compilaProteineBaseCatalogo());
+  const cacheValida=!!concrete;
+  if(!concrete){
+    concrete=[];
+    for(const r of (rdb.ricette||[])){
+      const comb=generaCombinazioni(r);
+      for(let i=0;i<comb.length;i++) concrete.push(await compilaRicetta(r,comb[i],i));
+    }
+    concrete.push(...await compilaContorniBaseCatalogo(),...await compilaProteineBaseCatalogo());
+  }
+  const soloTemplate=concrete.filter(r=>r.stackScope!=='contorni_catalogo'&&r.stackScope!=='proteine_catalogo');
+  state.compatibilitaCP=creaMappaCompatibilitaCP(soloTemplate);
   state.ricetteConcrete=concrete;
   state.ricetteById=new Map(concrete.map(r=>[r.id,r]));
-  await sincronizzaCacheRicette();
+  if(!cacheValida){
+    await sincronizzaCacheRicette();
+    if(typeof put==='function') await put('impostazioni',{chiave:'versioneRicetteCache',valore:versioneCache});
+  }
   await caricaTracking();
   state.pronto=true;
   return {versioneRicette:rdb.versione||0,versioneIngredienti:idb.versione||0,template:(rdb.ricette||[]).length,concrete:concrete.length};
