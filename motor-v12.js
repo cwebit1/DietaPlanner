@@ -1231,11 +1231,22 @@ async function generaCandidatiPasto(target,data,opts){
   const firme=new Set();
 
   for(const primo of prot){
-    let carbChoices=[null];
+    let carbChoices=[null],carboidratoForzato=false;
     if(!copertura(primo).C){
       let carb=pool.filter(r=>copertura(r).C&&!copertura(r).P&&r.id!==primo.id);
       if(opts.usaInventario)carb=applicaPrioritaInventario(carb,livelli);
-      carbChoices=carb.length?carb:[null];
+      if(carb.length){
+        carbChoices=carb;
+      }else{
+        /* Layer 2b: nessuna fonte C disponibile nel pool filtrato (es. limiti
+           settimanali hanno azzerato le opzioni). Non si rinuncia al pasto:
+           si forza una C da tutto il catalogo, ignorando i vincoli di budget,
+           e si marca il candidato con un avviso per l'utente. */
+        let forzata=state.ricetteConcrete.filter(r=>copertura(r).C&&!copertura(r).P&&r.id!==primo.id);
+        if(opts.usaInventario)forzata=applicaPrioritaInventario(forzata,livelli);
+        carbChoices=forzata.length?forzata:[null];
+        carboidratoForzato=forzata.length>0;
+      }
     }
 
     for(const carb of carbChoices){
@@ -1261,7 +1272,7 @@ async function generaCandidatiPasto(target,data,opts){
         if(firme.has(firma)) continue;
         firme.add(firma);
         if(opts.runtimeConfig&&opts.weeklyIngredientCounts&&opts.weeklySubtypeCounts&&!pastoRispettaConteggi(ricette,opts.runtimeConfig,opts.weeklyIngredientCounts,opts.weeklySubtypeCounts))continue;
-        risultati.push(risultatoPasto(token,ricette,copertura(primo).C?0:1));
+        risultati.push(risultatoPasto(token,ricette,copertura(primo).C?0:1,carboidratoForzato?'Ricetta per carboidrato definito non disponibile':null));
       }
     }
   }
@@ -1514,7 +1525,8 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
     porzioni:old&&old.porzioni||1,
     origine:'motore-nuovo',
     programmatoIl:new Date().toISOString(),
-    categoriaTarget:target
+    categoriaTarget:target,
+    avvisoCarboidrato:x.avviso||null
   });
   if(opzioni.usaInventario){
     voce.origine='alternativa-odierna';
