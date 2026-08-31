@@ -2581,81 +2581,6 @@ function scegliCotturaStandard(gruppoProteico){
    3. Proteina del secondo (dalla categoria larga di E1)
    4. Cottura (dalle COTTURE_STANDARD)
    5. Contorno (dal pool di contorni modulari) */
-async function componiPastoModulare(gruppoProteico, giorno, escludiSugoId, escludiProteinaId, escludiContornoId, forzaJolly){
-  // 1. Carboidrato del primo (usa la config utente, oppure distribuzione pesata)
-  const carboidratoScelto = await scegliCarboidratoModulare(!!forzaJolly);
-  const carboidratoConfig = CARBOIDRATI_PASTO[carboidratoScelto];
-  if(!carboidratoConfig) return null;
-
-  // 2. Sugo modulare — SOLO se il carboidrato ha un pool di sughi
-  let sugoScelto = null;
-  if(carboidratoConfig.haPoolSughi){
-    const sughiDisponibili = await cercaComponentiModulari('sugo');
-    if(sughiDisponibili.length){
-      // Anti-ripetizione: escludi sughi già usati questa settimana
-      const giorniSett = giorniSettimana(0);
-      const sughiUsatiSettimana = new Set();
-      const tuttoIlPiano = await getAll('piano');
-      for(const g of giorniSett){
-        for(const pasto of ['pranzo','cena']){
-          const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
-          if(!voce || voce.modo!=='multi') continue;
-          if(voce.primoSugoId) sughiUsatiSettimana.add(voce.primoSugoId);
-        }
-      }
-      const sughiNonUsati = sughiDisponibili.filter(s =>
-        !sughiUsatiSettimana.has(s.id) && s.id !== escludiSugoId
-      );
-      const poolSughi = sughiNonUsati.length ? sughiNonUsati : sughiDisponibili;
-      sugoScelto = mescola(poolSughi)[0];
-    }
-  }
-
-  // 3. Proteina modulare
-  let proteinaScelta = null;
-  if(gruppoProteico){
-    const proteineDisponibili = await cercaProteineModulari(gruppoProteico);
-    if(proteineDisponibili.length){
-      const proteineFiltrate = proteineDisponibili.filter(p => p.id !== escludiProteinaId);
-      const poolProteine = proteineFiltrate.length ? proteineFiltrate : proteineDisponibili;
-      proteinaScelta = mescola(poolProteine)[0];
-    }
-  }
-
-  // 4. Cottura
-  const cottura = proteinaScelta ? scegliCotturaStandard(proteinaScelta.gruppoProteico) : null;
-
-  // 5. Contorno modulare
-  let contornoScelto = null;
-  const contorniDisponibili = await cercaComponentiModulari('contorno');
-  if(contorniDisponibili.length){
-    const contorniFiltrati = contorniDisponibili.filter(c => c.id !== escludiContornoId);
-    const poolContorni = contorniFiltrati.length ? contorniFiltrati : contorniDisponibili;
-    contornoScelto = mescola(poolContorni)[0];
-  }
-
-  // Componi i nomi invitanti
-  const primoNome = sugoScelto
-    ? componiNomePrimoModulare(carboidratoConfig.label, sugoScelto.nome)
-    : carboidratoConfig.label;
-  const secondoNome = componiNomeSecondoModulare(
-    proteinaScelta ? proteinaScelta.nome : '',
-    cottura,
-    contornoScelto ? contornoScelto.nome : ''
-  );
-
-  return {
-    primoNome,
-    primoCarboidrato: carboidratoScelto,
-    primoSugoId: sugoScelto ? sugoScelto.id : null,
-    primoEJolly: !!carboidratoConfig.jolly,
-    secondoNome,
-    proteinaId: proteinaScelta ? proteinaScelta.id : null,
-    proteinaGruppo: proteinaScelta ? proteinaScelta.gruppoProteico : null,
-    cottura,
-    contornoId: contornoScelto ? contornoScelto.id : null
-  };
-}
 
 /* Sceglie un carboidrato per il nuovo sistema modulare.
    Usa la config utente se disponibile, altrimenti distribuzione
@@ -3432,40 +3357,6 @@ async function primiSpecialiDisponibili(){
 /* Compone un primo modulare: prende il template del condimento e il
    cereale scelto, genera/aggiorna una ricetta composta nel DB (upsert per
    nome, mai duplica). Ritorna l'oggetto ricetta composto. */
-async function componiPrimoModulare(templateRicetta, cerealeChiave){
-  const cereale = CEREALI_PRIMI[cerealeChiave];
-  if(!cereale) return null;
-  // Trova la variante del cereale nel DB
-  const varianti = await getAll('varianti');
-  const varCereale = varianti.find(v => v.nome.toLowerCase() === cereale.ingrediente.toLowerCase());
-  if(!varCereale) return null;
-  // Nome composto: "Riso al pomodoro" / "Farro alle verdure"
-  const nomeComposto = cereale.label + ' ' + templateRicetta.nome;
-  // Controlla se esiste già
-  const ricetteEsistenti = await getAll('ricette');
-  const esistente = ricetteEsistenti.find(r => r.nome.toLowerCase() === nomeComposto.toLowerCase());
-  // Ingredienti: cereale + ingredienti del condimento
-  const ingredienteCereale = { variantId: varCereale.id, nomeLibero: null, quantita: cereale.porzione };
-  const ingredientiComposti = [ingredienteCereale, ...(templateRicetta.ingredienti||[])];
-  const ricettaComposta = {
-    id: esistente ? esistente.id : uid(),
-    nome: nomeComposto,
-    fascia: templateRicetta.fascia || fasciaAutomaticaPrimo(templateRicetta.ingredienti),
-    porzioni: 1,
-    gruppoProteico: '',
-    tipoPortata: 'primo',
-    cerealeUsato: cerealeChiave,
-    tipoCereale: null,
-    templateId: templateRicetta.id,
-    fonte: 'composta',
-    ultimoUsato: esistente ? esistente.ultimoUsato : undefined,
-    ingredienti: ingredientiComposti,
-    procedimento: templateRicetta.procedimento || [],
-    nutrizioneManualeTotale: null
-  };
-  await put('ricette', ricettaComposta);
-  return ricettaComposta;
-}
 
 /* MOTORE E3 — punto di ingresso.
    Dato uno slot primo da riempire:
@@ -3477,54 +3368,6 @@ async function componiPrimoModulare(templateRicetta, cerealeChiave){
    6. Ritorna {ricetta, cereale} oppure null se non ci sono template
    Il chiamante (E2/garantisciRicettaSlot) usa il risultato come farebbe
    con qualsiasi altra ricetta primo. */
-async function motorePrimi(giorno, pasto, escludiTemplateId){
-  const tutteRicette = await getAll('ricette');
-  // 1. Controlla se un primo speciale è disponibile e lo proponiamo (bassa probabilità: ~20%)
-  const specialiDisponibili = await primiSpecialiDisponibili();
-  if(specialiDisponibili.length && Math.random() < 0.2){
-    const tipoSpeciale = specialiDisponibili[Math.floor(Math.random() * specialiDisponibili.length)];
-    const ricetteSpeciali = tutteRicette.filter(r =>
-      r.tipoCereale === tipoSpeciale &&
-      r.tipoPortata === 'primo' &&
-      !r.esclusa
-    );
-    if(ricetteSpeciali.length){
-      return { ricetta: mescola(ricetteSpeciali)[0], cereale: tipoSpeciale, templateId: null };
-    }
-  }
-  // 2. Cerca template modulari: ricette primo con cerealeLibero=true, non escluse
-  let templateDisponibili = tutteRicette.filter(r =>
-    r.tipoPortata === 'primo' &&
-    r.cerealeLibero === true &&
-    !r.esclusa &&
-    r.id !== escludiTemplateId
-  );
-  if(!templateDisponibili.length) return null;
-  // 3. Anti-ripetizione F4: escludi template già usati questa settimana
-  const giorni = giorniSettimana();
-  const templateUsatiSettimana = new Set();
-  const tuttoIlPiano = await getAll('piano');
-  const tutteLeRicetteE3 = await getAll('ricette');
-  for(const g of giorni){
-    for(const p of ['pranzo','cena']){
-      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+p);
-      if(!voce || voce.modo!=='multi' || !voce.primoId) continue;
-      const ricettaPrimo = tutteLeRicetteE3.find(r=>r.id===voce.primoId);
-      if(ricettaPrimo && ricettaPrimo.templateId) templateUsatiSettimana.add(ricettaPrimo.templateId);
-    }
-  }
-  const templateFiltrati = templateDisponibili.filter(t => !templateUsatiSettimana.has(t.id));
-  const pool = templateFiltrati.length ? templateFiltrati : templateDisponibili;
-  if(!pool.length) return null;
-  // 4. Scegli il template (casuale tra i disponibili)
-  const templateScelto = mescola(pool)[0];
-  // 5. Scegli il cereale
-  const cerealeScelto = await scegliCerealePrimo();
-  // 6. Componi
-  const ricettaComposta = await componiPrimoModulare(templateScelto, cerealeScelto);
-  if(!ricettaComposta) return null;
-  return { ricetta: ricettaComposta, cereale: cerealeScelto, templateId: templateScelto.id };
-}
 
 /* =========================================================
    NAV
@@ -4134,6 +3977,15 @@ async function calcolaProgrammatoGiorno(giornoIso){
   for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
     const voce = await getOne('piano', giornoIso+'_'+pasto);
     if(!voce) continue;
+    if(voce.motoreNuovo && Array.isArray(voce.realizzazioni)){
+      for(const real of voce.realizzazioni){
+        const n = real && real.nutrientiEffettivi;
+        if(!n) continue;
+        tot.kcal+=Number(n.kcal)||0; tot.prot+=Number(n.proteine)||0;
+        tot.carb+=Number(n.carboidrati)||0; tot.grassi+=Number(n.grassi)||0;
+      }
+      continue;
+    }
     if(voce.modo==='multi'){
       if(voce.primoId){
         const rPrimo = await getOne('ricette', voce.primoId);
@@ -5893,76 +5745,7 @@ async function abilitaRicercaDirettaPastoLegacyV72(cont,pasto,giorno,elementId,d
   input.addEventListener('input',draw);cont.querySelectorAll('input[name="ruoloRicerca_'+giorno+'_'+pasto+'"]').forEach(r=>r.addEventListener('change',draw));draw();
 }
 
-async function renderPastoTabContenutoLegacyV77(pasto,giorno,elementId){
-  giorno=giorno||giornoSelezionato;
-  const chiaveStato=giorno+'_'+pasto;
-  const cont=document.getElementById('pastoTabContenuto_'+(elementId?'m_':'')+chiaveStato);
-  const draft=draftPasto[chiaveStato];
-  if(!cont||!draft)return;
-  const mappaStati=await mappaStatiDisponibilita();
-  let html='';
-  if(draft.tabAttiva==='pasto'){
-    const carbCfg=draft.primoCereale&&CARBOIDRATI_PASTO[draft.primoCereale];
-    const carbLabel=carbCfg?carbCfg.label:'';
-    const sugoRicetta=draft.primoSugoId?await getOne('ricette',draft.primoSugoId):null;
-    const primoRicetta=draft.primoId?await getOne('ricette',draft.primoId):null;
-    const protRicetta=draft.proteinaId?await getOne('ricette',draft.proteinaId):null;
-    const contRicetta=draft.contornoId?await getOne('ricette',draft.contornoId):null;
-    const cottureAmmesse=protRicetta?cottureAmmesseProteina(protRicetta.nome,protRicetta.gruppoProteico):[];
-    if(draft.cottura&&!cottureAmmesse.includes(draft.cottura))draft.cottura=cottureAmmesse[0]||null;
-    const primoNome=primoRicetta
-      ? primoRicetta.nome
-      : ((carbLabel+(sugoRicetta?' · '+sugoRicetta.nome:''))||'Nessun carboidrato');
-    const protNome=protRicetta?protRicetta.nome+(draft.cottura?' · '+draft.cottura:''):'Nessuna proteina';
-    const contNome=contRicetta?contRicetta.nome:'Nessuna verdura';
-    const warn=r=>r&&ricettaHaQuasiEsaurito(r,mappaStati)?' ⚠️':'';
-    const riga=(tipo,icona,label,nome,r)=>`<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">${icona} ${label}</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore">${nome}${warn(r)}</span><span class="pasto-riga-azioni"><button data-pasto-refresh="${tipo}" title="Cambia ${label.toLowerCase()}">🔄</button>${r?`<button class="icon-info-btn" data-pasto-info="${r.id}" title="Informazioni nutrizionali">ⓘ</button>`:''}</span></div></div>`;
-    html+=riga('carb','🍝','Carboidrato',primoNome,primoRicetta);
-    html+=riga('proteina','🍗','Proteine',protNome,protRicetta);
-    html+=riga('contorno','🥦','Verdure',contNome,contRicetta);
-    const ruolo=draft.componenteEditor||'carb';
-    html+=`<div class="pasto-contenuto-espandibile">
-      <div class="pasto-selettori">
-        <button type="button" class="pasto-selettore ${ruolo==='carb'?'attivo':''}" data-componente-editor="carb" aria-pressed="${ruolo==='carb'}">🍝 Carboidrati</button>
-        <button type="button" class="pasto-selettore ${ruolo==='proteina'?'attivo':''}" data-componente-editor="proteina" aria-pressed="${ruolo==='proteina'}">🍗 Proteine</button>
-        <button type="button" class="pasto-selettore ${ruolo==='contorno'?'attivo':''}" data-componente-editor="contorno" aria-pressed="${ruolo==='contorno'}">🥦 Verdure</button>
-      </div>
-      <div class="pasto-comandi-dinamici">
-        ${ruolo==='carb'?`<button class="small" data-pasto-cambia="carb">Analogo</button>${carbCfg&&carbCfg.haPoolSughi?'<button class="small" data-pasto-cambia="sugo">Cambia sugo</button>':''}`:''}
-        ${ruolo==='proteina'?`<button class="small" data-pasto-cambia="proteina">Analogo</button>${cottureAmmesse.length>1?'<button class="small" data-pasto-cambia="cottura">Cambia cottura</button>':''}`:''}
-        ${ruolo==='contorno'?'<button class="small" data-pasto-cambia="contorno">Cambia verdura</button>':''}
-        <button class="small" data-pasto-salvafrigo="${ruolo}">♻️ Salvafrigo</button>
-        <button class="small accent" data-pasto-imposta>Imposta</button>
-      </div>
-      <input type="search" data-ricerca-pasto placeholder="Cerca ricetta per nome..." value="${String(draft.testoRicerca||'').replace(/"/g,'&quot;')}">
-      <div data-risultati-ricerca-pasto style="max-height:220px;overflow:auto;"></div>
-    </div>`;
-  }else{
-    const ricetta=draft.ricettaId?await getOne('ricette',draft.ricettaId):null;
-    const nutri=ricetta?await nutrizionePerPersona(ricetta):null;
-    html=`<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">🍽️ Pasto speciale</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore">${ricetta?ricetta.nome:'Nessun piatto speciale'}</span><span class="pasto-riga-azioni"><button data-pasto-refresh="speciale" title="Cambia piatto">🔄</button>${ricetta?`<button class="icon-info-btn" data-pasto-info="${ricetta.id}">ⓘ</button>`:''}</span></div>${nutri?`<div class="meta">${Math.round(nutri.kcal)} kcal</div>`:''}</div><div class="pasto-contenuto-espandibile"><button class="small" data-pasto-refresh="speciale">Analogo</button><button class="small accent" data-pasto-imposta style="margin-left:6px;">Imposta</button></div>`;
-  }
-  cont.innerHTML=html;
-  cont.querySelectorAll('[data-pasto-info]').forEach(btn=>btn.addEventListener('click',async()=>{const r=await getOne('ricette',btn.dataset.pastoInfo);if(r)apriModalInfoNutrizionale(r);}));
-  cont.querySelectorAll('[data-pasto-refresh]').forEach(btn=>btn.addEventListener('click',async()=>{await rigeneraPortataDraft(pasto,giorno,btn.dataset.pastoRefresh);await renderPastoTabContenuto(pasto,giorno,elementId);}));
-  cont.querySelectorAll('[data-pasto-salvafrigo]').forEach(btn=>btn.addEventListener('click',async()=>{await applicaSalvafrigoAPortata(pasto,giorno,btn.dataset.pastoSalvafrigo,btn,elementId);}));
-  cont.querySelectorAll('[data-pasto-cambia]').forEach(btn=>btn.addEventListener('click',async()=>{await cambiaCellaDraft(pasto,giorno,btn.dataset.pastoCambia);await renderPastoTabContenuto(pasto,giorno,elementId);}));
-  cont.querySelector('[data-pasto-imposta]')?.addEventListener('click',async()=>{
-    await applicaSelezioneRicercaPasto(draft);
-    const corrente=await getOne('piano',chiaveStato)||{id:chiaveStato,modo:'multi',fascia:draft.fascia||'facile',porzioni:1};
-    await confermaPastoDaTab(pasto,corrente,giorno,elementId);
-  });
-  if(draft.tabAttiva==='pasto')await abilitaRicercaDirettaPasto(cont,pasto,giorno,elementId,draft);
-}
 
-async function applicaSelezioneRicercaPastoLegacyV77(draft){
-  const scelta=draft&&draft.ricercaSelezionata;if(!scelta)return;
-  const r=await getOne('ricette',scelta.id);if(!r)return;
-  if(scelta.ruolo==='carb'){draft.primoId=r.id;draft.primoSugoId=null;draft.primoCereale=await carboidratoPrincipaleRicetta(r,draft.primoCereale);}
-  else if(scelta.ruolo==='proteina'){draft.proteinaId=r.id;draft.sottotipoProposto=r.gruppoProteico;draft.categoriaLarga=motoreCategoriaDiSottotipo(r.gruppoProteico);draft.cottura=scegliCotturaStandard(r.gruppoProteico,r.nome);}
-  else draft.contornoId=r.id;
-  draft.ricercaSelezionata=null;
-}
 
 async function carboidratoPrincipaleRicetta(r,corrente){
   const varianti=await getAll('varianti'),vBy=new Map(varianti.map(v=>[v.id,v]));
@@ -5972,98 +5755,9 @@ async function carboidratoPrincipaleRicetta(r,corrente){
   return Object.keys(CARBOIDRATI_PASTO).find(contiene)||corrente||null;
 }
 
-async function abilitaRicercaDirettaPastoLegacyV77(cont,pasto,giorno,elementId,draft){
-  const input=cont.querySelector('[data-ricerca-pasto]'),results=cont.querySelector('[data-risultati-ricerca-pasto]');if(!input||!results)return;
-  const [all,capsRec,vars,piano]=await Promise.all([typeof ricetteAmmesse==='function'?ricetteAmmesse(false):getAll('ricette'),getOne('impostazioni','tettiIngredienteSettimanali'),getAll('varianti'),getAll('piano')]);
-  const caps=capsRec&&capsRec.valore||{},vBy=new Map(vars.map(v=>[v.id,v])),days=new Set(giorniSettimanaDiDataMotore(giorno)),counts={};
-  for(const voce of piano.filter(v=>days.has(String(v.id).slice(0,10))))for(const rid of (voce.modo==='multi'?[voce.primoId,voce.secondoId,voce.contornoId]:[voce.ricettaId]).filter(Boolean)){const r=all.find(x=>x.id===rid)||await getOne('ricette',rid);for(const baseId of new Set((r&&r.ingredienti||[]).map(i=>vBy.get(i.variantId)?.ingredienteId).filter(Boolean)))counts[baseId]=(counts[baseId]||0)+1;}
-  const ammessaTetti=r=>(r.ingredienti||[]).every(i=>{const base=vBy.get(i.variantId)?.ingredienteId;return !base||caps[base]===undefined||(counts[base]||0)<Number(caps[base]);});
-  const draw=()=>{const q=input.value.trim().toLowerCase(),role=draft.componenteEditor||'carb';draft.testoRicerca=input.value;let pool=all.filter(r=>!r.piattoSpeciale&&ammessaTetti(r));if(role==='carb')pool=pool.filter(r=>(r.tipoPortata||'unico')==='primo');if(role==='proteina')pool=pool.filter(r=>r.gruppoProteico&&((r.tipoPortata||'unico')==='secondo'||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina')));if(role==='contorno')pool=pool.filter(r=>r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno'&&!r.gruppoProteico);pool=pool.filter(r=>!q||r.nome.toLowerCase().includes(q)).slice(0,5);results.innerHTML=pool.map(r=>`<button class="small pasto-risultato-ricerca ${draft.ricercaSelezionata&&draft.ricercaSelezionata.id===r.id&&draft.ricercaSelezionata.ruolo===role?'selezionato':''}" data-scelta-diretta="${r.id}" data-ruolo="${role}">${r.nome}${r.soloManuale?' · solo manuale':''}</button>`).join('')||'<div class="meta">Nessuna ricetta ammessa.</div>';results.querySelectorAll('[data-scelta-diretta]').forEach(b=>b.addEventListener('click',()=>{draft.ricercaSelezionata={id:b.dataset.sceltaDiretta,ruolo:b.dataset.ruolo};draw();}));};
-  input.addEventListener('input',draw);
-  cont.querySelectorAll('[data-componente-editor]').forEach(btn=>btn.addEventListener('click',()=>{draft.componenteEditor=btn.dataset.componenteEditor;draft.ricercaSelezionata=null;renderPastoTabContenuto(pasto,giorno,elementId);}));
-  draw();
-}
 
-async function generaCandidatoDraftModulareLegacyV77(pasto, giorno){
-  giorno=giorno||giornoSelezionato;
-  const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
 
-  // v42: prima ricava sempre la macro dalla proteina già presente. Un pasto con
-  // Uova sode deve restare UOVA anche se vecchi record non avevano categoriaLargaE1.
-  if(!draft.categoriaLarga && draft.proteinaId){
-    const corrente=await getOne('ricette',draft.proteinaId);
-    if(corrente&&corrente.gruppoProteico){
-      draft.categoriaLarga=motoreCategoriaDiSottotipo(corrente.gruppoProteico)||corrente.gruppoProteico;
-      draft.sottotipoProposto=corrente.gruppoProteico;
-    }
-  }
 
-  // Un draft completo NON va rigenerato all'apertura: prima questa funzione
-  // riassegnava primo/secondo/contorno e poteva cambiare anche la macro proteica.
-  if(draft.primoCereale && draft.proteinaId && draft.contornoId) return;
-
-  const voce=await getOne('piano',giorno+'_'+pasto);
-  const categoriaLarga=draft.categoriaLarga||(voce&&voce.categoriaLargaE1)||null;
-  draft.categoriaLarga=categoriaLarga||null;
-  if(!draft.sottotipoProposto && draft.proteinaId){
-    const corrente=await getOne('ricette',draft.proteinaId);
-    if(corrente)draft.sottotipoProposto=corrente.gruppoProteico||null;
-  }
-
-  // Completa soltanto i vuoti usando il coordinatore v10; non tocca mai ciò che
-  // esiste già. Poi compone il primo se il cereale usa un pool sughi.
-  if(typeof motoreV10CompletaDraftPerRealizzazione==='function'){
-    await motoreV10CompletaDraftPerRealizzazione(pasto,giorno,draft);
-  }
-  if(draft.primoCereale && !draft.primoId){
-    const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
-    if(cfg&&cfg.haPoolSughi){
-      let sugo=draft.primoSugoId?await getOne('ricette',draft.primoSugoId):null;
-      if(!sugo&&typeof scegliSugoMotore==='function'){
-        const stato=typeof creaStatoMotoreSettimana==='function'?await creaStatoMotoreSettimana():null;
-        if(stato)sugo=await scegliSugoMotore(stato,null);
-      }
-      if(sugo){
-        draft.primoSugoId=sugo.id;
-        const pr=await componiPrimoModulare(sugo,draft.primoCereale);
-        if(pr)draft.primoId=pr.id;
-      }
-    }
-  }
-}
-
-async function rigeneraPortataDraftLegacyV77(pasto, giorno, tipo){
-giorno=giorno||giornoSelezionato;
-const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
-if(tipo==='carb'){
-await cambiaCellaDraft(pasto,giorno,'carb');
-const carb=CARBOIDRATI_PASTO[draft.primoCereale];
-if(carb&&carb.haPoolSughi) await cambiaCellaDraft(pasto,giorno,'sugo');
-}else if(tipo==='proteina'){
-await cambiaCellaDraft(pasto,giorno,'proteina');
-}else if(tipo==='contorno'){
-await cambiaCellaDraft(pasto,giorno,'contorno');
-}else if(tipo==='speciale'){
-const [tutte,cfgRec,piano]=await Promise.all([getAll('ricette'),getOne('impostazioni','configAvanzata'),getAll('piano')]);const max=cfgRec&&cfgRec.valore&&cfgRec.valore.specialMealsMax!=null?cfgRec.valore.specialMealsMax:2,days=new Set(giorniSettimanaDiDataMotore(giorno));if(piano.filter(v=>days.has(String(v.id).slice(0,10))&&v.modalitaSpeciale).length>=max){await avviso('Hai raggiunto il limite settimanale dei pasti speciali.');return;} const speciali=tutte.filter(r=>r.piattoSpeciale&&!r.esclusa&&(r.tipoPortata||'unico')==='unico');
-const pool=speciali.filter(r=>r.id!==draft.ricettaId); if(speciali.length)draft.ricettaId=(typeof motoreMescola==='function'?motoreMescola(pool.length?pool:speciali):(pool.length?pool:speciali))[0].id;
-}
-}
-
-async function variantiFrigoPrioritarieRefresh(){
-  const score=new Map();
-  try{
-    const [scad,avanzi,inv]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getAll('inventario')]);
-    for(const x of (scad||[])) if(x.variantId) score.set(x.variantId,100);
-    for(const x of (avanzi||[])) if(x.variantId) score.set(x.variantId,Math.max(score.get(x.variantId)||0,80));
-    for(const x of (inv||[])) if(x.variantId&&x.stato!=='esaurito'&&Number(x.quantita)>0) score.set(x.variantId,Math.max(score.get(x.variantId)||0,10));
-  }catch(e){}
-  return score;
-}
-function punteggioRicettaFrigoRefresh(r,score){
-  let n=0;
-  for(const i of (r&&r.ingredienti||[])) if(i.variantId&&score.has(i.variantId)) n+=score.get(i.variantId);
-  return n;
-}
 async function macroProteicaDraftRefresh(draft){
   if(!draft)return null;
   if(draft.proteinaId){
@@ -6081,121 +5775,7 @@ async function macroProteicaDraftRefresh(draft){
   return null;
 }
 
-async function cambiaCellaDraftLegacyV77(pasto, giorno, cella){
-  giorno=giorno||giornoSelezionato;
-  const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
-  if(cella==='carb'){
-    const disponibili=await carboidratiAmmessiCambioDraft(giorno,pasto,draft);
-    if(!disponibili.length){await avviso('Nessun altro carboidrato disponibile.');return;}
-    draft.primoCereale=(typeof motoreMescola==='function'?motoreMescola(disponibili):disponibili)[0];
-    const cfg=CARBOIDRATI_PASTO[draft.primoCereale];
 
-    const statoTemp = await creaStatoMotoreSettimana();
-const primoReale = await motoreV10ScegliPrimoReale(draft.primoCereale, statoTemp, {});
-if(primoReale){
-draft.primoId=primoReale.id; draft.primoSugoId=null;
-}else if(cfg && cfg.haPoolSughi){
-const sughi = await cercaComponentiModulari('sugo');
-const compatibili = sughi.filter(s=>(s.carboidratiCompatibili||[]).includes(draft.primoCereale));
-if(compatibili.length){
-const sugo = scegliMenoRecenteMotore(compatibili, r=>statoTemp.storico.ultimoRicetta[r.id]||0, ()=>0);
-draft.primoSugoId=sugo.id;
-const pr=await componiPrimoModulare(sugo, draft.primoCereale);
-draft.primoId=pr?pr.id:null;
-}else{
-draft.primoId=null; draft.primoSugoId=null;
-}
-}else{
-draft.primoId=null; draft.primoSugoId=null;
-}
-  }else if(cella==='sugo'){
-    const cfg=CARBOIDRATI_PASTO[draft.primoCereale]; if(!cfg||!cfg.haPoolSughi)return;
-    const [sughi,frigo]=await Promise.all([cercaComponentiModulari('sugo'),variantiFrigoPrioritarieRefresh()]);
-    const pool=sughi.filter(x=>x.id!==draft.primoSugoId);
-    if(pool.length){
-      let best=-Infinity,scelte=[];
-      for(const x of pool){
-        const score=punteggioRicettaFrigoRefresh(x,frigo);
-        if(score>best){best=score;scelte=[x];}else if(score===best)scelte.push(x);
-      }
-      const x=(typeof motoreMescola==='function'?motoreMescola(scelte):scelte)[0];
-      draft.primoSugoId=x.id;
-      const pr=await componiPrimoModulare(x,draft.primoCereale);
-      draft.primoId=pr?pr.id:null;
-    }
-  }else if(cella==='proteina'){
-    const macro=(await sincronizzaSoggettoProteicoDraft(pasto,giorno,draft))||await macroProteicaDraftRefresh(draft);
-    if(!macro){
-      await avviso('Non riesco a determinare la macrocategoria proteica di questo secondo.');
-      return;
-    }
-    const [tutte,frigo,storico]=await Promise.all([
-      getAll('ricette'),variantiFrigoPrioritarieRefresh(),
-      typeof costruisciStoricoConsumatiMotore==='function'?costruisciStoricoConsumatiMotore():Promise.resolve({ultimoRicetta:{}})
-    ]);
-    let pool=tutte.filter(r=>{
-      if(r.esclusa||r.piattoSpeciale||r.id===draft.proteinaId)return false;
-      const eProteina=(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina')||r.tipoPortata==='secondo';
-      if(!eProteina||!r.gruppoProteico)return false;
-      return (motoreCategoriaDiSottotipo(r.gruppoProteico)||r.gruppoProteico)===macro;
-    });
-    if(!pool.length){
-      if(typeof registraRichiestaRicettaReview==='function') await registraRichiestaRicettaReview({tipo:'famiglia_proteica_refresh_mancante',categoriaProteica:macro,sottotipoProteico:draft.sottotipoProposto||null,pasto,giorno});
-      await avviso('Non ci sono ancora altre preparazioni disponibili per questa famiglia. La combinazione è stata segnalata per il ricettario.');
-      return;
-    }
-    // Prima usa ciò che ha senso consumare dal frigo; a parità evita ciò che è stato
-    // mangiato più di recente. Nessun candidato di carne/pesce può entrare se macro=UOVA.
-    let best=-Infinity,scelte=[];
-    for(const r of pool){
-      const sf=punteggioRicettaFrigoRefresh(r,frigo);
-      const rec=(storico&&storico.ultimoRicetta&&storico.ultimoRicetta[r.id])||0;
-      const score=sf*1000000-rec;
-      if(score>best){best=score;scelte=[r];}else if(score===best)scelte.push(r);
-    }
-    const p=(typeof motoreMescola==='function'?motoreMescola(scelte):scelte)[0];
-    if(p){
-      draft.proteinaId=p.id;
-      draft.categoriaLarga=macro;
-      draft.sottotipoProposto=p.gruppoProteico;
-      draft.cottura=scegliCotturaStandard(p.gruppoProteico,p.nome);
-    }
-  }else if(cella==='cottura'){
-    const r=draft.proteinaId?await getOne('ricette',draft.proteinaId):null; if(!r)return;
-    const cotture=cottureAmmesseProteina(r.nome,r.gruppoProteico); const pool=cotture.filter(c=>c!==draft.cottura);
-    if(pool.length)draft.cottura=(typeof motoreMescola==='function'?motoreMescola(pool):pool)[0]; else if(!cotture.length)draft.cottura=null;
-  }else if(cella==='contorno'){
-    const preferenze=typeof caricaPreferenzeMotoreDaSet==='function'?await caricaPreferenzeMotoreDaSet(0):{};
-    const stato=typeof creaStatoMotoreSettimana==='function'?await creaStatoMotoreSettimana():{storico:{ultimoVerdura:{}},preferiteVerdureUsate:new Set()};
-    const nuovo=typeof scegliContornoMotore==='function'?await scegliContornoMotore(giorno,stato,preferenze,draft.contornoId):null;
-    if(nuovo)draft.contornoId=nuovo.id;
-  }
-}
-
-async function applicaSalvafrigoAPortataLegacyV77(pasto, giorno, tipo, btn, elementId){
-giorno=giorno||giornoSelezionato;
-const draft=draftPasto[giorno+'_'+pasto]; if(!draft)return;
-const scadenze=await getScadenzeImminenti(); const avanzi=await getAvanziScomodi();
-let ids=[...scadenze.map(s=>s.variantId),...avanzi.map(a=>a.variantId)];
-if(!ids.length){const inv=await getAll('inventario');ids=inv.filter(i=>i.zona==='freezer'&&i.stato==='disponibile'&&i.quantita>0).map(i=>i.variantId);}
-if(!ids.length){mostraIconaDivieto(btn);return;}
-const tutte=await getAll('ricette');
-let utili=tutte.filter(r=>!r.esclusa&&!r.piattoSpeciale&&(r.ingredienti||[]).some(i=>i.variantId&&ids.includes(i.variantId)));
-if(tipo==='carb') utili=utili.filter(r=>(r.tipoPortata||'unico')==='primo');
-else if(tipo==='proteina') utili=utili.filter(r=>((r.tipoPortata||'unico')==='secondo')||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='proteina'));
-else if(tipo==='contorno') utili=utili.filter(r=>((r.tipoPortata||'unico')==='contorno')||(r.tipoPortata==='modulare'&&r.sottoCategoriaModulare==='contorno'));
-else utili=utili.filter(r=>(r.tipoPortata||'unico')==='unico');
-if(tipo==='proteina'&&draft.categoriaLarga) utili=utili.filter(r=>motoreCategoriaDiSottotipo(r.gruppoProteico)===draft.categoriaLarga);
-if(!utili.length){mostraIconaDivieto(btn);return;}
-const top3=utili.slice(0,3);
-await mostraModalSalvafrigo(top3,'frigo',(r)=>{
-if(tipo==='carb'){draft.primoId=r.id;draft.viaSalvafrigo='primoId';}
-else if(tipo==='proteina'){draft.proteinaId=r.id;draft.viaSalvafrigo='secondoId';draft.cottura=scegliCotturaStandard(r.gruppoProteico,r.nome);}
-else if(tipo==='contorno'){draft.contornoId=r.id;draft.viaSalvafrigo='contornoId';}
-else{draft.ricettaId=r.id;draft.viaSalvafrigo='ricettaId';}
-renderPastoTabContenuto(pasto,giorno,elementId);
-});
-}
 
 /* v78 — pannello e refresh basati sulle sorgenti di copertura P/C/V. */
 function tokenProteinaUi(macro){return DietaPlannerEngine.PROTEIN_CODE[motoreCategoriaDiSottotipo(macro)]||null;}
@@ -7412,6 +6992,16 @@ async function renderNutrizioneGiorno(){
   for(const pasto of ['colazione','pranzo','cena','spuntino1','spuntino2','spuntino3']){
     const voce = await getOne('piano', giornoSelezionato+'_'+pasto);
     if(!voce) continue;
+
+    if(voce.motoreNuovo && Array.isArray(voce.realizzazioni)){
+      for(const real of voce.realizzazioni){
+        const n = real && real.nutrientiEffettivi;
+        if(!n) continue;
+        tot.kcal += Number(n.kcal)||0; tot.prot += Number(n.proteine)||0;
+        tot.carb += Number(n.carboidrati)||0; tot.grassi += Number(n.grassi)||0;
+      }
+      continue;
+    }
 
     if(pasto==='colazione'){
       if(voce.componenti || voce.colazioneSpecialeId){
