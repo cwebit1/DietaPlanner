@@ -105,6 +105,16 @@ Sono due meccaniche collegate ma distinte.
 - La deperibilità è una priorità di ordinamento e composizione, non un divieto.
 - La generazione automatica modifica soltanto giorni successivi a oggi.
 - La settimana viene scritta solo quando tutti gli slot richiesti sono validi.
+- La costruzione procede per singolo slot, con query progressive: prima una
+  combinazione P+C gia dichiarata nel catalogo; se manca, P e C vengono cercati
+  separatamente e composti secondo le regole modulari; le eccezioni dichiarate
+  nei dati o nelle regole di categoria restringono la composizione.
+- Dopo C/P viene completata la sola quota di verdura mancante; quindi lo slot
+  viene chiuso e il motore passa al successivo.
+- Sono vietati sia il prodotto cartesiano fra pool indipendenti sia un
+  risolutore globale che ricompili l'intera settimana in un'unica ricerca.
+- Gli esempi forniti durante diagnosi e revisione servono a dimostrare una
+  violazione, non diventano filtri nominativi o correzioni selettive nel codice.
 
 ### Pasto odierno
 

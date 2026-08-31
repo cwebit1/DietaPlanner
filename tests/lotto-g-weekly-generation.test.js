@@ -31,16 +31,16 @@ const M=global.DietaPlannerMotorV12;
     [{day:'2026-09-01',di:1,pasto:'pranzo'}],['carne'],['patate'],
     {vegetables:{},carbohydrates:{selection:{patate:{mode:'fixed'},pasta:{mode:'auto'}},autoEligibleKeys:['pasta']}}
   );
-  assert.equal(secondoConCarboidrato.valid,true,'ogni carboidrato attivato deve poter accompagnare un secondo');
-  assert.equal(secondoConCarboidrato.keys[0],'patate');
-  assert.equal(secondoConCarboidrato.sostituzioni[0],null,'un componente C autonomo non deve produrre falsi fallback');
-  for(const carb of ['pane','gallette','pasta','riso','patate','piadina','friselle','crackers','taralli','polenta']){
-    for(const protein of ['carne','pesce','formaggi','uova','legumi']){
-      const cross=await M.assegnaCarboidratiCompatibili([{day:'2026-09-01',di:1,pasto:'pranzo'}],[protein],[carb],{vegetables:{},carbohydrates:{selection:{[carb]:{mode:'fixed'}},autoEligibleKeys:[]}});
-      assert.equal(cross.valid,true,protein+' deve poter essere composto con '+carb);
-      assert.equal(cross.keys[0],carb);
-    }
-  }
+  assert.equal(secondoConCarboidrato.valid,true,'la proteina prioritaria deve ricevere un carboidrato compatibile o una sostituzione dichiarata');
+  assert(secondoConCarboidrato.keys[0],'carboidrato compatibile mancante');
+
+  const ricette=M.getRicette();
+  const bresaolaSeparata=ricette.find(r=>M.copertura(r).P&&!M.copertura(r).C&&(r.ingredienti||[]).some(i=>i.nome==='Bresaola'));
+  const taleggioSeparato=ricette.find(r=>M.copertura(r).P&&!M.copertura(r).C&&(r.ingredienti||[]).some(i=>i.nome==='Taleggio'));
+  assert(bresaolaSeparata&&taleggioSeparato,'fonti proteiche modulari disponibili');
+  assert.equal(M.composizioneSeparataConsentita(bresaolaSeparata,'polenta'),false,'un esempio diagnostico non deve creare una combinazione fuori array');
+  assert.equal(M.composizioneSeparataConsentita(bresaolaSeparata,'pane'),true,'la regola strutturale degli affettati deve restare valida');
+  assert.equal(M.composizioneSeparataConsentita(taleggioSeparato,'polenta'),true,'una relazione presente negli array P+C deve restare componibile');
 
   for(let iteration=0;iteration<1;iteration++){
     const avanzamento=[];
