@@ -1267,6 +1267,49 @@ async function generaCandidatiPasto(target,data,opts){
   }
   return risultati;
 }
+async function contestoConteggiSettimana(giorno){
+  const runtimeConfig=await configRuntime();
+  const weeklyIngredientCounts={},weeklySubtypeCounts={},weeklyStackKeys=new Set();
+  if(typeof getAll==='function'){
+    const settimana=startOfWeekISO(new Date((giorno||isoDate(new Date()))+'T12:00:00'));
+    const [log,piano]=await Promise.all([getAll('consumoGiorno'),getAll('piano')]);
+    for(const row of log||[]){
+      if(startOfWeekISO(new Date((row.giorno||'')+'T12:00:00'))!==settimana)continue;
+      const rr=ricetteDaIds(row.ricettaIds||[]);
+      accumulaConteggiPasto(rr,weeklyIngredientCounts,weeklySubtypeCounts);
+      rr.flatMap(r=>r.chiaviStack||[]).forEach(k=>weeklyStackKeys.add(k));
+    }
+    for(const voce of piano||[]){
+      const giornoVoce=String(voce.id||'').slice(0,10);
+      if(!giornoVoce||startOfWeekISO(new Date(giornoVoce+'T12:00:00'))!==settimana)continue;
+      const rr=ricetteDaVocePiano(voce);
+      accumulaConteggiPasto(rr,weeklyIngredientCounts,weeklySubtypeCounts);
+      rr.flatMap(r=>r.chiaviStack||[]).forEach(k=>weeklyStackKeys.add(k));
+    }
+  }
+  return {runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys};
+}
+/* Risolve UN singolo slot pasto su richiesta (fuori dal flusso di generazione
+   settimanale in blocco), usando la stessa logica a layer completa
+   (costruisciPastoAQuery: Layer 1/2a/2b/3) invece dei vecchi compositori
+   modulari. target = token proteico/gruppo richiesto (es. 'PC','PP','carne'...).
+   opzioni.carbKey forza un carboidrato specifico; altrimenti ne viene scelto
+   uno a caso tra quelli AUTO ammessi, coerente con creaSequenzaCarboidrati. */
+async function risolviSlotSingolo(giorno,pasto,target,opzioni){
+  opzioni=opzioni||{};
+  const resolved=await caricaConfigurazioneNutrizionaleRisolta();
+  if(!resolved.valid)return null;
+  const ctx=await contestoConteggiSettimana(giorno);
+  ctx.vegetablePortions=resolved.vegetables;
+  const auto=(resolved.carbohydrates&&resolved.carbohydrates.autoEligibleKeys||[]).slice();
+  const carbKey=opzioni.carbKey||(auto.length?auto[Math.floor(Math.random()*auto.length)]:null);
+  if(!carbKey)return null;
+  const requiredVegetableVariantId=opzioni.requiredVegetableVariantId!==undefined?opzioni.requiredVegetableVariantId:(typeof verduraRicorrenteRichiesta==='function'?await verduraRicorrenteRichiesta(giorno,pasto):null);
+  const slot={day:giorno,pasto,target,carbKey,requiredVegetableVariantId};
+  const candidato=await costruisciPastoAQuery(slot,ctx);
+  if(!candidato)return null;
+  return await assegnaCondimentiRotazioneGlobale(candidato,giorno);
+}
 async function generaPasto(target,data,opts){
   let candidati=await generaCandidatiPasto(target,data,opts||{});
   if(!(opts&&opts.usaInventario))candidati=prioritaVerdureProgrammazionePasti(candidati,data);
@@ -1721,7 +1764,7 @@ global.DietaPlannerMotorV12={
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,getInventarioDisponibile,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
-  generaPasto,generaPianoSettimana,rigeneraPasto,statoRollPasto,ruotaPasto,materializzaRealizzazione,
+  generaPasto,generaPianoSettimana,rigeneraPasto,risolviSlotSingolo,statoRollPasto,ruotaPasto,materializzaRealizzazione,
   snapshotRealizzazione,
   applicaOverrideQuantitaRealizzazione,
   normalizzaRealizzazioniVerdura,
