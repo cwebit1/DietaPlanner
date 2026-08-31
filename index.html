@@ -877,18 +877,18 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   </div>
 </div>
 
-<!-- ===== MODAL: import ricette al primo avvio (libreria vuota) ===== -->
+<!-- ===== MODAL: ricettario non disponibile al primo avvio ===== -->
 <div class="modal-overlay hidden" id="modalImportaRicetteIniziale">
   <div class="modal">
     <div class="modal-head">
-      <h3>Carica la libreria ricette</h3>
+      <h3>Ricettario non disponibile</h3>
       <button class="close-x" data-close="modalImportaRicetteIniziale">✕</button>
     </div>
     <div class="meta" style="margin-bottom:16px;">
-      Non c'è ancora nessuna ricetta su questo dispositivo. Seleziona il file ricette.json per iniziare — potrai reimportarlo in qualsiasi momento da Impostazioni.
+      Non è stato possibile caricare il ricettario dell'app. Controlla la connessione e riprova: il catalogo viene caricato automaticamente.
     </div>
-    <button class="primary" id="btnModalImportaRicette" style="margin-bottom:8px;">Seleziona ricette.json</button>
-    <button class="secondary" id="btnModalImportaRicettePiuTardi">Più tardi</button>
+    <button class="primary" id="btnModalRiprovaRicettario" style="margin-bottom:8px;">Riprova</button>
+    <button class="secondary" id="btnModalImportaRicettePiuTardi">Chiudi</button>
   </div>
 </div>
 
@@ -4595,10 +4595,10 @@ async function renderPiano(){
   if(!tutteRicette.length){
     benvenutoEl.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--accent);">
       <h3 style="margin-bottom:8px;">Prima di iniziare 👋</h3>
-      <div class="meta" style="margin-bottom:10px;">Non c'è ancora nessuna ricetta in libreria su questo dispositivo. Vai su Impostazioni → Libreria ricette e importa il file ricette.json — poi torna qui.</div>
-      <button class="secondary" id="btnBenvenutoVaiImpostazioni" style="width:100%;">Vai a Impostazioni</button>
+      <div class="meta" style="margin-bottom:10px;">Non è stato possibile caricare il ricettario dell'app. Controlla la connessione e riprova: il catalogo viene caricato automaticamente.</div>
+      <button class="secondary" id="btnBenvenutoRiprovaRicettario" style="width:100%;">Riprova</button>
     </div>`;
-    document.getElementById('btnBenvenutoVaiImpostazioni').addEventListener('click', ()=> mostraVista('impostazioni'));
+    document.getElementById('btnBenvenutoRiprovaRicettario').addEventListener('click', e=>riprovaInizializzazioneRicettario(e.currentTarget));
     document.getElementById('selettoreGiorni').innerHTML = '';
     return;
   }
@@ -8306,6 +8306,16 @@ const CATEGORIE_PROTEICHE_SET = [
 async function generaPianoSettimana(scartoSettimane,opzioni){
   return await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,opzioni||{});
 }
+async function mostraFeedbackGenerazioneMenu(esito){
+  if(!esito||!Array.isArray(esito.generati))throw new Error('Il motore non ha restituito un risultato valido.');
+  if(!esito.generati.length){
+    const dettaglio=esito.errori&&esito.errori.length?esito.errori.join(' '):'Non risultano pasti futuri da programmare.';
+    await renderMenuSettimanale();
+    await avviso('Nessun pasto generato. '+dettaglio);
+    return true;
+  }
+  return false;
+}
 async function generaMenuDaConfigSet(scartoSettimane){
   scartoSettimane=scartoSettimane||0;
   /* Nell'ultimo giorno della settimana non esistono più slot futuri nella
@@ -8319,13 +8329,7 @@ async function generaMenuDaConfigSet(scartoSettimane){
   menuDraft={scarto:scartoSettimane,giorni:new Set(giorni),voci:new Map(),modificata:false};
   mostraVista('menu');
   const esito=await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,{forza:true});
-  if(!esito||!Array.isArray(esito.generati))throw new Error('Il motore non ha restituito un risultato valido.');
-  if(!esito.generati.length){
-    const dettaglio=esito.errori&&esito.errori.length?esito.errori.join(' '):'Non risultano pasti futuri da programmare.';
-    await renderMenuSettimanale();
-    await avviso('Nessun pasto generato. '+dettaglio);
-    return esito;
-  }
+  if(await mostraFeedbackGenerazioneMenu(esito))return esito;
   await renderMenuSettimanale();
   return esito;
 }
@@ -8507,10 +8511,16 @@ function renderMenuFooter(){
     const giorni=giorniSettimana(menuSettimanaScarto).filter(g=>g>todayISO());
     if(!giorni.length){await avviso('I giorni passati sono in sola lettura.');return;}
     for(const g of giorni)for(const p of ['colazione','pranzo','cena'])await delKey('piano',g+'_'+p);
-    await generaPianoSettimana(menuSettimanaScarto,{forza:true});
+    const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true});
+    if(await mostraFeedbackGenerazioneMenu(esito))return;
     renderMenuSettimanale();
   });
-  f.querySelector('#btnRigeneraMenu').addEventListener('click',async()=>{if(!giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO())){await avviso('I giorni passati sono in sola lettura.');return;}await generaPianoSettimana(menuSettimanaScarto,{forza:true});renderMenuSettimanale();});
+  f.querySelector('#btnRigeneraMenu').addEventListener('click',async()=>{
+    if(!giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO())){await avviso('I giorni passati sono in sola lettura.');return;}
+    const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true});
+    if(await mostraFeedbackGenerazioneMenu(esito))return;
+    renderMenuSettimanale();
+  });
   f.querySelector('#btnSalvaMenu').addEventListener('click',async()=>{
     if(!menuDraft)return;
     await commitMenuDraftAtomico();
@@ -9068,18 +9078,36 @@ document.getElementById('fileImportaRicette').addEventListener('change', async (
   e.target.value = '';
 });
 
-/* Punto 6: al primo avvio, se la libreria ricette è ancora vuota, propone subito un
-   modal per importare ricette.json — riusa esattamente lo stesso input file e la
-   stessa logica di importaListaRicette() del bottone "Importa ricette" in Impostazioni,
-   così non duplica alcuna logica di parsing/validazione. */
+/* Se l'avvio dalla cache non trova ancora i cataloghi JSON, il motore puo inizializzarsi
+   con zero ricette. Il recupero corretto e rilanciare l'auto-init dei cataloghi attivi. */
 async function controllaModalImportaRicetteIniziale(){
   const ricette = await getAll('ricette');
   if(ricette.length) return;
   apriModalInAlto('modalImportaRicetteIniziale');
 }
-document.getElementById('btnModalImportaRicette').addEventListener('click', ()=>{
-  document.getElementById('fileImportaRicette').click();
-});
+async function riprovaInizializzazioneRicettario(btn){
+  const testoOriginale=btn&&btn.textContent;
+  if(btn){btn.disabled=true;btn.textContent='Riprovo…';}
+  try{
+    const esito=await DietaPlannerMotorV12.inizializza({basePath:''});
+    const ricette=await getAll('ricette');
+    if(!esito||!esito.concrete||!ricette.length){
+      await avviso('Ricettario ancora non disponibile. Controlla la connessione e riprova.');
+      return false;
+    }
+    document.getElementById('modalImportaRicetteIniziale').classList.add('hidden');
+    await renderVersioneHeader();
+    await renderPiano();
+    return true;
+  }catch(err){
+    console.error('[riprova ricettario]',err);
+    await avviso('Ricettario ancora non disponibile: '+(err.message||err));
+    return false;
+  }finally{
+    if(btn&&document.contains(btn)){btn.disabled=false;btn.textContent=testoOriginale;}
+  }
+}
+document.getElementById('btnModalRiprovaRicettario').addEventListener('click', e=>riprovaInizializzazioneRicettario(e.currentTarget));
 document.getElementById('btnModalImportaRicettePiuTardi').addEventListener('click', ()=>{
   document.getElementById('modalImportaRicetteIniziale').classList.add('hidden');
 });
