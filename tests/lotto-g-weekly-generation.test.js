@@ -27,6 +27,15 @@ const M=global.DietaPlannerMotorV12;
   }
   assert(breakfastVariants.filter(v=>v.colazioneGruppo!=='spuntino').every(v=>v.porzioneColazione),'ogni opzione della colazione deve mantenere la propria porzione');
 
+  const fallback=await M.assegnaCarboidratiCompatibili(
+    [{day:'2026-09-01',di:1,pasto:'pranzo'}],['carne'],['patate'],
+    {vegetables:{},carbohydrates:{selection:{patate:{mode:'fixed'},pasta:{mode:'auto'}},autoEligibleKeys:['pasta']}}
+  );
+  assert.equal(fallback.valid,true,'un incrocio C/P scoperto non deve bloccare il piano');
+  assert.equal(fallback.keys[0],'pasta','deve essere scelto un carboidrato compatibile ammesso');
+  assert.equal(fallback.sostituzioni[0].richiesto,'patate');
+  assert.equal(fallback.sostituzioni[0].usato,'pasta');
+
   for(let iteration=0;iteration<20;iteration++){
     const result=await M.generaPianoSettimana(0,{forza:true});
     assert.deepEqual(result.errori,[],`generazione ${iteration+1}`);

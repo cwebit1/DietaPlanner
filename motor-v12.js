@@ -101,7 +101,11 @@ function creaSequenzaProteine(resolved,slotRefs,tab,rng,seedCounts){
 
 async function assegnaCarboidratiCompatibili(slotRefs,proteinTargets,carbKeys,resolved){
   const counts={};for(const key of carbKeys||[])counts[key]=(counts[key]||0)+1;
-  const unique=Object.keys(counts),opzioni=[];
+  const plan=resolved&&resolved.carbohydrates||{},selection=plan.selection||{};
+  const unique=Object.keys(counts),fallbackKeys=uniq([
+    ...(plan.autoEligibleKeys||[]),
+    ...Object.keys(selection).filter(k=>selection[k]&&selection[k].mode!=='excluded')
+  ]),opzioni=[];
   for(let i=0;i<slotRefs.length;i++){
     const slot=slotRefs[i],target=proteinTargets[i],keys=[];
     for(const key of unique){
@@ -110,7 +114,6 @@ async function assegnaCarboidratiCompatibili(slotRefs,proteinTargets,carbKeys,re
     }
     opzioni.push(keys);
   }
-  if(opzioni.some(x=>!x.length))return {valid:false,errors:['Il nuovo ricettario non copre almeno uno degli incroci proteina/carboidrato richiesti.'],keys:[]};
   const ordine=slotRefs.map((_,i)=>i).sort((a,b)=>opzioni[a].length-opzioni[b].length),out=Array(slotRefs.length);
   function assegna(pos){
     if(pos>=ordine.length)return true;
@@ -118,8 +121,52 @@ async function assegnaCarboidratiCompatibili(slotRefs,proteinTargets,carbKeys,re
     for(const key of disponibili){counts[key]--;out[idx]=key;if(assegna(pos+1))return true;counts[key]++;out[idx]=null;}
     return false;
   }
-  if(!assegna(0))return {valid:false,errors:['Le quantità C/P richieste sono valide separatamente ma non abbinabili con la copertura attuale del nuovo ricettario.'],keys:[]};
-  return {valid:true,errors:[],keys:out};
+  if(assegna(0))return {valid:true,errors:[],keys:out,sostituzioni:Array(slotRefs.length).fill(null)};
+
+  /* Nessun incastro perfetto: manteniamo inderogabili le proteine e troviamo
+     il massimo numero possibile di carboidrati richiesti. Gli slot rimasti
+     ricevono un carboidrato AUTO compatibile (mai uno escluso); la differenza
+     viene restituita al chiamante per essere registrata e resa visibile. */
+  out.fill(null);
+  for(let i=0;i<slotRefs.length;i++){
+    const slot=slotRefs[i],target=proteinTargets[i];
+    for(const key of fallbackKeys){
+      if(opzioni[i].includes(key))continue;
+      const candidati=await generaCandidatiPasto(target,slot.day,{carbBudget:{requiredKey:key},vegetablePortions:resolved.vegetables});
+      if(candidati.length)opzioni[i].push(key);
+    }
+  }
+  if(opzioni.some(x=>!x.length))return {valid:false,errors:['Il ricettario non contiene alcun carboidrato compatibile con almeno una delle classi proteiche programmate.'],keys:[],sostituzioni:[]};
+  const tokenRichiesti=[];
+  for(const [key,n] of Object.entries(counts))for(let i=0;i<n;i++)tokenRichiesti.push(key);
+  tokenRichiesti.sort((a,b)=>opzioni.filter(x=>x.includes(a)).length-opzioni.filter(x=>x.includes(b)).length);
+  const slotPerToken=Array(tokenRichiesti.length).fill(-1),tokenPerSlot=Array(slotRefs.length).fill(-1);
+  function abbinaToken(t,visti){
+    const key=tokenRichiesti[t],slots=ordine.filter(i=>opzioni[i].includes(key));
+    for(const slot of slots){
+      if(visti.has(slot))continue;visti.add(slot);
+      if(tokenPerSlot[slot]<0||abbinaToken(tokenPerSlot[slot],visti)){
+        tokenPerSlot[slot]=t;slotPerToken[t]=slot;return true;
+      }
+    }
+    return false;
+  }
+  for(let t=0;t<tokenRichiesti.length;t++)abbinaToken(t,new Set());
+  for(let slot=0;slot<tokenPerSlot.length;slot++)if(tokenPerSlot[slot]>=0)out[slot]=tokenRichiesti[tokenPerSlot[slot]];
+  const mancanti=tokenRichiesti.filter((_,t)=>slotPerToken[t]<0),sostituzioni=Array(slotRefs.length).fill(null);
+  for(const slot of ordine){
+    if(out[slot])continue;
+    const compatibiliAuto=opzioni[slot].filter(k=>(plan.autoEligibleKeys||[]).includes(k));
+    const usato=compatibiliAuto[0]||opzioni[slot][0];
+    if(!usato)return {valid:false,errors:['Nessun carboidrato ammesso è compatibile con la proteina '+proteinTargets[slot]+'.'],keys:[],sostituzioni:[]};
+    const richiesto=mancanti.shift()||null;
+    out[slot]=usato;
+    sostituzioni[slot]={
+      tipo:'carboidrato_sostituito',richiesto,usato,
+      messaggio:'Richiesto '+(richiesto||'un carboidrato programmato')+', sostituito con '+usato+' perché non esiste ancora una combinazione compatibile con la classe proteica '+proteinTargets[slot]+'.'
+    };
+  }
+  return {valid:true,errors:[],keys:out,sostituzioni};
 }
 async function limitaCarboidratiAutoAllaCopertura(resolved,slotRefs,proteinTargets){
   const plan=resolved&&resolved.carbohydrates||{},auto=plan.autoEligibleKeys||[];
@@ -1170,7 +1217,9 @@ async function generaPianoSettimana(scarto,opzioni){
       records.push({
         id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),
-        categoriaTarget:target,carboidratoPianificato:abbinamento.keys[si]
+        categoriaTarget:target,carboidratoPianificato:abbinamento.keys[si],
+        carboidratoRichiesto:abbinamento.sostituzioni&&abbinamento.sostituzioni[si]?abbinamento.sostituzioni[si].richiesto:abbinamento.keys[si],
+        avvisoProgrammazione:abbinamento.sostituzioni&&abbinamento.sostituzioni[si]||null
       });
       generated.push(id);
     }

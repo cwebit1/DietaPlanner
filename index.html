@@ -518,6 +518,7 @@ details{margin-top:14px;}
 .pasto-riga-essenziale:last-child{border-bottom:none;}
 .pasto-riga-etichetta{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);margin-bottom:3px;}
 .pasto-riga-valore{font-size:.9rem;font-weight:700;min-width:0;flex:1;}
+.pasto-riga-valore.avviso-programmazione,.menu-riepilogo-macro.avviso-programmazione{color:#f1c40f;}
 .pasto-riga-azioni{display:flex;align-items:center;gap:4px;flex:0 0 auto;}
 .pasto-riga-azioni button{background:none;border:none;color:var(--text);cursor:pointer;font-size:.9rem;padding:5px;min-width:30px;}
 .pasto-selettori{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;}
@@ -5689,7 +5690,8 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     const roll=(!voce.consumato&&giorno>=todayISO())
       ?'<button type="button" data-nm-roll-tipo="'+riga.tipo+'" title="Cambia '+riga.label.toLowerCase()+'" '+(statoRoll[riga.tipo]?'':'disabled')+'>🔄</button>'
       :'';
-    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+riga.icona+' '+riga.label+'</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore">'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+'</span><span class="pasto-riga-azioni">'+roll+'</span></div>'+dettaglio+'</div>';
+    const avvisoCarb=riga.tipo==='C'&&voce.avvisoProgrammazione,classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(voce.avvisoProgrammazione.messaggio)+'"':'';
+    html+='<div class="pasto-riga-essenziale"><div class="pasto-riga-etichetta">'+riga.icona+' '+riga.label+'</div><div class="row" style="align-items:center;gap:8px;"><span class="pasto-riga-valore'+classeAvviso+'"'+titoloAvviso+'>'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+(avvisoCarb?' ⚠':'')+'</span><span class="pasto-riga-azioni">'+roll+'</span></div>'+dettaglio+'</div>';
   }
 
   html+='<div class="meta" style="margin-top:8px;">'+Math.round(kcal)+' kcal · nuovo DB</div>';
@@ -8328,7 +8330,8 @@ async function riepilogoTestualePasto(giorno, pasto){
         ['🥬','V',t=>t==='V'||t==='V-']
       ].map(([icona,tipo,match])=>{
         const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(match)).map(r=>r.nome).filter(Boolean))];
-        return '<span class="menu-riepilogo-macro" data-menu-macro="'+tipo+'">'+icona+' '+(valori.length?valori.join(' · '):'Seleziona pasto')+'</span>';
+        const avvisoCarb=tipo==='C'&&voce.avvisoProgrammazione,classe=avvisoCarb?' avviso-programmazione':'',titolo=avvisoCarb?' title="'+String(voce.avvisoProgrammazione.messaggio||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'"':'';
+        return '<span class="menu-riepilogo-macro'+classe+'" data-menu-macro="'+tipo+'"'+titolo+'>'+icona+' '+(valori.length?valori.join(' · '):'Seleziona pasto')+(avvisoCarb?' ⚠':'')+'</span>';
       });
       return materializzate.length ? prefisso + righe.join('<br>') : testoVuoto;
     }

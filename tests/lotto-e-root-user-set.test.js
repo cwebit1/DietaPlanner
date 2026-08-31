@@ -5,6 +5,8 @@ for(const marker of ['async function risolviSetUtenteCorrente(userOverride)','co
 for(const marker of ['class="colazione-gruppo-slide"','data-set-colpref-giorno','colazionePreferitaGiorni'])assert(index.includes(marker),'contratto colazione ricorrente mancante: '+marker);
 assert(index.includes("const esito=await DietaPlannerMotorV12.generaPianoSettimana"),'il flusso UI deve verificare l’esito della generazione');
 assert(index.includes("if(!esito.generati.length)"),'il flusso UI deve rendere visibile una generazione vuota o fallita');
+assert(index.includes('avviso-programmazione'),'la sostituzione C/P deve essere evidenziata nel Piano e nel Menù');
+assert(motor.includes("tipo:'carboidrato_sostituito'"),'il motore deve registrare il motivo della sostituzione');
 assert(index.includes('NUTRITION_CONFIG_SET.PDF_BASELINE.carbohydrateWeeklyCaps[t.chiave]'),'il Set deve classificare i carboidrati dalla baseline canonica');
 assert(index.indexOf('nutrition-config.js?v=2')<index.indexOf('const NUTRITION_CONFIG_SET='),'il resolver deve esistere prima dell’inizializzazione del Set');
 assert(motor.includes("'configCarboidratiStati'"));assert(motor.includes("'configCarboidratiExplicitZeroKeys'"));
