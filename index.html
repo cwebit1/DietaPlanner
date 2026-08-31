@@ -3068,13 +3068,13 @@ async function renderSetVerduraRicorrente(){
     else{await delKey('impostazioni','verduraRicorrente');await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:[]});}
     await renderMantieniSwipe(renderSetVerduraRicorrente);
   }));
-  const giorni=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],head=giorni.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join(''),totale=pasti.size,maxPasti=5,pieno=totale>=maxPasti;
-  const riga=pasto=>giorni.map((_,i)=>{const key=pasto+'_'+i,on=pasti.has(key),disabled=!attivaValida||(pieno&&!on);return `<td class="cella"><button data-vr-pasto="${key}" class="${on?'active':''}" ${disabled?'disabled':''}></button></td>`;}).join('');
+  const giorni=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'],head=giorni.map(g=>`<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">${g}</th>`).join(''),totale=pasti.size;
+  const riga=pasto=>giorni.map((_,i)=>{const key=pasto+'_'+i,on=pasti.has(key),disabled=!attivaValida;return `<td class="cella"><button data-vr-pasto="${key}" class="${on?'active':''}" ${disabled?'disabled':''}></button></td>`;}).join('');
   tab.innerHTML=`<table class="tabella-giorno"><tr><th class="col-label"></th>${head}</tr><tr><td class="riga-label">Pranzo</td>${riga('pranzo')}</tr><tr><td class="riga-label">Cena</td>${riga('cena')}</tr></table>`;
-  tab.querySelectorAll('[data-vr-pasto]:not([disabled])').forEach(b=>b.addEventListener('click',async()=>{const key=b.dataset.vrPasto,rec=await getOne('impostazioni','verduraRicorrentePasti'),set=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);if(set.has(key))set.delete(key);else{if(set.size>=5){await avviso('Puoi programmare al massimo 5 pasti con la verdura ricorrente.');return;}set.add(key);}await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:[...set]});await renderSetVerduraRicorrente();}));
+  tab.querySelectorAll('[data-vr-pasto]:not([disabled])').forEach(b=>b.addEventListener('click',async()=>{const key=b.dataset.vrPasto,rec=await getOne('impostazioni','verduraRicorrentePasti'),set=new Set(rec&&Array.isArray(rec.valore)?rec.valore:[]);if(set.has(key))set.delete(key);else set.add(key);await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:[...set]});await renderSetVerduraRicorrente();}));
   if(nota){
     if(attiva&&!attivaValida)nota.textContent='⚠ La verdura ricorrente salvata è ora esclusa dal piano nutrizionista. Scegline un’altra oppure Nessuna.';
-    else nota.textContent=attivaObj?`✓ ${attivaObj.nome}: ${totale} / 5 pasti vincolati. Nei pasti selezionati il motore userà obbligatoriamente un contorno con questa verdura.`:'Seleziona una verdura per attivare la programmazione dei pasti.';
+    else nota.textContent=attivaObj?`✓ ${attivaObj.nome}: ${totale} pasti vincolati. Nei pasti selezionati il motore userà obbligatoriamente questa verdura.`:'Seleziona una verdura per attivare la programmazione dei pasti.';
     if(attivaObj&&attivaValida){nota.style.border='1px solid #2ecc71';nota.style.background='rgba(46,204,113,0.35)';nota.style.borderRadius='8px';nota.style.padding='8px 10px';nota.style.color='var(--text)';}else{nota.style.border='none';nota.style.background='transparent';nota.style.borderRadius='0';nota.style.padding='0';nota.style.color='';}
   }
 }
