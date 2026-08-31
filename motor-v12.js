@@ -543,7 +543,7 @@ function gruppoProteicoDaIngredienti(ingredienti,classe){
 function chiaviStack(combinazione,modelId,stackScope){
   const keys=[];
   for(const s of combinazione.slot){
-    if(s.categoria!=='C'){
+    if(s.categoria!=='C'&&s.categoria!=='V'){
       const componenti=s.ingrediente&&Array.isArray(s.ingrediente.componenti)&&s.ingrediente.componenti.length?s.ingrediente.componenti:(s.ingrediente?[s.ingrediente]:[]);
       for(const i of componenti)if(i&&i.nome&&Number(i.stack===undefined?s.ingrediente.stack:i.stack)!==0)keys.push('i:'+(i.categoria||s.categoria)+':'+i.nome);
       if(s.cottura&&s.cottura.nome&&Number(s.cottura.stack)!==0) keys.push('c:'+s.categoria+':'+s.cottura.nome);
@@ -552,6 +552,7 @@ function chiaviStack(combinazione,modelId,stackScope){
   for(const g of combinazione.condimenti) for(const i of (g.ingredienti||[])) if(i.nome&&Number(i.stack)!==0) keys.push('cond:'+i.nome);
   if(!keys.length){
     for(const s of combinazione.slot){
+      if(s.categoria==='V')continue;
       const componenti=s.ingrediente&&Array.isArray(s.ingrediente.componenti)&&s.ingrediente.componenti.length?s.ingrediente.componenti:(s.ingrediente?[s.ingrediente]:[]);
       for(const i of componenti)if(i&&i.nome&&Number(i.stack===undefined?s.ingrediente.stack:i.stack)!==0)keys.push('i:'+(i.categoria||s.categoria)+':'+i.nome);
       if(s.cottura&&s.cottura.nome&&Number(s.cottura.stack)!==0) keys.push('c:'+s.categoria+':'+s.cottura.nome);
@@ -1183,14 +1184,16 @@ function completaResiduoVerduraRicette(ricette,pool,data,portionConfig){
   out=out.map(r=>r.id===dedicata.id?ridimensionaVerdureRicetta(r,frazioneDedicata,portionConfig):r);
   return out;
 }
-function risultatoPasto(token,ricette,prioritaComposizione){
-  return {
+function risultatoPasto(token,ricette,prioritaComposizione,avviso){
+  const out={
     targetToken:token,
     prioritaComposizione:Number(prioritaComposizione)||0,
     firmaPasto:firmaPastoDaRicette(ricette),
     realizzazioni:realizzazioniDaRicette(ricette),
     ricette
   };
+  if(avviso)out.avviso=avviso;
+  return out;
 }
 function accumulaConteggiPasto(ricette,ingredientCounts,subtypeCounts){
   const ingredientIds=new Set(),subtypes=new Set();
@@ -1296,7 +1299,16 @@ async function costruisciPastoAQuery(slot,ctx){
   const separate=ordinaPerStackPoiCaso(proteine.filter(r=>!copertura(r).C&&composizioneSeparataConsentita(r,slot.carbKey)),ctx.weeklyStackKeys);
   const fontiCarboidrato=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
   const basi=combinate.map(r=>[r]);
-  if(fontiCarboidrato.length)for(let i=0;i<separate.length;i++)basi.push([separate[i],fontiCarboidrato[i%fontiCarboidrato.length]]);
+  let fontiUsate=fontiCarboidrato,carboidratoForzato=false;
+  if(!fontiUsate.length&&separate.length){
+    /* Layer 2b: nessuna fonte C compatibile con slot.carbKey. Non si blocca
+       la generazione: si forza una C da tutto il pool carboidrati, ignorando
+       il vincolo di compatibilita', e si marca il pasto risultante con un
+       avviso (usato dalla UI per il flag giallo + tooltip). */
+    fontiUsate=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P),ctx.weeklyStackKeys);
+    carboidratoForzato=fontiUsate.length>0;
+  }
+  if(fontiUsate.length)for(let i=0;i<separate.length;i++)basi.push([separate[i],fontiUsate[i%fontiUsate.length]]);
   const candidati=[];
 
   for(const base of basi){
@@ -1322,7 +1334,7 @@ async function costruisciPastoAQuery(slot,ctx){
       if(!contieneRichiesta&&coperturaV.remainingFraction<=0.000001)continue;
       if(!pastoCompletoPerToken(ricette,token))continue;
       if(!pastoRispettaConteggi(ricette,ctx.runtimeConfig,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts))continue;
-      candidati.push(risultatoPasto(token,ricette,base.length===1?0:1));
+      candidati.push(risultatoPasto(token,ricette,base.length===1?0:1,carboidratoForzato&&base.length===2?'Ricetta per carboidrato definito non disponibile':null));
     }
   }
   return scegliCandidatoConMargine(candidati,{runtimeConfig:ctx.runtimeConfig,weeklyIngredientCounts:ctx.weeklyIngredientCounts,weeklySubtypeCounts:ctx.weeklySubtypeCounts});
@@ -1387,7 +1399,8 @@ async function generaPianoSettimana(scarto,opzioni){
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),
         categoriaTarget:target,carboidratoPianificato:abbinamento.keys[si],
         carboidratoRichiesto:abbinamento.sostituzioni&&abbinamento.sostituzioni[si]?abbinamento.sostituzioni[si].richiesto:abbinamento.keys[si],
-        avvisoProgrammazione:abbinamento.sostituzioni&&abbinamento.sostituzioni[si]||null
+        avvisoProgrammazione:abbinamento.sostituzioni&&abbinamento.sostituzioni[si]||null,
+        avvisoCarboidrato:soluzione.scelte[si].avviso||null
       });
       generated.push(id);
   }

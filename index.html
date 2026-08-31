@@ -5736,7 +5736,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     const roll=(!voce.consumato&&giorno>=todayISO())
       ?'<button type="button" data-nm-roll-tipo="'+riga.tipo+'" title="Cambia '+riga.label.toLowerCase()+'" '+(statoRoll[riga.tipo]?'':'disabled')+'>🔄</button>'
       :'';
-    const avvisoCarb=riga.tipo==='C'&&voce.avvisoProgrammazione,classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(voce.avvisoProgrammazione.messaggio)+'"':'';
+    const avvisoCarb=riga.tipo==='C'&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(messaggioAvviso)+'"':'';
     html+='<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icona+'</span><span class="pasto-riga-piatto'+classeAvviso+'"'+titoloAvviso+'>'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+(avvisoCarb?' ⚠':'')+dettaglio+'</span><span class="pasto-riga-comando">'+roll+'</span></div>';
   }
   html+='</div>';
@@ -8436,7 +8436,7 @@ async function riepilogoTestualePasto(giorno, pasto){
         ['🥬','V',t=>t==='V'||t==='V-']
       ].map(([icona,tipo,match])=>{
         const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(match)).map(r=>r.nome).filter(Boolean))];
-        const avvisoCarb=tipo==='C'&&voce.avvisoProgrammazione,classe=avvisoCarb?' avviso-programmazione':'',titolo=avvisoCarb?' title="'+String(voce.avvisoProgrammazione.messaggio||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'"':'';
+        const avvisoCarb=tipo==='C'&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avvisoCarb?' avviso-programmazione':'',titolo=avvisoCarb?' title="'+String(messaggioAvviso).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'"':'';
         return '<span class="menu-riepilogo-macro'+classe+'" data-menu-macro="'+tipo+'"'+titolo+'>'+icona+' '+(valori.length?valori.join(' · '):'Seleziona pasto')+(avvisoCarb?' ⚠':'')+'</span>';
       });
       return materializzate.length ? prefisso + righe.join('<br>') : testoVuoto;
@@ -8473,7 +8473,7 @@ async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
   ];
   return righe.map(riga=>{
     const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(riga.match)).map(r=>r.nome).filter(Boolean))];
-    const avviso=riga.tipo==='C'&&voce&&voce.avvisoProgrammazione,classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(voce.avvisoProgrammazione.messaggio||'')+'"':'';
+    const avviso=riga.tipo==='C'&&voce&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce&&voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||(voce&&voce.avvisoCarboidrato)||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
     const stato=voce&&voce.consumato?'✓ ':voce&&voce.origine==='utente'?'⭐ ':'';
     return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+stato+esc(valori.length?valori.join(' · '):'— non ancora programmato —')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+azioneHtml+'</span></div>';
   }).join('');
