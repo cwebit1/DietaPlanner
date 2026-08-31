@@ -8976,7 +8976,8 @@ async function calcolaListaSpesa(scartoSettimane){
     el.appendChild(headerCat);
     for(const s of vociCat){
     const v = varianti.find(x=>x.id===s.variantId);
-    const pillTesto = v && v.unitaPezzo ? formattaQuantita(v, s.totaleAcquisto) : `${s.confezioni}× ${s.formato>0?s.formato+'g':'sfuso'}`;
+    const grammiVisibili=Math.round(Number(s.formato)||0);
+    const pillTesto = v && v.unitaPezzo ? formattaQuantita(v, s.totaleAcquisto) : `${s.confezioni}× ${grammiVisibili>0?grammiVisibili+'g':'sfuso'}`;
     const row = document.createElement('div');
     row.className = 'card';
     row.style.padding = '10px 14px';

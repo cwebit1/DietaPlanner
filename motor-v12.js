@@ -614,7 +614,7 @@ async function sincronizzaIngredientiIndexedDB(){
     await put('ingredienti',b); baseByName.set(key,b);
     let v=varByName.get(key);
     if(!v) v={id:'nrv_'+slug(nome),ingredienteId:b.id,nome};
-    const alta=d.deperibilita==='alta',surg=d.conservazione==='surgelato';
+    const alta=d.deperibilita==='alta',surg=d.conservazione==='surgelato',fresco=d.conservazione==='fresco';
     Object.assign(v,{
       ingredienteId:b.id,nome,
       /* Il selettore della colazione lavora sulle varianti, mentre la fonte
@@ -625,10 +625,10 @@ async function sincronizzaIngredientiIndexedDB(){
       porzioneColazione:d.sottoCategoriaColazione?d.porzione||null:null,
       kcal100:Number(d.kcal)||0,prot100:Number(d.proteine)||0,
       carb100:Number(d.carboidrati)||0,grassi100:Number(d.grassi)||0,
-      categoria:surg?'surgelato':(alta?'fresco':'conf'),
+      categoria:surg?'surgelato':(fresco||alta?'fresco':'conf'),
       consistenza:d.gruppo==='grassi'?'gia_cotto':'da_cuocere',
       congelabile:surg?'si':(alta?'si':'no'),
-      zona:surg?'freezer':(alta?'frigo':'dispensa'),
+      zona:surg?'freezer':(fresco||alta?'frigo':'dispensa'),
       formato:Number(d.formato&&d.formato.valore||d.formatoRiordino&&d.formatoRiordino.valore)||0,
       unitaPezzo:d.unitaPorzione==='pezzi',
       pesoPezzo:Number(d.pesoPezzo||(d.unitaPorzione==='pezzi'&&d.pesoPorzioneGrammi&&d.porzione?d.pesoPorzioneGrammi/d.porzione:0))||null,
