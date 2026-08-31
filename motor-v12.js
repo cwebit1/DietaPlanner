@@ -412,6 +412,13 @@ function compilaPartiRicetta(parti){
 }
 
 function costruisciNomeRicetta(ricetta,combinazione){
+  if(ricetta&&ricetta.nomeFisso){
+    const parti=[{tipo:'nomeFisso',valore:String(ricetta.nomeFisso)}];
+    return {
+      parti,
+      display:String(ricetta.nomeFisso)
+    };
+  }
   const parti=estraiPartiRicetta(ricetta,combinazione);
   return {
     parti,
