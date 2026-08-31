@@ -92,6 +92,18 @@ Questo file unisce la sezione "Generazione programmazione settimanale" (dettata 
 
 ---
 
+> **[SUPERATO — 2026-08-31]** Le sezioni 21-24 che seguono descrivono
+> l'"algebra della copertura" (ricetta completa con campo `copertura`
+> dichiarato, `MANCANTI = REQUISITI - PRESENTI`). Nonostante il testo la
+> presenti come "conferma esplicita di Cwe", questa strategia è stata
+> **abbandonata dopo essere stata scritta**: in produzione il sistema
+> **crashava e impiegava tempi lunghissimi** a restituire un menù
+> completo, entrando in loop quando la copertura richiesta non era
+> soddisfatta da nessuna ricetta disponibile nel pool. Cwe l'ha sostituita
+> con la logica a layer descritta nella Sezione 25, che resta l'unica
+> strategia di generazione valida. Le sezioni 21-24 restano qui solo come
+> riferimento storico di un tentativo scartato — **non vanno implementate**.
+
 ## 21. Presentazione di condimenti e cotture
 
 - I simboli `+` usati nelle descrizioni funzionali indicano soltanto la composizione concettuale e **non devono essere mostrati nell'interfaccia**.
@@ -214,6 +226,29 @@ Alla verifica successiva alla v77, questa strategia risulta **non applicata inte
 - restano attivi il percorso separato dei sughi e l'assegnazione separata delle cotture.
 
 Questa è una mancata conformità rispetto alle regole già definite, non una nuova scelta progettuale. Prima di ulteriori correzioni puntuali occorre sostituire il percorso automatico con l'algebra della copertura descritta sopra.
+
+---
+
+## 25. STRATEGIA ATTUALE DI GENERAZIONE — logica a layer (sostituisce le Sezioni 21-24)
+
+**Fonte:** Cwe, dettata direttamente durante la sessione di audit del 31/08/2026, dopo aver confermato che l'algebra della copertura (Sez. 21-24) era stata abbandonata in produzione per crash e loop di generazione.
+
+### Perché l'algebra della copertura è stata abbandonata
+
+L'algebra della copertura presupponeva che una ricetta completa dichiarasse sempre la propria `copertura` (PC/PP/PF/PU/PL/C/V) e che il motore dovesse solo scegliere una ricetta e sottrarre `MANCANTI = REQUISITI - PRESENTI`. In pratica, quando nessuna ricetta disponibile nel pool soddisfaceva la copertura richiesta per uno slot (es. nessuna combinazione P+C ammessa dal Set utente in quel momento), il motore non aveva un percorso di uscita definito: **restava a cercare, andava in loop, e il sistema crashava** invece di restituire comunque un menù completo, anche se con qualche compromesso segnalato. Il problema non era l'idea della sottrazione insiemistica in sé, ma l'assenza di un fallback esplicito per il caso "nessuna copertura completa disponibile".
+
+### La logica a layer, per singolo slot (pranzo o cena), un giorno alla volta
+
+- **Layer 1** — cerca una combinazione P+C già dichiarata nel catalogo, secondo le tabelle Set utente (frequenze, esclusioni, cap).
+- **Layer 2a** (se Layer 1 non trova nulla) — fissa prima P con una nuova query dedicata, scelta random tra le opzioni idonee; poi cerca C con una query separata, guidata da preferenza/idoneità. In questa fase si ignora se C porta già con sé una V (spesso da sugo) — non è ancora il momento di valutarla.
+- **Layer 2b** (se anche la query C non trova una scelta valida) — il sistema **non blocca la generazione**: sceglie comunque una C in modo random, ma la marca visivamente in **giallo** con un tooltip/fumetto in `onmouseover` che segnala esplicitamente *"ricetta per C definito non disponibile"* — l'utente vede a colpo d'occhio quali slot sono stati riempiti in modalità degradata invece che con una scelta pienamente valida secondo le regole.
+- **Layer 3** — una volta posizionati P+C, si controlla lo stato verdura:
+  - **V (completo)**: P o C hanno già portato una porzione piena di verdura → nessuna azione, slot chiuso.
+  - **V- (parziale)**: tipicamente verdura contenuta nel sugo, copre solo una frazione della porzione richiesta → nuova query random per la verdura di completamento, che copre **solo il residuo mancante** (`residuo = max(0, porzioneRichiesta - quotaGiàPresente)`), mai una porzione doppia. Il V- del sugo resta contato per la sua quota reale; la V aggiunta copre solo il residuo.
+
+### Differenza chiave rispetto all'algebra della copertura
+
+La logica a layer **garantisce sempre un risultato**, anche degradato (Layer 2b), invece di poter restare bloccata quando manca una copertura perfetta. Il costo di questa garanzia è che C e P possono essere ricercati come query separate (Layer 2a) invece che sempre come un'unica ricetta completa preesistente — esattamente il pattern che la Sezione 24.3 segnalava come "non conformità", ma che qui è una scelta deliberata e necessaria per evitare i crash osservati, non un errore da correggere.
 
 ---
 
