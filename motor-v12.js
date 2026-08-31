@@ -859,6 +859,22 @@ async function getFreezerDisponibili(){
   }
   return out;
 }
+async function getInventarioDisponibile(){
+  if(typeof getAll!=='function') return [];
+  const inv=await getAll('inventario'),out=[];
+  for(const item of inv||[]){
+    if(item.stato==='esaurito'||Number(item.quantita)<=0)continue;
+    const v=[...state.variantByName.values()].find(x=>x.id===item.variantId);
+    if(!v)continue;
+    const b=[...state.baseByName.values()].find(x=>x.id===v.ingredienteId);
+    out.push({
+      variantId:item.variantId,nome:v.nome,quantita:Number(item.quantita)||0,itemId:item.id,
+      deperibilita:b&&b.deperibilita||'bassa',zona:item.zona||v.zona||'dispensa'
+    });
+  }
+  const peso={alta:0,media:1,bassa:2};
+  return out.sort((a,b)=>(peso[a.deperibilita]??2)-(peso[b.deperibilita]??2));
+}
 async function salvafrigo(){
   const [scad,avanzi,vecchi,freezerTutti]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getCongelatiDaTempo(),getFreezerDisponibili()]);
   let src=scad,origine='scadenza';
@@ -1032,8 +1048,11 @@ async function assegnaCondimentiRotazioneGlobale(risultato,data){
 }
 
 async function livelliPrioritaInventario(){
-  const [scad,avanzi,freezer]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getFreezerDisponibili()]);
-  return [scad,avanzi,freezer]
+  const [scad,avanzi,freezer,disponibili]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi(),getFreezerDisponibili(),getInventarioDisponibile()]);
+  // Salvafrigo usa prima urgenze, avanzi e freezer; se non bastano, considera
+  // comunque tutta la scorta disponibile ordinata per deperibilita. In questo modo
+  // una scorta fresca compatibile non viene ignorata a favore di un nuovo acquisto.
+  return [scad,avanzi,freezer,disponibili]
     .filter(src=>src.length)
     .map(src=>new Set(src.map(x=>x.variantId)));
 }
@@ -1627,7 +1646,7 @@ function stato(){ return {pronto:state.pronto,versioneRicette:state.dbRicette&&s
 global.DietaPlannerMotorV12={
   inizializza,stato,getRicette,getRicetta,
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
-  getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,
+  getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,getInventarioDisponibile,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
   generaPasto,generaPianoSettimana,rigeneraPasto,statoRollPasto,ruotaPasto,materializzaRealizzazione,
   snapshotRealizzazione,

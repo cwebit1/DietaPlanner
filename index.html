@@ -1004,6 +1004,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
       <button class="close-x" data-close="modalIngrediente">✕</button>
     </div>
     <input type="hidden" id="ingModifVarianteId" value="">
+    <input type="hidden" id="ingModifInventarioId" value="">
     <label>Nome alimento</label>
     <input id="ingNomeBase" placeholder="es. Piselli surgelati">
     <label>Gruppo alimentare</label>
@@ -5425,6 +5426,7 @@ async function renderBloccoSemplice(pasto, giorno, elementId){
    giornaliero) definito dal PDF, così non è mai possibile scegliere qualcosa che
    sforerebbe. Non è un motore che propone: è la lista fissa del PDF, filtrata. */
 async function opzioniSpuntinoDisponibili(giorno){
+  await sincronizzaRicetteSpuntinoBase();
   const ricette = await getAll('ricette');
   const candidate = ricette.filter(r=>r.tipoPortata==='spuntino' && !r.esclusa);
   const {spuntini: consumiSettimana} = await getConsumiSpuntiniSettimana();
@@ -5436,6 +5438,37 @@ async function opzioniSpuntinoDisponibili(giorno){
     if(CAP_SPUNTINO_GIORNALIERO[sott]!==undefined && contoGiornalieroFruttaSecca >= CAP_SPUNTINO_GIORNALIERO[sott]) return false;
     return true;
   });
+}
+
+/* Le opzioni dello spuntino sono dati operativi dell'app, con ID stabili e dosi
+   esplicite. L'upsert e idempotente: non duplica e non sovrascrive scelte utente. */
+async function sincronizzaRicetteSpuntinoBase(){
+  const varianti=await getAll('varianti');
+  const perNome=new Map(varianti.map(v=>[String(v.nome||'').toLowerCase(),v]));
+  const definizioni=[
+    ['grana','Parmigiano grattugiato',20,'grana_spuntino'],
+    ['crackers','Crackers',30,'crackers_spuntino'],
+    ['pane-marmellata','Panino',25,'pane_marmellata_spuntino','Marmellata',5],
+    ['granita','Granita fatta in casa',150,'granita_spuntino'],
+    ['patatine','Patatine in busta',25,'patatine_grisbi'],
+    ['frutta-secca','Noci e mandorle',15,'frutta_secca_giornaliero'],
+    ['yogurt','Yogurt bianco',125,null]
+  ];
+  for(const [slugSp,nome,qta,sott,nome2,qta2] of definizioni){
+    const v=perNome.get(nome.toLowerCase());
+    const v2=nome2&&perNome.get(nome2.toLowerCase());
+    if(!v||(nome2&&!v2))continue;
+    const id='spuntino-base-'+slugSp;
+    const esistente=await getOne('ricette',id);
+    if(esistente&&esistente.fonte!=='spuntino-base')continue;
+    const ingredienti=[{variantId:v.id,quantita:qta}];
+    if(v2)ingredienti.push({variantId:v2.id,quantita:qta2});
+    await put('ricette',{
+      id,nome:nome2?'Pane con marmellata':nome,tipoPortata:'spuntino',
+      sottotipoSpuntino:sott,porzioni:1,fascia:'facile',ingredienti,
+      procedimento:[],fonte:'spuntino-base',esclusa:false
+    });
+  }
 }
 
 /* Nome pulito (senza "(spuntino)"/"(occasionale)") + le quantità reali dai suoi
@@ -8057,6 +8090,12 @@ async function renderRicette(){
     const p=['PC','PP','PF','PU','PL'].some(x=>c.has(x));
     return (c.has('C')?'C':'')+(p?'P':'')+(c.has('V')||c.has('V-')?'V':'')||'Altro';
   };
+  const fasciaRicetta=r=>{
+    if(['facile','medio','difficile'].includes(r.fascia))return r.fascia;
+    if(r.richiedeCottura===false)return 'facile';
+    const n=(r.ingredienti||[]).filter(i=>!i.condimento).length;
+    return n<=2?'facile':(n<=4?'medio':'difficile');
+  };
   const tipi=[['tutte','Tutte'],['C','Carboidrati'],['P','Proteine'],['V','Verdure'],['CP','C + P'],['CV','C + V'],['PV','P + V'],['CPV','C + P + V']];
   if(!tipi.some(x=>x[0]===filtroTipoRicette))filtroTipoRicette='tutte';
   const ft=document.getElementById('filtroTipoRicette');
@@ -8064,6 +8103,13 @@ async function renderRicette(){
   ft.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{filtroTipoRicette=btn.dataset.t;renderRicette();}));
   const count=filtroTipoRicette==='tutte'?all.length:all.filter(r=>macro(r)===filtroTipoRicette).length;
   document.getElementById('riepilogoFiltroTipo').textContent='Copertura: '+(filtroTipoRicette==='tutte'?'tutte · '+count:filtroTipoRicette+' · '+count);
+
+  const fasce=[['tutte','Tutte'],['facile','Facile (<20 min)'],['medio','Medio (<40 min)'],['difficile','Difficile (>40 min)']];
+  const ff=document.getElementById('filtroFasceRicette');
+  ff.innerHTML=fasce.map(x=>'<button data-fascia="'+x[0]+'" class="'+(filtroFasciaRicette===x[0]?'active':'')+'">'+x[1]+'</button>').join('');
+  ff.querySelectorAll('[data-fascia]').forEach(btn=>btn.addEventListener('click',()=>{filtroFasciaRicette=btn.dataset.fascia;renderRicette();}));
+  const countFascia=filtroFasciaRicette==='tutte'?all.length:all.filter(r=>fasciaRicetta(r)===filtroFasciaRicette).length;
+  document.getElementById('riepilogoFiltroFascia').textContent='Fascia di tempo: '+(filtroFasciaRicette==='tutte'?'Tutte · '+countFascia:filtroFasciaRicette+' · '+countFascia);
 
   const disponibili=await getAvanziScomodi();
   const sfBox=document.getElementById('filtroSalvafrigo');
@@ -8075,6 +8121,7 @@ async function renderRicette(){
 
   let list=all.slice();
   if(filtroTipoRicette!=='tutte')list=list.filter(r=>macro(r)===filtroTipoRicette);
+  if(filtroFasciaRicette!=='tutte')list=list.filter(r=>fasciaRicetta(r)===filtroFasciaRicette);
   if(filtroSalvafrigoVariante)list=list.filter(r=>(r.ingredienti||[]).some(i=>String(i.variantId)===String(filtroSalvafrigoVariante)));
   if(filtroTestoRicette)list=list.filter(r=>String(r.nome||'').toLowerCase().includes(filtroTestoRicette));
   if(filtroLetteraRicette)list=list.filter(r=>String(r.nome||'').toUpperCase().startsWith(filtroLetteraRicette));
@@ -8559,6 +8606,7 @@ document.getElementById('btnAggiungiIngrediente').addEventListener('click', ()=>
 
 function resetFormIngrediente(){
   document.getElementById('ingModifVarianteId').value = '';
+  document.getElementById('ingModifInventarioId').value = '';
   ['ingNomeBase','ingQtaIniziale','ingKcal','ingProt','ingCarb','ingGrassi'].forEach(id=>{
     document.getElementById(id).value='';
   });
@@ -8601,7 +8649,7 @@ function categoriaAlimentare(variante, ingredienteBase){
   return 'Altro';
 }
 
-async function apriModalModificaVariante(varianteId){
+async function apriModalModificaVariante(varianteId,inventarioId){
   const varianti = await getAll('varianti');
   const v = varianti.find(x=>x.id===varianteId);
   if(!v) return;
@@ -8611,10 +8659,12 @@ async function apriModalModificaVariante(varianteId){
   resetFormIngrediente();
   document.getElementById('modalIngredienteTitolo').textContent = 'Modifica ingrediente';
   document.getElementById('ingModifVarianteId').value = varianteId;
+  document.getElementById('ingModifInventarioId').value = inventarioId||'';
   document.getElementById('ingNomeBase').value = v.nome;
   document.getElementById('ingGruppo').value = base ? base.gruppo : 'carboidrati';
   document.getElementById('ingCategoria').value = v.categoria || 'conf';
-  document.getElementById('ingQtaIniziale').value = v.formato || '';
+  const item=inventarioId?await getOne('inventario',inventarioId):null;
+  document.getElementById('ingQtaIniziale').value = item ? item.quantita : (v.formato || '');
   document.getElementById('ingKcal').value = v.kcal100 || '';
   document.getElementById('ingProt').value = v.prot100 || '';
   document.getElementById('ingCarb').value = v.carb100 || '';
@@ -8674,13 +8724,13 @@ async function renderInventario(){
         </div>
         <div style="display:flex;gap:6px;align-items:center;">
           ${btnCongela}
-          <button class="small" data-modifica="${variante.id}">Modifica</button>
+          <button class="small" data-modifica="${variante.id}" data-inventario="${voce.id}">Modifica</button>
           <button class="toggle-stato ${voce.stato==='disponibile'?'disp':'esaur'}" data-toggle="${voce.id}">
             ${voce.stato==='disponibile'?'Disponibile':'Esaurito'}
           </button>
         </div>
       `;
-      row.querySelector('[data-modifica]').addEventListener('click', ()=> apriModalModificaVariante(variante.id));
+      row.querySelector('[data-modifica]').addEventListener('click', e=> apriModalModificaVariante(variante.id,e.currentTarget.dataset.inventario));
       row.querySelector('[data-toggle]').addEventListener('click', async ()=>{
         voce.stato = voce.stato==='disponibile' ? 'esaurito' : 'disponibile';
         await put('inventario', voce);
@@ -8700,6 +8750,7 @@ async function renderInventario(){
 
 document.getElementById('btnSalvaIngrediente').addEventListener('click', async ()=>{
   const modificaId = document.getElementById('ingModifVarianteId').value;
+  const modificaInventarioId = document.getElementById('ingModifInventarioId').value;
   const nome = document.getElementById('ingNomeBase').value.trim();
   const gruppo = document.getElementById('ingGruppo').value.trim().toLowerCase();
   const categoria = document.getElementById('ingCategoria').value;
@@ -8728,6 +8779,10 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
     v.consistenza = derivati.consistenza; v.congelabile = derivati.congelabile;
     v.kcal100 = kcal; v.prot100 = prot; v.carb100 = carb; v.grassi100 = grassi;
     await put('varianti', v);
+    if(modificaInventarioId){
+      const item=await getOne('inventario',modificaInventarioId);
+      if(item){item.quantita=qtaIniziale;item.stato=qtaIniziale>0?'disponibile':'esaurito';await put('inventario',item);}
+    }
   } else {
     // NUOVO — la quantità inserita vale sia come formato di confezione (per la spesa)
     // sia come scorta iniziale disponibile ora
