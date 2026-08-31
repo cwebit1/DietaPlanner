@@ -8304,7 +8304,22 @@ const CATEGORIE_PROTEICHE_SET = [
 ];
 
 async function generaPianoSettimana(scartoSettimane,opzioni){
-  return await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,opzioni||{});
+  opzioni=opzioni||{};
+  const precedente=document.getElementById('loaderGenerazioneMenu');if(precedente)precedente.remove();
+  const loader=document.createElement('div');loader.id='loaderGenerazioneMenu';loader.className='modal-overlay';loader.style.zIndex='190';
+  loader.innerHTML='<div class="modal" style="max-width:420px;text-align:center;align-self:center;border-radius:16px;padding:24px;">'+
+    '<h3>Sto preparando il menù</h3><div class="meta" id="testoAvanzamentoMenu" style="margin:12px 0;">Preparazione delle combinazioni…</div>'+
+    '<div style="height:9px;background:var(--panel-2);border-radius:9px;overflow:hidden;"><div id="barraAvanzamentoMenu" style="height:100%;width:0;background:var(--accent);transition:width .18s ease;"></div></div></div>';
+  document.body.appendChild(loader);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  const onProgress=stato=>{
+    const testo=document.getElementById('testoAvanzamentoMenu'),barra=document.getElementById('barraAvanzamentoMenu');
+    if(testo)testo.textContent='Pasti completati: '+stato.completati+' / '+stato.totale;
+    if(barra)barra.style.width=Math.round(stato.completati/stato.totale*100)+'%';
+    if(typeof opzioni.onProgress==='function')opzioni.onProgress(stato);
+  };
+  try{return await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,Object.assign({},opzioni,{onProgress}));}
+  finally{loader.remove();}
 }
 async function mostraFeedbackGenerazioneMenu(esito){
   if(!esito||!Array.isArray(esito.generati))throw new Error('Il motore non ha restituito un risultato valido.');
@@ -8328,7 +8343,7 @@ async function generaMenuDaConfigSet(scartoSettimane){
      primo render asincrono e le scritture del motore. */
   menuDraft={scarto:scartoSettimane,giorni:new Set(giorni),voci:new Map(),modificata:false};
   mostraVista('menu');
-  const esito=await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,{forza:true});
+  const esito=await generaPianoSettimana(scartoSettimane,{forza:true});
   if(await mostraFeedbackGenerazioneMenu(esito))return esito;
   await renderMenuSettimanale();
   return esito;

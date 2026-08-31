@@ -1249,37 +1249,62 @@ function aggiungiConteggiCandidato(candidato,ingredientCounts,subtypeCounts){
   accumulaConteggiPasto(candidato.ricette,nextI,nextS);
   return {ingredientCounts:nextI,subtypeCounts:nextS};
 }
-async function risolviSettimanaRicette(slotDefs,ctx){
-  const pools=[];
-  for(let i=0;i<slotDefs.length;i++){
-    const s=slotDefs[i];
-    let candidati=await generaCandidatiPasto(s.target,s.day,{
-      carbBudget:{requiredKey:s.carbKey},vegetablePortions:ctx.vegetablePortions,
-      requiredVegetableVariantId:s.requiredVegetableVariantId||null,runtimeConfig:ctx.runtimeConfig
-    });
-    candidati=candidati.sort((a,b)=>(a.prioritaComposizione-b.prioritaComposizione)||punteggioVerduraProgrammazione(b.ricette.find(r=>copertura(r).V)||{},s.day)-punteggioVerduraProgrammazione(a.ricette.find(r=>copertura(r).V)||{},s.day));
-    pools.push(candidati);
-  }
-  if(pools.some(p=>!p.length))return {ok:false,motivo:'Almeno uno slot non possiede candidati completi compatibili con i vincoli del Set.'};
-  const ordine=slotDefs.map((_,i)=>i).sort((a,b)=>pools[a].length-pools[b].length),scelte=Array(slotDefs.length).fill(null);
-  let nodi=0;
-  function cerca(pos,ingredientCounts,subtypeCounts,stackUsati){
-    if(++nodi>250000)return false;
-    if(pos>=ordine.length)return true;
-    const idx=ordine[pos];
-    const ordinati=pools[idx].slice().sort((a,b)=>chiaviStackPasto(a).filter(k=>stackUsati.has(k)).length-chiaviStackPasto(b).filter(k=>stackUsati.has(k)).length||a.prioritaComposizione-b.prioritaComposizione);
-    for(const candidato of ordinati){
-      if(!pastoRispettaConteggi(candidato.ricette,ctx.runtimeConfig,ingredientCounts,subtypeCounts))continue;
-      const stack=chiaviStackPasto(candidato);
-      const next=aggiungiConteggiCandidato(candidato,ingredientCounts,subtypeCounts),nextStack=new Set(stackUsati);
-      stack.forEach(k=>nextStack.add(k));scelte[idx]=candidato;
-      if(cerca(pos+1,next.ingredientCounts,next.subtypeCounts,nextStack))return true;
-      scelte[idx]=null;
+function mescolaCandidati(pool){
+  const out=(pool||[]).slice();
+  for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
+  return out;
+}
+function ordinaPerStackPoiCaso(pool,stackUsati){
+  const casuali=mescolaCandidati(pool),score=r=>(r.chiaviStack||[]).filter(k=>stackUsati.has(k)).length;
+  return casuali.sort((a,b)=>score(a)-score(b));
+}
+async function costruisciPastoAQuery(slot,ctx){
+  const token=PROTEIN_MACRO_TO_TOKEN[slot.target]||SUBTYPE_TO_TOKEN[slot.target]||slot.target;
+  const pool=await poolAmmesso(slot.day,{runtimeConfig:ctx.runtimeConfig});
+  const proteine=pool.filter(r=>copertura(r).tokens.has(token));
+  const combinate=ordinaPerStackPoiCaso(proteine.filter(r=>copertura(r).C&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
+  const separate=ordinaPerStackPoiCaso(proteine.filter(r=>!copertura(r).C),ctx.weeklyStackKeys);
+  const fontiCarboidrato=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
+  const basi=combinate.map(r=>[r]);
+  if(fontiCarboidrato.length)for(let i=0;i<separate.length;i++)basi.push([separate[i],fontiCarboidrato[i%fontiCarboidrato.length]]);
+
+  for(const base of basi){
+    let ricette=base.slice();
+    const coperturaV=coperturaVerduraRicette(ricette,ctx.vegetablePortions);
+    const richiesta=slot.requiredVegetableVariantId;
+    const contieneRichiesta=!richiesta||ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===richiesta));
+    if(coperturaV.remainingFraction>0.000001){
+      let verdure=pool.filter(r=>{
+        const c=copertura(r);
+        return c.V&&!c.P&&!c.C&&!ricette.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta));
+      });
+      if(!verdure.length)continue;
+      const punteggio=Math.max(...verdure.map(r=>punteggioVerduraProgrammazione(r,slot.day)));
+      verdure=ordinaPerStackPoiCaso(verdure.filter(r=>punteggioVerduraProgrammazione(r,slot.day)===punteggio),ctx.weeklyStackKeys);
+      const verdura=verdure[0];
+      const residuo=Math.max(0,coperturaV.remainingFraction);
+      if(residuo>0.000001)ricette.push(ridimensionaVerdureRicetta(verdura,residuo,ctx.vegetablePortions));
+      else ricette.push(verdura);
     }
-    return false;
+    if(!contieneRichiesta&&coperturaV.remainingFraction<=0.000001)continue;
+    if(!pastoCompletoPerToken(ricette,token))continue;
+    if(!pastoRispettaConteggi(ricette,ctx.runtimeConfig,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts))continue;
+    return risultatoPasto(token,ricette,base.length===1?0:1);
   }
-  const ok=cerca(0,Object.assign({},ctx.weeklyIngredientCounts),Object.assign({},ctx.weeklySubtypeCounts),new Set(ctx.weeklyStackKeys||[]));
-  return ok?{ok:true,scelte,nodi}:{ok:false,motivo:'Ricerca globale esaurita senza una settimana completa.',nodi};
+  return null;
+}
+async function risolviSettimanaRicette(slotDefs,ctx){
+  const scelte=[];
+  for(let i=0;i<slotDefs.length;i++){
+    const candidato=await costruisciPastoAQuery(slotDefs[i],ctx);
+    if(!candidato)return {ok:false,motivo:'Nessuna composizione valida per '+slotDefs[i].day+' '+slotDefs[i].pasto+'.',completati:i};
+    scelte.push(candidato);
+    accumulaConteggiPasto(candidato.ricette,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts);
+    chiaviStackPasto(candidato).forEach(k=>ctx.weeklyStackKeys.add(k));
+    if(typeof ctx.onProgress==='function')ctx.onProgress({completati:i+1,totale:slotDefs.length,giorno:slotDefs[i].day,pasto:slotDefs[i].pasto});
+    await new Promise(resolve=>setTimeout(resolve,0));
+  }
+  return {ok:true,scelte,completati:scelte.length};
 }
 
 async function generaPianoSettimana(scarto,opzioni){
@@ -1313,7 +1338,7 @@ async function generaPianoSettimana(scarto,opzioni){
   const [vrRec,vrPastiRec]=typeof getOne==='function'?await Promise.all([getOne('impostazioni','verduraRicorrente'),getOne('impostazioni','verduraRicorrentePasti')]):[null,null];
   const vrId=vrRec&&vrRec.valore||null,vrPasti=new Set(vrPastiRec&&Array.isArray(vrPastiRec.valore)?vrPastiRec.valore:[]);
   const slotDefs=slotDaGenerare.map((s,si)=>{const arr=tab['giorno_'+s.di]||[],mi=s.pasto==='pranzo'?0:1;return Object.assign({},s,{target:arr[mi]||proteine.targets[si],carbKey:abbinamento.keys[si],requiredVegetableVariantId:vrId&&vrPasti.has(s.pasto+'_'+s.di)?vrId:null});});
-  const soluzione=await risolviSettimanaRicette(slotDefs,{runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,vegetablePortions:resolved.vegetables});
+  const soluzione=await risolviSettimanaRicette(slotDefs,{runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,vegetablePortions:resolved.vegetables,onProgress:opzioni.onProgress});
   if(!soluzione.ok){
     const retry=Number(opzioni._retryCompatibilita)||0;
     if(retry<20)return generaPianoSettimana(scarto,Object.assign({},opzioni,{_retryCompatibilita:retry+1}));
@@ -1333,7 +1358,7 @@ async function generaPianoSettimana(scarto,opzioni){
       generated.push(id);
   }
   for(const record of records)await put('piano',record);
-  return {generati:generated,errori:[],diagnostica:{nodiRicerca:soluzione.nodi,tentativoCompleto:Number(opzioni._retryCompatibilita)||0}};
+  return {generati:generated,errori:[],diagnostica:{pastiCompletati:soluzione.completati,tentativoCompleto:Number(opzioni._retryCompatibilita)||0}};
 }
 
 async function verduraRicorrenteRichiesta(giorno,pasto){

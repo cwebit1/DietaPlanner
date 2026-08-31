@@ -43,9 +43,13 @@ const M=global.DietaPlannerMotorV12;
   }
 
   for(let iteration=0;iteration<1;iteration++){
-    const result=await M.generaPianoSettimana(0,{forza:true});
+    const avanzamento=[];
+    const result=await M.generaPianoSettimana(0,{forza:true,onProgress:stato=>avanzamento.push(structuredClone(stato))});
     assert.deepEqual(result.errori,[],`generazione ${iteration+1}`);
     assert.equal(result.generati.length,14);
+    assert.equal(avanzamento.at(-1).completati,14,'il loader deve arrivare ai pasti realmente completati');
+    assert.equal(avanzamento.at(-1).totale,14,'il totale del loader deve coincidere con gli slot da generare');
+    assert(avanzamento.every((stato,i)=>stato.completati===i+1),'l’avanzamento deve procedere di un pasto per volta');
     const records=await global.getAll('piano');
     assert.equal(records.length,14);
     for(const record of records){
