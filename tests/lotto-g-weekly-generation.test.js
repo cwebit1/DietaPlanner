@@ -20,6 +20,13 @@ const M=global.DietaPlannerMotorV12;
   assert.equal(init.template,39);
   assert(init.concrete>39);
 
+  const breakfastVariants=(await global.getAll('varianti')).filter(v=>v.colazioneGruppo);
+  assert(breakfastVariants.length>=9,'la sincronizzazione deve materializzare le opzioni della colazione');
+  for(const group of ['proteine','carboidrati','grassi','carboidrati_semplici']){
+    assert(breakfastVariants.some(v=>v.colazioneGruppo===group),'gruppo colazione mancante: '+group);
+  }
+  assert(breakfastVariants.filter(v=>v.colazioneGruppo!=='spuntino').every(v=>v.porzioneColazione),'ogni opzione della colazione deve mantenere la propria porzione');
+
   for(let iteration=0;iteration<20;iteration++){
     const result=await M.generaPianoSettimana(0,{forza:true});
     assert.deepEqual(result.errori,[],`generazione ${iteration+1}`);

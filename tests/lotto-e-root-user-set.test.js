@@ -2,6 +2,9 @@
 const assert=require('assert');const fs=require('fs');const path=require('path');
 const root=path.join(__dirname,'..'),index=fs.readFileSync(path.join(root,'index.html'),'utf8'),motor=fs.readFileSync(path.join(root,'motor-v12.js'),'utf8'),N=require('../nutrition-config.js');
 for(const marker of ['async function risolviSetUtenteCorrente(userOverride)','configCarboidratiStati','configCarboidratiExplicitZeroKeys',"['auto','excluded','fixed'].includes(st.mode)","st.mode==='excluded'?'0 · ESCLUSO'",'renderSetLimitiPersonaliIngredienti','salvaLimitiPersonaliSet',"document.getElementById('btnSalvaSetCompleto')"])assert(index.includes(marker),marker);
+for(const marker of ['class="colazione-gruppo-slide"','data-set-colpref-giorno','colazionePreferitaGiorni'])assert(index.includes(marker),'contratto colazione ricorrente mancante: '+marker);
+assert(index.includes("const esito=await DietaPlannerMotorV12.generaPianoSettimana"),'il flusso UI deve verificare l’esito della generazione');
+assert(index.includes("if(!esito.generati.length)"),'il flusso UI deve rendere visibile una generazione vuota o fallita');
 assert(index.includes('NUTRITION_CONFIG_SET.PDF_BASELINE.carbohydrateWeeklyCaps[t.chiave]'),'il Set deve classificare i carboidrati dalla baseline canonica');
 assert(index.indexOf('nutrition-config.js?v=2')<index.indexOf('const NUTRITION_CONFIG_SET='),'il resolver deve esistere prima dell’inizializzazione del Set');
 assert(motor.includes("'configCarboidratiStati'"));assert(motor.includes("'configCarboidratiExplicitZeroKeys'"));

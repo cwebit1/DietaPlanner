@@ -513,6 +513,7 @@ async function sincronizzaIngredientiIndexedDB(){
     if(!b) b={id:'nri_'+slug(nome),nome};
     Object.assign(b,{
       nome,gruppo:d.gruppo||'altro',sottotipo:d.sottotipo||null,
+      sottoCategoriaColazione:d.sottoCategoriaColazione||null,
       deperibilita:d.deperibilita||'bassa',conservazione:d.conservazione||null,
       porzione:d.porzione||null,unitaPorzione:d.unitaPorzione||null,
       pesoPorzioneGrammi:d.pesoPorzioneGrammi||null,pesoPezzo:d.pesoPezzo||null,
@@ -529,6 +530,12 @@ async function sincronizzaIngredientiIndexedDB(){
     const alta=d.deperibilita==='alta',surg=d.conservazione==='surgelato';
     Object.assign(v,{
       ingredienteId:b.id,nome,
+      /* Il selettore della colazione lavora sulle varianti, mentre la fonte
+         autorevole conserva questi due dati sull'ingrediente. Li materializziamo
+         qui ad ogni sincronizzazione, così un'installazione pulita e una già
+         esistente ricevono esattamente le stesse opzioni. */
+      colazioneGruppo:d.sottoCategoriaColazione||null,
+      porzioneColazione:d.sottoCategoriaColazione?d.porzione||null:null,
       kcal100:Number(d.kcal)||0,prot100:Number(d.proteine)||0,
       carb100:Number(d.carboidrati)||0,grassi100:Number(d.grassi)||0,
       categoria:surg?'surgelato':(alta?'fresco':'conf'),

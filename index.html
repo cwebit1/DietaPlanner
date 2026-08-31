@@ -4605,7 +4605,7 @@ async function renderPiano(){
   for(const g of giorniSett){
     const p = await getOne('piano', g+'_pranzo');
     const c = await getOne('piano', g+'_cena');
-    if((p && (p.ricettaId || p.primoId)) || (c && (c.ricettaId || c.primoId))){
+    if((p && (p.ricettaId || p.primoId || (p.realizzazioni&&p.realizzazioni.length))) || (c && (c.ricettaId || c.primoId || (c.realizzazioni&&c.realizzazioni.length)))){
       esisteAlmenoUnPasto = true;
       break;
     }
@@ -4616,8 +4616,12 @@ async function renderPiano(){
       <div class="meta" style="margin-bottom:10px;">Non hai ancora nessun pasto programmato questa settimana. Genera il menù per iniziare — funziona anche se la dispensa è vuota, la lista della spesa si costruisce da sola.</div>
       <button class="primary" id="btnBenvenutoGeneraMenu" style="width:100%;">Genera menù</button>
     </div>`;
-    document.getElementById('btnBenvenutoGeneraMenu').addEventListener('click', ()=>{
-      generaMenuDaConfigSet(0);
+    document.getElementById('btnBenvenutoGeneraMenu').addEventListener('click', async (e)=>{
+      const btn=e.currentTarget,etichetta=btn.textContent;
+      btn.disabled=true;btn.textContent='Generazione in corso…';
+      try{await generaMenuDaConfigSet(0);}
+      catch(err){console.error('[genera menu]',err);await avviso('Generazione non riuscita: '+(err.message||err));}
+      finally{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent=etichetta;}}
     });
   } else {
     benvenutoEl.innerHTML = '';
@@ -8255,11 +8259,26 @@ async function generaPianoSettimana(scartoSettimane,opzioni){
 }
 async function generaMenuDaConfigSet(scartoSettimane){
   scartoSettimane=scartoSettimane||0;
+  /* Nell'ultimo giorno della settimana non esistono più slot futuri nella
+     settimana corrente: in quel solo caso il comando prepara la successiva. */
+  if(scartoSettimane===0&&!giorniSettimana(0).some(g=>g>todayISO()))scartoSettimane=1;
   menuSettimanaScarto=scartoSettimane;
+  const giorni=giorniSettimana(scartoSettimane);
+  /* La generazione aperta dal Piano deve produrre una bozza modificabile nel
+     Menù. La creiamo prima di cambiare vista per eliminare la corsa tra il
+     primo render asincrono e le scritture del motore. */
+  menuDraft={scarto:scartoSettimane,giorni:new Set(giorni),voci:new Map(),modificata:false};
   mostraVista('menu');
-  await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,{forza:true});
+  const esito=await DietaPlannerMotorV12.generaPianoSettimana(scartoSettimane,{forza:true});
+  if(!esito||!Array.isArray(esito.generati))throw new Error('Il motore non ha restituito un risultato valido.');
+  if(!esito.generati.length){
+    const dettaglio=esito.errori&&esito.errori.length?esito.errori.join(' '):'Non risultano pasti futuri da programmare.';
+    await renderMenuSettimanale();
+    await avviso('Nessun pasto generato. '+dettaglio);
+    return esito;
+  }
   await renderMenuSettimanale();
-  await renderPiano();
+  return esito;
 }
 
 document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)=>{
