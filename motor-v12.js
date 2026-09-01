@@ -1238,11 +1238,18 @@ async function generaCandidatiPasto(target,data,opts){
       if(carb.length){
         carbChoices=carb;
       }else{
-        /* Layer 2b: nessuna fonte C disponibile nel pool filtrato (es. limiti
-           settimanali hanno azzerato le opzioni). Non si rinuncia al pasto:
-           si forza una C da tutto il catalogo, ignorando i vincoli di budget,
-           e si marca il candidato con un avviso per l'utente. */
-        let forzata=state.ricetteConcrete.filter(r=>copertura(r).C&&!copertura(r).P&&r.id!==primo.id);
+        /* Layer 2b: nessuna fonte C compatibile con la programmazione/budget
+           indicativo del giorno. La tabella carboidrati e' indicativa per
+           dare varieta', NON vincolante: si ignora qui SOLO carbRicettaAmmesso
+           (continuita' con quanto gia' programmato). I vincoli duri restano
+           intatti: ricettaAmmessa(r,data,opts) applica comunque tetti
+           settimanali sui carboidrati limitati, allergie ed esclusioni
+           cliniche, che non vanno MAI bypassati. Si marca il candidato con
+           un avviso per l'utente. */
+        let forzata=[];
+        for(const r of state.ricetteConcrete){
+          if(copertura(r).C&&!copertura(r).P&&r.id!==primo.id&&await ricettaAmmessa(r,data,opts)) forzata.push(r);
+        }
         if(opts.usaInventario)forzata=applicaPrioritaInventario(forzata,livelli);
         carbChoices=forzata.length?forzata:[null];
         carboidratoForzato=forzata.length>0;

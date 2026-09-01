@@ -36,6 +36,28 @@ Per ogni slot pranzo/cena, un giorno alla volta:
   generazione: si sceglie comunque una C random forzata, marcata con un
   **avviso** (flag giallo + tooltip: *"Ricetta per carboidrato definito
   non disponibile"*).
+
+  **Distinzione fondamentale, chiarita esplicitamente da Cwe — cosa il
+  Layer 2b può ignorare e cosa MAI:**
+  - `carbRicettaAmmesso`/`opts.carbBudget` (continuità con il carboidrato
+    già programmato per quel giorno/quella settimana) è **indicativo, non
+    vincolante** — "la tabella carboidrati è indicativa per dare varietà
+    ma non è assolutamente vincolante". Il Layer 2b **può** ignorarlo.
+  - `ricettaAmmessa` (allergeni, blocchi, e soprattutto i **tetti
+    settimanali sui carboidrati limitati** — gnocchi/pasta ripiena/
+    gallette/ecc., 0-2 volte a settimana da baseline nutrizionista) è un
+    vincolo **duro, mai bypassabile**: "i carboidrati vincolati nella
+    frequenza devono restare vincolati senza sforo, o non si rispettano
+    le basi per cui è sviluppata questa app". Il Layer 2b **non deve mai**
+    ignorarlo, nemmeno come ultima risorsa.
+
+  **Bug trovato e corretto:** la prima implementazione del fallback in
+  `generaCandidatiPasto` pescava da `state.ricetteConcrete` grezzo,
+  bypassando per errore *anche* `ricettaAmmessa` — violando quindi
+  potenzialmente un tetto settimanale duro. Corretto filtrando sempre
+  tramite `ricettaAmmessa(r,data,opts)` anche nel fallback forzato,
+  ignorando solo `carbRicettaAmmesso`. `costruisciPastoAQuery` non aveva
+  questo problema (filtrava già da `pool`, che include `ricettaAmmessa`).
 - **Layer 3** — verifica stato verdura: **V** (completo) nessuna azione;
   **V-** (parziale, da sugo) nuova query random per completare **solo il
   residuo mancante** (`residuo = max(0, porzioneRichiesta - quotaGiàPresente)`),
@@ -90,6 +112,7 @@ La logica a layer sopra è quella che l'ha sostituita ed è l'unica valida
 | — | J.5: cache versione combinazioni in `inizializza()` — evita rigenerazione completa (440 combinazioni) ad ogni avvio se `db-ricette.json`+`ingredienti-new.json` non sono cambiati | incluso in `8d46f2d` |
 | — | **Correzione**: `garantisci-slot.js` eliminato (era codice morto irraggiungibile, vedi §5); `renderBloccoCompleto` ridotta a redirect | `8d46f2d` |
 | — | Layer 2b completato anche in `generaCandidatiPasto` (percorso "Proponi nuovo pasto"/Salvafrigo) — tutti e tre i percorsi di generazione ora coerenti | `ada43b1` |
+| — | **Correzione critica**: il fallback Layer 2b di `generaCandidatiPasto` bypassava per errore anche `ricettaAmmessa` (tetti settimanali duri), non solo `carbRicettaAmmesso` (continuità indicativa) — corretto nello stesso commit di questo aggiornamento doc | *(questo commit)* |
 
 ### Cosa resta fuori scope (deliberatamente rimandato)
 
