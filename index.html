@@ -538,6 +538,9 @@ details{margin-top:14px;}
 .menu-pasto-summary{display:block!important;}
 .menu-pasto-summary::marker{font-size:.75rem;}
 .menu-pasto-summary .pasto-titolo-compatto{padding-left:2px;}
+.menu-colazione-riga{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:start;gap:7px;min-height:36px;padding:5px 0;}
+.menu-colazione-icona{font-size:1rem;line-height:1.25;text-align:center;}
+.menu-colazione-testo{font-size:.88rem;font-weight:700;line-height:1.25;min-width:0;overflow-wrap:anywhere;}
 .pasto-riga-etichetta{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-dim);margin-bottom:3px;}
 .pasto-riga-valore{font-size:.9rem;font-weight:700;min-width:0;flex:1;}
 .pasto-riga-valore.avviso-programmazione,.pasto-riga-piatto.avviso-programmazione,.menu-riepilogo-macro.avviso-programmazione{color:#f1c40f;}
@@ -7648,7 +7651,7 @@ async function renderMenuSettimanale(){
       }
       riepilogo=pasto==='colazione'?await riepilogoTestualePasto(g,pasto):await riepilogoGrigliaPastoMenu(g,pasto,iconaBloccoMenu);
       html += `<details class="pasto-sub-panel" data-menu-giorno="${g}" data-menu-pasto="${pasto}">
-        <summary class="${pasto==='colazione'?'':'menu-pasto-summary'}">${pasto==='colazione'?`<span style="flex:1;">${ICONA_PASTO[pasto]} ${LABEL_PASTO[pasto]}: ${riepilogo}${iconaStatoMenu}</span>`:`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="pasto-griglia-compatta">${riepilogo}</div>`}</summary>
+        <summary class="menu-pasto-summary">${pasto==='colazione'?`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="menu-colazione-riga"><span class="menu-colazione-icona">${ICONA_PASTO[pasto]}</span><span class="menu-colazione-testo">${riepilogo}${iconaStatoMenu}</span></div>`:`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="pasto-griglia-compatta">${riepilogo}</div>`}</summary>
         <div class="contenuto" id="menuBloc_${g}_${pasto}"></div>
       </details>`;
     }
