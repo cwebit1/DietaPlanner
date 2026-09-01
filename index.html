@@ -7593,18 +7593,26 @@ async function riepilogoTestualePasto(giorno, pasto){
 
 async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
   const voce=await getOne('piano',giorno+'_'+pasto),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const materializzate=[];
-  if(voce&&Array.isArray(voce.realizzazioni))for(const real of voce.realizzazioni){const r=await ricettaNuovoDaRealizzazione(real);if(r)materializzate.push(r);}
-  const righe=[
-    {tipo:'C',icone:'🍞',match:t=>t==='C'},
-    {tipo:'P',icone:'🥩',match:t=>['PC','PP','PF','PU','PL'].includes(t)},
-    {tipo:'V',icone:'🥬',match:t=>t==='V'||t==='V-'}
-  ];
-  return righe.map(riga=>{
-    const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(riga.match)).map(r=>r.nome).filter(Boolean))];
-    const avviso=riga.tipo==='C'&&voce&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce&&voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||(voce&&voce.avvisoCarboidrato)||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
-    const stato=voce&&voce.consumato?'✓ ':voce&&voce.origine==='utente'?'⭐ ':'';
-    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+stato+esc(valori.length?valori.join(' · '):'— non ancora programmato —')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+azioneHtml+'</span></div>';
+  const realizzazioni=[];
+  if(voce&&Array.isArray(voce.realizzazioni))for(let indice=0;indice<voce.realizzazioni.length;indice++){
+    const ricetta=await ricettaNuovoDaRealizzazione(voce.realizzazioni[indice]);
+    if(ricetta)realizzazioni.push({indice,ricetta});
+  }
+  if(!realizzazioni.length){
+    return ['🍞','🥩','🥬'].map((icona,indice)=>'<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icona+'</span><span class="pasto-riga-piatto">— non ancora programmato —</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>').join('');
+  }
+  const tokenProteina=t=>['PC','PP','PF','PU','PL'].includes(t);
+  const dati=realizzazioni.map(({indice,ricetta})=>{
+    const tokens=new Set((Array.isArray(ricetta.classe)?ricetta.classe:[ricetta.classe]).filter(Boolean));
+    const copreC=tokens.has('C'),copreP=[...tokens].some(tokenProteina),copreV=tokens.has('V');
+    const icone=[copreC?'🍞':'',copreP?'🥩':'',copreV?'🥬':''].filter(Boolean);
+    const ordine=copreC?0:(copreP?1:(copreV?2:3));
+    return {indice,ricetta,icone:icone.length?icone.join(' '):'🍽️',copreC,ordine};
+  }).sort((a,b)=>a.ordine-b.ordine||a.indice-b.indice);
+  const stato=voce.consumato?'✓ ':voce.origine==='utente'?'⭐ ':'';
+  return dati.map((riga,indice)=>{
+    const avviso=riga.copreC&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
+    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.ricetta.nome||'Piatto senza nome')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>';
   }).join('');
 }
 
