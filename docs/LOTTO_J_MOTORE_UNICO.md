@@ -238,7 +238,78 @@ Questo è il livello di verifica più alto raggiungibile senza il
 dispositivo reale di Cwe — copre tutto tranne l'interazione utente vera e
 propria (tap, scroll, resa visiva).
 
-## 8. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 9. Review esterna (ChatGPT) e correzioni conseguenti (01/09/2026)
+
+Cwe ha condiviso una review esterna del codice a HEAD `c1918f9`. Tre punti
+segnalati, verificati tutti nel codice reale prima di agire.
+
+**Punto 1 — regole hardcoded in `composizioneSeparataConsentita`**
+(`affettati` → solo `pane`, caso speciale `polenta`): non è un bug, è
+già stato discusso con Cwe in precedenza (vedi Sezione 1) — patch
+difensiva contro residui del vecchio motore, Cwe ha deciso esplicitamente
+di lasciarla com'è. Il reviewer non aveva questo contesto.
+
+**Punto 2 — confermato, corretto.** `ruotaPasto` scriveva subito su
+`piano` (`await put('piano',aggiornata)` come ultima riga), senza stadio
+provvisorio — in contraddizione con "la ricetta passa sul piano
+alimentare solo quando si clicca Salva" (istruzione di Cwe sulla
+finestra pasto). Corretto:
+- `ruotaPasto` ora calcola e restituisce il risultato senza salvarlo.
+- Nuova funzione esportata `salvaRoll(voce)` per il commit esplicito.
+- `ruotaPasto`/`statoRollPasto` accettano un parametro opzionale
+  `vocePendente`, per poter continuare a ruotare una bozza non ancora
+  salvata invece di rileggere sempre da IndexedDB (altrimenti un secondo
+  Roll prima di Salvare avrebbe perso il primo cambiamento).
+- UI (`renderBloccoNuovoMotore`): bozza tenuta in memoria
+  (`bozzeRollPendenti`, mai in IndexedDB), pulsanti **Salva**/**Annulla**
+  quando c'è una modifica non salvata. "Genera pasto"/"Proponi nuovo
+  pasto"/"Salvafrigo" scartano automaticamente una bozza pendente
+  (sostituiscono comunque l'intero pasto).
+- Non toccato: "Genera pasto"/"Proponi nuovo pasto"/"Salvafrigo" restano
+  a scrittura immediata — Cwe aveva descritto solo il Roll come
+  provvisorio.
+
+**Punto 3 — confermato, corretto.** `alternativeRollV` enumerava solo
+`base.numeroVariantiCondimento` (varianti di condimento della stessa
+ricetta) — il Roll V non cambiava mai la verdura stessa, contraddicendo
+"V cambia soltanto verdura/condimento compatibile". Corretto: la
+funzione ora unisce due liste — varianti di condimento della ricetta
+corrente (comportamento preesistente, preservato) **e** verdure diverse
+da altri template (nuovo, vera query di alternativa). Testato con 15 Roll
+consecutivi: 6-10 verdure diverse toccate, condimenti alternati
+correttamente quando è il turno della stessa verdura.
+
+### Priorità al deperibile — estesa da Roll a tutta la generazione
+
+Verifica di Cwe dopo il punto 3: la priorità al materiale in
+deperimento/avanzo (già descritta a parole in precedenza, mai
+implementata) non era inclusa nemmeno nel nuovo Roll V. Aggiunta:
+
+- Nuovo helper condiviso `variantiPrioritarieDeperimento()` (riusa
+  `getScadenzeImminenti`+`getAvanziScomodi`, già esistenti — non
+  duplicati).
+- `alternativeRollV`: i candidati che usano materiale in scadenza/avanzo
+  vengono proposti per primi.
+- `punteggioVerduraProgrammazione`/`ordinaVerdureProgrammazione`/
+  `prioritaVerdureProgrammazionePasti`/`completaResiduoVerduraRicette`:
+  esteso con parametro opzionale `variantiPrioritarie` (retrocompatibile,
+  default assente = comportamento identico a prima).
+- Agganciato in **tutti** i punti di generazione automatica:
+  `generaPianoSettimana` (calcolato una volta per tutta la settimana, non
+  per ogni slot), `risolviSlotSingolo`, `generaPasto`/`generaCandidatiPasto`/
+  `rigeneraPasto` (escluso quando `usaInventario` è già attivo — Salvafrigo
+  ha una logica dedicata più approfondita, `livelliPrioritaInventario`).
+
+Testato: su una settimana generata con un ingrediente verdura piazzato
+"in scadenza domani" nell'inventario di test, 7 realizzazioni su 12 con
+componente V l'hanno usato (il resto rispetta comunque gli altri vincoli
+— varietà, disponibilità per slot — che continuano ad applicarsi insieme
+alla priorità, non al posto suo). Su Roll V isolato: priorità confermata
+8/8 sugli slot dove il deperibile era tra le alternative valide.
+
+Nessuna regressione sull'intera batteria di test esistente.
+
+## 10. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.

@@ -979,6 +979,7 @@ function snapshotRealizzazione(realizzazione,ricetta){
   real.nomeEffettivo=ricetta.nome||null;
   real.ingredientiEffettivi=clone(ricetta.ingredienti||[]);
   real.nutrientiEffettivi=clone(ricetta.nutrienti||calcolaNutrienti(real.ingredientiEffettivi));
+  real.gruppoProteico=ricetta.gruppoProteico||null;
   return real;
 }
 function applicaOverrideQuantitaRealizzazione(ricetta,realizzazione){
@@ -1145,23 +1146,25 @@ function indiceSettimana(data){
   const d=new Date(String(data)+'T12:00:00');
   return Number.isNaN(d.getTime())?0:(d.getDay()+6)%7;
 }
-function punteggioVerduraProgrammazione(r,data){
+function punteggioVerduraProgrammazione(r,data,variantiPrioritarie){
   const indice=indiceSettimana(data),verdure=(r.ingredienti||[]).filter(ingredienteVerduraQuantificabile);
   if(!verdure.length)return -999;
+  if(variantiPrioritarie&&variantiPrioritarie.size&&verdure.some(i=>variantiPrioritarie.has(i.variantId))) return 1000;
   const livelli={alta:0,media:1,bassa:2};
   const livello=verdure.map(i=>livelli[i.deperibilita]===undefined?1:livelli[i.deperibilita]).reduce((a,b)=>Math.min(a,b),Infinity);
   const preferito=indice<=2?0:(indice<=4?1:2);
   return -Math.abs(livello-preferito)*10-livello;
 }
-function ordinaVerdureProgrammazione(pool,data){
-  return (pool||[]).slice().sort((a,b)=>punteggioVerduraProgrammazione(b,data)-punteggioVerduraProgrammazione(a,data));
+function ordinaVerdureProgrammazione(pool,data,variantiPrioritarie){
+  return (pool||[]).slice().sort((a,b)=>punteggioVerduraProgrammazione(b,data,variantiPrioritarie)-punteggioVerduraProgrammazione(a,data,variantiPrioritarie));
 }
-function prioritaVerdureProgrammazionePasti(candidati,data){
+function prioritaVerdureProgrammazionePasti(candidati,data,variantiPrioritarie){
   if(!(candidati||[]).length)return candidati||[];
   const indice=indiceSettimana(data),preferito=indice<=2?0:(indice<=4?1:2),livelli={alta:0,media:1,bassa:2};
   const score=c=>{
     const verdure=(c.ricette||[]).flatMap(r=>(r.ingredienti||[]).filter(ingredienteVerduraQuantificabile));
     if(!verdure.length)return -999;
+    if(variantiPrioritarie&&variantiPrioritarie.size&&verdure.some(i=>variantiPrioritarie.has(i.variantId))) return 1000;
     return -verdure.reduce((s,i)=>s+Math.abs((livelli[i.deperibilita]===undefined?1:livelli[i.deperibilita])-preferito),0)/verdure.length;
   };
   /* Math.max(...array) va in stack overflow su array molto grandi (verificato
@@ -1170,14 +1173,14 @@ function prioritaVerdureProgrammazionePasti(candidati,data){
   const max=candidati.map(score).reduce((a,b)=>Math.max(a,b),-Infinity);
   return candidati.filter(c=>score(c)===max);
 }
-function completaResiduoVerduraRicette(ricette,pool,data,portionConfig){
+function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie){
   let out=(ricette||[]).slice();
   const totale=coperturaVerduraRicette(out,portionConfig);
   let dedicata=out.find(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length;});
   if(totale.remainingFraction<=0&&!dedicata)return out;
   if(totale.remainingFraction<=0&&dedicata&&Math.abs(totale.rawFraction-1)<0.000001)return out;
   if(!dedicata){
-    dedicata=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data)[0]||null;
+    dedicata=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie)[0]||null;
     if(dedicata)out.push(dedicata);
   }
   if(!dedicata)return out;
@@ -1216,6 +1219,7 @@ function pastoRispettaConteggi(ricette,cfg,ingredientCounts,subtypeCounts){
 }
 async function generaCandidatiPasto(target,data,opts){
   opts=opts||{};
+  const variantiPrioritarie=opts.usaInventario?new Set():await variantiPrioritarieDeperimento();
   const token=PROTEIN_MACRO_TO_TOKEN[target]||SUBTYPE_TO_TOKEN[target]||target;
   const exclude=new Set(opts.excludeRecipeIds||[]);
   const pool=(await poolAmmesso(data,opts)).filter(r=>!exclude.has(r.id));
@@ -1287,7 +1291,7 @@ async function generaCandidatiPasto(target,data,opts){
       for(const veg of vegChoices){
         let ricette=base.concat(veg?[veg]:[]);
         if(!pastoCompletoPerToken(ricette,token)) continue;
-        ricette=completaResiduoVerduraRicette(ricette,pool,data,opts.vegetablePortions);
+        ricette=completaResiduoVerduraRicette(ricette,pool,data,opts.vegetablePortions,variantiPrioritarie);
         if(coperturaVerduraRicette(ricette,opts.vegetablePortions).remainingFraction>0.000001)continue;
         if(opts.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===opts.requiredVegetableVariantId)))continue;
         const firma=firmaPastoDaRicette(ricette);
@@ -1320,7 +1324,7 @@ async function contestoConteggiSettimana(giorno){
       rr.flatMap(r=>r.chiaviStack||[]).forEach(k=>weeklyStackKeys.add(k));
     }
   }
-  return {runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys};
+  return {runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,variantiPrioritarie:await variantiPrioritarieDeperimento()};
 }
 /* Risolve UN singolo slot pasto su richiesta (fuori dal flusso di generazione
    settimanale in blocco), usando la stessa logica a layer completa
@@ -1345,7 +1349,7 @@ async function risolviSlotSingolo(giorno,pasto,target,opzioni){
 }
 async function generaPasto(target,data,opts){
   let candidati=await generaCandidatiPasto(target,data,opts||{});
-  if(!(opts&&opts.usaInventario))candidati=prioritaVerdureProgrammazionePasti(candidati,data);
+  if(!(opts&&opts.usaInventario))candidati=prioritaVerdureProgrammazionePasti(candidati,data,await variantiPrioritarieDeperimento());
   const scelto=scegliCandidatoConMargine(candidati,opts||{});
   return scelto?await assegnaCondimentiRotazioneGlobale(scelto,data):null;
 }
@@ -1398,8 +1402,8 @@ async function costruisciPastoAQuery(slot,ctx){
         return c.V&&!c.P&&!c.C&&!base.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta));
       });
       if(!verdure.length)continue;
-      const punteggio=verdure.map(r=>punteggioVerduraProgrammazione(r,slot.day)).reduce((a,b)=>Math.max(a,b),-Infinity);
-      completamenti=ordinaPerStackPoiCaso(verdure.filter(r=>punteggioVerduraProgrammazione(r,slot.day)===punteggio),ctx.weeklyStackKeys);
+      const punteggio=verdure.map(r=>punteggioVerduraProgrammazione(r,slot.day,ctx.variantiPrioritarie)).reduce((a,b)=>Math.max(a,b),-Infinity);
+      completamenti=ordinaPerStackPoiCaso(verdure.filter(r=>punteggioVerduraProgrammazione(r,slot.day,ctx.variantiPrioritarie)===punteggio),ctx.weeklyStackKeys);
     }
     for(const completamento of completamenti){
       const ricette=base.slice();
@@ -1460,7 +1464,8 @@ async function generaPianoSettimana(scarto,opzioni){
   const [vrRec,vrPastiRec]=typeof getOne==='function'?await Promise.all([getOne('impostazioni','verduraRicorrente'),getOne('impostazioni','verduraRicorrentePasti')]):[null,null];
   const vrId=vrRec&&vrRec.valore||null,vrPasti=new Set(vrPastiRec&&Array.isArray(vrPastiRec.valore)?vrPastiRec.valore:[]);
   const slotDefs=slotDaGenerare.map((s,si)=>{const arr=tab['giorno_'+s.di]||[],mi=s.pasto==='pranzo'?0:1;return Object.assign({},s,{target:arr[mi]||proteine.targets[si],carbKey:abbinamento.keys[si],requiredVegetableVariantId:vrId&&vrPasti.has(s.pasto+'_'+s.di)?vrId:null});});
-  const soluzione=await risolviSettimanaRicette(slotDefs,{runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,vegetablePortions:resolved.vegetables,onProgress:opzioni.onProgress});
+  const variantiPrioritarie=await variantiPrioritarieDeperimento();
+  const soluzione=await risolviSettimanaRicette(slotDefs,{runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,vegetablePortions:resolved.vegetables,variantiPrioritarie,onProgress:opzioni.onProgress});
   if(!soluzione.ok){
     const retry=Number(opzioni._retryCompatibilita)||0;
     if(retry<20)return generaPianoSettimana(scarto,Object.assign({},opzioni,{_retryCompatibilita:retry+1}));
@@ -1521,16 +1526,17 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
     requiredVegetableVariantId
   };
   if(requiredCarbKey)opzioniCandidato.carbBudget={requiredKey:requiredCarbKey};
+  const variantiPrioritarie=opzioni.usaInventario?new Set():await variantiPrioritarieDeperimento();
   const candidati=await generaCandidatiPasto(target,giorno,opzioniCandidato);
   let disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
-  if(!opzioni.usaInventario)disponibili=prioritaVerdureProgrammazionePasti(disponibili,giorno);
+  if(!opzioni.usaInventario)disponibili=prioritaVerdureProgrammazionePasti(disponibili,giorno,variantiPrioritarie);
 
   if(!disponibili.length){
     azzeraProposte(chiave);
     visti=getPropostaSet(chiave);
     if(firmaCorrente) visti.add(firmaCorrente);
     disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
-    if(!opzioni.usaInventario)disponibili=prioritaVerdureProgrammazionePasti(disponibili,giorno);
+    if(!opzioni.usaInventario)disponibili=prioritaVerdureProgrammazionePasti(disponibili,giorno,variantiPrioritarie);
     if(!disponibili.length) disponibili=candidati.slice();
   }
 
@@ -1670,15 +1676,47 @@ async function alternativeRollP(base,giorno,condimentoIndex){
   return out.sort((a,b)=>a.comboIndex-b.comboIndex);
 }
 
+async function variantiPrioritarieDeperimento(){
+  try{
+    const [scadenze,avanzi]=await Promise.all([getScadenzeImminenti(),getAvanziScomodi()]);
+    return new Set([...scadenze,...avanzi].map(v=>v.variantId).filter(Boolean));
+  }catch(e){ return new Set(); }
+}
 async function alternativeRollV(base,giorno){
   if(!base) return [];
-  const n=Number(base.numeroVariantiCondimento)||1;
+  const c=copertura(base);
+  if(!c.V) return [];
   const out=[];
-  for(let idx=0;idx<n;idx++){
+  /* Stesso ingrediente verdura, condimenti compatibili diversi (comportamento
+     preesistente, preservato). */
+  const nVarianti=Number(base.numeroVariantiCondimento)||1;
+  for(let idx=0;idx<nVarianti;idx++){
     const x=await materializzaRicetta(base,idx);
-    if(await ricettaAmmessa(x,giorno,{})) out.push(idx);
+    if(x&&await ricettaAmmessa(x,giorno,{})) out.push({ricetta:base,condimentoVarianteIndex:idx,x});
   }
-  return out;
+  /* Verdura diversa (template diverso), condimento di base - vera query
+     su alternativa verdura, non solo sul condimento. Coerente con
+     "V cambia soltanto verdura/condimento compatibile" della specifica. */
+  const pool=state.ricetteConcrete.filter(r=>{
+    const cr=copertura(r);
+    return cr.V&&!cr.P&&!cr.C&&r.id!==base.id;
+  });
+  for(const r of pool){
+    const x=await materializzaRicetta(r,0);
+    if(x&&await ricettaAmmessa(x,giorno,{})) out.push({ricetta:r,condimentoVarianteIndex:0,x});
+  }
+  /* Priorita' al materiale in deperimento/avanzo: la verdura e' la
+     categoria piu' a rischio spreco, quindi il Roll V (non solo il
+     pulsante Salvafrigo dedicato) deve proporre per primi i candidati
+     che usano scadenze imminenti o avanzi scomodi gia' in inventario. */
+  const variantiPrioritarie=await variantiPrioritarieDeperimento();
+  const usaPrioritario=item=>variantiPrioritarie.size>0&&(item.x.ingredienti||[]).some(i=>variantiPrioritarie.has(i.variantId));
+  out.sort((a,b)=>{
+    const pa=usaPrioritario(a)?0:1,pb=usaPrioritario(b)?0:1;
+    if(pa!==pb)return pa-pb;
+    return 0;
+  });
+  return out.map(({ricetta,condimentoVarianteIndex})=>({ricetta,condimentoVarianteIndex}));
 }
 
 async function proprietarioRoll(voce,tipo,giorno){
@@ -1701,8 +1739,8 @@ async function proprietarioRoll(voce,tipo,giorno){
   return null;
 }
 
-async function statoRollPasto(giorno,pasto){
-  const voce=typeof getOne==='function'?await getOne('piano',giorno+'_'+pasto):null;
+async function statoRollPasto(giorno,pasto,vocePendente){
+  const voce=vocePendente||(typeof getOne==='function'?await getOne('piano',giorno+'_'+pasto):null);
   if(!voce||!Array.isArray(voce.realizzazioni)) return {C:false,P:false,V:false};
   return {
     C:!!(await proprietarioRoll(voce,'C',giorno)),
@@ -1711,11 +1749,11 @@ async function statoRollPasto(giorno,pasto){
   };
 }
 
-async function ruotaPasto(giorno,pasto,tipo){
+async function ruotaPasto(giorno,pasto,tipo,vocePendente){
   tipo=String(tipo||'').toUpperCase();
   if(!['C','P','V'].includes(tipo)) return null;
   const id=giorno+'_'+pasto;
-  const voce=typeof getOne==='function'?await getOne('piano',id):null;
+  const voce=vocePendente||(typeof getOne==='function'?await getOne('piano',id):null);
   if(!voce||!Array.isArray(voce.realizzazioni)) return null;
 
   const owner=await proprietarioRoll(voce,tipo,giorno);
@@ -1726,8 +1764,12 @@ async function ruotaPasto(giorno,pasto,tipo){
 
   if(tipo==='V'){
     const a=owner.alternative;
-    const pos=a.indexOf(condIndex);
-    real.condimentoVarianteIndex=a[(pos<0?0:pos+1)%a.length];
+    const pos=a.findIndex(x=>x.ricetta.id===real.ricettaId&&x.condimentoVarianteIndex===condIndex);
+    const prossimo=a[(pos<0?0:pos+1)%a.length];
+    real.ricettaId=prossimo.ricetta.id;
+    real.recipeModelId=prossimo.ricetta.recipeModelId;
+    real.copertura=Array.from(copertura(prossimo.ricetta).tokens);
+    real.condimentoVarianteIndex=prossimo.condimentoVarianteIndex;
   }else{
     const a=owner.alternative;
     const pos=a.findIndex(r=>r.id===real.ricettaId);
@@ -1759,8 +1801,16 @@ async function ruotaPasto(giorno,pasto,tipo){
     origine:'motore-nuovo',
     programmatoIl:new Date().toISOString()
   });
-  if(typeof put==='function') await put('piano',aggiornata);
   return aggiornata;
+}
+/* Passo esplicito di salvataggio, separato da ruotaPasto: il risultato di
+   un Roll resta provvisorio (solo in memoria lato UI) finche' non si
+   chiama questa funzione - coerente con "la ricetta passa sul piano
+   alimentare solo quando si clicca Salva". */
+async function salvaRoll(voce){
+  if(!voce||typeof put!=='function') return voce;
+  await put('piano',voce);
+  return voce;
 }
 
 async function inizializza(opts){
@@ -1823,7 +1873,7 @@ global.DietaPlannerMotorV12={
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,getInventarioDisponibile,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
-  generaPasto,generaPianoSettimana,rigeneraPasto,risolviSlotSingolo,statoRollPasto,ruotaPasto,materializzaRealizzazione,
+  generaPasto,generaPianoSettimana,rigeneraPasto,risolviSlotSingolo,statoRollPasto,ruotaPasto,salvaRoll,materializzaRealizzazione,
   snapshotRealizzazione,
   applicaOverrideQuantitaRealizzazione,
   normalizzaRealizzazioniVerdura,

@@ -5258,18 +5258,25 @@ async function ricettaNuovoDaRealizzazione(realizzazione){
   return await getOne('ricette',realizzazione.ricettaId);
 }
 
+/* Bozze Roll non ancora salvate, tenute solo in memoria (mai in IndexedDB)
+   finche' l'utente non clicca Salva - coerente con "la ricetta passa sul
+   piano alimentare solo quando si clicca Salva". Chiave: giorno_pasto. */
+const bozzeRollPendenti = {};
+
 async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   giorno=giorno||giornoSelezionato;
   const el=document.getElementById(elementId||(pasto==='pranzo'?'blocPranzo':'blocCena'));
   if(!el)return;
   const id=giorno+'_'+pasto;
-  const voce=await getOne('piano',id);
+  const bozza=bozzeRollPendenti[id]||null;
+  const voce=bozza||await getOne('piano',id);
   const title=LABEL_PASTO[pasto].toUpperCase()+':';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
     if(giorno<todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta">Nessun pasto registrato.</div>';return;}
     el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
     el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
+      delete bozzeRollPendenti[id];
       const target=await targetNuovoMotorePerPasto(giorno,pasto);
       await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target);
       await renderBloccoNuovoMotore(pasto,giorno,elementId);
@@ -5278,7 +5285,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   }
 
   const statoRoll=!voce.consumato&&giorno>=todayISO()
-    ? await DietaPlannerMotorV12.statoRollPasto(giorno,pasto)
+    ? await DietaPlannerMotorV12.statoRollPasto(giorno,pasto,bozza)
     : {C:false,P:false,V:false};
 
   let html='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-griglia-compatta">';
@@ -5321,7 +5328,10 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     if(originali.length)html+='<div class="meta" style="margin-top:6px;">Programmato: '+esc([...new Set(originali)].join(' · '))+'</div>';
   }
 
-  if(!voce.consumato&&giorno>=todayISO()){
+  if(bozza){
+    html+='<div class="meta" style="margin-top:6px;color:#f1c40f;">Modifiche non salvate</div>';
+    html+='<div class="row" style="margin-top:10px;gap:7px;"><button class="primary" data-nm-salva-roll>Salva</button><button class="secondary" data-nm-annulla-roll>Annulla</button></div>';
+  }else if(!voce.consumato&&giorno>=todayISO()){
     html+='<div class="row" style="margin-top:10px;gap:7px;"><button class="secondary" data-nm-rigenera>Proponi nuovo pasto</button><button class="secondary" data-nm-salvafrigo>♻️ Salvafrigo</button></div>';
   }
 
@@ -5329,18 +5339,34 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
 
   el.querySelectorAll('[data-nm-roll-tipo]').forEach(btn=>btn.addEventListener('click',async()=>{
     if(btn.disabled)return;
-    const aggiornata=await DietaPlannerMotorV12.ruotaPasto(giorno,pasto,btn.dataset.nmRollTipo);
-    if(!aggiornata)return;
+    const risultato=await DietaPlannerMotorV12.ruotaPasto(giorno,pasto,btn.dataset.nmRollTipo,bozzeRollPendenti[id]||voce);
+    if(!risultato)return;
+    bozzeRollPendenti[id]=risultato;
     await renderBloccoNuovoMotore(pasto,giorno,elementId);
   }));
 
+  el.querySelector('[data-nm-salva-roll]')?.addEventListener('click',async()=>{
+    const daSalvare=bozzeRollPendenti[id];
+    if(!daSalvare)return;
+    await DietaPlannerMotorV12.salvaRoll(daSalvare);
+    delete bozzeRollPendenti[id];
+    await renderBloccoNuovoMotore(pasto,giorno,elementId);
+  });
+
+  el.querySelector('[data-nm-annulla-roll]')?.addEventListener('click',async()=>{
+    delete bozzeRollPendenti[id];
+    await renderBloccoNuovoMotore(pasto,giorno,elementId);
+  });
+
   el.querySelector('[data-nm-rigenera]')?.addEventListener('click',async()=>{
+    delete bozzeRollPendenti[id];
     const target=voce.categoriaTarget||await targetNuovoMotorePerPasto(giorno,pasto);
     await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target);
     await renderBloccoNuovoMotore(pasto,giorno,elementId);
   });
 
   el.querySelector('[data-nm-salvafrigo]')?.addEventListener('click',async()=>{
+    delete bozzeRollPendenti[id];
     const target=voce.categoriaTarget||await targetNuovoMotorePerPasto(giorno,pasto);
     const aggiornata=await DietaPlannerMotorV12.rigeneraPasto(giorno,pasto,target,{usaInventario:true});
     if(!aggiornata){await avviso('Nessuna alternativa Salvafrigo compatibile con il piano odierno.');return;}
@@ -8509,51 +8535,34 @@ async function apriCalendarioVisuale(){
 
 /* Legge lo stato di un giorno e ritorna le icone da mostrare nelle due metà
    della cella: metà superiore = colazione, metà inferiore = pranzo/cena. */
+function iconaPastoDaVoce(voce, ricettePerId){
+  // Restituisce {icona, speciale} - gestisce sia lo schema nuovo
+  // (motoreNuovo + realizzazioni, con gruppoProteico già nello snapshot)
+  // sia il vecchio (secondoId/ricettaId su store 'ricette').
+  if(!voce) return {icona:'', speciale:false};
+  if(voce.motoreNuovo && Array.isArray(voce.realizzazioni) && voce.realizzazioni.length){
+    if(!voce.consumato) return {icona:'', speciale:false};
+    const conGruppo = voce.realizzazioni.find(r => r && r.gruppoProteico);
+    return {icona: conGruppo ? iconaGruppoProteico(conGruppo.gruppoProteico) : '🍝', speciale:false};
+  }
+  const idRicette = voce.modo==='multi'
+    ? [voce.secondoId].filter(Boolean)
+    : [voce.ricettaId].filter(Boolean);
+  for(const rid of idRicette){
+    const r = ricettePerId[rid];
+    if(r){
+      if(r.piattoSpeciale) return {icona:'<span class="icona-pizza">🍕</span>', speciale:true};
+      if(voce.consumato && r.gruppoProteico) return {icona: iconaGruppoProteico(r.gruppoProteico), speciale:false};
+      if(voce.consumato) return {icona:'🍝', speciale:false};
+    }
+  }
+  return {icona:'', speciale:false};
+}
 function leggiStatoGiornoCalendario(iso, pianoPerId, ricettePerId){
-  // PRANZO: icona proteica se consumato, pizza se speciale
-  let iconaPranzo = '';
-  let pranzoSpeciale = false;
   const vocePranzo = pianoPerId[iso+'_pranzo'];
-  if(vocePranzo){
-    const idRicettePranzo = vocePranzo.modo==='multi'
-      ? [vocePranzo.secondoId].filter(Boolean)
-      : [vocePranzo.ricettaId].filter(Boolean);
-    for(const rid of idRicettePranzo){
-      const r = ricettePerId[rid];
-      if(r){
-        if(r.piattoSpeciale){
-          pranzoSpeciale = true;
-          iconaPranzo = '<span class="icona-pizza">🍕</span>';
-        } else if(vocePranzo.consumato && r.gruppoProteico){
-          iconaPranzo = iconaGruppoProteico(r.gruppoProteico);
-        } else if(vocePranzo.consumato){
-          iconaPranzo = '🍝';
-        }
-      }
-    }
-  }
-  // CENA: stessa logica
-  let iconaCena = '';
-  let cenaSpeciale = false;
+  const {icona: iconaPranzo, speciale: pranzoSpeciale} = iconaPastoDaVoce(vocePranzo, ricettePerId);
   const voceCena = pianoPerId[iso+'_cena'];
-  if(voceCena){
-    const idRicetteCena = voceCena.modo==='multi'
-      ? [voceCena.secondoId].filter(Boolean)
-      : [voceCena.ricettaId].filter(Boolean);
-    for(const rid of idRicetteCena){
-      const r = ricettePerId[rid];
-      if(r){
-        if(r.piattoSpeciale){
-          cenaSpeciale = true;
-          iconaCena = '<span class="icona-pizza">🍕</span>';
-        } else if(voceCena.consumato && r.gruppoProteico){
-          iconaCena = iconaGruppoProteico(r.gruppoProteico);
-        } else if(voceCena.consumato){
-          iconaCena = '🍝';
-        }
-      }
-    }
-  }
+  const {icona: iconaCena, speciale: cenaSpeciale} = iconaPastoDaVoce(voceCena, ricettePerId);
   // COLAZIONE: solo se SPECIALE (la generica a gruppi non si mostra)
   let haColazioneSpeciale = false;
   let colazioneAlBar = false;
