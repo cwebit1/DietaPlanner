@@ -1,5 +1,12 @@
 # Istruzioni operative DietaPlanner
 
+## Principio generale di intervento sicuro
+
+- La sicurezza di una modifica non si ottiene imponendo in anticipo un perimetro arbitrario di file, livelli o tecnologie da non oltrepassare. Prima di ogni singolo intervento bisogna individuare il punto corretto su cui agire, comprenderne la funzione reale, verificare quali dati, moduli, viste e comportamenti dipendono da esso e valutare concretamente se ciascun effetto prodotto sia necessario oppure pericoloso.
+- Il livello dell'intervento deve essere deciso soltanto dopo questa verifica: CSS, markup, renderer, motore, persistenza o dati possono essere coinvolti quando sono realmente il punto corretto, ma nessuno di essi va modificato per supposizione, comodità o applicazione meccanica di un confine stabilito prima dell'analisi.
+- Prima di applicare una modifica, definire il risultato funzionale e visivo atteso e distinguere ciò che deve cambiare da ciò che deve restare invariato. Durante l'intervento, riesaminare ogni passaggio e le sue dipendenze invece di considerarlo sicuro soltanto perché ricade nel perimetro iniziale. Dopo l'intervento, verificare il comportamento reale, il diff completo e tutti i casi collegati, compresi quelli che condividono dati o renderer con il punto modificato.
+- Se l'analisi mostra che la soluzione corretta richiede di intervenire anche in un punto inizialmente non previsto, non estendere automaticamente la modifica e non ripiegare su una soluzione incompleta: descrivere la dipendenza emersa, valutarne i rischi e procedere soltanto quando l'estensione è necessaria e coerente con la richiesta autorizzata.
+
 ## Percorso di sviluppo e ricettario vincolante
 
 - Lo sviluppo dei Lotti della revisione prosegue esclusivamente sui file applicativi della **root** del repository (`index.html`, `nutrition-config.js`, `engine-core.js`, `motor-v12.js`, `db-ricette.json`, `ingredienti-new.json` e relativi test/documenti). Non deve esistere né essere ricreata una seconda cartella applicativa parallela.
