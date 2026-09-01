@@ -16,9 +16,18 @@ require('../motor-v12.js');
 const M=global.DietaPlannerMotorV12;
 
 (async()=>{
+  await global.put('ricette',{id:'contorno_cipolla',nome:'Cipolla',fonte:'nuovo-db-compilato',stackScope:'contorni_catalogo'});
+  await global.put('ricette',{id:'proteina_taleggio',nome:'Taleggio',fonte:'nuovo-db-compilato',stackScope:'proteine_catalogo'});
   const init=await M.inizializza({basePath:''});
   assert.equal(init.template,40);
   assert(init.concrete>40);
+
+  const catalogoIndexedDB=(await global.getAll('ricette')).filter(r=>r.fonte==='nuovo-db-compilato');
+  assert.deepEqual(M.getRicette(),catalogoIndexedDB,'il catalogo runtime deve essere riletto integralmente da IndexedDB');
+  assert(!catalogoIndexedDB.some(r=>r.stackScope==='contorni_catalogo'||r.stackScope==='proteine_catalogo'),'le finte ricette derivate dagli ingredienti devono essere eliminate dalla cache');
+  await global.put('ricette',Object.assign({},catalogoIndexedDB[0],{provaCacheIndexedDB:true}));
+  await M.inizializza({basePath:''});
+  assert.equal(M.getRicetta(catalogoIndexedDB[0].id).provaCacheIndexedDB,true,'a versione invariata il motore deve usare le ricette IndexedDB così come sono');
 
   const breakfastVariants=(await global.getAll('varianti')).filter(v=>v.colazioneGruppo);
   assert(breakfastVariants.length>=9,'la sincronizzazione deve materializzare le opzioni della colazione');
@@ -36,11 +45,10 @@ const M=global.DietaPlannerMotorV12;
 
   const ricette=M.getRicette();
   const bresaolaSeparata=ricette.find(r=>M.copertura(r).P&&!M.copertura(r).C&&(r.ingredienti||[]).some(i=>i.nome==='Bresaola'));
-  const taleggioSeparato=ricette.find(r=>M.copertura(r).P&&!M.copertura(r).C&&(r.ingredienti||[]).some(i=>i.nome==='Taleggio'));
-  assert(bresaolaSeparata&&taleggioSeparato,'fonti proteiche modulari disponibili');
+  const taleggioConPolenta=ricette.find(r=>M.copertura(r).P&&M.copertura(r).C&&(r.ingredienti||[]).some(i=>i.nome==='Taleggio')&&(r.ingredienti||[]).some(i=>i.nome==='Polenta'));
+  assert(bresaolaSeparata&&taleggioConPolenta,'devono restare disponibili soltanto le combinazioni dichiarate nel ricettario');
   assert.equal(M.composizioneSeparataConsentita(bresaolaSeparata,'polenta'),false,'un esempio diagnostico non deve creare una combinazione fuori array');
   assert.equal(M.composizioneSeparataConsentita(bresaolaSeparata,'pane'),true,'la regola strutturale degli affettati deve restare valida');
-  assert.equal(M.composizioneSeparataConsentita(taleggioSeparato,'polenta'),true,'una relazione presente negli array P+C deve restare componibile');
 
   for(let iteration=0;iteration<1;iteration++){
     const avanzamento=[];
