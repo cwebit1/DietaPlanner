@@ -118,7 +118,33 @@ La logica a layer sopra è quella che l'ha sostituita ed è l'unica valida
 
 - **Editor manuale del singolo pasto** ("finestra pasto": `renderContenutoAlternativaCompleta`, `componiSecondoContorno`, `scegliComponentiSecondo`, draft primo/secondo/contorno) — Cwe ha esplicitamente rimandato questa parte più volte ("la vediamo dopo, di là è più facile").
 - Struttura `varianti` per Condimenti multi-sugo (`preposizione`, `quotaVerduraGrammi`, `carboidratiCompatibili`) — progettata, non ancora popolata. **Nota:** il campo `composizioni` già presente nei dati (es. ricetta id 43, 9 carboidrati × 8 composizioni verdura) implementa concettualmente la stessa cosa — da riusare/estendere, non reinventare.
-- Sezioni 17-20 di `REGOLE_FLUSSO_LOGICO.md` (redesign pagina Menù, Configurazione avanzata, allergeni UE, bug modal tastiera) — decise ma mai implementate, non ancora lette per intero.
+- Sezioni 17-20 di `REGOLE_FLUSSO_LOGICO.md` (redesign pagina Menù, bug modal tastiera) — decise ma mai implementate, non ancora lette per intero. **Nota:** la classificazione allergeni UE menzionata nella stessa sezione è in realtà **già implementata e verificata** — vedi punto dedicato sotto.
+
+## 7. Allergeni UE — verificato, funzionante
+
+Verifica del 01/09/2026, richiesta da Cwe dopo un dubbio: gli allergeni
+**sono già completamente integrati**, catena verificata end-to-end:
+
+1. **UI**: `ALLERGENI_UE` in `index.html` — 14 voci esatte della
+   classificazione UE (glutine, crostacei, uova, pesce, arachidi, soia,
+   latte, frutta a guscio, sedano, senape, sesamo, solfiti, lupini,
+   molluschi), toggle in "Configurazione avanzata".
+2. **Persistenza**: `salvaConfigAvanzata` → `impostazioni/allergeniAttivi`.
+3. **Resolver**: `caricaConfigurazioneNutrizionaleRisolta` →
+   `resolved.safety.allergens` → `cfg.allergie`.
+4. **Dati**: `ingredienti-new.json`, campo `allergeni` per ingrediente —
+   le 10 chiavi effettivamente usate (`crostacei`, `frutta_guscio`,
+   `glutine`, `latte`, `molluschi`, `pesce`, `sedano`, `sesamo`, `soia`,
+   `uova`) combaciano esattamente con `ALLERGENI_UE`, nessun
+   disallineamento di stringhe. Le altre 4 voci UI (arachidi, senape,
+   solfiti, lupini) non sono ancora usate da nessun ingrediente nel
+   catalogo attuale — non un bug, semplicemente nessun ingrediente le
+   contiene oggi.
+5. **Motore**: il campo `allergeni` viene copiato dall'ingrediente alla
+   ricetta compilata in 3 punti di `motor-v12.js` (righe 486, 513, 640);
+   `ricettaAmmessa` lo controlla come **esclusione dura**
+   (`i.allergeni.some(a=>cfg.allergie.includes(a))`), mai bypassabile
+   nemmeno dal Layer 2b — stesso principio dei tetti settimanali.
 - Test end-to-end reale su dispositivo/browser — nulla del lavoro sopra è stato verificato su IndexedDB vero, solo in isolamento dove possibile.
 
 ## 4. Bug trovati e corretti durante l'audit
