@@ -113,6 +113,7 @@ La logica a layer sopra è quella che l'ha sostituita ed è l'unica valida
 | — | **Correzione**: `garantisci-slot.js` eliminato (era codice morto irraggiungibile, vedi §5); `renderBloccoCompleto` ridotta a redirect | `8d46f2d` |
 | — | Layer 2b completato anche in `generaCandidatiPasto` (percorso "Proponi nuovo pasto"/Salvafrigo) — tutti e tre i percorsi di generazione ora coerenti | `ada43b1` |
 | — | **Correzione critica**: il fallback Layer 2b di `generaCandidatiPasto` bypassava per errore anche `ricettaAmmessa` (tetti settimanali duri), non solo `carbRicettaAmmesso` (continuità indicativa) — corretto nello stesso commit di questo aggiornamento doc | *(questo commit)* |
+| — | Verifica di sistema totale (statica + Node + browser reale) — trovato e corretto un secondo bug reale: il fallback Layer 2b generava fino a 140.548 candidati (esplosione combinatoria), mandando in stack overflow `prioritaVerdureProgrammazionePasti`; limitato il campione forzato e resi robusti tutti i `Math.max`/`Math.min` su spread nel file | *(questo commit)* |
 
 ### Cosa resta fuori scope (deliberatamente rimandato)
 
@@ -120,7 +121,7 @@ La logica a layer sopra è quella che l'ha sostituita ed è l'unica valida
 - Struttura `varianti` per Condimenti multi-sugo (`preposizione`, `quotaVerduraGrammi`, `carboidratiCompatibili`) — progettata, non ancora popolata. **Nota:** il campo `composizioni` già presente nei dati (es. ricetta id 43, 9 carboidrati × 8 composizioni verdura) implementa concettualmente la stessa cosa — da riusare/estendere, non reinventare.
 - Sezioni 17-20 di `REGOLE_FLUSSO_LOGICO.md` (redesign pagina Menù, bug modal tastiera) — decise ma mai implementate, non ancora lette per intero. **Nota:** la classificazione allergeni UE menzionata nella stessa sezione è in realtà **già implementata e verificata** — vedi punto dedicato sotto.
 
-## 7. Allergeni UE — verificato, funzionante
+## 4. Allergeni UE — verificato, funzionante
 
 Verifica del 01/09/2026, richiesta da Cwe dopo un dubbio: gli allergeni
 **sono già completamente integrati**, catena verificata end-to-end:
@@ -147,7 +148,7 @@ Verifica del 01/09/2026, richiesta da Cwe dopo un dubbio: gli allergeni
    nemmeno dal Layer 2b — stesso principio dei tetti settimanali.
 - Test end-to-end reale su dispositivo/browser — nulla del lavoro sopra è stato verificato su IndexedDB vero, solo in isolamento dove possibile.
 
-## 4. Bug trovati e corretti durante l'audit
+## 5. Bug trovati e corretti durante l'audit
 
 1. **Cooldown applicato erroneamente a V** — `chiaviStack()` escludeva la
    categoria C dal tracciamento cooldown ma non V; tutti i 34 ingredienti
@@ -164,7 +165,7 @@ Verifica del 01/09/2026, richiesta da Cwe dopo un dubbio: gli allergeni
    inesistente in un ramo morto di `garantisciRicettaSlot` (sparito con
    la rimozione di quella funzione).
 
-## 5. Lezione appresa — verificare la raggiungibilità fino in fondo
+## 6. Lezione appresa — verificare la raggiungibilità fino in fondo
 
 Un audit esterno ha trovato un bug in `garantisci-slot.js` (usava
 `voce.fascia`, che significa **solo** facile/medio/difficile, come target
@@ -189,7 +190,55 @@ ridotta al solo redirect. `risolviSlotSingolo` (infrastruttura corretta,
 con Layer 2b) resta in `motor-v12.js`, oggi orfana, disponibile per
 quando si affronterà per davvero l'editor manuale del pasto.
 
-## 6. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 7. Verifica di sistema totale (01/09/2026) — statica, Node, browser reale
+
+Richiesta esplicita di Cwe: verifica completa prima di considerare il
+Lotto J concluso. Eseguita in tre livelli.
+
+**Statica:** sintassi valida su tutti i file JS, JSON validi, zero
+riferimenti residui al codice eliminato in sessione, tutte le 51 funzioni
+esportate da `motor-v12.js` esistono davvero.
+
+**Node (IndexedDB/fetch simulati):** 540 combinazioni corrette (440 da
+template + 100 sintetiche di catalogo), cache J.5 confermata letta
+davvero (tecnica del marcatore: una modifica sopravvive a una seconda
+`inizializza()` con stessa versione), cambio versione forza correttamente
+la rigenerazione, 270 pasti generati su 6 settimane consecutive senza
+alcun blocco sulle verdure (fix cooldown-V confermato sotto uso
+prolungato).
+
+**Bug trovato e corretto durante lo stress test:** forzando
+l'esaurimento dei carboidrati per innescare il Layer 2b davvero, il
+fallback di `generaCandidatiPasto` generava **140.548 candidati**
+(proteine candidate × tutto il catalogo forzato come carboidrato),
+mandando in stack overflow `prioritaVerdureProgrammazionePasti`
+(`Math.max(...array)` su spread di array enorme). Corretto in due modi:
+1. Il campione forzato è ora limitato a un massimo di 8 (mescolato con
+   `ordinaPerStackPoiCaso`), non più tutto il catalogo.
+2. Tutte le 6 occorrenze nel file dello stesso pattern fragile
+   (`Math.max`/`Math.min` su spread) sono state rese robuste con
+   `reduce`, eliminando l'intera classe di vulnerabilità indipendentemente
+   dalla causa.
+
+Ritestato dopo la correzione: il Layer 2b sotto stress restituisce
+correttamente l'avviso e le realizzazioni, nessun crash.
+
+**Browser reale (Chromium via Playwright, IndexedDB vera del browser,
+server HTTP reale, stesso ordine di caricamento script di produzione):**
+- Generazione completa: 540 ricette, 10 pasti, tutti con realizzazioni,
+  zero errori console/pagina.
+- **Cache J.5 confermata anche nel browser vero**: un marcatore scritto in
+  IndexedDB sopravvive a una nuova navigazione della pagina — la cache
+  viene letta davvero, non solo "non fallisce".
+- **Invalidazione cache confermata nel browser vero**: alterando la
+  versione salvata, la rigenerazione scatta correttamente e il marcatore
+  sparisce.
+
+Questo è il livello di verifica più alto raggiungibile senza il
+dispositivo reale di Cwe — copre tutto tranne l'interazione utente vera e
+propria (tap, scroll, resa visiva).
+
+## 8. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.

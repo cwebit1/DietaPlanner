@@ -946,7 +946,7 @@ async function poolAmmesso(data,opts){
 function scegliCasuale(pool){ return pool.length?pool[Math.floor(Math.random()*pool.length)]:null; }
 function scegliCandidatoConMargine(pool,opts){
   if(!(pool||[]).length)return null;
-  const priorita=Math.min(...pool.map(c=>Number(c.prioritaComposizione)||0));
+  const priorita=pool.map(c=>Number(c.prioritaComposizione)||0).reduce((a,b)=>Math.min(a,b),Infinity);
   pool=pool.filter(c=>(Number(c.prioritaComposizione)||0)===priorita);
   const cfg=opts&&opts.runtimeConfig,subCounts=opts&&opts.weeklySubtypeCounts||{},ingCounts=opts&&opts.weeklyIngredientCounts||{};
   if(!cfg)return scegliCasuale(pool);
@@ -958,7 +958,7 @@ function scegliCandidatoConMargine(pool,opts){
     for(const id of ingredienti){const rule=cfg.vincoli[id];if(rule&&rule.max!==null&&rule.max!==undefined)penalita+=10/(Math.max(0,Number(rule.max)-(Number(ingCounts[id])||0))+1);}
     return penalita;
   };
-  const min=Math.min(...pool.map(score)),migliori=pool.filter(c=>Math.abs(score(c)-min)<1e-9);
+  const min=pool.map(score).reduce((a,b)=>Math.min(a,b),Infinity),migliori=pool.filter(c=>Math.abs(score(c)-min)<1e-9);
   return scegliCasuale(migliori);
 }
 
@@ -1011,7 +1011,7 @@ function nomiVarianteCondimento(raw,indice){
 function punteggioRecenzaCondimento(nomi,rotazione){
   if(!nomi.length) return -1;
   const ultimo=rotazione&&rotazione.ultimo||{};
-  return Math.max(...nomi.map(nome=>Number(ultimo[nome])||0));
+  return nomi.map(nome=>Number(ultimo[nome])||0).reduce((a,b)=>Math.max(a,b),-Infinity);
 }
 async function scegliCondimentoGlobale(base,data){
   if(!base) return 0;
@@ -1149,7 +1149,7 @@ function punteggioVerduraProgrammazione(r,data){
   const indice=indiceSettimana(data),verdure=(r.ingredienti||[]).filter(ingredienteVerduraQuantificabile);
   if(!verdure.length)return -999;
   const livelli={alta:0,media:1,bassa:2};
-  const livello=Math.min(...verdure.map(i=>livelli[i.deperibilita]===undefined?1:livelli[i.deperibilita]));
+  const livello=verdure.map(i=>livelli[i.deperibilita]===undefined?1:livelli[i.deperibilita]).reduce((a,b)=>Math.min(a,b),Infinity);
   const preferito=indice<=2?0:(indice<=4?1:2);
   return -Math.abs(livello-preferito)*10-livello;
 }
@@ -1164,7 +1164,10 @@ function prioritaVerdureProgrammazionePasti(candidati,data){
     if(!verdure.length)return -999;
     return -verdure.reduce((s,i)=>s+Math.abs((livelli[i.deperibilita]===undefined?1:livelli[i.deperibilita])-preferito),0)/verdure.length;
   };
-  const max=Math.max(...candidati.map(score));
+  /* Math.max(...array) va in stack overflow su array molto grandi (verificato
+     oltre le ~100mila voci). reduce() e' equivalente ma sempre sicuro,
+     qualunque sia la dimensione di candidati. */
+  const max=candidati.map(score).reduce((a,b)=>Math.max(a,b),-Infinity);
   return candidati.filter(c=>score(c)===max);
 }
 function completaResiduoVerduraRicette(ricette,pool,data,portionConfig){
@@ -1245,11 +1248,23 @@ async function generaCandidatiPasto(target,data,opts){
            intatti: ricettaAmmessa(r,data,opts) applica comunque tetti
            settimanali sui carboidrati limitati, allergie ed esclusioni
            cliniche, che non vanno MAI bypassati. Si marca il candidato con
-           un avviso per l'utente. */
+           un avviso per l'utente.
+
+           IMPORTANTE: il campione va limitato (max 8, come una normale pool
+           di carboidrati compatibili) e non lasciato a tutto il catalogo -
+           con molte proteine candidate in parallelo, ogni proteina x tutto
+           il catalogo forzato produce un'esplosione combinatoria reale
+           (verificato: 140.548 candidati con ~260 proteine x 540 ricette),
+           che manda in stack overflow prioritaVerdureProgrammazionePasti
+           (Math.max su spread di un array enorme). */
         let forzata=[];
         for(const r of state.ricetteConcrete){
-          if(copertura(r).C&&!copertura(r).P&&r.id!==primo.id&&await ricettaAmmessa(r,data,opts)) forzata.push(r);
+          if(copertura(r).C&&!copertura(r).P&&r.id!==primo.id&&await ricettaAmmessa(r,data,opts)){
+            forzata.push(r);
+            if(forzata.length>=40)break; /* campione sufficiente da cui scegliere, mai tutto il catalogo */
+          }
         }
+        forzata=ordinaPerStackPoiCaso(forzata,new Set()).slice(0,8);
         if(opts.usaInventario)forzata=applicaPrioritaInventario(forzata,livelli);
         carbChoices=forzata.length?forzata:[null];
         carboidratoForzato=forzata.length>0;
@@ -1383,7 +1398,7 @@ async function costruisciPastoAQuery(slot,ctx){
         return c.V&&!c.P&&!c.C&&!base.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta));
       });
       if(!verdure.length)continue;
-      const punteggio=Math.max(...verdure.map(r=>punteggioVerduraProgrammazione(r,slot.day)));
+      const punteggio=verdure.map(r=>punteggioVerduraProgrammazione(r,slot.day)).reduce((a,b)=>Math.max(a,b),-Infinity);
       completamenti=ordinaPerStackPoiCaso(verdure.filter(r=>punteggioVerduraProgrammazione(r,slot.day)===punteggio),ctx.weeklyStackKeys);
     }
     for(const completamento of completamenti){
