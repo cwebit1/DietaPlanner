@@ -535,9 +535,10 @@ details{margin-top:14px;}
 .pasto-riga-comando{display:flex;align-items:center;justify-content:center;width:34px;}
 .pasto-riga-comando button{background:none;border:none;color:var(--text);cursor:pointer;font-size:1rem;line-height:1;padding:5px;min-width:30px;}
 .pasto-riga-comando button:disabled{opacity:.3;cursor:default;}
-.menu-pasto-summary{display:block!important;}
+.menu-pasto-summary{display:grid!important;grid-template-columns:auto minmax(0,1fr);column-gap:6px;align-items:start;}
 .menu-pasto-summary::marker{font-size:.75rem;}
-.menu-pasto-summary .pasto-titolo-compatto{padding-left:2px;}
+.menu-pasto-summary .pasto-titolo-compatto{grid-column:2;padding-left:0;}
+.menu-pasto-summary .pasto-griglia-compatta,.menu-pasto-summary .menu-colazione-riga{grid-column:1/-1;}
 .menu-colazione-riga{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:start;gap:7px;min-height:36px;padding:5px 0;}
 .menu-colazione-icona{font-size:1rem;line-height:1.25;text-align:center;}
 .menu-colazione-testo{font-size:.88rem;font-weight:700;line-height:1.25;min-width:0;overflow-wrap:anywhere;}
