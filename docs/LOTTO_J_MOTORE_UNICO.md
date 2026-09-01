@@ -309,7 +309,53 @@ alla priorità, non al posto suo). Su Roll V isolato: priorità confermata
 
 Nessuna regressione sull'intera batteria di test esistente.
 
-## 10. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 10. Pagina Menù: pulsanti, generazione rapida, fix fascia oraria (01/09/2026)
+
+Richiesta di Cwe su tre fronti, tutti verificati nel browser reale
+(Chromium/Playwright) con screenshot prima di pushare.
+
+**Pulsanti scroll settimana** (`#menuSettimanaTab [data-menu-prev]`/
+`[data-menu-next]`) raddoppiati in dimensione (padding 6px 10px → 12px
+20px, font 1.4rem). Nuova regola CSS scoped solo a `#menuSettimanaTab`,
+non toccata `.tabgroup button` condivisa da altri selettori dell'app
+(colazione, impostazioni...).
+
+**Nuovo pulsante "Genera menù"** sotto la descrizione della pagina,
+larghezza piena/altezza contenuta (`#btnGeneraMenuTop`), stessa logica
+del "Rigenera" già in fondo pagina. Listener statico agganciato una sola
+volta (pattern già in uso per altri pulsanti statici come
+`btnSalvaRicettaManuale`), non ad ogni render.
+
+**Bug trovato e corretto: `elaboraConsumoAutomatico` mai chiamata da
+Menù.** Il meccanismo che fa passare un pasto da "programmato" a
+"consumato" (e lo rende immodificabile) quando la fascia oraria è
+superata era corretto e già aggiornato per lo schema nuovo, ma veniva
+chiamato solo da `renderPiano()`. Un utente che apre direttamente Menù
+senza mai passare da Piano non vedeva applicato il blocco. Aggiunta la
+stessa chiamata in cima a `renderMenuSettimanale()`.
+
+**Bug trovato e corretto: la generazione saltava tutto il giorno
+odierno.** `generaPianoSettimana` aveva `if(day<=today)continue;` —
+saltava pranzo E cena di oggi indistintamente, anche se uno dei due era
+ancora in fascia oraria aperta (mai consumato). Corretto:
+- `motor-v12.js`: `day<today` (non più `<=`), con esclusione esplicita
+  solo dei pasti già `consumato`; nuovo parametro opzionale
+  `opzioni.pastiOggiChiusi` (Set) per il caso raro di un pasto mai
+  generato ma già fuori fascia (il motore non ha e non deve avere un
+  concetto di orologio — resta responsabilità del chiamante).
+- `index.html`: nuovo helper `pastiOggiFuoriFascia()` (usa
+  `fasciaPastoSuperata` già esistente), passato a tutte e 4 le chiamate
+  di `generaPianoSettimana(...,{forza:true})` nel file (Resetta,
+  Rigenera, Genera menù, generazione da Piano).
+
+Testato: 3 casi in Node (pranzo oggi consumato → invariato; cena oggi
+aperta mai generata → generata; pasto mai esistito ma segnalato fuori
+fascia → escluso), tutti confermati. Confermato anche nel browser reale
+con l'orologio di sistema vero: pranzo di oggi (fascia già chiusa) non
+generato, cena (ancora aperta) generata correttamente. Nessuna
+regressione sulla batteria di test esistente.
+
+## 11. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.

@@ -393,6 +393,15 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
   padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;
 }
 .tabgroup button.active{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);}
+/* Solo i pulsanti scroll settimana del Menù: il doppio più larghi e il doppio
+   più alti rispetto al .tabgroup button standard (padding 6px 10px -> 12px 20px),
+   senza toccare le altre tabgroup dell'app che condividono lo stesso stile base. */
+#menuSettimanaTab button[data-menu-prev],
+#menuSettimanaTab button[data-menu-next]{
+  padding:12px 20px!important;
+  font-size:1.4rem!important;
+  line-height:1!important;
+}
 #configAllergeniAttivi button.active{
   background:rgba(231,76,60,0.18)!important;
   color:#e74c3c!important;
@@ -691,6 +700,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <section class="view" id="view-menu">
   <div class="tabgroup" id="menuSettimanaTab"></div>
   <div class="meta" style="margin-bottom:10px;">Ciò che è programmato per la settimana selezionata: è la base su cui viene calcolata la lista della spesa.</div>
+  <button class="primary" id="btnGeneraMenuTop" style="width:100%;padding:7px;margin-bottom:10px;">Genera menù</button>
   <div id="menuSettimanale"></div>
 </section>
 
@@ -4390,6 +4400,16 @@ const FASCE_ORARIE_PASTO = {
 /* Vero quando l'orario di fine-fascia di quel pasto, in quel giorno, è già passato
    rispetto ad ora — quindi il pasto va considerato "consumato", non più solo
    "programmato". Giorni nel passato sono sempre considerati passati per intero. */
+/* Usata dalla generazione settimanale in blocco (motor-v12.js non conosce
+   le fasce orarie, resta un concetto di sola UI): quali pasti di OGGI hanno
+   già la fascia chiusa, anche se non esiste ancora un record 'piano' per
+   loro (caso raro: mai generato e già fuori fascia) - la generazione non
+   deve crearli comunque, sarebbe un pasto che l'utente non può più agire. */
+function pastiOggiFuoriFascia(){
+  const oggi=todayISO(),out=new Set();
+  for(const pasto of ['pranzo','cena']) if(fasciaPastoSuperata(oggi,pasto)) out.add(pasto);
+  return out;
+}
 function fasciaPastoSuperata(giorno, pasto, ora){
   ora = ora || new Date();
   const oggiIso = todayISO();
@@ -7488,7 +7508,7 @@ async function generaMenuDaConfigSet(scartoSettimane){
      primo render asincrono e le scritture del motore. */
   menuDraft={scarto:scartoSettimane,giorni:new Set(giorni),voci:new Map(),modificata:false};
   mostraVista('menu');
-  const esito=await generaPianoSettimana(scartoSettimane,{forza:true});
+  const esito=await generaPianoSettimana(scartoSettimane,{forza:true,pastiOggiChiusi:pastiOggiFuoriFascia()});
   if(await mostraFeedbackGenerazioneMenu(esito))return esito;
   await renderMenuSettimanale();
   return esito;
@@ -7586,6 +7606,11 @@ async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
 
 async function renderMenuSettimanale(){
   const mieGen = ++menuRenderGen;
+  // Stesso controllo reattivo già presente in renderPiano: senza questo, un
+  // utente che entra direttamente su Menù (senza mai passare da Piano) non
+  // vedrebbe applicato il blocco automatico "programmato -> consumato" per i
+  // pasti il cui orario è già superato.
+  await elaboraConsumoAutomatico();
   const giorni = giorniSettimana(menuSettimanaScarto);
   if(!menuDraft || menuDraft.scarto!==menuSettimanaScarto){
     menuDraft={scarto:menuSettimanaScarto,giorni:new Set(giorni),voci:new Map(),modificata:false};
@@ -7683,6 +7708,7 @@ function renderMenuFooter(){
     '<button class="secondary" id="btnVaiSpesaFooter">🛒 Vai alla spesa</button>';
   menu.parentNode.insertBefore(f,menu.nextSibling);
   const settimanaModificabile=giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO());
+  document.getElementById('btnGeneraMenuTop').disabled=!settimanaModificabile;
   f.querySelector('#btnResettaMenu').disabled=!settimanaModificabile;
   f.querySelector('#btnRigeneraMenu').disabled=!settimanaModificabile;
   f.querySelector('#btnSalvaMenu').disabled=!settimanaModificabile;
@@ -7691,13 +7717,13 @@ function renderMenuFooter(){
     const giorni=giorniSettimana(menuSettimanaScarto).filter(g=>g>todayISO());
     if(!giorni.length){await avviso('I giorni passati sono in sola lettura.');return;}
     for(const g of giorni)for(const p of ['colazione','pranzo','cena'])await delKey('piano',g+'_'+p);
-    const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true});
+    const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true,pastiOggiChiusi:pastiOggiFuoriFascia()});
     if(await mostraFeedbackGenerazioneMenu(esito))return;
     renderMenuSettimanale();
   });
   f.querySelector('#btnRigeneraMenu').addEventListener('click',async()=>{
     if(!giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO())){await avviso('I giorni passati sono in sola lettura.');return;}
-    const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true});
+    const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true,pastiOggiChiusi:pastiOggiFuoriFascia()});
     if(await mostraFeedbackGenerazioneMenu(esito))return;
     renderMenuSettimanale();
   });
@@ -7709,6 +7735,12 @@ function renderMenuFooter(){
   f.querySelector('#btnVaiSpesaFooter').addEventListener('click',()=>{ mostraVista('spesa'); calcolaListaSpesa(menuSettimanaScarto); });
 }
 
+document.getElementById('btnGeneraMenuTop').addEventListener('click', async ()=>{
+  if(!giorniSettimana(menuSettimanaScarto).some(g=>g>todayISO())){await avviso('I giorni passati sono in sola lettura.');return;}
+  const esito=await generaPianoSettimana(menuSettimanaScarto,{forza:true,pastiOggiChiusi:pastiOggiFuoriFascia()});
+  if(await mostraFeedbackGenerazioneMenu(esito))return;
+  renderMenuSettimanale();
+});
 document.getElementById('btnSalvaRicettaManuale').addEventListener('click', async ()=>{
   const nome = document.getElementById('nrNome').value.trim();
   if(!nome) return;
