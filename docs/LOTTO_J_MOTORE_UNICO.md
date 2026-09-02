@@ -774,3 +774,10 @@ inventata automaticamente una componente assente.
 Ogni commit deve essere verificabile isolatamente. Conversione catalogo,
 riscrittura del generatore e modifiche grafiche non devono essere accorpate in
 un unico intervento.
+
+### 16.7 Stato di avanzamento
+
+- **Blocco 1 — contratto e test V/S/G:** implementato. Aggiunte le funzioni
+  pure `ruoliVerduraDaClasse` e `calcolaBilancioVSG` e il test dedicato
+  `tests/lotto-j-vsg-contract.test.js`. La pipeline di generazione e il
+  catalogo non sono stati modificati in questo blocco.

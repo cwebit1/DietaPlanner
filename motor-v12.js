@@ -1006,6 +1006,31 @@ function copertura(r){
     proteinTokens:[...tokens].filter(t=>TOKEN_P.has(t))
   };
 }
+
+/* Contratto matematico V/S/G. Questa funzione e' deliberatamente pura e non
+   modifica ancora la pipeline di generazione: il Blocco 1 congela semantica,
+   soglia e casi aperti prima della riclassificazione del catalogo. */
+function ruoliVerduraDaClasse(classe){
+  const tokens=new Set((Array.isArray(classe)?classe:[classe]).filter(Boolean));
+  return {V:tokens.has('V'),S:tokens.has('S'),G:tokens.has('G')};
+}
+function calcolaBilancioVSG(valori){
+  valori=valori||{};
+  const nonNegativo=n=>Math.max(0,Number.isFinite(Number(n))?Number(n):0);
+  const richiestaGrammi=nonNegativo(valori.richiestaGrammi);
+  const grammiV=nonNegativo(valori.grammiV);
+  const grammiS=nonNegativo(valori.grammiS);
+  const grammiG=nonNegativo(valori.grammiG);
+  const residuoGrammi=Math.max(0,richiestaGrammi-grammiV-grammiS-grammiG);
+  let strategia='nessuna';
+  if(residuoGrammi>=50)strategia='v_dedicata';
+  else if(residuoGrammi>0)strategia=grammiS>0&&grammiG>0?'redistribuzione_sg':'regola_sotto_soglia_da_definire';
+  return {
+    richiestaGrammi,grammiV,grammiS,grammiG,residuoGrammi,
+    coperturaCompleta:residuoGrammi===0,
+    strategia
+  };
+}
 function scoreCopertura(r,targetToken){
   const c=copertura(r);
   let s=0;
@@ -1992,6 +2017,6 @@ global.DietaPlannerMotorV12={
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
   prioritaVerdureProgrammazionePasti,
-  registraUtilizzo,copertura,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi
+  registraUtilizzo,copertura,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi
 };
 })(typeof window!=='undefined'?window:globalThis);
