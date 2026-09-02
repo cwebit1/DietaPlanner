@@ -1096,6 +1096,11 @@ function snapshotRealizzazione(realizzazione,ricetta){
   real.ingredientiEffettivi=clone(ricetta.ingredienti||[]);
   real.nutrientiEffettivi=clone(ricetta.nutrienti||calcolaNutrienti(real.ingredientiEffettivi));
   real.gruppoProteico=ricetta.gruppoProteico||null;
+  real.ruoloVerdura=ruoliVerduraDaClasse(ricetta.classe);
+  if(ricetta.residuoVerdura)real.residuoVerdura=clone(ricetta.residuoVerdura);
+  else delete real.residuoVerdura;
+  if(ricetta.redistribuzioneVerdura)real.redistribuzioneVerdura=clone(ricetta.redistribuzioneVerdura);
+  else delete real.redistribuzioneVerdura;
   return real;
 }
 function applicaOverrideQuantitaRealizzazione(ricetta,realizzazione){
@@ -1110,6 +1115,8 @@ function applicaOverrideQuantitaRealizzazione(ricetta,realizzazione){
   }
   copia.nutrienti=calcolaNutrienti(copia.ingredienti||[]);
   copia.nutrizioneManualeTotale={kcal:copia.nutrienti.kcal,prot:copia.nutrienti.proteine,carb:copia.nutrienti.carboidrati,grassi:copia.nutrienti.grassi};
+  if(realizzazione&&realizzazione.residuoVerdura)copia.residuoVerdura=clone(realizzazione.residuoVerdura);
+  if(realizzazione&&realizzazione.redistribuzioneVerdura)copia.redistribuzioneVerdura=clone(realizzazione.redistribuzioneVerdura);
   return copia;
 }
 function realizzazioniDaRicette(ricette){
@@ -1363,7 +1370,7 @@ function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiP
   out=out.map(r=>r.id===dedicata.id?ridimensionaVerdureRicetta(r,frazioneDedicata,portionConfig):r);
   return out;
 }
-function risultatoPasto(token,ricette,prioritaComposizione,avviso){
+function risultatoPasto(token,ricette,prioritaComposizione,avviso,portionConfig){
   const out={
     targetToken:token,
     prioritaComposizione:Number(prioritaComposizione)||0,
@@ -1371,6 +1378,7 @@ function risultatoPasto(token,ricette,prioritaComposizione,avviso){
     realizzazioni:realizzazioniDaRicette(ricette),
     ricette
   };
+  if(portionConfig)out.bilancioVerdura=coperturaVerduraRicette(ricette,portionConfig);
   if(avviso)out.avviso=avviso;
   return out;
 }
@@ -1471,7 +1479,7 @@ async function generaCandidatiPasto(target,data,opts){
         if(firme.has(firma)) continue;
         firme.add(firma);
         if(opts.runtimeConfig&&opts.weeklyIngredientCounts&&opts.weeklySubtypeCounts&&!pastoRispettaConteggi(ricette,opts.runtimeConfig,opts.weeklyIngredientCounts,opts.weeklySubtypeCounts))continue;
-        risultati.push(risultatoPasto(token,ricette,copertura(primo).C?0:1,carboidratoForzato?'Ricetta per carboidrato definito non disponibile':null));
+        risultati.push(risultatoPasto(token,ricette,copertura(primo).C?0:1,carboidratoForzato?'Ricetta per carboidrato definito non disponibile':null,opts.vegetablePortions));
       }
     }
   }
@@ -1629,7 +1637,7 @@ async function costruisciPastoAQuery(slot,ctx){
       if(!contieneRichiesta&&coperturaV.remainingFraction<=0.000001)continue;
       if(!pastoCompletoPerToken(ricette,token,ctx.vegetablePortions))continue;
       if(!pastoRispettaConteggi(ricette,ctx.runtimeConfig,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts))continue;
-      candidati.push(risultatoPasto(token,ricette,base.length===1?0:1,carboidratoForzato&&base.length===2?'Ricetta per carboidrato definito non disponibile':null));
+      candidati.push(risultatoPasto(token,ricette,base.length===1?0:1,carboidratoForzato&&base.length===2?'Ricetta per carboidrato definito non disponibile':null,ctx.vegetablePortions));
     }
   }
   return scegliCandidatoConMargine(candidati,{runtimeConfig:ctx.runtimeConfig,weeklyIngredientCounts:ctx.weeklyIngredientCounts,weeklySubtypeCounts:ctx.weeklySubtypeCounts});
@@ -1695,7 +1703,7 @@ async function generaPianoSettimana(scarto,opzioni){
       const {day,pasto,target}=slotDefs[si],id=day+'_'+pasto;
       const x=await assegnaCondimentiRotazioneGlobale(soluzione.scelte[si],day);
       records.push({
-        id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,
+        id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,bilancioVerdura:x.bilancioVerdura||null,
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),
         categoriaTarget:target,carboidratoPianificato:abbinamento.keys[si],
         carboidratoRichiesto:abbinamento.sostituzioni&&abbinamento.sostituzioni[si]?abbinamento.sostituzioni[si].richiesto:abbinamento.keys[si],
@@ -1769,6 +1777,7 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
     modo:'multi',
     motoreNuovo:true,
     realizzazioni:x.realizzazioni,
+    bilancioVerdura:x.bilancioVerdura||null,
     porzioni:old&&old.porzioni||1,
     origine:'motore-nuovo',
     programmatoIl:new Date().toISOString(),

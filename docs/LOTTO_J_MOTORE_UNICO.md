@@ -868,3 +868,18 @@ nella repository.
   settimanale e stress/migrazioni. Resta l'intermittenza già nota del solo
   callback di avanzamento in esecuzioni ripetute. Commit remoto: commit di
   chiusura contenente questa registrazione.
+- **Blocco 7 — snapshot e propagazione:** lo snapshot di ogni realizzazione
+  conserva ora ruolo `V/S/G`, quantità effettive, nutrienti ricalcolati e i
+  metadati di residuo o redistribuzione. Il pasto salva anche il proprio
+  `bilancioVerdura`; lo stesso bilancio viene congelato nello storico di
+  consumo. La rimaterializzazione dei condimenti preserva gli override
+  quantitativi invece di ricadere sulle dosi del template. Nutrizione,
+  inventario e spesa continuano a leggere `ingredientiEffettivi` e
+  `nutrientiEffettivi` tramite la realizzazione materializzata; non è stata
+  creata una seconda fonte quantitativa. Aggiunto
+  `tests/lotto-j-vsg-atomic-snapshot.test.js`. Superati test dedicato,
+  realizzazioni atomiche, generazione settimanale, stress/migrazioni e
+  contratto PWA. Batteria completa: 20 suite su 21 superate; resta il test
+  Lotto C già noto con firma obsoleta. Roll e Salvafrigo non sono stati
+  modificati in questo blocco. Commit remoto: commit di chiusura contenente
+  questa registrazione.

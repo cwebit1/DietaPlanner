@@ -50,8 +50,9 @@
 - `tests/lotto-j-vsg-structured-coverage.test.js`.
 - `tests/lotto-j-vsg-pipeline-order.test.js`.
 - `tests/lotto-j-vsg-threshold.test.js`.
+- `tests/lotto-j-vsg-atomic-snapshot.test.js`.
 
-Ultima esecuzione, Blocco 6 V/S/G: 19/20 test passati, più controllo
+Ultima esecuzione, Blocco 7 V/S/G: 20/21 test passati, più controllo
 sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
 `creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
 le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
@@ -70,6 +71,10 @@ Il Blocco 6 applica la soglia: da 50 g compresi viene aggiunta una `V`
 compensativa esatta; sotto 50 g il residuo viene diviso a metà fra `S` e `G`,
 che in tale condizione sono necessariamente presenti insieme. Nessun caso
 alternativo con un solo token è stato introdotto.
+
+Il Blocco 7 congela quantità, nutrienti, ruolo e bilancio V/S/G nello snapshot
+della realizzazione e nello storico. Nutrizione, spesa e inventario continuano
+a consumare tale snapshot unico; i template del catalogo restano immutati.
 
 ## Limite della verifica corrente
 
