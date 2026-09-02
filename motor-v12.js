@@ -1522,6 +1522,15 @@ function ordinaPerStackPoiCaso(pool,stackUsati){
   const casuali=mescolaCandidati(pool),score=r=>(r.chiaviStack||[]).filter(k=>stackUsati.has(k)).length;
   return casuali.sort((a,b)=>score(a)-score(b));
 }
+function componiBasiProteinaCarboidrato(proteine,fontiCarboidrato){
+  const out=[],fonti=fontiCarboidrato||[];
+  let indiceFonte=0;
+  for(const proteina of proteine||[]){
+    if(copertura(proteina).C){out.push([proteina]);continue;}
+    if(fonti.length){out.push([proteina,fonti[indiceFonte%fonti.length]]);indiceFonte++;}
+  }
+  return out;
+}
 async function costruisciPastoAQuery(slot,ctx){
   const token=PROTEIN_MACRO_TO_TOKEN[slot.target]||SUBTYPE_TO_TOKEN[slot.target]||slot.target;
   const pool=await poolAmmesso(slot.day,{runtimeConfig:ctx.runtimeConfig});
@@ -1535,12 +1544,16 @@ async function costruisciPastoAQuery(slot,ctx){
        generazione - stesso principio di gradualita' del Layer 2b. */
     proteine=pool.filter(r=>copertura(r).tokens.has(token));
   }
-  const combinate=ordinaPerStackPoiCaso(proteine.filter(r=>copertura(r).C&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
-  const separate=ordinaPerStackPoiCaso(proteine.filter(r=>!copertura(r).C&&composizioneSeparataConsentita(r,slot.carbKey)),ctx.weeklyStackKeys);
+  /* La proteina e' la macro-scelta primaria. Una ricetta P+C e una P
+     separata restano nello stesso pool, senza precedenza per la combinata;
+     soltanto dopo l'ordinamento proteico viene applicata la C programmata. */
+  proteine=ordinaPerStackPoiCaso(proteine.filter(r=>
+    (copertura(r).C&&carbKeysRicetta(r).includes(slot.carbKey))||
+    (!copertura(r).C&&composizioneSeparataConsentita(r,slot.carbKey))
+  ),ctx.weeklyStackKeys);
   const fontiCarboidrato=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
-  const basi=combinate.map(r=>[r]);
   let fontiUsate=fontiCarboidrato,carboidratoForzato=false;
-  if(!fontiUsate.length&&separate.length){
+  if(!fontiUsate.length&&proteine.some(r=>!copertura(r).C)){
     /* Layer 2b: nessuna fonte C compatibile con slot.carbKey. Non si blocca
        la generazione: si forza una C da tutto il pool carboidrati, ignorando
        il vincolo di compatibilita', e si marca il pasto risultante con un
@@ -1548,7 +1561,7 @@ async function costruisciPastoAQuery(slot,ctx){
     fontiUsate=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P),ctx.weeklyStackKeys);
     carboidratoForzato=fontiUsate.length>0;
   }
-  if(fontiUsate.length)for(let i=0;i<separate.length;i++)basi.push([separate[i],fontiUsate[i%fontiUsate.length]]);
+  const basi=componiBasiProteinaCarboidrato(proteine,fontiUsate);
   const candidati=[];
 
   for(const base of basi){
@@ -2040,6 +2053,7 @@ global.DietaPlannerMotorV12={
   applicaOverrideQuantitaRealizzazione,
   normalizzaRealizzazioniVerdura,
   assegnaCarboidratiCompatibili,
+  componiBasiProteinaCarboidrato,
   limitaCarboidratiAutoAllaCopertura,
   creaMappaCompatibilitaCP,composizioneSeparataConsentita,
   chiaviStack,

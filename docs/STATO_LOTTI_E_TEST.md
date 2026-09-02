@@ -48,8 +48,9 @@
 - `tests/lotto-j-vsg-catalog.test.js`;
 - `tests/lotto-j-vsg-motor-semantics.test.js`.
 - `tests/lotto-j-vsg-structured-coverage.test.js`.
+- `tests/lotto-j-vsg-pipeline-order.test.js`.
 
-Ultima esecuzione, Blocco 4 V/S/G: 17/18 test passati, più controllo
+Ultima esecuzione, Blocco 5 V/S/G: 18/19 test passati, più controllo
 sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
 `creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
 le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
@@ -59,6 +60,10 @@ l'ordine di costruzione del pasto. Il test dedicato e le suite collegate sono
 passati; nella corsa aggregata anche la suite settimanale è passata. Resta
 registrata l'intermittenza preesistente del solo controllo di avanzamento,
 osservata in una precedente esecuzione isolata.
+
+Il Blocco 5 ha reso esplicito l'ordine P -> C -> V nella costruzione dello
+slot e ha eliminato la precedenza implicita delle ricette P+C già combinate,
+senza modificare i vincoli o la logica quantitativa del blocco precedente.
 
 ## Limite della verifica corrente
 

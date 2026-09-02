@@ -837,3 +837,18 @@ nella repository.
   piano generato non ha evidenziato regressioni. Nessuna pipeline, soglia,
   redistribuzione, Roll o UI è stata modificata. Commit remoto: commit di
   chiusura contenente questa registrazione.
+- **Blocco 5 — pipeline P -> C -> V:** riorganizzata la costruzione delle
+  basi in `costruisciPastoAQuery`. Il pool viene formato e ordinato a partire
+  dalla proteina assegnata; soltanto dopo viene applicato il carboidrato
+  programmato con il relativo `S`. Le ricette P+C dichiarate restano
+  candidate, ma condividono lo stesso ordinamento delle proteine separate e
+  non ricevono più precedenza per il solo fatto di essere combinate. Il
+  completamento V continua ad avvenire dopo la base P/C e conserva tutti i
+  filtri esistenti. Estratto l'helper puro
+  `componiBasiProteinaCarboidrato` e aggiunto
+  `tests/lotto-j-vsg-pipeline-order.test.js`. Superati test dedicato,
+  copertura strutturata, generazione settimanale, realizzazioni atomiche e
+  stress/migrazioni. Batteria completa: 18 suite su 19 superate; resta
+  esclusivamente il test Lotto C già noto con firma obsoleta. Soglia,
+  redistribuzione, snapshot, Roll, Salvafrigo e UI non sono stati modificati.
+  Commit remoto: commit di chiusura contenente questa registrazione.
