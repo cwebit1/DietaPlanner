@@ -19,14 +19,15 @@ assert.equal(M.carbRicettaAmmesso({classe:['C'],ingredienti:[{nome:'Piadina'}]},
 assert.equal(M.carbRicettaAmmesso({classe:['C'],ingredienti:[{nome:'Friselle'}]},budget),true);
 M.consumaBudgetCarboidrati([{ingredienti:[{nome:'Friselle'}]}],budget);M.consumaBudgetCarboidrati([{ingredienti:[{nome:'Friselle'}]}],budget);
 assert.equal(M.carbRicettaAmmesso({classe:['C'],ingredienti:[{nome:'Friselle'}]},budget),false,'il fisso non può essere superato');
-const sequence=M.creaSequenzaCarboidrati(resolved,14,()=>0.25);assert.equal(sequence.valid,true);assert.equal(sequence.keys.length,14);assert.equal(sequence.keys.filter(k=>k==='friselle').length,2);assert.equal(sequence.keys.filter(k=>k==='piadina').length,0);for(const k of sequence.keys)assert(k==='friselle'||resolved.carbohydrates.autoEligibleKeys.includes(k));
-const partialSequence=M.creaSequenzaCarboidrati(resolved,10,()=>0.25,{friselle:1,pane:3});assert.equal(partialSequence.valid,true);assert.equal(partialSequence.keys.filter(k=>k==='friselle').length,1,'un fisso già preservato deve essere sottratto');
+const slotRefs14=Array.from({length:14},(_,i)=>({day:String(i),di:Math.floor(i/2),pasto:i%2?'cena':'pranzo'}));
+const sequence=M.creaSequenzaCarboidrati(resolved,slotRefs14,()=>0.25);assert.equal(sequence.valid,true);assert.equal(sequence.keys.length,14);assert.equal(sequence.keys.filter(k=>k==='friselle').length,2);assert.equal(sequence.keys.filter(k=>k==='piadina').length,0);for(const k of sequence.keys)assert(k==='friselle'||resolved.carbohydrates.autoEligibleKeys.includes(k));
+const partialSequence=M.creaSequenzaCarboidrati(resolved,slotRefs14.slice(0,10),()=>0.25,{friselle:1,pane:3});assert.equal(partialSequence.valid,true);assert.equal(partialSequence.keys.filter(k=>k==='friselle').length,1,'un fisso già preservato deve essere sottratto');
 for(const [name,meta] of Object.entries(ingredients)){const groups=Array.isArray(meta.gruppo)?meta.gruppo:[meta.gruppo];if(groups.includes('carboidrati'))assert(M.carbKeyNome(name),`carboidrato senza classificazione v12: ${name}`);}
 for(const recipe of recipes)for(const group of recipe.gruppi||[])if(group.categoria==='C')for(const item of group.ingredienti||[])assert(M.carbKeyNome(item.nome),`ingrediente C non classificato nel template ${recipe.id}: ${item.nome}`);
 assert.deepEqual(M.selezioneCarboidratiPersistita({friselle:2},{friselle:['utente','utente']},{},[]).states.friselle,{mode:'fixed',count:2});
 assert.deepEqual(M.selezioneCarboidratiPersistita({pane:4},{pane:['sistema','sistema','sistema','sistema']},{},[]).states.pane,{mode:'auto',count:0});
 assert.deepEqual(M.selezioneCarboidratiPersistita({piadina:0},{},{},['piadina']).states.piadina,{mode:'excluded',count:0});
-const slots=Array.from({length:14},(_,i)=>({day:String(i),di:Math.floor(i/2),pasto:i%2?'cena':'pranzo'}));
+const slots=slotRefs14;
 const veg=N=>E.resolveNutritionConfig({nutritionist:{config:{dietProfile:N}}});
 const vegetarian=M.creaSequenzaProteine(veg('vegetariano'),slots,{},()=>0.2);assert.equal(vegetarian.valid,true);assert(!vegetarian.targets.includes('carne'));assert(!vegetarian.targets.includes('pesce'));
 const vegan=M.creaSequenzaProteine(veg('vegano'),slots,{},()=>0.2);assert.equal(vegan.valid,true);assert.deepEqual([...new Set(vegan.targets)],['legumi']);
@@ -34,7 +35,7 @@ const partialProtein=M.creaSequenzaProteine(E.resolveNutritionConfig({}),slots.s
 const ic={},sc={};M.accumulaConteggiPasto([{ingredienti:[{ingredienteId:'speck',sottotipo:'affettati'},{ingredienteId:'speck',sottotipo:'affettati'}]}],ic,sc);assert.deepEqual(ic,{speck:1});assert.deepEqual(sc,{affettati:1});
 const runtime={vincoli:{speck:{max:1}},weeklyLimits:{affettati:1}};assert.equal(M.pastoRispettaConteggi([{ingredienti:[{ingredienteId:'speck',sottotipo:'affettati'}]}],runtime,ic,sc),false,'pasto preservato deve consumare il cap settimanale');
 const snap=M.snapshotRealizzazione({ricettaId:'x'},{nome:'Test',ingredienti:[{nome:'Zucchine',quantita:80,grammi:80,gruppo:'verdura',macro:'verdura'}],nutrienti:{kcal:10,proteine:1,carboidrati:2,grassi:0}});assert.equal(snap.schemaQuantita,1);assert.equal(snap.ingredientiEffettivi[0].quantita,80);assert.equal(snap.nutrientiEffettivi.kcal,10);
-const parziale={id:'misto',classe:['C','V'],ingredienti:[{nome:'Zucchine',quantita:80,grammi:80,gruppo:'verdura',macro:'verdura'}]};
+const parziale={id:'misto',classe:['C','S'],ingredienti:[{nome:'Zucchine',quantita:80,grammi:80,gruppo:'verdura',macro:'verdura'}]};
 const contorno={id:'contorno',classe:['V'],ingredienti:[{nome:'Broccoli',quantita:200,grammi:200,gruppo:'verdura',macro:'verdura',deperibilita:'media'}]};
 const completato=M.completaResiduoVerduraRicette([parziale],[parziale,contorno],'2026-08-31',{vegetablePortionGrams:200,saladPortionGrams:70});assert.equal(completato.length,2);assert(Math.abs(M.coperturaVerduraRicette(completato,{vegetablePortionGrams:200,saladPortionGrams:70}).coveredFraction-1)<1e-9);assert.equal(Math.round(completato[1].ingredienti[0].quantita),120,'deve aggiungere solo il residuo');
 const ordinate=M.ordinaVerdureProgrammazione([{id:'durevole',ingredienti:[{grammi:200,gruppo:'verdura',macro:'verdura',deperibilita:'bassa'}]},{id:'delicata',ingredienti:[{grammi:200,gruppo:'verdura',macro:'verdura',deperibilita:'alta'}]}],'2026-08-31');assert.equal(ordinate[0].id,'delicata','inizio settimana favorisce alta deperibilità');assert.equal(M.ordinaVerdureProgrammazione(ordinate,'2026-09-06')[0].id,'durevole','fine settimana favorisce bassa deperibilità');

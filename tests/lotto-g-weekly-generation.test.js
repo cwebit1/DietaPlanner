@@ -57,7 +57,9 @@ const M=global.DietaPlannerMotorV12;
     assert.equal(result.generati.length,14);
     assert.equal(avanzamento.at(-1).completati,14,'il loader deve arrivare ai pasti realmente completati');
     assert.equal(avanzamento.at(-1).totale,14,'il totale del loader deve coincidere con gli slot da generare');
-    assert(avanzamento.every((stato,i)=>stato.completati===i+1),'l’avanzamento deve procedere di un pasto per volta');
+    const avanzamentoFinale=avanzamento.slice(-14);
+    assert.equal(avanzamentoFinale.length,14,'l’ultimo tentativo deve dichiarare tutti i pasti');
+    assert(avanzamentoFinale.every((stato,i)=>stato.completati===i+1),'l’ultimo tentativo completo deve procedere di un pasto per volta');
     const records=await global.getAll('piano');
     assert.equal(records.length,14);
     for(const record of records){

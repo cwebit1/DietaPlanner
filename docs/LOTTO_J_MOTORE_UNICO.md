@@ -575,7 +575,7 @@ Testato: 0 duplicati proteina/verdura su 68 giorni reali generati (10
 settimane), 0 generazioni fallite su 15 settimane, nessuna regressione
 (batteria completa + `tests/lotto-g-weekly-generation.test.js`).
 
-### Decisione di design in sospeso: V/S/G (non ancora implementata)
+### Decisione di design originaria V/S/G (successivamente approvata e implementata)
 
 Cwe ha proposto una soluzione matematica per il problema di fondo —
 perché il Layer 3 non completa mai un sugo/guarnizione parziale: oggi
@@ -908,3 +908,26 @@ nella repository.
   delle realizzazioni, contratto PWA e test Roll/Salvafrigo. Nessuna modifica
   al motore o ai cataloghi in questo blocco. Commit remoto: commit di chiusura
   contenente questa registrazione.
+- **Blocco 10 — stress, browser reale e chiusura:** aggiunto
+  `tests/lotto-j-vsg-stress.test.js` ed eseguite 25 generazioni complete, per
+  350 pasti: tutti gli snapshot hanno quantità e nutrienti, nessun token
+  `V-`, `bilancioVerdura.coperturaCompleta=true` e residuo zero anche dopo
+  rimaterializzazione. Riallineato il test Lotto C alla firma corrente di
+  `creaSequenzaCarboidrati` e alla classe `C+S`, eliminando l'unico errore
+  storico della batteria. Il test settimanale controlla ora l'ultima sequenza
+  completa 1 -> 14, senza confondere gli avanzamenti dei retry interni con
+  un singolo tentativo. Esito complessivo: 24 suite su 24 superate;
+  sintassi JS, JSON e `git diff --check` superati.
+
+  Il browser cloud non ha potuto aprire il server locale
+  `http://127.0.0.1:4173/` (`ERR_BLOCKED_BY_CLIENT`). È stata quindi verificata
+  in sola lettura la build GitHub Pages corrispondente al Blocco 9: asset V/S/G
+  correnti presenti e nessun controllo UI su `V-`. In modalità locale sono
+  stati verificati generazione con inventario vuoto, salvataggio, persistenza
+  del menù dopo ricarica e nuovo ingresso locale, tre righe C/P/V, Roll C
+  reale (`Pasta corta` -> `Pasta integrale`) senza variazioni di P e V, e
+  Salvafrigo senza errori. I soli errori console provenivano dall'estensione
+  del browser cloud, non dall'app. Non essendo disponibile il ridimensionamento
+  del viewport cloud, la verifica responsive Android resta un gate distinto e
+  non viene dichiarata eseguita. Il flusso di sviluppo V/S/G in dieci blocchi
+  è concluso. Commit remoto: commit finale contenente questa registrazione.

@@ -87,3 +87,13 @@ realizzazioni legacy, migrazione carboidrati e profili vegetariano/vegano.
 icone, store IndexedDB e registrazione degli handler del service worker. I
 requisiti marcati `browser` in tabella restano aperti fino a una sessione reale
 raggiungibile; la release resta quindi bloccata.
+
+## Evidenza Lotto J V/S/G
+
+I requisiti `VEG-06`—`VEG-09`, `PLAN-07`, `MEAL-04` e `ROLL-01`—`ROLL-03`
+sono coperti dai test Lotto J su catalogo, semantica, quantità, pipeline,
+soglia, snapshot, Roll/Salvafrigo, rendering e stress. La batteria finale ha
+superato 24 suite su 24; lo stress dedicato ha verificato 350 pasti. La prova
+browser della build corrente ha coperto generazione, persistenza, righe C/P/V,
+Roll C e Salvafrigo. Il responsive Android resta aperto come previsto da
+`UI-04` e non viene chiuso da questa evidenza.

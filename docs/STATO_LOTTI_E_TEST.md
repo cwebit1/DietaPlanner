@@ -53,11 +53,13 @@
 - `tests/lotto-j-vsg-atomic-snapshot.test.js`.
 - `tests/lotto-j-vsg-roll-salvafrigo.test.js`.
 - `tests/lotto-j-vsg-rendering.test.js`.
+- `tests/lotto-j-vsg-stress.test.js`.
 
-Ultima esecuzione, Blocco 9 V/S/G: 22/23 test passati, più controllo
-sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
-`creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
-le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
+Ultima esecuzione, chiusura Blocco 10 V/S/G: 24/24 test passati, più controllo
+sintattico del motore, validazione JSON e `git diff --check`. Il test Lotto C
+è stato riallineato alla firma corrente di `creaSequenzaCarboidrati` e alla
+classe `C+S`; il test settimanale verifica l'ultima sequenza completa 1 -> 14
+senza fallire quando esistono retry interni. Il Blocco 3 ha introdotto la
 lettura semantica distinta dei token `V`, `S` e `G` nel motore; il calcolo
 quantitativo strutturato è stato aggiunto nel Blocco 4 senza cambiare ancora
 l'ordine di costruzione del pasto. Il test dedicato e le suite collegate sono
@@ -85,6 +87,12 @@ bilancio del pasto programmato originale.
 Il Blocco 9 mantiene tre sole righe visuali: `S` è incorporato in C, `G` in P
 e V compare soltanto per una portata vegetale completa. Pasto e Programmazione
 condividono la stessa funzione di proiezione.
+
+Il Blocco 10 ha stressato 25 settimane e 350 pasti senza residui o snapshot
+incoerenti. La prova browser sulla build GitHub Pages corrente ha verificato
+generazione, salvataggio, persistenza dopo ricarica, rendering C/P/V, Roll C e
+Salvafrigo. Il server locale è rimasto irraggiungibile dal browser cloud con
+`ERR_BLOCKED_BY_CLIENT`; il responsive Android resta pertanto un gate separato.
 
 ## Limite della verifica corrente
 
