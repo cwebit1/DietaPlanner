@@ -77,7 +77,7 @@ La logica a layer sopra è quella che l'ha sostituita ed è l'unica valida
   esaurito il fresco, il sistema passa da sé al livello di deperibilità
   successivo fino ai surgelati. **Nessun vincolo di non-ripetibilità/cooldown
   su V** — altrimenti il sistema antispreco si rompe (bug reale trovato e
-  corretto, vedi Sezione 4).
+  corretto, vedi Sezione 5).
 - **Cotture/sughi vs verdure:** C×Sughi e P×Cotture nello stesso gruppo
   fanno vero **prodotto cartesiano** (es. 4 cereali × 3 sughi = 12 piatti
   distinti). Le verdure **non** fanno cartesiano col condimento — il
@@ -92,13 +92,12 @@ La logica a layer sopra è quella che l'ha sostituita ed è l'unica valida
   la stessa variazione finché non le ha esplorate tutte; una volta
   esaurite, si resetta e il ciclo riparte da capo. Concepito per array
   dinamici ma applicabile anche a query dirette su IndexedDB.
-- **Salvafrigo su V (requisito aperto, non ancora implementato):** oggi
-  Salvafrigo è solo un pulsante dedicato separato (livello 1 frigo
-  scadenze+avanzi, livello 2 freezer). L'intenzione di Cwe è **estendere**
-  questa priorità al Roll **normale** su V come comportamento di default
-  — la verdura è la categoria più a rischio spreco, quindi anche un Roll
-  qualunque dovrebbe dare priorità al materiale in deperimento, non solo
-  tramite il pulsante dedicato.
+- **Salvafrigo su V — implementato** (era "requisito aperto" quando
+  scritto per la prima volta in questa sezione; vedi Sezione 9 per il
+  dettaglio): il pulsante dedicato resta, ma ora anche il Roll
+  **normale** su V dà priorità di default al materiale in deperimento/
+  avanzo, non solo tramite l'azione esplicita — perché la verdura è la
+  categoria più a rischio spreco.
 
 ## 3. Stato del Lotto J — cosa è stato fatto
 
@@ -237,6 +236,55 @@ server HTTP reale, stesso ordine di caricamento script di produzione):**
 Questo è il livello di verifica più alto raggiungibile senza il
 dispositivo reale di Cwe — copre tutto tranne l'interazione utente vera e
 propria (tap, scroll, resa visiva).
+
+## 8. Bug trovato e corretto: calendario visuale non aggiornato allo schema nuovo
+
+Verifica richiesta da Cwe insieme a una richiesta più ampia (statistiche
+per-ricetta, vedi sotto): `leggiStatoGiornoCalendario` (icone pranzo/cena
+nel calendario mensile) leggeva **solo** lo schema vecchio
+(`vocePranzo.secondoId`, `r.gruppoProteico` da `ricettePerId`) — stessa
+classe di bug già corretta altrove per `calcolaProgrammatoGiorno`/
+`renderNutrizioneGiorno`. Per i pasti generati dal motore nuovo, il
+calendario non mostrava **nessuna icona**.
+
+Corretto: nuovo helper condiviso `iconaPastoDaVoce(voce, ricettePerId)`
+che gestisce entrambi gli schemi — per il nuovo, deriva l'icona da
+`realizzazioni[].gruppoProteico`. Il campo `gruppoProteico` non arrivava
+fino alla realizzazione salvata: esteso `snapshotRealizzazione` in
+`motor-v12.js` per copiarlo dalla ricetta materializzata (aggiunta pura,
+nessun comportamento esistente cambiato). Testato con 5 casi (schema
+nuovo consumato/non consumato, schema vecchio consumato/speciale, voce
+assente) — nessuna regressione sullo schema vecchio.
+
+**Le statistiche per-ricetta (quante volte proposta, quante volte
+consumata) restano invece non implementate** — solo analisi fatta:
+serve uno store IndexedDB **separato** (mai `'ricette'`, che viene
+riscritto per intero ad ogni sync J.5/cambio versione catalogo, perdendo
+qualunque contatore aggiunto lì sopra), con un incremento aggiornato del
+`DB_VERSION` (oggi `3`) per creare il nuovo `objectStore`. "Consumata" ha
+un punto di aggancio naturale già pronto (`registraConsumoStorico`,
+già aggiornata per lo schema nuovo). "Proposta" ha un'ambiguità mai
+sciolta con Cwe: solo generazione/rigenerazione effettiva, o anche ogni
+variazione esplorata col Roll (che oggi non passa dallo stesso punto di
+`assegnaCondimentiRotazioneGlobale`, servirebbe un aggancio separato in
+`ruotaPasto`/`salvaRoll`). Lavoro sospeso, da riprendere.
+
+### Rifiniture grafiche pagina Menù — lavoro di Cwe/ChatGPT, non di questa sessione
+
+Tra un intervento e l'altro di questa sessione, Cwe ha fatto 4 correzioni
+grafiche dirette sul repo tramite ChatGPT (non Claude), tutte su
+`index.html`, solo CSS/layout, nessuna logica toccata:
+
+| Commit | Cosa |
+|---|---|
+| `e40506b` | Allinea titoli e indicatori dei pasti nel menù (`.menu-pasto-summary` da block a grid, triangolo/marker + titolo su colonne allineate) |
+| `3a35faf` | Raggruppa le coperture della stessa realizzazione nel menù (badge C/P/V) |
+| `8c5edf9` | Mostra le date estese nelle intestazioni del menù |
+| `aa8d1e7` | Allinea i triangoli ai titoli dei pasti |
+
+Nessuna di queste tocca `motor-v12.js` o logica di generazione — pura
+UI. Riportate qui solo per completezza dello storico commit, non fanno
+parte del lavoro di audit/correzione motore di questa sessione.
 
 ## 9. Review esterna (ChatGPT) e correzioni conseguenti (01/09/2026)
 
@@ -450,7 +498,7 @@ stesso (qui: i giorni ormai passati e mai generati, coerente con la
 regola today+1 già discussa in precedenza) — e anche in quel caso, solo
 per la quota esattamente proporzionata, mai oltre.
 
-## 13. Lavoro parallelo e merge (01/09/2026) — commit `fce7729` + `d914287`
+## 12. Lavoro parallelo e merge (01/09/2026) — commit `fce7729` + `d914287`
 
 Mentre venivano corrette le 5 criticità (Sezione 11), il repo si è mosso
 avanti: Cwe (o un'altra sessione con lui) ha lavorato **direttamente sul
@@ -494,7 +542,7 @@ sempre `git fetch` e controllare se il remoto si è mosso rispetto
 all'ultimo pull, invece di assumere che sia fermo dove lo si era
 lasciato.
 
-## 14. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 13. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.
