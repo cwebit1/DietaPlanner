@@ -24,12 +24,17 @@
 | VEG-03 | Aggiunta del solo residuo necessario | HARD | realizzazione | Lotto G |
 | VEG-04 | Ortaggi e insalate usano porzioni distinte | HARD | catalogo/resolver | Lotto F + Lotto G |
 | VEG-05 | Patate non sono verdura; classificazioni PDF preservate | HARD | catalogo | Lotto F |
+| VEG-06 | `P+V` parziale diventa `P+G`; `C+V` parziale diventa `C+S`; `V` resta solo per una porzione completa | HARD | catalogo/motor v12 | catalog audit + motor test |
+| VEG-07 | `S` e `G` contribuiscono in grammi ma non soddisfano da soli il requisito `V` | HARD | motor v12/realizzazione | unit + integrazione |
+| VEG-08 | `V_residuo = max(0, V_richiesta - S - G - V_presente)` usa le quantità effettive | HARD | motor v12/realizzazione | unit + Lotto G |
+| VEG-09 | Residuo >=50 g crea una `V` dedicata; residuo <50 g viene redistribuito senza mutare il template | HARD | motor v12/realizzazione | unit + Roll + browser |
 | PLAN-01 | Programmazione indipendente dalla giacenza | HARD | generatore | Lotto G |
 | PLAN-02 | Inventario vuoto produce piano e carrello, non blocco | HARD | generatore/spesa | Lotto G/H |
 | PLAN-03 | Verdure delicate prima, durevoli dopo | SOFT obbligatoria | generatore | Lotto G/H |
 | PLAN-04 | Carrello contiene varietà di durata coerente col menu | HARD | lista spesa | Lotto G/H |
 | PLAN-05 | Generazione automatica soltanto da domani | HARD | motore/UI | Lotto G/H |
 | PLAN-06 | Settimana salvata solo se ogni slot è valido | HARD | motore | Lotto C |
+| PLAN-07 | Composizione dello slot nell'ordine Proteina/G, Carboidrato/S, residuo V | HARD | motor v12 | integrazione + stress |
 | TODAY-01 | Pasto odierno ricorda il programmato | HARD | UI/adattatore | Lotto G/H |
 | TODAY-02 | Alternative odierne rispettano il piano nutrizionale | HARD | motore/UI | Lotto G/H |
 | TODAY-03 | Scadenza, avanzo e deperibilità sono priorità positive | SOFT | Salvafrigo | Lotto G/H |

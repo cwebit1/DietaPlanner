@@ -653,3 +653,124 @@ design e verificare il risultato — non ancora iniziato.
 - Prima di ogni push: verificare diff completo contro l'originale,
   testare in isolamento dove possibile, dichiarare chiaramente cosa non
   è stato/non può essere testato end-to-end.
+
+## 16. Piano operativo approvato per integrare V/S/G (02/09/2026)
+
+Questa sezione sostituisce la parte del planning che prevedeva di dedurre a
+runtime il ruolo della verdura. La distinzione viene fatta direttamente nel
+catalogo, così il motore non può confondere un sugo o una guarnizione con una
+verdura completa:
+
+- `P+V` diventa `P+G` quando la quota vegetale è una guarnizione parziale;
+- `C+V` diventa `C+S` quando la quota vegetale è un sugo parziale;
+- `V` resta `V` soltanto quando rappresenta realmente una porzione completa.
+
+La conversione non è una sostituzione cieca di stringhe: i piatti freddi e le
+altre ricette che contengono davvero una porzione vegetale completa conservano
+`V`. Ogni template misto va verificato contro quantità e funzione reale prima
+della modifica.
+
+### 16.1 Contratto matematico
+
+Per ogni pasto:
+
+```text
+V_richiesta = porzione prevista dal resolver
+S = grammi vegetali del sugo associato al carboidrato
+G = grammi vegetali della guarnizione associata alla proteina
+V_presente = grammi di una vera V eventualmente già contenuta nel pasto
+V_residuo = max(0, V_richiesta - S - G - V_presente)
+```
+
+`S` e `G` valgono zero quando assenti. I token descrivono il ruolo; il bilancio
+usa sempre i grammi effettivi della realizzazione. La sola presenza di `S` o
+`G` non chiude mai booleanamente la copertura `V`.
+
+### 16.2 Ordine di costruzione dello slot
+
+1. Leggere la classe proteica assegnata da `tabellaGiornoCategoria`.
+2. Selezionare una realizzazione proteica ammessa di quella classe.
+3. Determinare il dettaglio di cottura/condimento e l'eventuale `G`.
+4. Leggere il carboidrato determinato da `AUTO/FIXED/EXCLUDED`.
+5. Selezionare la realizzazione C compatibile e l'eventuale sugo `S`.
+6. Calcolare `V_residuo` sulle quantità effettive.
+7. Applicare la soglia dei 50 g.
+8. Verificare allergie, esclusioni, cap, frequenze e rotazione giornaliera.
+9. Chiudere lo slot; la settimana viene salvata solo se tutti gli slot sono
+   validi.
+
+Le ricette P+C già dichiarate restano candidate quando rispettano entrambe le
+macro-scelte; non vengono più preferite soltanto perché già combinate.
+
+### 16.3 Regola del residuo
+
+- `V_residuo = 0`: nessuna azione.
+- `V_residuo >= 50 g`: aggiungere una vera ricetta `V`, ridimensionata
+  esattamente sul residuo.
+- `0 < V_residuo < 50 g`: non creare un piatto `V` troppo piccolo;
+  redistribuire il residuo nelle quantità effettive di `S` e `G`, senza
+  modificare i template.
+
+Il caso in cui sotto soglia sia presente soltanto uno fra `S` e `G` deve essere
+chiuso con una regola esplicita di Cwe prima dell'implementazione: non va
+inventata automaticamente una componente assente.
+
+### 16.4 Modifiche tecniche previste
+
+1. **Test del contratto prima del comportamento**: aggiungere casi puri per
+   `V/S/G`, grammi, soglia e assenza di quantità negative.
+2. **Audit catalogo**: classificare nominalmente e quantitativamente i template
+   misti; aggiornare `db-ricette.json` e la sua versione soltanto dopo la
+   verifica completa.
+3. **Semantica motore**: estendere `categoriaPrincipale`, `copertura`,
+   `scoreCopertura` e `pastoCompletoPerToken`; eliminare il residuo concettuale
+   `V-` senza introdurre fallback legacy.
+4. **Copertura strutturata**: fare restituire a
+   `coperturaVerduraRicette` almeno `richiestaGrammi`, `grammiV`, `grammiS`,
+   `grammiG`, `residuoGrammi` e `coperturaCompleta`.
+5. **Pipeline P -> C -> V**: ristrutturare `costruisciPastoAQuery` secondo
+   l'ordine della Sezione 16.2, preservando tutti i vincoli duri.
+6. **Realizzazione atomica**: applicare contorno o redistribuzione su copie
+   materializzate, ricalcolare nutrienti e salvare lo stesso snapshot letto da
+   nutrizione, inventario, spesa e storico.
+7. **Roll e Salvafrigo**: ogni Roll C ricalcola `S` e residuo; ogni Roll P
+   ricalcola `G` e residuo; Roll V cambia soltanto una vera `V`; Proponi nuovo
+   pasto e Salvafrigo usano la stessa pipeline.
+8. **UI**: mantenere tre sole righe. `S` viene mostrato dentro la riga C, `G`
+   dentro la riga P, `V` soltanto quando esiste una vera portata vegetale.
+9. **Stress e browser reale**: verificare generazione, bozza/Salva/Annulla,
+   Roll, Salvafrigo, IndexedDB, inventario, spesa, storico e responsive.
+
+### 16.5 Casi di test minimi obbligatori
+
+1. `S=0`, `G=0`: aggiunta di V completa.
+2. `S=80`, `G=0`, richiesta 200: V da 120 g.
+3. `S=0`, `G=60`, richiesta 200: V da 140 g.
+4. `S=80`, `G=80`, richiesta 200: residuo 40 g, nessuna V dedicata.
+5. `S=100`, `G=50`, richiesta 200: V da 50 g.
+6. `S+G+V_presente` uguale o superiore alla richiesta: residuo zero.
+7. Piatto freddo con V completa: nessun contorno aggiuntivo.
+8. Roll C che cambia S e attraversa la soglia in entrambe le direzioni.
+9. Roll P che cambia G e attraversa la soglia in entrambe le direzioni.
+10. Propagazione identica delle quantità a nutrizione, spesa, inventario e
+    storico.
+11. Nessun bypass di allergie, esclusioni e cap nei fallback.
+12. Nessun doppione C/P/V nello stesso giorno.
+13. Lettura degli snapshot precedenti senza reset distruttivo.
+
+### 16.6 Sequenza dei commit di sviluppo
+
+1. Test e contratto V/S/G.
+2. Audit e conversione catalogo.
+3. Lettura dei token nel motore.
+4. Calcolo quantitativo strutturato.
+5. Pipeline P -> C -> V.
+6. Soglia e redistribuzione.
+7. Snapshot e propagazione.
+8. Roll, Salvafrigo e rigenerazione.
+9. Rendering.
+10. Stress test, browser reale e aggiornamento finale della documentazione.
+
+Ogni commit deve essere verificabile isolatamente. Conversione catalogo,
+riscrittura del generatore e modifiche grafiche non devono essere accorpate in
+un unico intervento.

@@ -66,6 +66,18 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - Porzione di riferimento: ortaggi 200–250 g; insalata 70–80 g.
 - La copertura è quantitativa: la verdura contenuta in C, P, sugo o ricetta
   completa contribuisce per la propria frazione di porzione.
+- La classe del catalogo distingue direttamente il ruolo della quota vegetale:
+  `V` indica esclusivamente una vera porzione di verdura; `S` indica la quota
+  vegetale parziale del sugo associato a un carboidrato; `G` indica la quota
+  vegetale parziale usata come guarnizione o condimento di una proteina.
+- La conversione dei template è esplicita e non viene dedotta a runtime:
+  una ricetta oggi classificata `P+V` diventa `P+G` quando la verdura è una
+  guarnizione parziale; una ricetta oggi classificata `C+V` diventa `C+S`
+  quando la verdura è un sugo parziale. `V` resta presente soltanto quando la
+  quantità vegetale costituisce realmente una porzione completa.
+- `S` e `G` non soddisfano mai da soli e per semplice presenza del token il
+  requisito `V`. Il bilancio resta quantitativo:
+  `V_residuo = max(0, V_richiesta - S - G - V_presente)`.
 - Nei piatti freddi composti con verdure, la quantità di verdura interna
   coincide con la porzione completa prevista: il piatto copre quindi `V` e non
   deve ricevere automaticamente un ulteriore contorno o residuo.
@@ -78,6 +90,11 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
   di zucca e zucca al forno restano ricette future da definire, non vanno
   inventate durante questa conversione.
 - Si aggiunge soltanto il residuo necessario, mai una seconda porzione intera.
+- Se il residuo è almeno 50 g, viene aggiunta una vera `V` dimensionata sul
+  residuo. Se è inferiore a 50 g, non viene creato un contorno dedicato e il
+  residuo viene redistribuito tra `S` e `G` secondo la regola operativa del
+  Lotto J. La redistribuzione modifica soltanto le quantità della
+  realizzazione, mai il template del catalogo.
 - Nei sughi di verdura le alternative definite restano opzioni fisse: gli
   ingredienti appartenenti a sughi diversi non vengono incrociati tramite
   prodotto cartesiano. Il sugo usa la dose parziale prevista e la
@@ -105,12 +122,17 @@ Sono due meccaniche collegate ma distinte.
 - La deperibilità è una priorità di ordinamento e composizione, non un divieto.
 - La generazione automatica modifica soltanto giorni successivi a oggi.
 - La settimana viene scritta solo quando tutti gli slot richiesti sono validi.
-- La costruzione procede per singolo slot, con query progressive: prima una
-  combinazione P+C gia dichiarata nel catalogo; se manca, P e C vengono cercati
-  separatamente e composti secondo le regole modulari; le eccezioni dichiarate
-  nei dati o nelle regole di categoria restringono la composizione.
-- Dopo C/P viene completata la sola quota di verdura mancante; quindi lo slot
-  viene chiuso e il motore passa al successivo.
+- La costruzione procede per singolo slot. Prima viene assegnata la classe
+  proteica prevista da `tabellaGiornoCategoria`; il motore sceglie la
+  realizzazione proteica ammessa e il relativo dettaglio di cottura o
+  guarnizione `G`. Dopo viene applicato il carboidrato determinato dalla
+  configurazione `AUTO/FIXED/EXCLUDED`; il motore sceglie la realizzazione
+  compatibile e il relativo sugo `S`.
+- Le combinazioni P+C gia dichiarate nel catalogo restano utilizzabili soltanto
+  quando rispettano sia la proteina assegnata sia il carboidrato programmato;
+  non acquisiscono priorità per il solo fatto di essere già combinate.
+- Dopo P e C viene calcolato matematicamente il solo residuo `V`; quindi lo
+  slot viene validato, chiuso e il motore passa al successivo.
 - Sono vietati sia il prodotto cartesiano fra pool indipendenti sia un
   risolutore globale che ricompili l'intera settimana in un'unica ricerca.
 - Gli esempi forniti durante diagnosi e revisione servono a dimostrare una
