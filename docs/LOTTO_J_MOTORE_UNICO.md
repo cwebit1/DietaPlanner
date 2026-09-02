@@ -819,3 +819,21 @@ nella repository.
   il test Lotto C già noto, ancora incompatibile con la firma corrente di
   `creaSequenzaCarboidrati`; non è stato corretto fuori perimetro. Commit
   remoto: commit di chiusura contenente questa registrazione.
+- **Blocco 4 — copertura quantitativa strutturata:** implementato in
+  `coperturaVerduraRicette`, preservando i campi frazionari già consumati
+  dalla pipeline. Il risultato espone ora `richiestaGrammi`, `grammiV`,
+  `grammiS`, `grammiG`, `residuoGrammi`, `coperturaCompleta`, strategia e
+  tipo di porzione. Le quantità fisiche sono disponibili anche in
+  `grammiRealiPerRuolo`; quando nello stesso pasto convivono insalata e
+  ortaggi, i campi usati dall'equazione vengono normalizzati su un unico
+  riferimento di porzione, evitando di sommare grammi nutrizionalmente non
+  equivalenti. La classificazione del ruolo deriva esclusivamente dai token
+  del template e non da deduzioni nominali. Aggiunto
+  `tests/lotto-j-vsg-structured-coverage.test.js`, con casi vuoto, solo S,
+  solo G, S+G, V completa, insalata e composizione mista. Superati test
+  dedicato, realizzazioni atomiche, conversioni approvate e test Lotto J
+  precedenti. La generazione settimanale ha riprodotto l'intermittenza già
+  nota sul solo controllo di avanzamento ed è poi passata isolatamente; il
+  piano generato non ha evidenziato regressioni. Nessuna pipeline, soglia,
+  redistribuzione, Roll o UI è stata modificata. Commit remoto: commit di
+  chiusura contenente questa registrazione.

@@ -47,13 +47,18 @@
 - `tests/lotto-j-vsg-contract.test.js`;
 - `tests/lotto-j-vsg-catalog.test.js`;
 - `tests/lotto-j-vsg-motor-semantics.test.js`.
+- `tests/lotto-j-vsg-structured-coverage.test.js`.
 
-Ultima esecuzione, Blocco 3 V/S/G: 16/17 test passati, più controllo
+Ultima esecuzione, Blocco 4 V/S/G: 17/18 test passati, più controllo
 sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
 `creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
 le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
 lettura semantica distinta dei token `V`, `S` e `G` nel motore; il calcolo
-quantitativo strutturato appartiene al blocco successivo.
+quantitativo strutturato è stato aggiunto nel Blocco 4 senza cambiare ancora
+l'ordine di costruzione del pasto. Il test dedicato e le suite collegate sono
+passati; nella corsa aggregata anche la suite settimanale è passata. Resta
+registrata l'intermittenza preesistente del solo controllo di avanzamento,
+osservata in una precedente esecuzione isolata.
 
 ## Limite della verifica corrente
 

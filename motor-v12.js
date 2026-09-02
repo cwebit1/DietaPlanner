@@ -1226,18 +1226,44 @@ function ingredienteVerduraQuantificabile(i){
 }
 function tipoPorzioneVerdura(i){
   const meta=metaIngrediente(i&&i.nome)||{};
-  return Number(meta.porzione)>0&&Number(meta.porzione)<=100?'salad':'vegetable';
+  const porzione=Number(i&&i.porzione)||Number(meta.porzione);
+  return porzione>0&&porzione<=100?'salad':'vegetable';
 }
 function righeCoperturaVerdura(ricette,escludiRicettaId){
   const out=[];
   for(const r of ricette||[]){
     if(escludiRicettaId&&r.id===escludiRicettaId)continue;
-    for(const i of r.ingredienti||[])if(ingredienteVerduraQuantificabile(i))out.push({kind:tipoPorzioneVerdura(i),quantity:Number(i.grammi)||0});
+    const ruoli=ruoliVerduraDaClasse(r.classe);
+    const ruolo=ruoli.V?'V':(ruoli.S?'S':(ruoli.G?'G':null));
+    for(const i of r.ingredienti||[])if(ingredienteVerduraQuantificabile(i))out.push({kind:tipoPorzioneVerdura(i),quantity:Number(i.grammi)||0,ruolo});
   }
   return out;
 }
 function coperturaVerduraRicette(ricette,portionConfig){
-  return N.vegetableCoverage(righeCoperturaVerdura(ricette),portionConfig);
+  const cfg=Object.assign({vegetablePortionGrams:200,saladPortionGrams:70},portionConfig||{});
+  const righe=righeCoperturaVerdura(ricette);
+  const frazioni=N.vegetableCoverage(righe,cfg);
+  const riferimento=righe.length&&righe.every(r=>r.kind==='salad')?'salad':'vegetable';
+  const richiestaGrammi=riferimento==='salad'?Number(cfg.saladPortionGrams):Number(cfg.vegetablePortionGrams);
+  const grammi={V:0,S:0,G:0};
+  const grammiReali={V:0,S:0,G:0};
+  for(const riga of righe){
+    if(!Object.prototype.hasOwnProperty.call(grammi,riga.ruolo))continue;
+    const reali=Math.max(0,Number(riga.quantity)||0);
+    const porzioneRiga=riga.kind==='salad'?Number(cfg.saladPortionGrams):Number(cfg.vegetablePortionGrams);
+    grammiReali[riga.ruolo]+=reali;
+    if(porzioneRiga>0)grammi[riga.ruolo]+=(reali/porzioneRiga)*richiestaGrammi;
+  }
+  const bilancio=calcolaBilancioVSG({
+    richiestaGrammi,
+    grammiV:grammi.V,
+    grammiS:grammi.S,
+    grammiG:grammi.G
+  });
+  return Object.assign({},frazioni,bilancio,{
+    tipoPorzioneRichiesta:riferimento,
+    grammiRealiPerRuolo:grammiReali
+  });
 }
 function ridimensionaVerdureRicetta(ricetta,frazioneRichiesta,portionConfig){
   const copia=clone(ricetta),cfg=portionConfig||{};
