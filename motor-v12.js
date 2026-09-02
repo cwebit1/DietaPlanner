@@ -98,26 +98,125 @@ function preparaBudgetCarboidrati(resolved){
   const plan=resolved&&resolved.carbohydrates||{},remaining=Object.assign({},plan.fixedCounts||{});
   return {selection:plan.selection||{},autoEligible:new Set(plan.autoEligibleKeys||[]),remaining,errors:[]};
 }
-function creaSequenzaCarboidrati(resolved,slotCount,rng,seedCounts){
-  const plan=resolved&&resolved.carbohydrates||{},out=[];rng=rng||Math.random;
+function creaSequenzaCarboidrati(resolved,slotRefs,rng,seedCounts){
+  const plan=resolved&&resolved.carbohydrates||{};rng=rng||Math.random;
   seedCounts=seedCounts||{};
-  for(const [key,count] of Object.entries(plan.fixedCounts||{})){const used=Number(seedCounts[key])||0;if(used>Number(count))return {valid:false,errors:['Il piano preservato supera il numero fisso di '+key+'.'],keys:[]};for(let i=used;i<Number(count)||0;i++)out.push(key);}
-  if(out.length>slotCount)return {valid:false,errors:['I carboidrati fissi superano gli slot programmabili.'],keys:[]};
+  const slotCount=slotRefs.length;
+  const richiesti=[];
+  for(const [key,count] of Object.entries(plan.fixedCounts||{})){const used=Number(seedCounts[key])||0;if(used>Number(count))return {valid:false,errors:['Il piano preservato supera il numero fisso di '+key+'.'],keys:[]};for(let i=used;i<Number(count)||0;i++)richiesti.push(key);}
+  if(richiesti.length>slotCount){
+    /* I fissi eccedono gli slot generabili: succede quando la settimana e'
+       gia' iniziata e uno o piu' giorni non sono mai stati generati (ormai
+       nel passato, irraggiungibili). Quei giorni riducono il fabbisogno
+       fisso reale, non bloccano la generazione - si mescola e si taglia
+       l'eccedenza in modo equo tra le chiavi, invece di restituire errore. */
+    for(let i=richiesti.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[richiesti[i],richiesti[j]]=[richiesti[j],richiesti[i]];}
+    richiesti.length=slotCount;
+  }
   const auto=(plan.autoEligibleKeys||[]).slice();
-  if(out.length<slotCount&&!auto.length)return {valid:false,errors:['Nessun carboidrato AUTO disponibile per completare il piano.'],keys:[]};
-  while(out.length<slotCount)out.push(auto[Math.floor(rng()*auto.length)]);
-  for(let i=out.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[out[i],out[j]]=[out[j],out[i]];}
+  if(richiesti.length<slotCount&&!auto.length)return {valid:false,errors:['Nessun carboidrato AUTO disponibile per completare il piano.'],keys:[]};
+  const numeroGiorni=new Set((slotRefs||[]).map(s=>s&&s.di)).size||slotCount;
+  const conteggioChiave={};
+  for(const k of richiesti)conteggioChiave[k]=(conteggioChiave[k]||0)+1;
+  while(richiesti.length<slotCount){
+    /* Tetto per chiave = numero di giorni: oltre non avrebbe senso provarci,
+       ma NON basta da solo a garantire zero doppioni (la distribuzione
+       potrebbe comunque concentrarsi) - la garanzia vera arriva dalla fase
+       costruttiva sotto. Qui serve solo a non sprecare scelte impossibili. */
+    const disponibili=auto.filter(k=>(conteggioChiave[k]||0)<numeroGiorni);
+    const scelte=disponibili.length?disponibili:auto;
+    const scelta=scelte[Math.floor(rng()*scelte.length)];
+    richiesti.push(scelta);
+    conteggioChiave[scelta]=(conteggioChiave[scelta]||0)+1;
+  }
+
+  /* Assegnazione COSTRUTTIVA per giorno, non "riempi a caso e sistema dopo":
+     si raggruppano gli slot per giorno (slotRefs[i].di) e, per ogni giorno,
+     si pesca dal pool residuo escludendo sempre la chiave gia' assegnata a
+     quel giorno finche' esiste un'alternativa con scorta residua. Un doppione
+     nello stesso giorno si verifica SOLO se, quando tocca l'ultima posizione
+     di quel giorno, resta scorta unicamente della chiave gia' usata quel
+     giorno stesso - caso che il tetto sopra rende raro ma non puo' escludere
+     in astratto con conteggi fissi molto sbilanciati (l'utente puo' fissare
+     anche 14 volte lo stesso carboidrato: in quel caso un doppione e' l'unica
+     soluzione fisicamente possibile, non un difetto dell'algoritmo). */
+  const giorniOrdine=[],slotPerGiorno=new Map();
+  for(let idx=0;idx<slotRefs.length;idx++){
+    const di=slotRefs[idx]&&slotRefs[idx].di;
+    if(!slotPerGiorno.has(di)){slotPerGiorno.set(di,[]);giorniOrdine.push(di);}
+    slotPerGiorno.get(di).push(idx);
+  }
+  const residuo={};
+  for(const k of richiesti)residuo[k]=(residuo[k]||0)+1;
+  const out=new Array(slotCount).fill(null);
+  const giorniShuffled=giorniOrdine.slice();
+  for(let i=giorniShuffled.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[giorniShuffled[i],giorniShuffled[j]]=[giorniShuffled[j],giorniShuffled[i]];}
+
+  function pescaChiave(esclusa){
+    const candidati=Object.keys(residuo).filter(k=>residuo[k]>0);
+    if(!candidati.length)return null;
+    /* Fondamentale: si sceglie sempre la chiave con PIU' scorta residua, non
+       una a caso tra le disponibili. Scegliere a caso puo' esaurire per
+       sfortuna una chiave troppo presto, lasciando solo un'altra chiave per
+       l'ultimo giorno anche quando l'esclusione singola per giorno da sola
+       non basterebbe a prevederlo (verificato con un caso reale fallito).
+       Questo e' l'algoritmo dimostrato corretto per "riorganizza una
+       sequenza senza due uguali adiacenti" (stesso principio di LeetCode
+       767 "Reorganize String"), che qui si applica direttamente perche'
+       pranzo+cena dello stesso giorno sono sempre posizioni consecutive.
+       Tra chiavi a pari scorta si sceglie a caso, per varieta'. */
+    let massimo=-1;
+    for(const k of candidati)if(residuo[k]>massimo)massimo=residuo[k];
+    let migliori=candidati.filter(k=>residuo[k]===massimo);
+    if(migliori.length===1&&migliori[0]===esclusa){
+      const alternative=candidati.filter(k=>k!==esclusa);
+      if(!alternative.length)return esclusa; /* doppione inevitabile: nessun'altra scorta esiste */
+      let massimoAlt=-1;
+      for(const k of alternative)if(residuo[k]>massimoAlt)massimoAlt=residuo[k];
+      migliori=alternative.filter(k=>residuo[k]===massimoAlt);
+    }else{
+      migliori=migliori.filter(k=>k!==esclusa);
+      if(!migliori.length)migliori=[esclusa];
+    }
+    return migliori[Math.floor(rng()*migliori.length)];
+  }
+
+  for(const di of giorniShuffled){
+    let precedente=null;
+    for(const pos of slotPerGiorno.get(di)){
+      const scelta=pescaChiave(precedente);
+      if(scelta===null)break;
+      out[pos]=scelta;
+      residuo[scelta]--;
+      precedente=scelta;
+    }
+  }
   return {valid:true,errors:[],keys:out};
 }
-function creaSequenzaProteine(resolved,slotRefs,tab,rng,seedCounts){
+function creaSequenzaProteine(resolved,slotRefs,tab,rng,seedCounts,slotTotaliSettimanaCompleta){
   rng=rng||Math.random;tab=tab||{};const freq=resolved.proteinFrequencies||{},forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]),counts=Object.assign({},seedCounts||{}),targets=Array(slotRefs.length).fill(null),errors=[];
   const allowed=Object.keys(freq).filter(k=>!forbidden.has(k)&&freq[k].max!==0);
   for(let i=0;i<slotRefs.length;i++){const ref=slotRefs[i],fixed=(tab['giorno_'+ref.di]||[])[ref.pasto==='pranzo'?0:1];if(!fixed)continue;if(!allowed.includes(fixed)){errors.push('Proteina '+fixed+' non ammessa per '+ref.day+' '+ref.pasto+'.');continue;}targets[i]=fixed;counts[fixed]=(counts[fixed]||0)+1;}
   for(const key of allowed){const max=freq[key].max;if(max!==null&&max!==undefined&&(counts[key]||0)>Number(max))errors.push('Proteina '+key+' oltre il massimo settimanale.');}
   const empty=()=>targets.findIndex(x=>!x);
-  for(const key of allowed){let need=Math.max(0,(Number(freq[key].min)||0)-(counts[key]||0));while(need-->0){const i=empty();if(i<0){errors.push('Slot insufficienti per i minimi proteici.');break;}targets[i]=key;counts[key]=(counts[key]||0)+1;}}
+  for(const key of allowed){let need=Math.max(0,(Number(freq[key].min)||0)-(counts[key]||0));while(need-->0){const i=empty();if(i<0)break;/* slot insufficienti per il minimo: giorni gia' passati e mai generati lo rendono irraggiungibile questa settimana, non e' un errore bloccante */targets[i]=key;counts[key]=(counts[key]||0)+1;}}
   while(empty()>=0){let pool=allowed.filter(k=>freq[k].max===null||freq[k].max===undefined||(counts[k]||0)<Number(freq[k].max));if(!pool.length){errors.push('Nessuna proteina ammessa per completare la settimana.');break;}const underTarget=pool.filter(k=>(counts[k]||0)<(Number(freq[k].target)||Number(freq[k].min)||0));if(underTarget.length)pool=underTarget;const key=pool[Math.floor(rng()*pool.length)],i=empty();targets[i]=key;counts[key]=(counts[key]||0)+1;}
-  for(const key of allowed)if((counts[key]||0)<(Number(freq[key].min)||0))errors.push('Minimo proteico non raggiunto: '+key+'.');
+  /* Il minimo non raggiunto va segnalato SEMPRE, tranne per la quota
+     esattamente spiegabile dai giorni gia' passati e mai generati (today+1).
+     Non e' un condono generale: se lo scarto supera cio' che i giorni persi
+     potrebbero giustificare, e' un problema di copertura reale (dati/regole
+     insufficienti anche a settimana intera) e deve continuare a bloccare -
+     altrimenti si nasconderebbe un errore vero dietro la scusa del tempo. */
+  const slotPersi=Math.max(0,(Number(slotTotaliSettimanaCompleta)||slotRefs.length)-slotRefs.length);
+  let scartoTotale=0;
+  const scartoPerChiave={};
+  for(const key of allowed){
+    const mancano=Math.max(0,(Number(freq[key].min)||0)-(counts[key]||0));
+    if(mancano>0){scartoPerChiave[key]=mancano;scartoTotale+=mancano;}
+  }
+  if(scartoTotale>slotPersi){
+    for(const [key,mancano] of Object.entries(scartoPerChiave))errors.push('Minimo proteico non raggiunto: '+key+' (mancano '+mancano+').');
+  }
   return {valid:errors.length===0,errors,targets,counts};
 }
 
@@ -940,7 +1039,16 @@ function scoreCopertura(r,targetToken){
 }
 async function poolAmmesso(data,opts){
   const out=[];
-  for(const r of state.ricetteConcrete) if(carbRicettaAmmesso(r,opts&&opts.carbBudget)&&await ricettaAmmessa(r,data,opts)) out.push(r);
+  for(const r of state.ricetteConcrete){
+    /* Le voci sintetiche di compilaContorniBaseCatalogo/compilaProteineBaseCatalogo
+       (stackScope 'contorni_catalogo'/'proteine_catalogo') sono un ingrediente
+       singolo con nome nudo (es. "Zucca", "Cipolla"), mai le ricette composte
+       del catalogo ("Insalata di X e Y con Z"). Non devono competere alla pari
+       nella selezione automatica - restano nello stato per altri usi (es.
+       ricerca manuale diretta) ma sono escluse qui. */
+    if(r.stackScope==='contorni_catalogo'||r.stackScope==='proteine_catalogo')continue;
+    if(carbRicettaAmmesso(r,opts&&opts.carbBudget)&&await ricettaAmmessa(r,data,opts)) out.push(r);
+  }
   return out;
 }
 function scegliCasuale(pool){ return pool.length?pool[Math.floor(Math.random()*pool.length)]:null; }
@@ -1453,10 +1561,10 @@ async function generaPianoSettimana(scarto,opzioni){
   let sequenza=null,proteine=null,abbinamento=null;
   const compatCache=new Map();
   for(let tentativo=0;tentativo<30;tentativo++){
-    proteine=creaSequenzaProteine(resolved,slotDaGenerare,tab,null,weeklyProteinCounts);
+    proteine=creaSequenzaProteine(resolved,slotDaGenerare,tab,null,weeklyProteinCounts,days.length*2);
     if(!proteine.valid)return {generati:[],errori:proteine.errors};
     const resolvedCoperto=await limitaCarboidratiAutoAllaCopertura(resolved,slotDaGenerare,proteine.targets,runtimeConfig,compatCache);
-    sequenza=creaSequenzaCarboidrati(resolvedCoperto,slotDaGenerare.length,null,weeklyCarbCounts);
+    sequenza=creaSequenzaCarboidrati(resolvedCoperto,slotDaGenerare,null,weeklyCarbCounts);
     if(!sequenza.valid)return {generati:[],errori:sequenza.errors};
     abbinamento=await assegnaCarboidratiCompatibili(slotDaGenerare,proteine.targets,sequenza.keys,resolved,runtimeConfig,compatCache);
     if(abbinamento.valid)break;

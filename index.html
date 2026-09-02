@@ -3391,7 +3391,21 @@ async function primiSpecialiDisponibili(){
 /* =========================================================
    NAV
    ========================================================= */
-function mostraVista(nome){
+async function mostraVista(nome){
+  const vistaAttuale = document.querySelector('nav.tabbar button.active')?.dataset.view;
+  if(vistaAttuale==='menu' && nome!=='menu' && menuDraft && menuDraft.modificata){
+    const scelta = await mostraModaleAvviso(
+      'Hai generato o modificato il menù senza salvare. Le modifiche andranno perse se esci ora.',
+      [
+        {testo:'Salva ed esci', classe:'primary', valore:'salva'},
+        {testo:'Esci senza salvare', classe:'secondary', valore:'scarta'},
+        {testo:'Annulla', classe:'secondary', valore:'annulla'}
+      ]
+    );
+    if(scelta==='annulla')return;
+    if(scelta==='salva'){await commitMenuDraftAtomico();aggiornaListaSpesaAutomatica(menuSettimanaScarto);}
+    menuDraft=null;
+  }
   document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.view===nome));
   document.querySelectorAll('section.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+nome).classList.add('active');

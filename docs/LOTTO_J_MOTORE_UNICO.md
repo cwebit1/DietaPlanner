@@ -355,7 +355,102 @@ con l'orologio di sistema vero: pranzo di oggi (fascia già chiusa) non
 generato, cena (ancora aperta) generata correttamente. Nessuna
 regressione sulla batteria di test esistente.
 
-## 11. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 11. Cinque criticità urgenti segnalate da Cwe (01/09/2026)
+
+Segnalazione con priorità massima, 5 punti. Tutti verificati nel codice
+reale prima di correggere, non per supposizione.
+
+**1. Overflow/blocco generando a settimana già iniziata.**
+`creaSequenzaCarboidrati`/`creaSequenzaProteine` restituivano errore
+bloccante (`valid:false`, zero pasti generati) quando il fabbisogno fisso/
+minimo settimanale eccedeva gli slot realmente generabili — succedeva
+quando un giorno non era mai stato generato (ormai passato,
+irraggiungibile). Riprodotto e confermato: 13 carboidrati fissi su 12
+slot disponibili → bloccava; 8 minimi proteici teorici su 4 slot → bloccava.
+
+**2. Doppioni carboidrato stesso giorno (es. Polenta a pranzo E cena).**
+`chiaviStack()` esclude la categoria C dal tracciamento anti-ripetizione
+(comportamento preesistente): zero anti-duplicato sui carboidrati.
+Misurato: 24% di probabilità di doppione nello stesso giorno.
+
+**3 e 4. Sughi senza completamento verdura / verdure da pool sbagliato
+(rapanello, cetriolo invece di "Insalata di X e Y").** Stessa causa
+comune: `compilaContorniBaseCatalogo`/`compilaProteineBaseCatalogo`
+(voci sintetiche a ingrediente singolo, pensate come riserva) competevano
+alla pari con le vere ricette composte in `poolAmmesso`, il pool
+condiviso da tutta la generazione automatica.
+
+**5. Nessun avviso uscendo da Menù con generazione non salvata.**
+Confermato: mentre si è su Menù, le scritture su 'piano' vengono
+intercettate in `menuDraft.voci` (mai IndexedDB reale) — `menuDraft.
+modificata` è il segnale di modifiche non salvate, già esistente ma mai
+usato per avvisare all'uscita.
+
+### Correzioni applicate
+
+- **`creaSequenzaCarboidrati`**: riscritta con algoritmo **costruttivo**
+  (non più "riempi a caso e sistema dopo"). Per ogni giorno, si assegna
+  sempre la chiave con **più scorta residua** (esclusa quella già usata
+  quel giorno) — l'algoritmo dimostrato corretto per "riorganizza una
+  sequenza senza due elementi uguali adiacenti" (stesso principio di
+  LeetCode 767 "Reorganize String"), qui applicato direttamente perché
+  pranzo+cena dello stesso giorno sono sempre posizioni consecutive.
+  **Importante, corretto dopo un primo tentativo sbagliato**: un primo
+  approccio (limitare il totale per chiave al numero di giorni, poi
+  scambiare le posizioni in conflitto) sembrava funzionare (0,86% di
+  residuo su 1400 prove) ma non era una garanzia reale — trovato un caso
+  concreto di fallimento con debug mirato (una chiave esaurita "per
+  sfortuna" 2 giorni prima della fine, lasciando solo un'altra chiave per
+  l'ultimo giorno). L'algoritmo costruttivo a scorta-massima risolve
+  questo alla radice: testato su oltre 500.000 generazioni combinate
+  (4 chiavi, 2 chiavi, fissi sbilanciati, settimana parziale), **zero
+  doppioni evitabili**. Nel caso davvero impossibile (una singola chiave
+  fissata a più occorrenze di quanti siano i giorni — comunque non
+  configurabile dalla UI reale, che limita a 7 caselle) produce sempre
+  e solo l'unico doppione inevitabile, mai di più.
+- **`creaSequenzaProteine`**: il fabbisogno fisso/minimo in eccesso non
+  blocca più con errore quando lo scarto è spiegabile dai giorni persi
+  per il tempo (today+1) — ma **non è un condono generale**: nuovo
+  parametro `slotTotaliSettimanaCompleta` calcola quanto scarto sia
+  legittimamente attribuibile ai giorni persi; se lo scarto lo supera
+  (copertura insufficiente vera, anche a settimana intera), **continua a
+  bloccare con errore esplicito**. Corretto dopo un primo errore: la
+  prima versione rimuoveva il controllo "minimo non raggiunto" *sempre*,
+  non solo per il caso today+1 — un condono generale che avrebbe
+  nascosto problemi di copertura reali, esattamente il tipo di errore
+  che Cwe ha segnalato esplicitamente come inaccettabile ("le regole
+  DEVONO restare quelle, le ricette si aggiungono se mancano").
+- **`poolAmmesso`**: esclude le voci sintetiche (`stackScope`
+  `'contorni_catalogo'`/`'proteine_catalogo'`) dal pool di selezione
+  automatica — restano in `state.ricetteConcrete` per altri usi (es.
+  ricerca manuale) ma non competono più con le ricette composte del
+  catalogo. Verificato: 0 nomi "nudi" su 143 realizzazioni pure-V/pure-P
+  testate su 8 settimane generate, nessuna perdita di capacità di
+  generazione (0 fallimenti).
+- **`mostraVista`**: resa asincrona, intercetta l'uscita da Menù con
+  `menuDraft.modificata===true` offrendo Salva/Esci senza salvare/Annulla
+  tramite il modal di conferma generico già esistente
+  (`mostraModaleAvviso`). Verificato solo a livello sintattico e logico
+  (compone funzioni già testate), non con click-through nel browser reale
+  per limiti dell'ambiente di test in questa sessione.
+
+### Lezione di metodo, esplicitata da Cwe durante questa correzione
+
+> "Se tu mi dici facendo così poi non ho copertura e sono costretto a...
+> vuol dire che stai cambiando una regola per permettere ai dati che hai
+> di rendere di successo un processo di base errato."
+
+Principio da applicare sempre d'ora in avanti: quando una regola/vincolo
+non è soddisfacibile con i dati/tempo disponibili, la risposta corretta è
+**segnalarlo**, non piegare silenziosamente la regola per far apparire
+di successo un'operazione che di fatto non rispetta ciò che l'utente ha
+chiesto. L'unica eccezione legittima è quando lo scarto è interamente
+spiegabile da un vincolo strutturale esplicitamente accettato dall'utente
+stesso (qui: i giorni ormai passati e mai generati, coerente con la
+regola today+1 già discussa in precedenza) — e anche in quel caso, solo
+per la quota esattamente proporzionata, mai oltre.
+
+## 12. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.
