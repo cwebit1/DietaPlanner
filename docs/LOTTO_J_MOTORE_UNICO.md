@@ -596,7 +596,50 @@ Tocca lo schema dati (`classe` in `db-ricette.json`) e la logica di
 `copertura()`/`coperturaVerduraRicette()` nel motore. Da costruire
 quando Cwe deciderà di procedere — non implementata in questa sessione.
 
-## 14. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 14. Rimozione id 45 dal catalogo, rafforzamento design V/S/G (02/09/2026)
+
+**Rimosse** (non trasformate) le 20 combinazioni nude del template id 45
+in `db-ricette.json` — l'unico carboidrato puro del catalogo ("Riso",
+"Polenta" ecc. senza alcun testo). Un primo tentativo di Claude aveva
+solo aggiunto `testo1:"Porzione di"` (testo onesto, non un piatto
+inventato) per eliminare il nome nudo; Cwe ha corretto con fermezza
+("se ti dico togli è togli") — rimosso del tutto l'oggetto `id:45`,
+versione catalogo portata a **72**.
+
+**Impatto verificato prima del push**: nessun crash, 0% di avvisi
+Layer 2b, generazione ancora funzionante su 15 settimane testate. Le
+altre ricette C+V del catalogo (id 5/6/7/43 — pasta con sughi verdura)
+restano valide come "fonte carboidrato" per l'abbinamento con proteine
+senza carboidrato proprio (il filtro di Layer 2a richiede solo
+`!copertura(r).P`, non `!copertura(r).V`) — 56/144 proteine "separate"
+(affettati, pesce, legumi ecc.) sono comunque comparse nel campione
+testato. **Varietà di abbinamento più ristretta** per i carbKey che solo
+id45 copriva (riso puro, patate, pane, panino, taralli...) — accettato
+consapevolmente da Cwe, non è un difetto silenzioso: verificato e
+riportato prima del push.
+
+### Rafforzamento decisione di design V/S/G — ancora non implementata
+
+Due aggiunte al design della Sezione 13:
+
+1. **Principio d'ordine nell'assegnazione**: PX (proteina) va assegnata
+   **per prima**, seguendo la tabella che l'utente ha già compilato
+   (`tabellaGiornoCategoria`, esiste già) — il motore decide di suo solo
+   il **condimento**. CX (carboidrato) va assegnato **dopo**, seguendo
+   la configurazione scelta dall'utente (fissi/auto) — il motore decide
+   di suo solo il **sugo**. In generale: dove l'utente ha dato una
+   condizione esplicita, il sistema la segue; il motore decide da sé
+   solo il dettaglio d'esecuzione, mai la macro-scelta.
+2. **Soglia pratica sul residuo**: `V_residuo = V_richiesta - G - S`;
+   se `V_residuo < 50g` non ha senso creare un piatto V dedicato così
+   piccolo — si redistribuisce il residuo **a metà** tra S e G (es.
+   residuo 50g → +25g a S, +25g a G); se `V_residuo >= 50g` si aggiunge
+   davvero una V dedicata, dimensionata su quel residuo.
+
+Prossimo passo dichiarato da Cwe: sviluppare l'algoritmo secondo questo
+design e verificare il risultato — non ancora iniziato.
+
+## 15. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.

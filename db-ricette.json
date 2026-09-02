@@ -1,5 +1,5 @@
 {
-  "versione": 70,
+  "versione": 72,
   "ricette": [
     {
       "gruppi": [
@@ -3229,44 +3229,6 @@
         "PL",
         "V"
       ]
-    },
-    {
-      "id": 45,
-      "gruppi": [
-        {
-          "testo1": "",
-          "categoria": "C",
-          "ingredienti": [
-            {"nome":"Cous cous","stack":1,"roll":1},
-            {"nome":"Crackers","stack":1,"roll":1},
-            {"nome":"Farro perlato","stack":1,"roll":1},
-            {"nome":"Friselle","stack":1,"roll":1},
-            {"nome":"Gallette di riso","stack":1,"roll":1},
-            {"nome":"Gnocchi","stack":1,"roll":1},
-            {"nome":"Noodles","stack":1,"roll":1},
-            {"nome":"Orzo perlato","stack":1,"roll":1},
-            {"nome":"Pane integrale","stack":1,"roll":1},
-            {"nome":"Panino","stack":1,"roll":1},
-            {"nome":"Pasta corta","stack":1,"roll":1},
-            {"nome":"Pasta integrale","stack":1,"roll":1},
-            {"nome":"Patate","stack":1,"roll":1},
-            {"nome":"Piadina","stack":1,"roll":1},
-            {"nome":"Polenta","stack":1,"roll":1},
-            {"nome":"Ravioli ricotta e spinaci","stack":1,"roll":1},
-            {"nome":"Riso","stack":1,"roll":1},
-            {"nome":"Spaghetti","stack":1,"roll":1},
-            {"nome":"Tagliolini all'uovo","stack":1,"roll":1},
-            {"nome":"Taralli","stack":1,"roll":1}
-          ],
-          "cotture": [],
-          "testo2": "",
-          "mostraNomi": true
-        },
-        {"testo1":"","categoria":"Nessuno","ingredienti":[],"cotture":[],"testo2":"","mostraNomi":false},
-        {"testo1":"","categoria":"Nessuno","ingredienti":[],"cotture":[],"testo2":"","mostraNomi":false},
-        {"testo1":"","categoria":"Nessuno","ingredienti":[],"cotture":[],"testo2":"","mostraNomi":false}
-      ],
-      "classe": "C"
     }
   ]
 }
