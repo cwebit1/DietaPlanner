@@ -775,9 +775,17 @@ Ogni commit deve essere verificabile isolatamente. Conversione catalogo,
 riscrittura del generatore e modifiche grafiche non devono essere accorpate in
 un unico intervento.
 
+**Regola di chiusura di ogni blocco:** al termine di ciascun blocco devono
+essere pubblicati insieme sia i file modificati sia il resoconto degli
+interventi realmente eseguiti. Il resoconto va registrato nella Sezione 16.7
+con esito dei test, eventuali limiti della verifica e commit remoto. Un blocco
+non è concluso finché modifiche e resoconto non risultano entrambi salvati
+nella repository.
+
 ### 16.7 Stato di avanzamento
 
 - **Blocco 1 — contratto e test V/S/G:** implementato. Aggiunte le funzioni
   pure `ruoliVerduraDaClasse` e `calcolaBilancioVSG` e il test dedicato
   `tests/lotto-j-vsg-contract.test.js`. La pipeline di generazione e il
-  catalogo non sono stati modificati in questo blocco.
+  catalogo non sono stati modificati in questo blocco. Test dedicato superato;
+  commit remoto `76fffe7`.
