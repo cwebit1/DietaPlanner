@@ -20,7 +20,4 @@ assert.deepEqual(M.calcolaBilancioVSG({richiestaGrammi:200,grammiS:80,grammiG:80
 assert.equal(M.calcolaBilancioVSG({richiestaGrammi:200,grammiS:100,grammiG:50}).strategia,'v_dedicata','50 g esatti richiedono una V dedicata');
 assert.equal(M.calcolaBilancioVSG({richiestaGrammi:200,grammiV:200}).strategia,'nessuna');
 assert.equal(M.calcolaBilancioVSG({richiestaGrammi:200,grammiV:250}).residuoGrammi,0,'il residuo non può essere negativo');
-assert.equal(M.calcolaBilancioVSG({richiestaGrammi:200,grammiS:170}).strategia,'regola_sotto_soglia_da_definire','non va inventata la redistribuzione se G è assente');
-assert.equal(M.calcolaBilancioVSG({richiestaGrammi:200,grammiG:170}).strategia,'regola_sotto_soglia_da_definire','non va inventata la redistribuzione se S è assente');
-
 console.log('lotto J contratto V/S/G: ok');

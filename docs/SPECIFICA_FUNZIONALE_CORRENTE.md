@@ -92,8 +92,10 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - Si aggiunge soltanto il residuo necessario, mai una seconda porzione intera.
 - Se il residuo è almeno 50 g, viene aggiunta una vera `V` dimensionata sul
   residuo. Se è inferiore a 50 g, non viene creato un contorno dedicato e il
-  residuo viene redistribuito tra `S` e `G` secondo la regola operativa del
-  Lotto J. La redistribuzione modifica soltanto le quantità della
+  residuo, condizione che per costruzione implica la presenza contemporanea
+  di `S` e `G`, viene redistribuito a metà tra i due. Non esiste un caso
+  operativo sotto soglia con uno solo tra `S` e `G`. La redistribuzione
+  modifica soltanto le quantità della
   realizzazione, mai il template del catalogo.
 - Nei sughi di verdura le alternative definite restano opzioni fisse: gli
   ingredienti appartenenti a sughi diversi non vengono incrociati tramite

@@ -1025,10 +1025,11 @@ function calcolaBilancioVSG(valori){
   const grammiV=nonNegativo(valori.grammiV);
   const grammiS=nonNegativo(valori.grammiS);
   const grammiG=nonNegativo(valori.grammiG);
-  const residuoGrammi=Math.max(0,richiestaGrammi-grammiV-grammiS-grammiG);
+  const residuoCalcolato=Math.max(0,richiestaGrammi-grammiV-grammiS-grammiG);
+  const residuoGrammi=residuoCalcolato<0.000001?0:residuoCalcolato;
   let strategia='nessuna';
   if(residuoGrammi>=50)strategia='v_dedicata';
-  else if(residuoGrammi>0)strategia=grammiS>0&&grammiG>0?'redistribuzione_sg':'regola_sotto_soglia_da_definire';
+  else if(residuoGrammi>0&&grammiS>0&&grammiG>0)strategia='redistribuzione_sg';
   return {
     richiestaGrammi,grammiV,grammiS,grammiG,residuoGrammi,
     coperturaCompleta:residuoGrammi===0,
@@ -1215,9 +1216,12 @@ async function prioritaInventario(pool){
 function firmaPastoDaRicette(ricette){
   return (ricette||[]).map(r=>r.id).sort().join('||');
 }
-function pastoCompletoPerToken(ricette,token){
+function pastoCompletoPerToken(ricette,token,portionConfig){
   const coperture=(ricette||[]).map(copertura);
-  return coperture.some(c=>c.tokens.has(token)) && coperture.some(c=>c.C) && coperture.some(c=>c.V);
+  const proteina=coperture.some(c=>c.tokens.has(token));
+  const carboidrato=coperture.some(c=>c.C);
+  const verdura=coperture.some(c=>c.V)||(portionConfig&&coperturaVerduraRicette(ricette,portionConfig).coperturaCompleta);
+  return !!(proteina&&carboidrato&&verdura);
 }
 function ingredienteVerduraQuantificabile(i){
   if(!i||i.condimento||i.categoria==='Condimenti'||!(Number(i.grammi)>0))return false;
@@ -1317,6 +1321,35 @@ function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiP
   let out=(ricette||[]).slice();
   const totale=coperturaVerduraRicette(out,portionConfig);
   let dedicata=out.find(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length;});
+  if(totale.residuoGrammi>0&&totale.residuoGrammi<50){
+    if(!(totale.grammiS>0&&totale.grammiG>0))throw new Error('Invariante V/S/G violata: un residuo sotto 50 g richiede S e G presenti.');
+    const meta={
+      strategia:'redistribuzione_sg',
+      residuoOriginaleGrammi:totale.residuoGrammi,
+      incrementoSGrammi:totale.residuoGrammi/2,
+      incrementoGGrammi:totale.residuoGrammi/2
+    };
+    for(const ruolo of ['S','G']){
+      const corrente=ruolo==='S'?totale.grammiS:totale.grammiG;
+      const incremento=totale.residuoGrammi/2;
+      const fattore=(corrente+incremento)/corrente;
+      out=out.map(r=>{
+        if(!ruoliVerduraDaClasse(r.classe)[ruolo])return r;
+        const copia=clone(r);
+        for(const i of copia.ingredienti||[]){
+          if(!ingredienteVerduraQuantificabile(i))continue;
+          i.quantita=(Number(i.quantita)||0)*fattore;
+          i.grammi=(Number(i.grammi)||0)*fattore;
+          i.overrideQuantita='redistribuzione_'+ruolo.toLowerCase();
+        }
+        copia.nutrienti=calcolaNutrienti(copia.ingredienti||[]);
+        copia.nutrizioneManualeTotale={kcal:copia.nutrienti.kcal,prot:copia.nutrienti.proteine,carb:copia.nutrienti.carboidrati,grassi:copia.nutrienti.grassi};
+        copia.redistribuzioneVerdura=clone(meta);
+        return copia;
+      });
+    }
+    return out;
+  }
   if(totale.remainingFraction<=0&&!dedicata)return out;
   if(totale.remainingFraction<=0&&dedicata&&Math.abs(totale.rawFraction-1)<0.000001)return out;
   if(!dedicata){
@@ -1419,9 +1452,10 @@ async function generaCandidatiPasto(target,data,opts){
       const base=[primo].concat(carb?[carb]:[]);
       if(carb&&!composizioneSeparataConsentita(primo,carbKeysRicetta(carb)[0]))continue;
       const haV=base.some(r=>copertura(r).V);
+      const bilancioBase=coperturaVerduraRicette(base,opts.vegetablePortions);
       let vegChoices=[null];
 
-      if(!haV){
+      if(!haV&&bilancioBase.residuoGrammi>=50){
         let veg=pool.filter(r=>copertura(r).V&&!copertura(r).P&&!base.some(x=>x.id===r.id));
         if(opts.usaInventario)veg=applicaPrioritaInventario(veg,livelli);
         vegChoices=veg.length?veg:[null];
@@ -1429,8 +1463,8 @@ async function generaCandidatiPasto(target,data,opts){
 
       for(const veg of vegChoices){
         let ricette=base.concat(veg?[veg]:[]);
-        if(!pastoCompletoPerToken(ricette,token)) continue;
         ricette=completaResiduoVerduraRicette(ricette,pool,data,opts.vegetablePortions,variantiPrioritarie);
+        if(!pastoCompletoPerToken(ricette,token,opts.vegetablePortions)) continue;
         if(coperturaVerduraRicette(ricette,opts.vegetablePortions).remainingFraction>0.000001)continue;
         if(opts.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===opts.requiredVegetableVariantId)))continue;
         const firma=firmaPastoDaRicette(ricette);
@@ -1569,7 +1603,7 @@ async function costruisciPastoAQuery(slot,ctx){
     const richiesta=slot.requiredVegetableVariantId;
     const contieneRichiesta=!richiesta||base.some(r=>(r.ingredienti||[]).some(i=>i.variantId===richiesta));
     let completamenti=[null];
-    if(coperturaV.remainingFraction>0.000001){
+    if(coperturaV.residuoGrammi>=50){
       let verdure=pool.filter(r=>{
         const c=copertura(r);
         return c.V&&!c.P&&!c.C&&!base.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta))&&!usataOggi(r);
@@ -1585,13 +1619,15 @@ async function costruisciPastoAQuery(slot,ctx){
       completamenti=ordinaPerStackPoiCaso(verdure.filter(r=>punteggioVerduraProgrammazione(r,slot.day,ctx.variantiPrioritarie)===punteggio),ctx.weeklyStackKeys);
     }
     for(const completamento of completamenti){
-      const ricette=base.slice();
+      let ricette=base.slice();
       if(completamento){
         const residuo=Math.max(0,coperturaV.remainingFraction);
         ricette.push(residuo>0.000001?ridimensionaVerdureRicetta(completamento,residuo,ctx.vegetablePortions):completamento);
+      }else if(coperturaV.residuoGrammi>0){
+        ricette=completaResiduoVerduraRicette(ricette,pool,slot.day,ctx.vegetablePortions,ctx.variantiPrioritarie);
       }
       if(!contieneRichiesta&&coperturaV.remainingFraction<=0.000001)continue;
-      if(!pastoCompletoPerToken(ricette,token))continue;
+      if(!pastoCompletoPerToken(ricette,token,ctx.vegetablePortions))continue;
       if(!pastoRispettaConteggi(ricette,ctx.runtimeConfig,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts))continue;
       candidati.push(risultatoPasto(token,ricette,base.length===1?0:1,carboidratoForzato&&base.length===2?'Ricetta per carboidrato definito non disponibile':null));
     }

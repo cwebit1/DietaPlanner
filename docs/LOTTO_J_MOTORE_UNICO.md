@@ -618,7 +618,7 @@ id45 copriva (riso puro, patate, pane, panino, taralli...) — accettato
 consapevolmente da Cwe, non è un difetto silenzioso: verificato e
 riportato prima del push.
 
-### Rafforzamento decisione di design V/S/G — ancora non implementata
+### Rafforzamento decisione di design V/S/G — successivamente implementata per blocchi
 
 Due aggiunte al design della Sezione 13:
 
@@ -633,7 +633,7 @@ Due aggiunte al design della Sezione 13:
 2. **Soglia pratica sul residuo**: `V_residuo = V_richiesta - G - S`;
    se `V_residuo < 50g` non ha senso creare un piatto V dedicato così
    piccolo — si redistribuisce il residuo **a metà** tra S e G (es.
-   residuo 50g → +25g a S, +25g a G); se `V_residuo >= 50g` si aggiunge
+   residuo 40g → +20g a S, +20g a G); se `V_residuo >= 50g` si aggiunge
    davvero una V dedicata, dimensionata su quel residuo.
 
 Prossimo passo dichiarato da Cwe: sviluppare l'algoritmo secondo questo
@@ -711,9 +711,10 @@ macro-scelte; non vengono più preferite soltanto perché già combinate.
   redistribuire il residuo nelle quantità effettive di `S` e `G`, senza
   modificare i template.
 
-Il caso in cui sotto soglia sia presente soltanto uno fra `S` e `G` deve essere
-chiuso con una regola esplicita di Cwe prima dell'implementazione: non va
-inventata automaticamente una componente assente.
+Il residuo sotto soglia può verificarsi soltanto quando `S` e `G` sono entrambi
+presenti e viene diviso a metà tra i due. Non esiste un caso operativo sotto
+soglia con uno solo fra `S` e `G`; il motore tratta tale ingresso come
+violazione dell'invariante anziché inventare una componente assente.
 
 ### 16.4 Modifiche tecniche previste
 
@@ -852,3 +853,18 @@ nella repository.
   esclusivamente il test Lotto C già noto con firma obsoleta. Soglia,
   redistribuzione, snapshot, Roll, Salvafrigo e UI non sono stati modificati.
   Commit remoto: commit di chiusura contenente questa registrazione.
+- **Blocco 6 — soglia e redistribuzione:** applicata la regola operativa
+  dichiarata da Cwe in entrambi i percorsi di costruzione del pasto.
+  `V_residuo >= 50 g` aggiunge una vera `V` ridimensionata esattamente sulla
+  differenza; `0 < V_residuo < 50 g` non aggiunge `V` e divide il residuo a
+  metà fra `S` e `G`, presenti entrambi per costruzione. Non è stato creato
+  alcun percorso per un solo token sotto soglia; tale ingresso è protetto
+  come violazione dell'invariante nel punto che applica la redistribuzione.
+  Le modifiche sono eseguite su copie delle ricette concrete e ricalcolano i
+  nutrienti, senza mutare i template. Aggiunto
+  `tests/lotto-j-vsg-threshold.test.js`; aggiornati contratto e specifica per
+  eliminare il caso ipotetico non operativo. Superati test soglia, contratto,
+  semantica, copertura strutturata, realizzazioni atomiche, generazione
+  settimanale e stress/migrazioni. Resta l'intermittenza già nota del solo
+  callback di avanzamento in esecuzioni ripetute. Commit remoto: commit di
+  chiusura contenente questa registrazione.
