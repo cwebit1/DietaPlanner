@@ -19,8 +19,8 @@ const M=global.DietaPlannerMotorV12;
   await global.put('ricette',{id:'contorno_cipolla',nome:'Cipolla',fonte:'nuovo-db-compilato',stackScope:'contorni_catalogo'});
   await global.put('ricette',{id:'proteina_taleggio',nome:'Taleggio',fonte:'nuovo-db-compilato',stackScope:'proteine_catalogo'});
   const init=await M.inizializza({basePath:''});
-  assert.equal(init.template,40);
-  assert(init.concrete>40);
+  assert.equal(init.template,39);
+  assert(init.concrete>39);
 
   const catalogoIndexedDB=(await global.getAll('ricette')).filter(r=>r.fonte==='nuovo-db-compilato');
   assert.deepEqual(M.getRicette(),catalogoIndexedDB,'il catalogo runtime deve essere riletto integralmente da IndexedDB');

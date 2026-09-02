@@ -18,7 +18,9 @@
 ## Cataloghi correnti
 
 - `ingredienti-new.json` v21: 157 ingredienti.
-- `db-ricette.json` v69: 39 template.
+- `db-ricette.json` v73: 39 template. Il Blocco 2 V/S/G ha riclassificato
+  i sughi parziali come `S` e le guarnizioni proteiche come `G`, conservando
+  `V` soltanto nei template misti con porzione vegetale completa.
 - Tutte le 218 referenze ingrediente, comprese le composizioni fisse, risolvono
   nel catalogo.
 - Nessuna sorgente runtime usa i cataloghi della versione 1.0.

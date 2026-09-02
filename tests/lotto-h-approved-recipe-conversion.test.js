@@ -34,6 +34,7 @@ for(const recipe of cold){
 
 const sauces=db.ricette.find(r=>r.stackScope==='sughi_verdure');
 assert(sauces);
+assert.deepEqual(sauces.classe,['C','S']);
 const sauceComps=sauces.gruppi.find(g=>g.categoria==='V').composizioni;
 assert.deepEqual(sauceComps.map(c=>c.nome),[
   'zucchine e melanzane','zucchine e carote','zucchine e pomodoro',
@@ -49,6 +50,7 @@ for(const comp of sauceComps){
 
 const eggPeas=db.ricette.find(r=>r.stackScope==='uovo_piselli');
 assert(eggPeas);
+assert.deepEqual(eggPeas.classe,['C','PU','PL','S']);
 assert.equal(eggPeas.gruppi.find(g=>g.categoria==='PU').ingredienti[0].dose,1);
 assert.equal(eggPeas.gruppi.find(g=>g.categoria==='PL').ingredienti[0].dose,60);
 assert.equal(eggPeas.gruppi.find(g=>g.categoria==='PL').ingredienti[0].nome,'Piselli surgelati');

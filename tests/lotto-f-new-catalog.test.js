@@ -15,9 +15,9 @@ const expectedGroup = {
 };
 
 assert.equal(ingredientsFile.versione, 21);
-assert.equal(recipesFile.versione, 70);
+assert.equal(recipesFile.versione, 73);
 assert.equal(Object.keys(ingredients).length, 157);
-assert.equal(recipes.length, 40);
+assert.equal(recipes.length, 39);
 
 for (const recipe of recipes) {
   assert.ok(Number.isInteger(recipe.id), `id ricetta non valido: ${recipe.id}`);

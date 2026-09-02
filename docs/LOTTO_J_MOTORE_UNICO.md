@@ -789,3 +789,18 @@ nella repository.
   `tests/lotto-j-vsg-contract.test.js`. La pipeline di generazione e il
   catalogo non sono stati modificati in questo blocco. Test dedicato superato;
   commit remoto `76fffe7`.
+- **Blocco 2 — audit e riclassificazione catalogo:** implementato sui 12
+  template misti. Conservano `V` i template `5, 9, 10, 16, 42` perché
+  contengono una porzione vegetale completa; diventano `S` i template di sugo
+  `6, 7, 43, 44`; diventano `G` le guarnizioni proteiche `31, 33, 39`.
+  Nessuna dose o composizione è stata modificata. Catalogo portato a v73;
+  aggiunto `tests/lotto-j-vsg-catalog.test.js` e riallineati a 39 template i
+  test di snapshot rimasti fermi alla versione precedente. Superati il test
+  V/S/G, snapshot root, catalogo, realizzazioni atomiche, generazione
+  settimanale isolata, conversioni approvate, retry ricettario, migrazioni e
+  contratto PWA. Nella corsa aggregata: 15 suite su 17 superate; resta il test
+  Lotto C già incompatibile con la firma corrente di
+  `creaSequenzaCarboidrati` e si è verificata una singola intermittenza del
+  controllo avanzamento nel test settimanale; la stessa suite ha poi superato
+  cinque esecuzioni isolate consecutive. Nessuno dei due punti è stato
+  corretto dentro questo blocco di sola classificazione catalogo.
