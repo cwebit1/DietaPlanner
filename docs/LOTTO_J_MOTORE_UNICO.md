@@ -542,7 +542,61 @@ sempre `git fetch` e controllare se il remoto si è mosso rispetto
 all'ultimo pull, invece di assumere che sia fermo dove lo si era
 lasciato.
 
-## 13. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 13. Rotazione stesso giorno estesa a Proteina e Verdura (02/09/2026)
+
+Segnalazione con screenshot reale: "Polenta con Taleggio" a pranzo e
+"Riso con Taleggio" a cena lo stesso giorno — il fix carboidrati (Sezione
+11, punto 2) copriva solo C, non le proteine. Verdure ancora mostrate
+come nome nudo ("Finocchi", "Broccoli") in alcuni casi: verificato nel
+catalogo reale che l'id 26 ha `testo1`/`testo2` entrambi vuoti su un
+gruppo V multi-ingrediente — quando il sistema sceglie un solo
+ingrediente da lì il nome è nudo per come sono scritti i dati stessi
+(diverso da id19/22, che hanno `testo1:'Insalata di'` corretto). Non
+ancora corretto, resta in sospeso insieme al lavoro V/S/G sotto.
+
+**Principio confermato da Cwe**: "una volta messo in menu, stop per
+quel giorno" vale per **tutte** le macro categorie — Carboidrato (già
+c'era), **Proteina** e **Verdura** (nuovo). Non contraddice la libertà
+settimanale già stabilita per V (può ripetersi tra giorni diversi, per
+smaltire l'inventario) — sono due regole a granularità diversa: quella
+settimanale su V resta, si aggiunge il divieto nello stesso giorno.
+
+**Implementato**: nuovo tracciamento `ctx.todayStackKeys`, resettato ad
+ogni cambio giorno in `risolviSettimanaRicette`, popolato con le chiavi
+ingrediente di **qualsiasi** categoria tramite la nuova
+`chiaviGiornoRicetta`/`chiaviGiornoPasto` (a differenza di `chiaviStack`,
+che esclude apposta C e V per il cooldown settimanale — scopo diverso,
+non riusabile qui). Esclusione dura in `costruisciPastoAQuery` su
+proteine e verdura di completamento; se il pool si svuota (catalogo
+piccolo per quella categoria), ripiega sul pool completo invece di
+bloccare — stesso principio del Layer 2b.
+
+Testato: 0 duplicati proteina/verdura su 68 giorni reali generati (10
+settimane), 0 generazioni fallite su 15 settimane, nessuna regressione
+(batteria completa + `tests/lotto-g-weekly-generation.test.js`).
+
+### Decisione di design in sospeso: V/S/G (non ancora implementata)
+
+Cwe ha proposto una soluzione matematica per il problema di fondo —
+perché il Layer 3 non completa mai un sugo/guarnizione parziale: oggi
+`copertura(r).V` è vero anche quando un sugo copre solo parzialmente la
+verdura (es. 80g di pomodoro contro i 200-250g richiesti), quindi il
+sistema pensa la copertura sia già completa.
+
+**Equazione**: `V_residuo = V_richiesta - S - G` (S e G sono quantità
+note in grammi, 0 se assenti, l'equazione resta sempre valida e
+legittima). Nuove etichette per la classe delle ricette, al posto del
+concetto ambiguo e mai usato `V-`:
+- **V** pura solo quando la verdura è davvero piena (porzione completa).
+- **S** = verdura parziale dentro il sugo di un **primo/carboidrato**.
+- **G** (Guarnizione) = verdura usata come guarnizione/condimento in un
+  **secondo/proteina** — non soddisfa mai da sola il requisito V.
+
+Tocca lo schema dati (`classe` in `db-ricette.json`) e la logica di
+`copertura()`/`coperturaVerduraRicette()` nel motore. Da costruire
+quando Cwe deciderà di procedere — non implementata in questa sessione.
+
+## 14. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.

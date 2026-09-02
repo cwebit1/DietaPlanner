@@ -1442,6 +1442,18 @@ async function generaPasto(target,data,opts){
 function chiaviStackPasto(candidato){
   return uniq((candidato&&candidato.ricette||[]).flatMap(r=>r.chiaviStack||[]));
 }
+function chiaviGiornoRicetta(r){
+  /* Come chiaviStack, ma SENZA esclusioni di categoria (chiaviStack esclude
+     apposta C e V, che servono al cooldown settimanale per motivi diversi -
+     qui serve invece sapere, per QUALSIASI categoria, cosa e' gia' stato
+     messo nel menu OGGI, cosi' da non ripeterlo nello stesso giorno. */
+  const keys=[];
+  for(const i of (r&&r.ingredienti||[])) if(i&&i.nome) keys.push('i:'+(i.categoria||'')+':'+i.nome);
+  return uniq(keys);
+}
+function chiaviGiornoPasto(candidato){
+  return uniq((candidato&&candidato.ricette||[]).flatMap(r=>chiaviGiornoRicetta(r)));
+}
 function aggiungiConteggiCandidato(candidato,ingredientCounts,subtypeCounts){
   const nextI=Object.assign({},ingredientCounts),nextS=Object.assign({},subtypeCounts);
   accumulaConteggiPasto(candidato.ricette,nextI,nextS);
@@ -1459,7 +1471,16 @@ function ordinaPerStackPoiCaso(pool,stackUsati){
 async function costruisciPastoAQuery(slot,ctx){
   const token=PROTEIN_MACRO_TO_TOKEN[slot.target]||SUBTYPE_TO_TOKEN[slot.target]||slot.target;
   const pool=await poolAmmesso(slot.day,{runtimeConfig:ctx.runtimeConfig});
-  const proteine=pool.filter(r=>copertura(r).tokens.has(token));
+  const oggi=ctx.todayStackKeys||new Set();
+  const usataOggi=r=>chiaviGiornoRicetta(r).some(k=>oggi.has(k));
+  let proteine=pool.filter(r=>copertura(r).tokens.has(token)&&!usataOggi(r));
+  if(!proteine.length){
+    /* Nessuna alternativa non ancora usata oggi per questo token: si
+       ripiega su tutto il pool (puo' capitare con un catalogo molto
+       piccolo per quella categoria specifica) invece di bloccare la
+       generazione - stesso principio di gradualita' del Layer 2b. */
+    proteine=pool.filter(r=>copertura(r).tokens.has(token));
+  }
   const combinate=ordinaPerStackPoiCaso(proteine.filter(r=>copertura(r).C&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
   const separate=ordinaPerStackPoiCaso(proteine.filter(r=>!copertura(r).C&&composizioneSeparataConsentita(r,slot.carbKey)),ctx.weeklyStackKeys);
   const fontiCarboidrato=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(slot.carbKey)),ctx.weeklyStackKeys);
@@ -1484,8 +1505,14 @@ async function costruisciPastoAQuery(slot,ctx){
     if(coperturaV.remainingFraction>0.000001){
       let verdure=pool.filter(r=>{
         const c=copertura(r);
-        return c.V&&!c.P&&!c.C&&!base.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta));
+        return c.V&&!c.P&&!c.C&&!base.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta))&&!usataOggi(r);
       });
+      if(!verdure.length){
+        verdure=pool.filter(r=>{
+          const c=copertura(r);
+          return c.V&&!c.P&&!c.C&&!base.some(x=>x.id===r.id)&&(contieneRichiesta||(r.ingredienti||[]).some(i=>i.variantId===richiesta));
+        });
+      }
       if(!verdure.length)continue;
       const punteggio=verdure.map(r=>punteggioVerduraProgrammazione(r,slot.day,ctx.variantiPrioritarie)).reduce((a,b)=>Math.max(a,b),-Infinity);
       completamenti=ordinaPerStackPoiCaso(verdure.filter(r=>punteggioVerduraProgrammazione(r,slot.day,ctx.variantiPrioritarie)===punteggio),ctx.weeklyStackKeys);
@@ -1506,12 +1533,15 @@ async function costruisciPastoAQuery(slot,ctx){
 }
 async function risolviSettimanaRicette(slotDefs,ctx){
   const scelte=[];
+  let giornoCorrente=null;
   for(let i=0;i<slotDefs.length;i++){
+    if(slotDefs[i].day!==giornoCorrente){giornoCorrente=slotDefs[i].day;ctx.todayStackKeys=new Set();}
     const candidato=await costruisciPastoAQuery(slotDefs[i],ctx);
     if(!candidato)return {ok:false,motivo:'Nessuna composizione valida per '+slotDefs[i].day+' '+slotDefs[i].pasto+' ['+slotDefs[i].target+' + '+slotDefs[i].carbKey+'].',completati:i};
     scelte.push(candidato);
     accumulaConteggiPasto(candidato.ricette,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts);
     chiaviStackPasto(candidato).forEach(k=>ctx.weeklyStackKeys.add(k));
+    chiaviGiornoPasto(candidato).forEach(k=>ctx.todayStackKeys.add(k));
     if(typeof ctx.onProgress==='function')ctx.onProgress({completati:i+1,totale:slotDefs.length,giorno:slotDefs[i].day,pasto:slotDefs[i].pasto});
     await new Promise(resolve=>setTimeout(resolve,0));
   }
