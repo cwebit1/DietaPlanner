@@ -51,8 +51,9 @@
 - `tests/lotto-j-vsg-pipeline-order.test.js`.
 - `tests/lotto-j-vsg-threshold.test.js`.
 - `tests/lotto-j-vsg-atomic-snapshot.test.js`.
+- `tests/lotto-j-vsg-roll-salvafrigo.test.js`.
 
-Ultima esecuzione, Blocco 7 V/S/G: 20/21 test passati, più controllo
+Ultima esecuzione, Blocco 8 V/S/G: 21/22 test passati, più controllo
 sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
 `creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
 le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
@@ -75,6 +76,10 @@ alternativo con un solo token è stato introdotto.
 Il Blocco 7 congela quantità, nutrienti, ruolo e bilancio V/S/G nello snapshot
 della realizzazione e nello storico. Nutrizione, spesa e inventario continuano
 a consumare tale snapshot unico; i template del catalogo restano immutati.
+
+Il Blocco 8 fa ricalcolare lo stesso bilancio dopo Roll C/P/V e mantiene
+rigenerazione e Salvafrigo sulla pipeline comune. Salvafrigo conserva anche il
+bilancio del pasto programmato originale.
 
 ## Limite della verifica corrente
 

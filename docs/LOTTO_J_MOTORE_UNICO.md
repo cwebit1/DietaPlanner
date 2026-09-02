@@ -883,3 +883,16 @@ nella repository.
   Lotto C già noto con firma obsoleta. Roll e Salvafrigo non sono stati
   modificati in questo blocco. Commit remoto: commit di chiusura contenente
   questa registrazione.
+- **Blocco 8 — Roll, Salvafrigo e rigenerazione:** confermata e resa
+  verificabile la pipeline comune. Dopo ogni Roll C o P,
+  `normalizzaRealizzazioniVerdura` rimaterializza le realizzazioni e riapplica
+  lo stesso calcolo di soglia: cambiare C ricalcola `S`, cambiare P ricalcola
+  `G`, quindi contorno o redistribuzione vengono aggiornati atomicamente.
+  Roll V continua ad accettare soltanto ricette con vera classe `V`. Il pasto
+  restituito dal Roll salva il nuovo `bilancioVerdura`. Rigenerazione e
+  Salvafrigo condividono `generaCandidatiPasto`; Salvafrigo aggiunge soltanto
+  la priorità inventario e conserva realizzazioni e bilancio del programmato
+  originale. Aggiunto `tests/lotto-j-vsg-roll-salvafrigo.test.js`.
+  Superati test dedicato, generazione settimanale, realizzazioni atomiche e
+  stress/migrazioni. Nessuna modifica UI in questo blocco. Commit remoto:
+  commit di chiusura contenente questa registrazione.

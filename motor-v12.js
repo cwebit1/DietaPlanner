@@ -1788,6 +1788,7 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
     voce.origine='alternativa-odierna';
     if(old&&!old.programmatoOriginale)voce.programmatoOriginale={
       realizzazioni:clone(old.realizzazioni||[]),
+      bilancioVerdura:clone(old.bilancioVerdura||null),
       categoriaTarget:old.categoriaTarget||target,
       carboidratoPianificato:old.carboidratoPianificato||null,
       programmatoIl:old.programmatoIl||null
@@ -1853,6 +1854,14 @@ async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig
     if(indice>=0){usati.add(indice);return snapshotRealizzazione(realizzazioni[indice],r);}
     return snapshotRealizzazione({ricettaId:r.id,recipeModelId:r.recipeModelId,copertura:Array.from(copertura(r).tokens),condimentoVarianteIndex:Number(r.condimentoVarianteIndex)||0},r);
   });
+}
+async function bilancioVerduraDaRealizzazioni(realizzazioni,portionConfig){
+  const ricette=[];
+  for(const real of realizzazioni||[]){
+    const ricetta=await materializzaRealizzazione(real);
+    if(ricetta)ricette.push(ricetta);
+  }
+  return coperturaVerduraRicette(ricette,portionConfig);
 }
 
 function firmaPerRollC(r){
@@ -2020,6 +2029,7 @@ async function ruotaPasto(giorno,pasto,tipo,vocePendente){
   }
   const aggiornata=Object.assign({},voce,{
     realizzazioni,
+    bilancioVerdura:await bilancioVerduraDaRealizzazioni(realizzazioni,resolved.vegetables),
     origine:'motore-nuovo',
     programmatoIl:new Date().toISOString()
   });
@@ -2097,6 +2107,7 @@ global.DietaPlannerMotorV12={
   snapshotRealizzazione,
   applicaOverrideQuantitaRealizzazione,
   normalizzaRealizzazioniVerdura,
+  bilancioVerduraDaRealizzazioni,
   assegnaCarboidratiCompatibili,
   componiBasiProteinaCarboidrato,
   limitaCarboidratiAutoAllaCopertura,
