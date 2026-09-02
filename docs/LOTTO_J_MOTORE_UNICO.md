@@ -450,7 +450,51 @@ stesso (qui: i giorni ormai passati e mai generati, coerente con la
 regola today+1 già discussa in precedenza) — e anche in quel caso, solo
 per la quota esattamente proporzionata, mai oltre.
 
-## 12. Metodo di lavoro (istruzioni permanenti di Cwe)
+## 13. Lavoro parallelo e merge (01/09/2026) — commit `fce7729` + `d914287`
+
+Mentre venivano corrette le 5 criticità (Sezione 11), il repo si è mosso
+avanti: Cwe (o un'altra sessione con lui) ha lavorato **direttamente sul
+repo in parallelo**, aggiungendo 6 commit di rifinitura UI (allineamento
+titoli/date/coperture nel menù) e infine `fce7729`
+**"Usa solo ricette compilate in IndexedDB"**, che affronta la **stessa
+area** del Bug 4 (Sezione 11) in modo più radicale:
+
+- **`compilaContorniBaseCatalogo`/`compilaProteineBaseCatalogo` rimosse
+  del tutto** — le voci sintetiche a ingrediente singolo non vengono più
+  generate a monte (il fix di Claude in `poolAmmesso` le filtrava solo a
+  valle, restando ridondante ma innocuo dopo questo commit).
+- **`templateOrigine`**: ogni ricetta compilata porta ora con sé una
+  copia del proprio template sorgente (`compilaRicetta` la salva,
+  `materializzaRicetta` la usa) invece di cercarlo ogni volta in
+  `state.dbRicette.ricette` tramite `templateRicetta(id)` (rimossa).
+- **Cache J.5 ristrutturata**: IndexedDB (store `'ricette'`, filtro
+  `fonte==='nuovo-db-compilato'`) è ora l'**unica fonte di verità** per
+  `state.ricetteConcrete`, riletta sempre dopo un'eventuale
+  rigenerazione — non più l'array appena calcolato in memoria. Aggiunta
+  una verifica di migrazione: se la cache esistente contiene ancora
+  voci sintetiche residue (`contieneFallback`), viene considerata non
+  valida e rigenerata, anche a versione invariata.
+- **Nuovo file `tests/lotto-g-weekly-generation.test.js`** — test
+  formale automatizzato end-to-end (cache IndexedDB, colazione,
+  copertura verdura, verdura ricorrente, Proponi nuovo pasto). Da
+  eseguire con `node tests/lotto-g-weekly-generation.test.js` prima di
+  ogni push importante, va tenuto aggiornato.
+
+**Merge eseguito con `git merge` vero** (non force-push), nessun
+conflitto di riga (le due modifiche toccavano aree diverse del file).
+Verificato dopo il merge: sintassi valida, entrambi i lavori presenti,
+il test formale nuovo passa, l'intera batteria di test della sessione
+rieseguita senza regressioni (incluse le due correzioni più delicate:
+0 doppioni su 140.000 prove carboidrati, minimo proteico ancora
+correttamente bloccato quando la copertura è insufficiente).
+
+**Nota per il futuro**: questo repo può ricevere commit da più fonti in
+parallelo nella stessa finestra di tempo. Prima di ogni push, fare
+sempre `git fetch` e controllare se il remoto si è mosso rispetto
+all'ultimo pull, invece di assumere che sia fermo dove lo si era
+lasciato.
+
+## 14. Metodo di lavoro (istruzioni permanenti di Cwe)
 
 - Consultare sempre AGENTS.md e la documentazione ufficiale prima di
   operare sul progetto.
