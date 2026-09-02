@@ -688,34 +688,12 @@ async function compilaRicetta(ricetta,combinazione,index){
     slot:clone(combinazione.slot),
     condimenti:clone(selezionata.condimenti),
     condimentiDisponibili:clone(combinazione.condimenti),
+    /* Snapshot necessario ai Roll: dopo la compilazione il runtime non deve
+       tornare a cercare il template nel JSON sorgente. */
+    templateOrigine:clone(ricetta),
     condimentoVarianteIndex:0,
     numeroVariantiCondimento:selezionata.numeroVariantiCondimento
   };
-}
-
-async function compilaContorniBaseCatalogo(){
-  const out=[];
-  for(const [nome,d] of Object.entries(state.ingredientiMap||{})){
-    if(!d||d.gruppo!=='verdura')continue;
-    const modello={
-      id:'contorno_'+slug(nome),classe:'V',stackScope:'contorni_catalogo',
-      gruppi:[{testo1:'',categoria:'V',ingredienti:[{nome,stack:1,roll:1}],cotture:[],testo2:'',mostraNomi:true}]
-    };
-    out.push(await compilaRicetta(modello,generaCombinazioni(modello)[0],0));
-  }
-  return out;
-}
-async function compilaProteineBaseCatalogo(){
-  const out=[];
-  for(const [nome,d] of Object.entries(state.ingredientiMap||{})){
-    const token=d&&SUBTYPE_TO_TOKEN[d.sottotipo];if(!token)continue;
-    const modello={
-      id:'proteina_'+slug(nome),classe:token,stackScope:'proteine_catalogo',
-      gruppi:[{testo1:'',categoria:token,ingredienti:[{nome,stack:1,roll:1}],cotture:[],testo2:'',mostraNomi:true}]
-    };
-    out.push(await compilaRicetta(modello,generaCombinazioni(modello)[0],0));
-  }
-  return out;
 }
 
 async function sincronizzaIngredientiIndexedDB(){
@@ -1040,12 +1018,11 @@ function scoreCopertura(r,targetToken){
 async function poolAmmesso(data,opts){
   const out=[];
   for(const r of state.ricetteConcrete){
-    /* Le voci sintetiche di compilaContorniBaseCatalogo/compilaProteineBaseCatalogo
-       (stackScope 'contorni_catalogo'/'proteine_catalogo') sono un ingrediente
-       singolo con nome nudo (es. "Zucca", "Cipolla"), mai le ricette composte
-       del catalogo ("Insalata di X e Y con Z"). Non devono competere alla pari
-       nella selezione automatica - restano nello stato per altri usi (es.
-       ricerca manuale diretta) ma sono escluse qui. */
+    /* Rete di sicurezza ridondante: le voci sintetiche a ingrediente singolo
+       (stackScope 'contorni_catalogo'/'proteine_catalogo') non vengono più
+       generate a monte (compilaContorniBaseCatalogo/compilaProteineBaseCatalogo
+       sono state rimosse), quindi questo filtro oggi non esclude mai nulla.
+       Lasciato per sicurezza nel caso quel tipo di voce tornasse in futuro. */
     if(r.stackScope==='contorni_catalogo'||r.stackScope==='proteine_catalogo')continue;
     if(carbRicettaAmmesso(r,opts&&opts.carbBudget)&&await ricettaAmmessa(r,data,opts)) out.push(r);
   }
@@ -1678,15 +1655,9 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
   return voce;
 }
 
-function templateRicetta(id){
-  return state.dbRicette&&Array.isArray(state.dbRicette.ricette)
-    ? state.dbRicette.ricette.find(r=>String(r.id)===String(id))
-    : null;
-}
-
 async function materializzaRicetta(base,condimentoVarianteIndex){
   if(!base) return null;
-  const ricetta=templateRicetta(base.recipeModelId);
+  const ricetta=base.templateOrigine||null;
   if(!ricetta) return clone(base);
   const raw={
     slot:clone(base.slot||[]),
@@ -1934,40 +1905,38 @@ async function inizializza(opts){
   state.propostaCicli=new Map();
   await sincronizzaIngredientiIndexedDB();
 
-  /* J.5: le combinazioni concrete cambiano solo quando cambia db-ricette.json
-     o ingredienti-new.json. Se la versione combinata coincide con l'ultima
-     gia' sincronizzata, si carica lo stato compilato direttamente dalla
-     cache IndexedDB (store 'ricette', solo fonte:'nuovo-db-compilato')
-     invece di rigenerare da zero generaCombinazioni+compilaRicetta per ogni
-     template ad ogni avvio. */
-  const versioneCache=String(rdb.versione||0)+'_'+String(idb.versione||0);
-  let concrete=null;
+  /* Il JSON e' soltanto la sorgente di compilazione. Il catalogo operativo e'
+     sempre lo store IndexedDB "ricette": a versione invariata lo si legge
+     direttamente; a versione cambiata lo si sostituisce e poi lo si rilegge. */
+  const versioneCache=String(rdb.versione||0)+'_'+String(idb.versione||0)+'_indexeddb-only-v1';
+  let cacheValida=false;
   if(typeof getOne==='function'&&typeof getAll==='function'){
     try{
-      const rec=await getOne('impostazioni','versioneRicetteCache');
-      if(rec&&rec.valore===versioneCache){
-        const cache=(await getAll('ricette')||[]).filter(r=>r&&r.fonte==='nuovo-db-compilato');
-        if(cache.length) concrete=cache;
-      }
+      const [rec,registrate]=await Promise.all([
+        getOne('impostazioni','versioneRicetteCache'),
+        getAll('ricette')
+      ]);
+      const compilate=(registrate||[]).filter(r=>r&&r.fonte==='nuovo-db-compilato');
+      const contieneFallback=compilate.some(r=>r.stackScope==='contorni_catalogo'||r.stackScope==='proteine_catalogo');
+      cacheValida=!!(rec&&rec.valore===versioneCache&&compilate.length&&!contieneFallback);
     }catch(e){}
   }
-  const cacheValida=!!concrete;
-  if(!concrete){
-    concrete=[];
+  if(!cacheValida){
+    const compilate=[];
     for(const r of (rdb.ricette||[])){
       const comb=generaCombinazioni(r);
-      for(let i=0;i<comb.length;i++) concrete.push(await compilaRicetta(r,comb[i],i));
+      for(let i=0;i<comb.length;i++) compilate.push(await compilaRicetta(r,comb[i],i));
     }
-    concrete.push(...await compilaContorniBaseCatalogo(),...await compilaProteineBaseCatalogo());
-  }
-  const soloTemplate=concrete.filter(r=>r.stackScope!=='contorni_catalogo'&&r.stackScope!=='proteine_catalogo');
-  state.compatibilitaCP=creaMappaCompatibilitaCP(soloTemplate);
-  state.ricetteConcrete=concrete;
-  state.ricetteById=new Map(concrete.map(r=>[r.id,r]));
-  if(!cacheValida){
+    state.ricetteConcrete=compilate;
     await sincronizzaCacheRicette();
     if(typeof put==='function') await put('impostazioni',{chiave:'versioneRicetteCache',valore:versioneCache});
   }
+  const concrete=(await getAll('ricette')||[])
+    .filter(r=>r&&r.fonte==='nuovo-db-compilato'&&r.stackScope!=='contorni_catalogo'&&r.stackScope!=='proteine_catalogo');
+  if(!concrete.length) throw new Error('Catalogo ricette IndexedDB vuoto dopo la sincronizzazione.');
+  state.compatibilitaCP=creaMappaCompatibilitaCP(concrete);
+  state.ricetteConcrete=concrete;
+  state.ricetteById=new Map(concrete.map(r=>[r.id,r]));
   await caricaTracking();
   state.pronto=true;
   return {versioneRicette:rdb.versione||0,versioneIngredienti:idb.versione||0,template:(rdb.ricette||[]).length,concrete:concrete.length};
