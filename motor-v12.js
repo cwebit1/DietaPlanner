@@ -68,7 +68,9 @@ function categoriaPrincipale(classe){
   const c=Array.isArray(classe)?classe:[classe];
   if(c.some(x=>TOKEN_P.has(x))) return c.find(x=>TOKEN_P.has(x));
   if(c.includes('C')) return 'C';
-  if(c.includes('V')||c.includes('V-')) return 'V';
+  if(c.includes('V')) return 'V';
+  if(c.includes('S')) return 'S';
+  if(c.includes('G')) return 'G';
   return c[0]||null;
 }
 function carbKeyNome(nome){return CARB_KEY_BY_NAME[String(nome||'').trim().toLowerCase()]||null;}
@@ -231,7 +233,7 @@ function incrocioCopertoDaPool(pool,target,key){
   const haCarbSeparato=ammessi.some(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(key));
   const haVerduraSeparata=ammessi.some(r=>copertura(r).V&&!copertura(r).P);
   return proteine.some(r=>{
-    const c=copertura(r),carbOk=c.C||(haCarbSeparato&&composizioneSeparataConsentita(r,key)),verduraOk=(c.V&&!c.Vparziale)||haVerduraSeparata;
+    const c=copertura(r),carbOk=c.C||(haCarbSeparato&&composizioneSeparataConsentita(r,key)),verduraOk=c.V||haVerduraSeparata;
     return carbOk&&verduraOk;
   });
 }
@@ -997,11 +999,13 @@ async function suggerisciCongelati(){
 
 function copertura(r){
   const tokens=new Set((Array.isArray(r.classe)?r.classe:[r.classe]).filter(Boolean));
+  const ruoliVerdura=ruoliVerduraDaClasse([...tokens]);
   return {
     tokens,
     C:tokens.has('C'),
-    V:tokens.has('V'),
-    Vparziale:tokens.has('V-'),
+    V:ruoliVerdura.V,
+    S:ruoliVerdura.S,
+    G:ruoliVerdura.G,
     P:[...tokens].some(t=>TOKEN_P.has(t)),
     proteinTokens:[...tokens].filter(t=>TOKEN_P.has(t))
   };
@@ -1037,7 +1041,8 @@ function scoreCopertura(r,targetToken){
   if(c.tokens.has(targetToken)) s+=10;
   if(c.C) s+=3;
   if(c.V) s+=3;
-  if(c.Vparziale) s+=1;
+  if(c.S) s+=1;
+  if(c.G) s+=1;
   return s;
 }
 async function poolAmmesso(data,opts){
@@ -1211,9 +1216,8 @@ function firmaPastoDaRicette(ricette){
   return (ricette||[]).map(r=>r.id).sort().join('||');
 }
 function pastoCompletoPerToken(ricette,token){
-  const tokens=new Set();
-  for(const r of (ricette||[])) for(const t of copertura(r).tokens) tokens.add(t);
-  return tokens.has(token) && tokens.has('C') && tokens.has('V');
+  const coperture=(ricette||[]).map(copertura);
+  return coperture.some(c=>c.tokens.has(token)) && coperture.some(c=>c.C) && coperture.some(c=>c.V);
 }
 function ingredienteVerduraQuantificabile(i){
   if(!i||i.condimento||i.categoria==='Condimenti'||!(Number(i.grammi)>0))return false;
@@ -1389,10 +1393,9 @@ async function generaCandidatiPasto(target,data,opts){
       const base=[primo].concat(carb?[carb]:[]);
       if(carb&&!composizioneSeparataConsentita(primo,carbKeysRicetta(carb)[0]))continue;
       const haV=base.some(r=>copertura(r).V);
-      const haVParziale=base.some(r=>copertura(r).Vparziale);
       let vegChoices=[null];
 
-      if(!haV || haVParziale){
+      if(!haV){
         let veg=pool.filter(r=>copertura(r).V&&!copertura(r).P&&!base.some(x=>x.id===r.id));
         if(opts.usaInventario)veg=applicaPrioritaInventario(veg,livelli);
         vegChoices=veg.length?veg:[null];
@@ -2017,6 +2020,6 @@ global.DietaPlannerMotorV12={
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
   prioritaVerdureProgrammazionePasti,
-  registraUtilizzo,copertura,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi
+  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi
 };
 })(typeof window!=='undefined'?window:globalThis);

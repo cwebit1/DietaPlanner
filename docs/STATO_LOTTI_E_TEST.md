@@ -44,9 +44,16 @@
 - `tests/lotto-h-stress-migrations.test.js`.
 - `tests/lotto-h-approved-recipe-conversion.test.js`.
 - `tests/lotto-i-google-auth-contract.test.js` (login corrente; RBAC ancora da implementare).
+- `tests/lotto-j-vsg-contract.test.js`;
+- `tests/lotto-j-vsg-catalog.test.js`;
+- `tests/lotto-j-vsg-motor-semantics.test.js`.
 
-Ultima esecuzione: 12/12 test passati, più controllo sintattico di resolver,
-engine e motore e `git diff --check`.
+Ultima esecuzione, Blocco 3 V/S/G: 16/17 test passati, più controllo
+sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
+`creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
+le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
+lettura semantica distinta dei token `V`, `S` e `G` nel motore; il calcolo
+quantitativo strutturato appartiene al blocco successivo.
 
 ## Limite della verifica corrente
 

@@ -804,3 +804,18 @@ nella repository.
   controllo avanzamento nel test settimanale; la stessa suite ha poi superato
   cinque esecuzioni isolate consecutive. Nessuno dei due punti è stato
   corretto dentro questo blocco di sola classificazione catalogo.
+- **Blocco 3 — lettura dei token nel motore:** implementato in
+  `motor-v12.js`. `categoriaPrincipale` conserva P e C come macro-categorie
+  dei piatti `P+G` e `C+S` e riconosce esplicitamente `S`/`G` senza
+  promuoverli a `V`; `copertura` espone separatamente `V`, `S` e `G`;
+  `scoreCopertura` attribuisce alle quote parziali il peso secondario già
+  previsto senza equipararle alla porzione completa;
+  `pastoCompletoPerToken` richiede sempre una vera `V`. Rimossi dal solo
+  motore i controlli operativi residui su `V-`; cataloghi, quantità, calcolo
+  quantitativo, pipeline, soglia, Roll e UI non sono stati modificati.
+  Aggiunto `tests/lotto-j-vsg-motor-semantics.test.js`. Superati controllo
+  sintattico, i tre test Lotto J, realizzazioni atomiche e generazione
+  settimanale; batteria completa: 16 suite su 17 superate. L'unico errore è
+  il test Lotto C già noto, ancora incompatibile con la firma corrente di
+  `creaSequenzaCarboidrati`; non è stato corretto fuori perimetro. Commit
+  remoto: commit di chiusura contenente questa registrazione.
