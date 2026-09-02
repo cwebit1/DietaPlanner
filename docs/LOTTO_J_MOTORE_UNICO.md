@@ -896,3 +896,15 @@ nella repository.
   Superati test dedicato, generazione settimanale, realizzazioni atomiche e
   stress/migrazioni. Nessuna modifica UI in questo blocco. Commit remoto:
   commit di chiusura contenente questa registrazione.
+- **Blocco 9 — rendering:** Pasto e Programmazione usano ora la stessa
+  proiezione a tre righe esatte. La riga C mostra l'ingrediente carboidrato e
+  l'eventuale quota `S`; la riga P mostra la proteina e l'eventuale quota
+  `G`; la riga V mostra contenuto soltanto quando la realizzazione possiede
+  una vera classe `V`. Rimossi dall'interfaccia gli ultimi controlli su
+  `V-`. Il riepilogo settimanale non crea più una riga per ogni realizzazione
+  e non ripete l'intero nome del piatto in ogni macrocategoria: aggrega invece
+  i componenti nelle sole righe C/P/V. Aggiunto
+  `tests/lotto-j-vsg-rendering.test.js`. Superati test dedicato, contratto UI
+  delle realizzazioni, contratto PWA e test Roll/Salvafrigo. Nessuna modifica
+  al motore o ai cataloghi in questo blocco. Commit remoto: commit di chiusura
+  contenente questa registrazione.

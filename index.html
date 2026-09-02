@@ -5308,6 +5308,27 @@ async function ricettaNuovoDaRealizzazione(realizzazione){
    piano alimentare solo quando si clicca Salva". Chiave: giorno_pasto. */
 const bozzeRollPendenti = {};
 
+function classiVsgUi(ricetta){return new Set((Array.isArray(ricetta&&ricetta.classe)?ricetta.classe:[ricetta&&ricetta.classe]).filter(Boolean));}
+function ricettaCopreRigaVsg(ricetta,tipo){
+  const tokens=classiVsgUi(ricetta);
+  if(tipo==='C')return tokens.has('C');
+  if(tipo==='P')return [...tokens].some(t=>['PC','PP','PF','PU','PL'].includes(t));
+  return tokens.has('V');
+}
+function ingredientiRigaVsg(ricetta,tipo){
+  const tokens=classiVsgUi(ricetta);
+  return (ricetta&&ricetta.ingredienti||[]).filter(i=>{
+    if(tipo==='C')return i.categoria==='C'||(tokens.has('S')&&(i.macro==='verdura'||(Array.isArray(i.gruppo)?i.gruppo.includes('verdura'):i.gruppo==='verdura')));
+    if(tipo==='P')return ['PC','PP','PF','PU','PL'].includes(i.categoria)||(tokens.has('G')&&(i.macro==='verdura'||(Array.isArray(i.gruppo)?i.gruppo.includes('verdura'):i.gruppo==='verdura')));
+    return tokens.has('V')&&(i.macro==='verdura'||(Array.isArray(i.gruppo)?i.gruppo.includes('verdura'):i.gruppo==='verdura'));
+  });
+}
+function valoriRigaVsg(materializzate,tipo){
+  const proprietarie=(materializzate||[]).filter(r=>ricettaCopreRigaVsg(r,tipo));
+  const ingredienti=[...new Set(proprietarie.flatMap(r=>ingredientiRigaVsg(r,tipo).map(i=>i.nome)).filter(Boolean))];
+  return ingredienti.length?ingredienti:[...new Set(proprietarie.map(r=>r.nome).filter(Boolean))];
+}
+
 async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   giorno=giorno||giornoSelezionato;
   const el=document.getElementById(elementId||(pasto==='pranzo'?'blocPranzo':'blocCena'));
@@ -5344,20 +5365,14 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   }
 
   const righeMacro=[
-    {tipo:'C',icona:'🍞',label:'Carboidrato',match:t=>t==='C'},
-    {tipo:'P',icona:'🥩',label:'Proteina',match:t=>['PC','PP','PF','PU','PL'].includes(t)},
-    {tipo:'V',icona:'🥬',label:'Verdura',match:t=>t==='V'||t==='V-'}
+    {tipo:'C',icona:'🍞',label:'Carboidrato'},
+    {tipo:'P',icona:'🥩',label:'Proteina'},
+    {tipo:'V',icona:'🥬',label:'Verdura'}
   ];
   for(const riga of righeMacro){
-    const proprietarie=materializzate.filter(rr=>(Array.isArray(rr.classe)?rr.classe:[rr.classe]).some(riga.match));
-    const ricette=[...new Set(proprietarie.map(rr=>rr.nome).filter(Boolean))];
-    const ingredienti=[...new Set(proprietarie.flatMap(rr=>(rr.ingredienti||[]).filter(i=>{
-      if(riga.tipo==='C')return i.categoria==='C';
-      if(riga.tipo==='P')return ['PC','PP','PF','PU','PL'].includes(i.categoria);
-      return i.categoria==='V'||i.categoria==='V-';
-    }).map(i=>i.nome)).filter(Boolean))];
-    const valore=ricette.length?ricette.join(' · '):'Seleziona pasto';
-    const dettaglio=ingredienti.length?'<div class="meta" style="margin-top:2px;">'+esc(ingredienti.join(' · '))+'</div>':'';
+    const valori=valoriRigaVsg(materializzate,riga.tipo);
+    const valore=valori.length?valori.join(' · '):'Seleziona pasto';
+    const dettaglio='';
     const roll=(!voce.consumato&&giorno>=todayISO())
       ?'<button type="button" data-nm-roll-tipo="'+riga.tipo+'" title="Cambia '+riga.label.toLowerCase()+'" '+(statoRoll[riga.tipo]?'':'disabled')+'>🔄</button>'
       :'';
@@ -7251,7 +7266,7 @@ async function renderRicette(){
   const macro=r=>{
     const c=new Set((Array.isArray(r.classe)?r.classe:[r.classe]).filter(Boolean));
     const p=['PC','PP','PF','PU','PL'].some(x=>c.has(x));
-    return (c.has('C')?'C':'')+(p?'P':'')+(c.has('V')||c.has('V-')?'V':'')||'Altro';
+    return (c.has('C')?'C':'')+(p?'P':'')+(c.has('V')?'V':'')||'Altro';
   };
   const fasciaRicetta=r=>{
     if(['facile','medio','difficile'].includes(r.fascia))return r.fascia;
@@ -7580,12 +7595,8 @@ async function riepilogoTestualePasto(giorno, pasto){
         const rr=await ricettaNuovoDaRealizzazione(x);
         if(rr)materializzate.push(rr);
       }
-      const righe=[
-        ['🍞','C',t=>t==='C'],
-        ['🥩','P',t=>['PC','PP','PF','PU','PL'].includes(t)],
-        ['🥬','V',t=>t==='V'||t==='V-']
-      ].map(([icona,tipo,match])=>{
-        const valori=[...new Set(materializzate.filter(r=>(Array.isArray(r.classe)?r.classe:[r.classe]).some(match)).map(r=>r.nome).filter(Boolean))];
+      const righe=[['🍞','C'],['🥩','P'],['🥬','V']].map(([icona,tipo])=>{
+        const valori=valoriRigaVsg(materializzate,tipo);
         const avvisoCarb=tipo==='C'&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avvisoCarb?' avviso-programmazione':'',titolo=avvisoCarb?' title="'+String(messaggioAvviso).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))+'"':'';
         return '<span class="menu-riepilogo-macro'+classe+'" data-menu-macro="'+tipo+'"'+titolo+'>'+icona+' '+(valori.length?valori.join(' · '):'Seleziona pasto')+(avvisoCarb?' ⚠':'')+'</span>';
       });
@@ -7622,18 +7633,16 @@ async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
   if(!realizzazioni.length){
     return ['🍞','🥩','🥬'].map((icona,indice)=>'<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icona+'</span><span class="pasto-riga-piatto">— non ancora programmato —</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>').join('');
   }
-  const tokenProteina=t=>['PC','PP','PF','PU','PL'].includes(t);
-  const dati=realizzazioni.map(({indice,ricetta})=>{
-    const tokens=new Set((Array.isArray(ricetta.classe)?ricetta.classe:[ricetta.classe]).filter(Boolean));
-    const copreC=tokens.has('C'),copreP=[...tokens].some(tokenProteina),copreV=tokens.has('V');
-    const icone=[copreC?'🍞':'',copreP?'🥩':'',copreV?'🥬':''].filter(Boolean);
-    const ordine=copreC?0:(copreP?1:(copreV?2:3));
-    return {indice,ricetta,icone:icone.length?icone.join(' '):'🍽️',copreC,ordine};
-  }).sort((a,b)=>a.ordine-b.ordine||a.indice-b.indice);
+  const materializzate=realizzazioni.map(x=>x.ricetta);
+  const dati=[
+    {tipo:'C',icona:'🍞'},
+    {tipo:'P',icona:'🥩'},
+    {tipo:'V',icona:'🥬'}
+  ].map(riga=>Object.assign({},riga,{valori:valoriRigaVsg(materializzate,riga.tipo)}));
   const stato=voce.consumato?'✓ ':voce.origine==='utente'?'⭐ ':'';
   return dati.map((riga,indice)=>{
-    const avviso=riga.copreC&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
-    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.ricetta.nome||'Piatto senza nome')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>';
+    const avviso=riga.tipo==='C'&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
+    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icona+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.valori.length?riga.valori.join(' · '):'Seleziona pasto')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>';
   }).join('');
 }
 

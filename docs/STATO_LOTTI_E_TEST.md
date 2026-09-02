@@ -52,8 +52,9 @@
 - `tests/lotto-j-vsg-threshold.test.js`.
 - `tests/lotto-j-vsg-atomic-snapshot.test.js`.
 - `tests/lotto-j-vsg-roll-salvafrigo.test.js`.
+- `tests/lotto-j-vsg-rendering.test.js`.
 
-Ultima esecuzione, Blocco 8 V/S/G: 21/22 test passati, più controllo
+Ultima esecuzione, Blocco 9 V/S/G: 22/23 test passati, più controllo
 sintattico del motore. L'unico errore è il test Lotto C già noto, che invoca
 `creaSequenzaCarboidrati` con la firma precedente; i test Lotto J, Lotto G e
 le altre suite risultano superati. Il Blocco 3 ha introdotto soltanto la
@@ -80,6 +81,10 @@ a consumare tale snapshot unico; i template del catalogo restano immutati.
 Il Blocco 8 fa ricalcolare lo stesso bilancio dopo Roll C/P/V e mantiene
 rigenerazione e Salvafrigo sulla pipeline comune. Salvafrigo conserva anche il
 bilancio del pasto programmato originale.
+
+Il Blocco 9 mantiene tre sole righe visuali: `S` è incorporato in C, `G` in P
+e V compare soltanto per una portata vegetale completa. Pasto e Programmazione
+condividono la stessa funzione di proiezione.
 
 ## Limite della verifica corrente
 
