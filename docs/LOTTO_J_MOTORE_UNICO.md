@@ -931,3 +931,12 @@ nella repository.
   del viewport cloud, la verifica responsive Android resta un gate distinto e
   non viene dichiarata eseguita. Il flusso di sviluppo V/S/G in dieci blocchi
   è concluso. Commit remoto: commit finale contenente questa registrazione.
+- **Intervento successivo — consumo automatico fuori dalla bozza Menù:** in
+  `renderMenuSettimanale` la chiamata a `elaboraConsumoAutomatico` viene ora
+  eseguita con `menuDraft` temporaneamente impostata a `null` e ripristinata in
+  un blocco `finally`. Le operazioni `put` e `delKey` sullo store `piano` non
+  possono quindi essere intercettate da `menuDraftIntercetta`: un pasto
+  scaduto passa immediatamente a consumato nel piano committato anche quando
+  l'elaborazione parte dalla vista Menù. Aggiunto
+  `tests/menu-consumo-automatico-store-reale.test.js`; batteria completa:
+  25/25 test superati. Nessuna modifica al motore o ai cataloghi.

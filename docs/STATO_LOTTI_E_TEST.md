@@ -1,6 +1,6 @@
 # DietaPlanner — stato consolidato lotti e test
 
-**Data:** 2026-08-30
+**Data:** 2026-09-03
 **Pubblicazione:** release v2 autorizzata da Cwe il 30 agosto 2026
 
 | Lotto | Stato | Evidenza |
@@ -54,6 +54,7 @@
 - `tests/lotto-j-vsg-roll-salvafrigo.test.js`.
 - `tests/lotto-j-vsg-rendering.test.js`.
 - `tests/lotto-j-vsg-stress.test.js`.
+- `tests/menu-consumo-automatico-store-reale.test.js`.
 
 Ultima esecuzione, chiusura Blocco 10 V/S/G: 24/24 test passati, più controllo
 sintattico del motore, validazione JSON e `git diff --check`. Il test Lotto C
@@ -93,6 +94,11 @@ incoerenti. La prova browser sulla build GitHub Pages corrente ha verificato
 generazione, salvataggio, persistenza dopo ricarica, rendering C/P/V, Roll C e
 Salvafrigo. Il server locale è rimasto irraggiungibile dal browser cloud con
 `ERR_BLOCKED_BY_CLIENT`; il responsive Android resta pertanto un gate separato.
+
+L'intervento del 3 settembre 2026 isola il consumo automatico dalla bozza
+Menù: `renderMenuSettimanale` disattiva temporaneamente `menuDraft`, esegue
+`elaboraConsumoAutomatico` sullo store `piano` reale e ripristina la bozza in
+`finally`. Suite completa successiva alla modifica: 25/25 test superati.
 
 ## Limite della verifica corrente
 
