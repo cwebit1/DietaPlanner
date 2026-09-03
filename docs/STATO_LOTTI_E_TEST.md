@@ -1,19 +1,19 @@
 # DietaPlanner — stato consolidato lotti e test
 
-**Data:** 2026-09-03
+**Data:** 2026-09-03 (aggiornato dopo la sessione pomeridiana — vedi fondo pagina)
 **Pubblicazione:** release v2 autorizzata da Cwe il 30 agosto 2026
 
 | Lotto | Stato | Evidenza |
 |---|---|---|
 | A — baseline | verificato | fixture PDF e snapshot root |
 | B — resolver | verificato | precedenze, range, AUTO/EXCLUDED/FIXED |
-| C — motore | verificato sulla v12 | integrazione, cap, profili, atomicità settimana |
+| C — motore | verificato sulla v12 | integrazione, cap, profili, atomicità settimana, pipeline sequenziale P→C→V |
 | D — Setting | verificato | resolver, contesti, nessuna mutazione catalogo |
-| E — Set | verificato | stati carboidrati e cap personali restrittivi |
+| E — Set | verificato | stati carboidrati, cap personali restrittivi, bozza con salvataggio esplicito, Fonti proteiche/giorno |
 | F — catalogo | verificato sui dati correnti | 39 template, 157 ingredienti, referenze coerenti |
-| G — generazione/manuale/UI | implementato e verificato automaticamente | quantità atomiche, residuo, deperibilità, pasto odierno, C/P/V |
-| H — stress test/release | release v2 autorizzata | 12/12 automatici passati; gate browser locale non eseguibile nell'ambiente cloud, pubblicazione richiesta esplicitamente da Cwe |
-| I — accessi/RBAC/Firestore | progettato, non implementato | `LOTTO_I_ACCESSI_RBAC_E_MIGRAZIONE_FIRESTORE.md`; esecuzione per fasi con rollback |
+| G — generazione/manuale/UI | implementato e verificato automaticamente + browser reale | quantità atomiche, residuo, deperibilità, pasto odierno, C/P/V raggruppato per ricetta |
+| H — stress test/release | release v2 autorizzata | 27/27 automatici passati; verifica browser reale eseguita via Chromium/Playwright il 03/09 (vedi fondo pagina) — resta da fare solo il test su dispositivo Android fisico |
+| I — accessi/RBAC/Firestore | login Google funzionante, RBAC/whitelist non implementato | `LOTTO_I_ACCESSI_RBAC_E_MIGRAZIONE_FIRESTORE.md`; esecuzione per fasi con rollback |
 
 ## Cataloghi correnti
 
@@ -43,6 +43,7 @@
 - `tests/lotto-h-pwa-source-contract.test.js`;
 - `tests/lotto-h-stress-migrations.test.js`.
 - `tests/lotto-h-approved-recipe-conversion.test.js`.
+- `tests/lotto-h-generation-feedback-catalog-retry.test.js`.
 - `tests/lotto-i-google-auth-contract.test.js` (login corrente; RBAC ancora da implementare).
 - `tests/lotto-j-vsg-contract.test.js`;
 - `tests/lotto-j-vsg-catalog.test.js`;
@@ -54,7 +55,17 @@
 - `tests/lotto-j-vsg-roll-salvafrigo.test.js`.
 - `tests/lotto-j-vsg-rendering.test.js`.
 - `tests/lotto-j-vsg-stress.test.js`.
+- `tests/lotto-j-una-fonte-proteica-giorno.test.js`.
 - `tests/menu-consumo-automatico-store-reale.test.js`.
+- `tests/menu-layer-sequenziale.test.js`.
+
+27/27 suite superate all'ultima esecuzione (03/09/2026, sessione pomeridiana).
+Una sola suite (`lotto-g-weekly-generation.test.js`, a volte `lotto-j-vsg-stress.test.js`)
+mostra intermittenza non deterministica nota e già spiegata: con margini
+settimanali stretti l'ordine casuale delle classi proteiche a volte non trova
+l'unica combinazione valida al primo tentativo — non è una violazione di
+regola, è un problema di fattibilità numerica ancora da decidere (algoritmo
+costruttivo come per i carboidrati, o errore esplicito accettato).
 
 Ultima esecuzione, chiusura Blocco 10 V/S/G: 24/24 test passati, più controllo
 sintattico del motore, validazione JSON e `git diff --check`. Il test Lotto C
@@ -101,6 +112,17 @@ Menù: `renderMenuSettimanale` disattiva temporaneamente `menuDraft`, esegue
 `finally`. Suite completa successiva alla modifica: 25/25 test superati.
 
 ## Limite della verifica corrente
+
+Aggiornato il 03/09/2026: la limitazione descritta sotto (server locale
+irraggiungibile dal browser cloud) valeva il 30 agosto. Da allora sono state
+eseguite più sessioni di verifica browser reale end-to-end (Chromium via
+Playwright, server locale servito correttamente) — generazione settimanale,
+salvataggio Set con lettura IndexedDB diretta indipendente dall'app, Roll,
+Salvafrigo, rendering C/P/V, righe raggruppate per ricetta, avviso "modifiche
+non salvate", tutte verificate con successo. Il gate non ancora eseguito è
+solo il test su dispositivo Android fisico (touch, tastiera, responsive reale).
+
+Testo originale (30 agosto 2026, mantenuto per cronologia):
 
 Non è stato ancora eseguito un test browser/IndexedDB end-to-end della root
 corrente. Il 30 agosto 2026 il browser reale è stato avviato correttamente, ma
@@ -150,7 +172,42 @@ superate; stress V/S/G: 25 settimane e 350 pasti completi.
 
 ### Ancora da verificare in browser reale
 
-- responsive Android, tastiera, service worker e cache;
+- responsive Android, tastiera, service worker e cache su dispositivo fisico;
 - migrazione reale di IndexedDB e reset dall'interfaccia;
-- flussi completi piano/pasto odierno/Roll/Salvafrigo/spesa/consumo/storico;
+- spesa, consumo e storico end-to-end (piano/pasto/Roll/Salvafrigo già
+  verificati via Chromium/Playwright il 03/09, vedi sezione finale);
 - nessuna release senza esito positivo e autorizzazione di Cwe.
+
+## Riepilogo sessione pomeridiana 03/09/2026 (stato attuale, fonte unica)
+
+Punto di lettura rapido per non dover ricostruire la cronologia sopra.
+Ultimo commit di questa sezione: `8d2be4e`.
+
+- `index.html` ripristinato dopo la corruzione di `9f38543` (8.900+ righe
+  integre, verificato sintatticamente e in browser).
+- Generazione settimanale riscritta in sequenza P→C→V, un pasto alla volta,
+  nessun retry sull'intera settimana, nessun prodotto cartesiano.
+- Rendering C/P/V: sempre nome ricetta (mai ingredienti sciolti); una
+  ricetta a più ruoli compare una sola riga con le icone combinate, su
+  Menù e Pasto; giorni passati mostrano "— pasto concluso —" in carattere
+  sottile invece del placeholder di stato-vuoto.
+- "Proponi nuovo pasto" e Salvafrigo condividono la pipeline settimanale.
+- Set utente: bozza vera (nessuna scrittura prima di Salva su tutte le
+  sotto-sezioni), i tre pulsanti Salva committano la stessa configurazione.
+- "Fonti proteiche/giorno" rispettato anche dal riempimento automatico,
+  incluso il caso limite delle ricette a doppia fonte proteica.
+- Config nutrizionale (allergie, profilo) calcolata una volta per sessione,
+  non ricaricata da IndexedDB ad ogni pasto/condimento/Roll; pulsante
+  manuale dedicato nel Setting nutrizionista per ricalcolarla dopo un
+  cambio di profilo.
+- Specifica funzionale aggiornata con le deroghe decise in sessione (pasto
+  senza carboidrato con avviso, cooldown carboidrati AUTO, vincolo fonti
+  proteiche/giorno anche sulle celle libere).
+- 27/27 suite di test, incluso il nuovo `lotto-j-una-fonte-proteica-giorno.test.js`.
+- **Ancora aperto, non deciso**: l'ordine casuale delle classi proteiche a
+  volte non trova l'unica combinazione valida quando i margini settimanali
+  sono stretti (visibile soprattutto con "Fonti proteiche/giorno"=1) — in
+  attesa di decidere se applicare lo stesso algoritmo costruttivo già usato
+  per i carboidrati, o accettare l'errore esplicito.
+- Dettaglio completo di ogni intervento nella memoria di sessione di Claude
+  e nei messaggi del commit corrispondente su GitHub.
