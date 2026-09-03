@@ -1704,13 +1704,28 @@ function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng
   const slot=slots[indice],freq=resolved.proteinFrequencies||{};
   const forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]);
   const allowed=Object.keys(freq).filter(k=>!forbidden.has(k)&&freq[k].max!==0);
+  /* "Fonti proteiche/giorno" (Configurazione nutrizionista) impostato a 1
+     significa: un solo giorno, una sola categoria per entrambi i pasti -
+     non "al massimo due", ma esattamente una. A 2 (default) resta la
+     regola di sempre: mai la stessa categoria due volte nello stesso
+     giorno. Va rispettato sia quando la cella e' fissata a mano in
+     tabella sia quando la sceglie il motore per le celle libere. */
+  const unaSolaFonteAlGiorno=Number(resolved.maxProteinSourcesPerDay)===1;
   const fissata=targetTabellaPerSlot(tab,slot);
   if(fissata){
     if(!allowed.includes(fissata))return {errors:['Proteina '+fissata+' non ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
-    if(usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
+    if(!unaSolaFonteAlGiorno&&usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
+    if(unaSolaFonteAlGiorno&&usateGiorno.size&&!usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due categorie diverse per '+slot.day+', ma il piano ammette una sola fonte proteica al giorno.'],targets:[]};
     const max=freq[fissata].max;
     if(max!==null&&max!==undefined&&(Number(counts[fissata])||0)>=Number(max))return {errors:['Proteina '+fissata+' oltre il massimo settimanale.'],targets:[]};
     return {errors:[],targets:[fissata]};
+  }
+  if(unaSolaFonteAlGiorno&&usateGiorno.size){
+    const oggi=[...usateGiorno][0];
+    if(!allowed.includes(oggi))return {errors:['Nessuna classe proteica ammessa per '+slot.day+' '+slot.pasto+' (la fonte gia\' usata oggi non e\' piu\' disponibile).'],targets:[]};
+    const max=freq[oggi].max;
+    if(max!==null&&max!==undefined&&(Number(counts[oggi])||0)>=Number(max))return {errors:['Proteina '+oggi+' oltre il massimo settimanale.'],targets:[]};
+    return {errors:[],targets:[oggi]};
   }
   const prenotate=contaTargetTabellaFuturi(tab,slots,indice+1);
   let pool=allowed.filter(k=>{
