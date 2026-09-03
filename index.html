@@ -4742,11 +4742,12 @@ async function renderColazione(giorno, elementId){
   // una proposta implicita. La colazione viene composta solo dalla generazione
   // settimanale o da un'azione esplicita dell'utente nella vista Piano.
   if(elementId && !haContenutoColazione){
+    if(giorno<todayISO()){el.innerHTML='<div class="pasto-concluso">— pasto concluso —</div>';return;}
     el.innerHTML='<div class="meta">Nessuna colazione programmata.</div>';
     return;
   }
   if(giorno < todayISO() && !haContenutoColazione){
-    el.innerHTML='<div class="pasto-header">'+ICONA_PASTO.colazione+' Colazione</div><div class="meta">Nessuna colazione registrata.</div>';
+    el.innerHTML='<div class="pasto-header">'+ICONA_PASTO.colazione+' Colazione</div><div class="pasto-concluso">— pasto concluso —</div>';
     return;
   }
 
@@ -5435,7 +5436,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   const title=LABEL_PASTO[pasto].toUpperCase()+':';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
-    if(giorno<todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-concluso">— pasto concluso —</div>';return;}
+    if(giorno<todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-griglia-compatta"><div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto pasto-concluso">— pasto concluso —</span><span class="pasto-riga-comando"></span></div></div>';return;}
     el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
     el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
       delete bozzeRollPendenti[id];
@@ -7660,7 +7661,8 @@ document.getElementById('pannelloGraficiConsumo').addEventListener('toggle', (e)
 
 async function riepilogoTestualePasto(giorno, pasto){
   const isSpuntino = pasto==='spuntino1' || pasto==='spuntino2' || pasto==='spuntino3';
-  const testoVuoto = isSpuntino ? '— nessuno (facoltativo) —' : '— non ancora programmato —';
+  const concluso = giorno<todayISO();
+  const testoVuoto = concluso ? '<span class="pasto-concluso">— pasto concluso —</span>' : (isSpuntino ? '— nessuno (facoltativo) —' : '— non ancora programmato —');
   const voce = await getOne('piano', giorno+'_'+pasto);
   if(!voce) return testoVuoto;
   // G1: icona di stato del pasto
@@ -7726,9 +7728,10 @@ async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
     if(ricetta)realizzazioni.push({indice,ricetta});
   }
   if(!realizzazioni.length){
-    const concluso=giorno<todayISO();
-    const testoVuotoRiga=concluso?'<span class="pasto-concluso">— pasto concluso —</span>':'— non ancora programmato —';
-    return ['🍞','🥩','🥬'].map((icona,indice)=>'<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icona+'</span><span class="pasto-riga-piatto">'+testoVuotoRiga+'</span><span class="pasto-riga-comando">'+(indice===0&&!concluso?azioneHtml:'')+'</span></div>').join('');
+    if(giorno<todayISO()){
+      return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto pasto-concluso">— pasto concluso —</span><span class="pasto-riga-comando"></span></div>';
+    }
+    return ['🍞','🥩','🥬'].map((icona,indice)=>'<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icona+'</span><span class="pasto-riga-piatto">— non ancora programmato —</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>').join('');
   }
   const materializzate=realizzazioni.map(x=>x.ricetta);
   const righeUniche=righeVsgUniche(materializzate);
