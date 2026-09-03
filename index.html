@@ -249,6 +249,13 @@ ol.plain{margin:6px 0;padding-left:18px;font-size:0.85rem;}
   background:var(--accent)!important;
   border-color:var(--accent)!important;
 }
+/* Proposta di Completa/Casuale: visivamente distinta da una scelta vera
+   dell'utente (tratteggiata, colore diverso) - non è ancora salvabile,
+   va toccata per diventare una scelta reale. */
+#setTabellaGiorno td.cella button.suggerita{
+  background:var(--panel-2)!important;
+  border:1px dashed #f1c40f!important;
+}
 /* v21: stile unico per tutti i selettori testuali del Setting */
 .setting-swipe button,
 .colazione-gruppo-slide button,
@@ -1172,6 +1179,24 @@ function menuDraftIntercetta(store,key){
   if(store!=='piano'||!menuDraft||!document.getElementById('view-menu')?.classList.contains('active')) return false;
   return menuDraft.giorni.has(String(key).slice(0,10));
 }
+/* Bozza Set utente: stesso principio della bozza Menù. "Salva" deve
+   voler dire salva davvero - se non lo premo, IndexedDB non deve
+   cambiare, qualunque toggle io abbia toccato. Tutti i pulsanti Salva
+   della pagina (Carboidrati, Proteine, quello unico in fondo) fanno
+   letteralmente la stessa cosa: validano e committano l'intera bozza,
+   mai solo il proprio pezzo. */
+let setDraft = null;
+const SET_DRAFT_KEYS = new Set([
+  'setVerdureDisattivate','setVerdurePreferite','verduraRicorrente','verduraRicorrentePasti',
+  'setProteineLimitate','setPocoTempo','cerealiNonGraditi',
+  'colazionePreferita','colazionePreferitaGiorni','colazioneIngredientiEsclusi',
+  'configCarboidrati','configCarboidratiOrigini','configCarboidratiStati','configCarboidratiExplicitZeroKeys',
+  'tabellaGiornoCategoria','tettiIngredienteSettimanali'
+]);
+function setDraftIntercetta(store,key){
+  if(store!=='impostazioni'||!setDraft||!document.getElementById('view-set')?.classList.contains('active')) return false;
+  return SET_DRAFT_KEYS.has(key);
+}
 function rawPut(store,obj){
   cacheGetAll[store]=null;
   return new Promise((res,reject)=>{const r=tx(store,'readwrite').put(obj);r.onsuccess=()=>res(obj);r.onerror=()=>reject(r.error);});
@@ -1205,6 +1230,7 @@ function getAllRaw(store){
 function put(store, obj){
   if(['ricette','ingredienti','varianti'].includes(store)&&obj&&obj.nome) obj.nome=nomeConInizialeMaiuscola(obj.nome);
   if(menuDraftIntercetta(store,obj.id)){menuDraft.voci.set(obj.id,structuredClone(obj));menuDraft.modificata=true;return Promise.resolve(obj);}
+  if(setDraftIntercetta(store,obj.chiave)){setDraft.voci.set(obj.chiave,structuredClone(obj));setDraft.modificata=true;return Promise.resolve(obj);}
   return rawPut(store,obj);
 }
 function getOneRaw(store,key){
@@ -1212,16 +1238,23 @@ function getOneRaw(store,key){
 }
 function getOne(store, key){
   if(menuDraftIntercetta(store,key)&&menuDraft.voci.has(key)){const v=menuDraft.voci.get(key);return Promise.resolve(v===null?undefined:structuredClone(v));}
+  if(setDraftIntercetta(store,key)&&setDraft.voci.has(key)){const v=setDraft.voci.get(key);return Promise.resolve(v===null?undefined:structuredClone(v));}
   return getOneRaw(store,key);
 }
 function delKey(store, key){
   if(menuDraftIntercetta(store,key)){menuDraft.voci.set(key,null);menuDraft.modificata=true;return Promise.resolve();}
+  if(setDraftIntercetta(store,key)){setDraft.voci.set(key,null);setDraft.modificata=true;return Promise.resolve();}
   return rawDelKey(store,key);
 }
 function commitMenuDraftAtomico(){
   if(!menuDraft||!menuDraft.voci.size)return Promise.resolve();
   const modifiche=[...menuDraft.voci.entries()];cacheGetAll.piano=null;
   return new Promise((resolve,reject)=>{const trans=db.transaction('piano','readwrite'),store=trans.objectStore('piano');for(const [id,v] of modifiche){if(v===null)store.delete(id);else store.put(v);}trans.oncomplete=()=>resolve();trans.onerror=()=>reject(trans.error);trans.onabort=()=>reject(trans.error||new Error('Commit menù annullato'));});
+}
+function commitSetDraftAtomico(){
+  if(!setDraft||!setDraft.voci.size)return Promise.resolve();
+  const modifiche=[...setDraft.voci.entries()];cacheGetAll.impostazioni=null;
+  return new Promise((resolve,reject)=>{const trans=db.transaction('impostazioni','readwrite'),store=trans.objectStore('impostazioni');for(const [chiave,v] of modifiche){if(v===null)store.delete(chiave);else store.put(v);}trans.oncomplete=()=>resolve();trans.onerror=()=>reject(trans.error);trans.onabort=()=>reject(trans.error||new Error('Commit Set annullato'));});
 }
 /* Implementazioni raw usate dal commit atomico della bozza Menù. */
 /* legacy body kept below intentionally replaced */
@@ -2830,7 +2863,31 @@ function completaCaselleCarboidrati(daZero){
 document.getElementById('btnPulisciCarboidrati')?.addEventListener('click',()=>{inizializzaStatoCaselleCarb();renderCaselleCarboidrati();aggiornaStatoConfigCarb();});
 document.getElementById('btnCompletaCarboidrati')?.addEventListener('click',()=>completaCaselleCarboidrati(false));
 document.getElementById('btnCasualeCarboidrati')?.addEventListener('click',()=>completaCaselleCarboidrati(true));
-document.getElementById('btnSalvaCarboidrati')?.addEventListener('click',()=>salvaConfigCarboidratiSet(true));
+/* I tre pulsanti Salva della pagina Set (Carboidrati, Proteine, quello
+   unico in fondo) chiamano tutti questa stessa funzione: stessa validazione,
+   stesso commit dell'intera bozza, stesso messaggio. Sono dislocati solo per
+   comodità (non scorrere tutta la pagina per togliere un carboidrato), non
+   fanno cose diverse. */
+async function salvaSetCompleto(mostraMessaggio){
+  const carb=await salvaConfigCarboidratiSet(false);
+  if(!carb.ok){if(mostraMessaggio!==false)await avviso('⚠ '+carb.errori.join(' '));return carb;}
+  /* Non si completa più la tabella proteine qui: si salva soltanto ciò
+     che l'utente ha scelto a mano (tabellaProteineDraft). Le celle
+     lasciate vuote restano vuote in tabellaGiornoCategoria - il motore
+     le estrarrà di nuovo a caso a ogni generazione futura, mai
+     congelate da un singolo Completa/Casuale guardato una volta. */
+  const cfgProt=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft||{},cfgProt.frequenze,maxFontiProteicheGiornaliereSet);
+  if(!fatt.ok){const msg='La tabella proteine non è compatibile con i limiti del nutrizionista.';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
+  await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:cloneConfigurazione(tabellaProteineDraft||{})});
+  const caps=await salvaLimitiPersonaliSet(false);
+  if(!caps.ok){if(mostraMessaggio!==false)await avviso('⚠ '+caps.errori.join(' '));return caps;}
+  await commitSetDraftAtomico();
+  if(setDraft){setDraft.voci.clear();setDraft.modificata=false;}
+  tabellaProteineAnteprima=null;
+  if(mostraMessaggio!==false)await avviso('✅ Configurazione Set salvata.');
+  return {ok:true};
+}
+document.getElementById('btnSalvaCarboidrati')?.addEventListener('click',()=>salvaSetCompleto(true));
 async function getConfigProteine(){
   const rec=await getOne('impostazioni','configAvanzata'),cfg=configAvanzataEffettivaSalvata(rec&&rec.valore||{}),resolved=risolviConfigNutrizionista(cfg,{},[],[]),forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]),frequenze={};
   for(const [k,v] of Object.entries(resolved.proteinFrequencies||{}))frequenze[k]=forbidden.has(k)?Object.assign({},v,{min:0,max:0,target:0}):Object.assign({},v);
@@ -2841,6 +2898,12 @@ async function getExtraCapSottotipiEffettivi(){return (await getConfigProteine()
 
 const NOMI_GIORNI_SET=['Lun','Mar','Mer','Gio','Ven','Sab','Dom'];
 let tabellaProteineDraft=null;
+/* Solo visualizzazione: la proposta di Completa/Casuale non viene mai
+   scritta da sola in tabellaProteineDraft, quindi non può mai essere
+   salvata "per sbaglio" insieme al resto della pagina. Si azzera a ogni
+   tocco manuale di una cella, cosi' non resta a mostrare una proposta
+   ormai superata. */
+let tabellaProteineAnteprima=null;
 let frequenzeProteineSetCorrenti=null;
 let maxFontiProteicheGiornaliereSet=2;
 async function caricaVincoliProteineSet(){
@@ -2862,14 +2925,20 @@ async function renderSetTabellaGiorno(){
   const el=document.getElementById('setTabellaGiorno');if(!el)return;
   const [rec,cfg]=await Promise.all([getOne('impostazioni','tabellaGiornoCategoria'),caricaVincoliProteineSet()]);
   if(!tabellaProteineDraft)tabellaProteineDraft=cloneConfigurazione(rec&&rec.valore||{});
-  const tabella=tabellaProteineDraft,freq=cfg.frequenze,maxDay=maxFontiProteicheGiornaliereSet;
+  const tabella=tabellaProteineDraft,anteprima=tabellaProteineAnteprima,freq=cfg.frequenze,maxDay=maxFontiProteicheGiornaliereSet;
   const head=NOMI_GIORNI_SET.map(g=>'<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">'+g+'</th>').join('');
   const righe=CATEGORIE_PROTEICHE_SET.map(c=>{
     const reg=freq[c.chiave]||{min:0,max:0},tetto=reg.max,n=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(c.chiave)).length,rowMax=tetto!==null&&tetto!==undefined&&n>=Number(tetto),range=reg.max===null?'min '+reg.min+' · senza max':reg.min+'–'+reg.max+' / sett.';
-    const cells=NOMI_GIORNI_SET.map((_,i)=>{const key='giorno_'+i,sel=(tabella[key]||[]).includes(c.chiave),dayMax=(tabella[key]||[]).length>=maxDay,disabled=(dayMax||rowMax)&&!sel;return '<td class="cella"><button data-set-cella="'+i+'|'+c.chiave+'" class="'+(sel?'active':'')+' '+(disabled?'al-tetto':'')+'" '+(disabled?'disabled':'')+'></button></td>';}).join('');
+    const cells=NOMI_GIORNI_SET.map((_,i)=>{
+      const key='giorno_'+i,sel=(tabella[key]||[]).includes(c.chiave);
+      const suggerita=!sel&&anteprima&&(anteprima[key]||[]).includes(c.chiave);
+      const dayMax=(tabella[key]||[]).length>=maxDay,disabled=(dayMax||rowMax)&&!sel;
+      return '<td class="cella"><button data-set-cella="'+i+'|'+c.chiave+'" class="'+(sel?'active':(suggerita?'suggerita':''))+' '+(disabled?'al-tetto':'')+'" '+(disabled?'disabled':'')+'></button></td>';
+    }).join('');
     return '<tr><td class="riga-label">'+c.label+'<div class="meta" style="font-size:.56rem;line-height:1.05;">'+range+'</div></td>'+cells+'</tr>';
   }).join('');
-  el.innerHTML='<table class="tabella-giorno"><tr><th class="col-label"></th>'+head+'</tr>'+righe+'</table><div class="meta" style="margin-top:6px;">Vincoli effettivi dal piano nutrizionista · max categorie fissabili per giorno: '+maxDay+'</div>';
+  const notaAnteprima=anteprima?'<div class="meta" style="margin-top:6px;color:#f1c40f;">🎲 Le caselle tratteggiate sono una proposta: toccale per confermarle come tua scelta. Quelle che lasci così non vengono salvate e restano casuali a ogni generazione.</div>':'';
+  el.innerHTML='<table class="tabella-giorno"><tr><th class="col-label"></th>'+head+'</tr>'+righe+'</table><div class="meta" style="margin-top:6px;">Vincoli effettivi dal piano nutrizionista · max categorie fissabili per giorno: '+maxDay+'</div>'+notaAnteprima;
   el.querySelectorAll('[data-set-cella]').forEach(btn=>btn.addEventListener('click',async()=>{
     const [is,cat]=btn.dataset.setCella.split('|'),key='giorno_'+parseInt(is);tabella[key]=tabella[key]||[];const arr=tabella[key],pos=arr.indexOf(cat);
     if(pos>=0)arr.splice(pos,1);else{
@@ -2878,24 +2947,30 @@ async function renderSetTabellaGiorno(){
       if(arr.length>=maxDay){await avviso('Puoi fissare al massimo '+maxDay+' categorie proteiche per questo giorno.');return;}
       arr.push(cat);const fatt=validaFattibilitaProteineSet(tabella,freq,maxDay);if(!fatt.ok){arr.pop();await avviso(fatt.reason==='minimums'?'Questa scelta lascerebbe troppo pochi pasti liberi per completare le frequenze minime del piano.':'Questa scelta supera un vincolo proteico del piano.');return;}
     }
+    tabellaProteineAnteprima=null;
     await renderSetTabellaGiorno();
   }));
 }
 async function completaTabellaProteine(daZero){
-  if(daZero)tabellaProteineDraft={};const cfg=await caricaVincoliProteineSet(),giorni=NOMI_GIORNI_SET.map((_,i)=>'giorno_'+i),E=globalThis.DietaPlannerEngine;
-  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,tabellaProteineDraft||{},{proteinFrequencies:cfg.frequenze},{},Math.random):null;
-  if(griglia){for(const g of giorni)tabellaProteineDraft[g]=['pranzo','cena'].map(p=>griglia.cells[g][p].macro).filter(Boolean);}
+  const cfg=await caricaVincoliProteineSet(),giorni=NOMI_GIORNI_SET.map((_,i)=>'giorno_'+i),E=globalThis.DietaPlannerEngine;
+  /* daZero=true (Casuale): la proposta ignora le scelte già fatte,
+     come se si ripartisse da una settimana vuota. daZero=false
+     (Completa): la proposta rispetta le celle già scelte a mano.
+     In nessuno dei due casi si tocca tabellaProteineDraft - è solo
+     un'anteprima, mai scritta da sola. */
+  const base=daZero?{}:cloneConfigurazione(tabellaProteineDraft||{});
+  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze},{},Math.random):null;
+  if(griglia){
+    const anteprima={};
+    for(const g of giorni)anteprima[g]=['pranzo','cena'].map(p=>griglia.cells[g][p].macro).filter(Boolean);
+    tabellaProteineAnteprima=anteprima;
+  }
   await renderSetTabellaGiorno();return griglia;
 }
-document.getElementById('btnPulisciProteine')?.addEventListener('click',async()=>{tabellaProteineDraft={};await renderSetTabellaGiorno();});
+document.getElementById('btnPulisciProteine')?.addEventListener('click',async()=>{tabellaProteineDraft={};tabellaProteineAnteprima=null;await renderSetTabellaGiorno();});
 document.getElementById('btnCompletaProteine')?.addEventListener('click',()=>completaTabellaProteine(false));
 document.getElementById('btnCasualeProteine')?.addEventListener('click',()=>completaTabellaProteine(true));
-document.getElementById('btnSalvaProteine')?.addEventListener('click',async()=>{
-  const griglia=await completaTabellaProteine(false),cfg=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft||{},cfg.frequenze,maxFontiProteicheGiornaliereSet);
-  if(griglia&&griglia.errors&&griglia.errors.length){await avviso('Impossibile completare la tabella proteine senza violare il piano: '+griglia.errors.join(' · '));return;}
-  if(!fatt.ok){await avviso('Tabella proteine non compatibile con i limiti del nutrizionista.');return;}
-  await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:cloneConfigurazione(tabellaProteineDraft)});await avviso('Tabella proteine salvata.');
-});
+document.getElementById('btnSalvaProteine')?.addEventListener('click',()=>salvaSetCompleto(true));
 function catturaPosizioniSwipe(){
   return [...document.querySelectorAll('.setting-swipe,.colazione-gruppo-slide')].map((el,i)=>(
     {i, id:el.id||'', gruppo:el.dataset.setColGruppo||'', x:el.scrollLeft}
@@ -2953,12 +3028,7 @@ async function renderSetPreferenzeMenu(){
   const nota=document.getElementById('setVerdurePreferiteNota');if(nota){const alte=[...pref].filter(n=>ingredientiJsonMap[n]?.deperibilita==='alta'&&!blockedNames.has(n));nota.textContent=alte.length?'💡 Molto deperibili: '+alte.join(', ')+'; il motore può limitarle a fine settimana.':'';}
 }
 
-document.getElementById('btnSalvaSetCompleto')?.addEventListener('click', async ()=>{
-  const stato=document.getElementById('setSalvaStato'),carb=await salvaConfigCarboidratiSet(false);if(!carb.ok){if(stato){stato.textContent='⚠ '+carb.errori.join(' ');stato.style.color='var(--warn)';}return;}
-  const caps=await salvaLimitiPersonaliSet(false);if(!caps.ok){if(stato){stato.textContent='⚠ '+caps.errori.join(' ');stato.style.color='var(--warn)';}return;}
-  if(tabellaProteineDraft){const cfg=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft,cfg.frequenze,maxFontiProteicheGiornaliereSet);if(!fatt.ok){if(stato){stato.textContent='⚠ La tabella proteine non è compatibile con i limiti del nutrizionista.';stato.style.color='var(--warn)';}return;}await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:cloneConfigurazione(tabellaProteineDraft)});}
-  if(stato){stato.textContent='✅ Configurazione salvata. I carboidrati non fissati resteranno AUTO.';stato.style.color='var(--accent)';setTimeout(()=>{stato.textContent='';},3000);}
-});
+document.getElementById('btnSalvaSetCompleto')?.addEventListener('click',()=>salvaSetCompleto(true));
 
 function tierDisponibilitaVerdura(v){const n=(v&&v.nome||'').toLowerCase();if(v&&v.categoria==='surgelato')return 'surgelato';if(/barattolo|scatola|craut/.test(n)||(v&&v.categoria==='conf'&&!['patate'].includes(n)))return 'confezionato';const freschi=new Set(['basilico fresco','cetriolo','fagiolini','funghi champignon','insalata mista','pomodoro fresco','radicchio','spinaci freschi','zucchine']);if(freschi.has(n))return 'fresco';return 'fresco_duraturo';}
 async function renderSetVerdure(){
@@ -3406,6 +3476,21 @@ async function mostraVista(nome){
     if(scelta==='salva'){await commitMenuDraftAtomico();aggiornaListaSpesaAutomatica(menuSettimanaScarto);}
     menuDraft=null;
   }
+  if(vistaAttuale==='set' && nome!=='set' && setDraft && setDraft.modificata){
+    const scelta = await mostraModaleAvviso(
+      'Hai modificato il Set senza salvare. Le modifiche andranno perse se esci ora.',
+      [
+        {testo:'Salva ed esci', classe:'primary', valore:'salva'},
+        {testo:'Esci senza salvare', classe:'secondary', valore:'scarta'},
+        {testo:'Annulla', classe:'secondary', valore:'annulla'}
+      ]
+    );
+    if(scelta==='annulla')return;
+    if(scelta==='salva'){await commitSetDraftAtomico();}
+    setDraft=null;
+    tabellaProteineDraft=null;
+    tabellaProteineAnteprima=null;
+  }
   document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.view===nome));
   document.querySelectorAll('section.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+nome).classList.add('active');
@@ -3413,7 +3498,7 @@ async function mostraVista(nome){
   if(nome==='menu') renderMenuSettimanale();
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
-  if(nome==='set'){ renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
+  if(nome==='set'){ setDraft={voci:new Map(),modificata:false}; tabellaProteineDraft=null; tabellaProteineAnteprima=null; renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
   if(nome==='impostazioni')renderInfoVersioniRemote();
   if(nome==='nutrizionista')renderConfigAvanzata();
 }
