@@ -5311,22 +5311,13 @@ const bozzeRollPendenti = {};
 function classiVsgUi(ricetta){return new Set((Array.isArray(ricetta&&ricetta.classe)?ricetta.classe:[ricetta&&ricetta.classe]).filter(Boolean));}
 function ricettaCopreRigaVsg(ricetta,tipo){
   const tokens=classiVsgUi(ricetta);
-  if(tipo==='C')return tokens.has('C');
-  if(tipo==='P')return [...tokens].some(t=>['PC','PP','PF','PU','PL'].includes(t));
+  if(tipo==='C')return tokens.has('C')||tokens.has('S');
+  if(tipo==='P')return [...tokens].some(t=>['PC','PP','PF','PU','PL'].includes(t))||tokens.has('G');
   return tokens.has('V');
-}
-function ingredientiRigaVsg(ricetta,tipo){
-  const tokens=classiVsgUi(ricetta);
-  return (ricetta&&ricetta.ingredienti||[]).filter(i=>{
-    if(tipo==='C')return i.categoria==='C'||(tokens.has('S')&&(i.macro==='verdura'||(Array.isArray(i.gruppo)?i.gruppo.includes('verdura'):i.gruppo==='verdura')));
-    if(tipo==='P')return ['PC','PP','PF','PU','PL'].includes(i.categoria)||(tokens.has('G')&&(i.macro==='verdura'||(Array.isArray(i.gruppo)?i.gruppo.includes('verdura'):i.gruppo==='verdura')));
-    return tokens.has('V')&&(i.macro==='verdura'||(Array.isArray(i.gruppo)?i.gruppo.includes('verdura'):i.gruppo==='verdura'));
-  });
 }
 function valoriRigaVsg(materializzate,tipo){
   const proprietarie=(materializzate||[]).filter(r=>ricettaCopreRigaVsg(r,tipo));
-  const ingredienti=[...new Set(proprietarie.flatMap(r=>ingredientiRigaVsg(r,tipo).map(i=>i.nome)).filter(Boolean))];
-  return ingredienti.length?ingredienti:[...new Set(proprietarie.map(r=>r.nome).filter(Boolean))];
+  return [...new Set(proprietarie.map(r=>r.nome).filter(Boolean))];
 }
 
 async function renderBloccoNuovoMotore(pasto,giorno,elementId){
