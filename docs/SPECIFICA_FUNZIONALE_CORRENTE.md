@@ -35,7 +35,13 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 ## 3. Carboidrati
 
 - Pranzo e cena automatici richiedono una fonte di carboidrati, salvo pasto
-  speciale o override esplicito.
+  speciale o override esplicito. **Eccezione decisa il 03/09/2026**: se, dopo
+  aver provato in ordine tutti i carboidrati candidati ammessi per quello
+  slot (fissi/tetto prima, poi AUTO rispettando il cooldown), nessuno risulta
+  compatibile con la proteina scelta, il pasto procede senza carboidrato — il
+  motore non forza mai una combinazione incompatibile pur di non lasciare lo
+  slot vuoto. Il pasto viene segnalato con avviso giallo e tooltip, utile per
+  capire quali ricette mancano nel catalogo per coprire quella combinazione.
 - Il piano settimanale ordinario contiene 14 slot.
 - Stati persistenti:
   - `AUTO`: riempimento casuale con sole voci prive di tetto PDF;
@@ -133,6 +139,13 @@ Sono due meccaniche collegate ma distinte.
 - Le combinazioni P+C gia dichiarate nel catalogo restano utilizzabili soltanto
   quando rispettano sia la proteina assegnata sia il carboidrato programmato;
   non acquisiscono priorità per il solo fatto di essere già combinate.
+- I carboidrati con tetto settimanale (sezione 3) mantengono il loro
+  conteggio fisso. I carboidrati AUTO seguono in più un cooldown di un
+  giorno: lo stesso carboidrato non può ricomparire lo stesso giorno né il
+  giorno successivo, disponibile di nuovo il secondo giorno dopo l'uso.
+- Se, esauriti tutti i carboidrati candidati ammessi per lo slot, nessuno è
+  compatibile con la proteina scelta, si applica l'eccezione della sezione 3
+  (pasto senza carboidrato, avviso giallo) — mai una combinazione forzata.
 - Dopo P e C viene calcolato matematicamente il solo residuo `V`; quindi lo
   slot viene validato, chiuso e il motore passa al successivo.
 - Quando `tabellaGiornoCategoria` esiste, ogni cella definita dall'utente è
@@ -145,6 +158,11 @@ Sono due meccaniche collegate ma distinte.
   anche formaggio rende il formaggio già usato per quel giorno. Nei profili
   che lasciano una sola possibilità reale non viene inventata una categoria
   vietata per simulare una rotazione impossibile.
+- L'impostazione nutrizionista "Fonti proteiche/giorno" (1 o 2, default 2)
+  è vincolante anche per le celle non definite dall'utente: a 2 resta la
+  regola sopra (mai la stessa macro due volte nello stesso giorno); a 1 vale
+  l'opposto, il secondo pasto del giorno deve obbligatoriamente ripetere la
+  categoria del primo.
 - Frequenze, cap, carboidrati e rotazione vengono aggiornati in memoria
   soltanto dopo che il singolo pasto è stato costruito e accettato. Una scelta
   tentata ma non collocata non è consumata e non influenza lo slot seguente.

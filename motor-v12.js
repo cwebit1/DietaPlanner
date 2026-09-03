@@ -1676,12 +1676,18 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
       if(!composizioneSeparataConsentita(proteina,chiave))continue;
       let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
       if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
-      if(!carboScelte.length)continue;
-      const esito=await chiudiPastoConVerdura([proteina,carboScelte[0]],token,giorno,pool,ctx);
-      if(esito)return Object.assign(esito,{
-        carbKeyUsato:chiave,
-        avviso:chiave!==carbCandidati[0]?('Carboidrato '+carbCandidati[0]+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
-      });
+      /* Prima di scartare la chiave e passare al carboidrato candidato
+         successivo, si provano tutte le ricette disponibili per QUESTA
+         chiave, in ordine di priorita' - non solo la prima. Un'unica
+         ricetta specifica puo' non chiudere (verdura, conteggi) senza che
+         il carboidrato in se' sia incompatibile. */
+      for(const carboScelto of carboScelte){
+        const esito=await chiudiPastoConVerdura([proteina,carboScelto],token,giorno,pool,ctx);
+        if(esito)return Object.assign(esito,{
+          carbKeyUsato:chiave,
+          avviso:chiave!==carbCandidati[0]?('Carboidrato '+carbCandidati[0]+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
+        });
+      }
     }
     /* Nessun carboidrato fra i candidati e' compatibile con questa
        proteina: si procede senza, invece di bloccare il pasto o forzare
@@ -1710,7 +1716,7 @@ function contaTargetTabellaFuturi(tab,slots,daIndice){
   }
   return out;
 }
-function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng){
+function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng,targetGiorno){
   const slot=slots[indice],freq=resolved.proteinFrequencies||{};
   const forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]);
   const allowed=Object.keys(freq).filter(k=>!forbidden.has(k)&&freq[k].max!==0);
@@ -1719,23 +1725,26 @@ function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng
      non "al massimo due", ma esattamente una. A 2 (default) resta la
      regola di sempre: mai la stessa categoria due volte nello stesso
      giorno. Va rispettato sia quando la cella e' fissata a mano in
-     tabella sia quando la sceglie il motore per le celle libere. */
+     tabella sia quando la sceglie il motore per le celle libere.
+     targetGiorno e' la categoria EFFETTIVAMENTE cercata per il primo
+     pasto del giorno (non tutte le macro incidentalmente presenti nella
+     ricetta scelta, che con una ricetta a doppia proteina - es. carne e
+     formaggio nello stesso piatto - sarebbero ambigue su quale ripetere). */
   const unaSolaFonteAlGiorno=Number(resolved.maxProteinSourcesPerDay)===1;
   const fissata=targetTabellaPerSlot(tab,slot);
   if(fissata){
     if(!allowed.includes(fissata))return {errors:['Proteina '+fissata+' non ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
     if(!unaSolaFonteAlGiorno&&usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
-    if(unaSolaFonteAlGiorno&&usateGiorno.size&&!usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due categorie diverse per '+slot.day+', ma il piano ammette una sola fonte proteica al giorno.'],targets:[]};
+    if(unaSolaFonteAlGiorno&&targetGiorno&&targetGiorno!==fissata)return {errors:['La tabella proteine assegna '+fissata+' per '+slot.day+', ma la fonte già usata oggi è '+targetGiorno+' e il piano ammette una sola fonte proteica al giorno.'],targets:[]};
     const max=freq[fissata].max;
     if(max!==null&&max!==undefined&&(Number(counts[fissata])||0)>=Number(max))return {errors:['Proteina '+fissata+' oltre il massimo settimanale.'],targets:[]};
     return {errors:[],targets:[fissata]};
   }
-  if(unaSolaFonteAlGiorno&&usateGiorno.size){
-    const oggi=[...usateGiorno][0];
-    if(!allowed.includes(oggi))return {errors:['Nessuna classe proteica ammessa per '+slot.day+' '+slot.pasto+' (la fonte gia\' usata oggi non e\' piu\' disponibile).'],targets:[]};
-    const max=freq[oggi].max;
-    if(max!==null&&max!==undefined&&(Number(counts[oggi])||0)>=Number(max))return {errors:['Proteina '+oggi+' oltre il massimo settimanale.'],targets:[]};
-    return {errors:[],targets:[oggi]};
+  if(unaSolaFonteAlGiorno&&targetGiorno){
+    if(!allowed.includes(targetGiorno))return {errors:['Nessuna classe proteica ammessa per '+slot.day+' '+slot.pasto+' (la fonte gia\' usata oggi non e\' piu\' disponibile).'],targets:[]};
+    const max=freq[targetGiorno].max;
+    if(max!==null&&max!==undefined&&(Number(counts[targetGiorno])||0)>=Number(max))return {errors:['Proteina '+targetGiorno+' oltre il massimo settimanale.'],targets:[]};
+    return {errors:[],targets:[targetGiorno]};
   }
   const prenotate=contaTargetTabellaFuturi(tab,slots,indice+1);
   let pool=allowed.filter(k=>{
@@ -1803,13 +1812,14 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
      traccia, per ciascun giorno gia' passato, quali chiavi carboidrato sono
      state usate: serve al cooldown di un giorno sulle voci AUTO. */
   const carboidratoGiorno=new Map();
+  const targetGiorno=new Map();
   for(let i=0;i<slotRefs.length;i++){
     const slot=slotRefs[i];
     if(!proteineGiorno.has(slot.day))proteineGiorno.set(slot.day,new Set());
     ctx.todayStackKeys=new Set();
     for(const precedente of slotDefs)if(precedente.day===slot.day)chiaviGiornoPasto(scelte[slotDefs.indexOf(precedente)]).forEach(k=>ctx.todayStackKeys.add(k));
 
-    const proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng);
+    const proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng,targetGiorno.get(slot.day));
     if(proteine.errors.length)return {ok:false,errori:proteine.errors,completati:i};
 
     const cooldownEsclusi=new Set([
@@ -1834,6 +1844,7 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
 
     const definizione=Object.assign({},slot,{target,carbKey:candidato.carbKeyUsato,requiredVegetableVariantId:ctx.requiredVegetable(slot)});
     scelte.push(candidato);slotDefs.push(definizione);
+    if(!targetGiorno.has(slot.day))targetGiorno.set(slot.day,target);
     ctx.weeklyProteinCounts[target]=(ctx.weeklyProteinCounts[target]||0)+1;
     if(candidato.carbKeyUsato){
       if(residui[candidato.carbKeyUsato]>0)residui[candidato.carbKeyUsato]--;
