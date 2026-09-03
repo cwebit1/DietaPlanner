@@ -94,6 +94,7 @@ section.view.active{display:block;}
 }
 .card h3{font-size:1rem;margin-bottom:4px;}
 .meta{color:var(--text-dim);font-size:0.78rem;}
+.pasto-concluso{font-weight:300;color:var(--text-dim);}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .pill{
   display:inline-block;font-size:0.65rem;text-transform:uppercase;letter-spacing:.04em;
@@ -5404,6 +5405,25 @@ function valoriRigaVsg(materializzate,tipo){
   const proprietarie=(materializzate||[]).filter(r=>ricettaCopreRigaVsg(r,tipo));
   return [...new Set(proprietarie.map(r=>r.nome).filter(Boolean))];
 }
+/* Una ricetta puo' coprire piu' ruoli insieme (C+P, C+V, P+V, o tutti e
+   tre - es. un'insalata fredda di cereali che e' insieme carboidrato,
+   proteina e verdura). Va scritta una sola volta, con le icone di tutti
+   i ruoli che copre - non ripetuta identica su piu' righe. Ordine di
+   lettura invariato: C, poi P, poi V; una ricetta gia' vista in una riga
+   precedente non genera una riga nuova, si aggiunge solo l'icona. */
+const ICONE_VSG={C:'🍞',P:'🥩',V:'🥬'};
+function righeVsgUniche(materializzate){
+  const viste=new Map(),ordine=[];
+  for(const tipo of ['C','P','V']){
+    for(const r of (materializzate||[]).filter(x=>ricettaCopreRigaVsg(x,tipo))){
+      const chiave=r.id||r.nome;
+      if(!chiave)continue;
+      if(!viste.has(chiave)){viste.set(chiave,{nome:r.nome,tipi:[]});ordine.push(chiave);}
+      if(!viste.get(chiave).tipi.includes(tipo))viste.get(chiave).tipi.push(tipo);
+    }
+  }
+  return ordine.map(k=>viste.get(k));
+}
 
 async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   giorno=giorno||giornoSelezionato;
@@ -5415,7 +5435,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   const title=LABEL_PASTO[pasto].toUpperCase()+':';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
-    if(giorno<todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta">Nessun pasto registrato.</div>';return;}
+    if(giorno<todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-concluso">— pasto concluso —</div>';return;}
     el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
     el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
       delete bozzeRollPendenti[id];
@@ -5440,21 +5460,20 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     kcal+=Number(rr.nutrienti&&rr.nutrienti.kcal||0);
   }
 
-  const righeMacro=[
-    {tipo:'C',icona:'🍞',label:'Carboidrato'},
-    {tipo:'P',icona:'🥩',label:'Proteina'},
-    {tipo:'V',icona:'🥬',label:'Verdura'}
-  ];
-  for(const riga of righeMacro){
-    const valori=valoriRigaVsg(materializzate,riga.tipo);
-    const valore=valori.length?valori.join(' · '):'Seleziona pasto';
-    const dettaglio='';
-    const roll=(!voce.consumato&&giorno>=todayISO())
-      ?'<button type="button" data-nm-roll-tipo="'+riga.tipo+'" title="Cambia '+riga.label.toLowerCase()+'" '+(statoRoll[riga.tipo]?'':'disabled')+'>🔄</button>'
-      :'';
-    const avvisoCarb=riga.tipo==='C'&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(messaggioAvviso)+'"':'';
-    html+='<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icona+'</span><span class="pasto-riga-piatto'+classeAvviso+'"'+titoloAvviso+'>'+(voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+(avvisoCarb?' ⚠':'')+dettaglio+'</span><span class="pasto-riga-comando">'+roll+'</span></div>';
-  }
+  const righeUniche=righeVsgUniche(materializzate);
+  const copertiUnica=new Set(righeUniche.flatMap(r=>r.tipi));
+  for(const tipo of ['C','P','V'])if(!copertiUnica.has(tipo))righeUniche.push({nome:null,tipi:[tipo]});
+  const LABEL_TIPO={C:'carboidrato',P:'proteina',V:'verdura'};
+  righeUniche.forEach((riga,indice)=>{
+    const icone=riga.tipi.map(t=>ICONE_VSG[t]).join('');
+    const valore=riga.nome||'Seleziona pasto';
+    const roll=riga.tipi.map(t=>(!voce.consumato&&giorno>=todayISO())
+      ?'<button type="button" data-nm-roll-tipo="'+t+'" title="Cambia '+LABEL_TIPO[t]+'" '+(statoRoll[t]?'':'disabled')+'>🔄</button>'
+      :''
+    ).join('');
+    const avvisoCarb=riga.tipi.includes('C')&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(messaggioAvviso)+'"':'';
+    html+='<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icone+'</span><span class="pasto-riga-piatto'+classeAvviso+'"'+titoloAvviso+'>'+(indice===0&&voce.consumato?'<span class="consumato-spunta">✓</span> ':'')+esc(valore)+(avvisoCarb?' ⚠':'')+'</span><span class="pasto-riga-comando">'+roll+'</span></div>';
+  });
   html+='</div>';
   html+='<div class="meta" style="margin-top:8px;">'+Math.round(kcal)+' kcal · nuovo DB</div>';
 
@@ -7707,18 +7726,19 @@ async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
     if(ricetta)realizzazioni.push({indice,ricetta});
   }
   if(!realizzazioni.length){
-    return ['🍞','🥩','🥬'].map((icona,indice)=>'<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icona+'</span><span class="pasto-riga-piatto">— non ancora programmato —</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>').join('');
+    const concluso=giorno<todayISO();
+    const testoVuotoRiga=concluso?'<span class="pasto-concluso">— pasto concluso —</span>':'— non ancora programmato —';
+    return ['🍞','🥩','🥬'].map((icona,indice)=>'<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icona+'</span><span class="pasto-riga-piatto">'+testoVuotoRiga+'</span><span class="pasto-riga-comando">'+(indice===0&&!concluso?azioneHtml:'')+'</span></div>').join('');
   }
   const materializzate=realizzazioni.map(x=>x.ricetta);
-  const dati=[
-    {tipo:'C',icona:'🍞'},
-    {tipo:'P',icona:'🥩'},
-    {tipo:'V',icona:'🥬'}
-  ].map(riga=>Object.assign({},riga,{valori:valoriRigaVsg(materializzate,riga.tipo)}));
+  const righeUniche=righeVsgUniche(materializzate);
+  const copertiUnica=new Set(righeUniche.flatMap(r=>r.tipi));
+  for(const tipo of ['C','P','V'])if(!copertiUnica.has(tipo))righeUniche.push({nome:null,tipi:[tipo]});
   const stato=voce.consumato?'✓ ':voce.origine==='utente'?'⭐ ':'';
-  return dati.map((riga,indice)=>{
-    const avviso=riga.tipo==='C'&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
-    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+riga.icona+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.valori.length?riga.valori.join(' · '):'Seleziona pasto')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>';
+  return righeUniche.map((riga,indice)=>{
+    const icone=riga.tipi.map(t=>ICONE_VSG[t]).join('');
+    const avviso=riga.tipi.includes('C')&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
+    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.nome||'Seleziona pasto')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>';
   }).join('');
 }
 

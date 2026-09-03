@@ -38,9 +38,9 @@ assert.equal(M.ordinaVerdureProgrammazione([fragile,durable],'2026-09-06')[0].id
 assert(motorSource.includes('const livelli=opts.usaInventario?await livelliPrioritaInventario():[]'));
 assert(index.includes('realizzazioni:voce.realizzazioni?structuredClone(voce.realizzazioni):[]'));
 assert(index.includes('if(!ing.variantId||ing.nonRichiedeInventario)continue'));
-assert(index.includes("{tipo:'C',icona:'🍞',label:'Carboidrato'"));
-assert(index.includes("{tipo:'P',icona:'🥩',label:'Proteina'"));
-assert(index.includes("{tipo:'V',icona:'🥬',label:'Verdura'"));
+assert(index.includes("const ICONE_VSG={C:'🍞',P:'🥩',V:'🥬'}"),'le icone C/P/V devono restare definite in un unico punto condiviso');
+assert(index.includes('function righeVsgUniche(materializzate)'),'una ricetta a piu ruoli deve essere raggruppata in una riga sola, non ripetuta');
+assert(index.includes('righeVsgUniche(materializzate)')&&(index.match(/righeVsgUniche\(materializzate\)/g)||[]).length>=2,'Menù e Pasto devono condividere la stessa logica di raggruppamento C/P/V');
 assert(index.includes('data-menu-macro'));
 assert(index.includes('grid-template-columns:72px minmax(0,1fr) 34px'),'Menù e Pasto devono usare la griglia compatta icone/testo/comando');
 assert(index.includes('riepilogoGrigliaPastoMenu(g,pasto,iconaBloccoMenu)'),'il Menù deve rendere C/P/V su tre righe strutturate');
