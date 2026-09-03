@@ -1892,8 +1892,7 @@ async function generaPianoSettimana(scarto,opzioni){
   const days=giorniSettimana(scarto), today=typeof todayISO==='function'?todayISO():isoDate(new Date()),resolved=await caricaConfigurazioneNutrizionaleRisolta();
   if(!resolved.valid)return {generati:[],errori:resolved.errors};
   const slotDaGenerare=[];
-  const pastiOggiChiusi=opzioni.pastiOggiChiusi instanceof Set?opzioni.pastiOggiChiusi:new Set();
-  for(let di=0;di<days.length;di++){const day=days[di];if(day<today)continue;for(const pasto of ['pranzo','cena']){const old=await getOne('piano',day+'_'+pasto);if(old&&old.bloccata)continue;if(old&&old.consumato)continue;if(day===today&&!old&&pastiOggiChiusi.has(pasto))continue;if(old&&!opzioni.forza&&old.realizzazioni&&old.realizzazioni.length)continue;slotDaGenerare.push({day,di,pasto});}}
+  for(let di=0;di<days.length;di++){const day=days[di];if(day<=today)continue;for(const pasto of ['pranzo','cena']){const old=await getOne('piano',day+'_'+pasto);if(old&&old.bloccata)continue;if(old&&old.consumato)continue;if(old&&!opzioni.forza&&old.realizzazioni&&old.realizzazioni.length)continue;slotDaGenerare.push({day,di,pasto});}}
   let tab={};
   try{const r=await getOne('impostazioni','tabellaGiornoCategoria');tab=r&&r.valore||{};}catch(e){}
   const runtimeConfig=await configRuntime(),weeklyIngredientCounts={},weeklySubtypeCounts={},weeklyStackKeys=new Set(),generatedIds=new Set(slotDaGenerare.map(x=>x.day+'_'+x.pasto)),seenSlots=new Set(),proteineGiorno=new Map();
