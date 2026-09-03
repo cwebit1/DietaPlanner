@@ -855,7 +855,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 <section class="view" id="view-nutrizionista">
   <button class="secondary" id="btnTornaImpostazioni" style="margin-bottom:12px;">← Torna a Impostazioni</button>
   <div class="card"><h3>Allergeni e intolleranze</h3><div class="meta">La selezione esclude in modo rigido tutti gli ingredienti e le ricette collegati.</div><div class="tabgroup" id="configAllergeniAttivi" style="margin-top:10px;"></div></div>
-  <div class="card"><h3>Piano alimentare</h3><div class="meta">Le esclusioni del piano sono automatiche, visibili e non modificabili finché il piano resta selezionato.</div><select id="configProfiloAlimentare" style="margin-top:10px;"><option value="onnivoro">Onnivoro</option><option value="vegetariano">Vegetariano</option><option value="vegano">Vegano</option></select></div>
+  <div class="card"><h3>Piano alimentare</h3><div class="meta">Le esclusioni del piano sono automatiche, visibili e non modificabili finché il piano resta selezionato.</div><select id="configProfiloAlimentare" style="margin-top:10px;"><option value="onnivoro">Onnivoro</option><option value="vegetariano">Vegetariano</option><option value="vegano">Vegano</option></select><button id="btnRicostruisciDopoProfilo" class="secondary" style="margin-top:10px;font-size:0.78rem;opacity:0.7;" title="Da premere dopo aver salvato un cambio di profilo alimentare">Applica cambio profilo e ricostruisci</button></div>
   <div class="card"><h3>Parametri nutrizionali globali</h3><div class="meta">I limiti nutrizionali derivano dal PDF; le regole tecniche dell'app sono indicate separatamente come APP-CWE.</div><div id="configAvanzataCampi" class="nutri-config-grid" style="margin-top:10px;"></div></div>
   <div class="card"><h3>Carboidrati complessi e semplici</h3><div id="configClassiCarboidrati" class="nutri-config-grid" style="margin-top:10px;"></div></div>
   <div class="card"><h3>Impostazioni ingredienti</h3><div class="meta">L'elenco proviene da Ingredienti. Tocca un ingrediente: giallo = limitato, rosso = escluso, terzo tocco = senza restrizioni. Per un ingrediente limitato puoi impostare anche massimo e quantità specifici per colazione, pasto principale e spuntino.</div><div id="configMacroIngredienti" style="min-width:0;margin-top:12px;"></div><div id="configVincoliIngredienti" class="nutri-config-grid" style="margin-top:12px;"></div></div>
@@ -8169,6 +8169,16 @@ document.getElementById('btnApriNutrizionista').addEventListener('click',()=>mos
 document.getElementById('btnTornaImpostazioni').addEventListener('click',()=>mostraVista('impostazioni'));
 document.getElementById('configProfiloAlimentare').addEventListener('change',async()=>{aggiornaCampiProfiloNutrizionista();await renderVincoliIngredientiNutrizionista();});
 document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{const def=configAvanzataDefaultCanonico();await put('impostazioni',{chiave:'configAvanzata',valore:def});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await put('impostazioni',{chiave:'ingredientiBloccati',valore:[]});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:{}});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:{}});applicaConfigAvanzataRuntime(def);await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati dalla baseline canonica.';});
+document.getElementById('btnRicostruisciDopoProfilo').addEventListener('click',async()=>{
+  /* Il profilo alimentare non cambia mai da solo durante l'uso normale -
+     va ricalcolato solo quando lo decide chi gestisce il Nutrizionista.
+     Un pulsante esplicito, non un controllo automatico sparso ovunque:
+     cancella la cache del catalogo compilato e la cache in memoria del
+     motore, poi ricarica la pagina da zero. */
+  await delKey('impostazioni','versioneRicetteCache');
+  await avviso('Profilo aggiornato. La pagina si ricarica adesso per applicarlo.');
+  location.reload();
+});
 
 /* =========================================================
    VIEW: SPESA

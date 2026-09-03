@@ -36,7 +36,8 @@ const state = {
   baseByName:new Map(),
   variantByName:new Map(),
   tracking:{ultimoUtilizzo:{}, utilizziSettimanali:{}, condimentoRotazione:{contatore:0,ultimo:{}}},
-  propostaCicli:new Map()
+  propostaCicli:new Map(),
+  runtimeConfigCache:null
 };
 
 function slug(s){
@@ -814,9 +815,16 @@ async function registraUtilizzo(r,data){
   await salvaTracking();
 }
 
-async function configRuntime(){
+async function configRuntime(forzaRicalcolo){
+  /* Il profilo alimentare (allergie, esclusioni, vegano/ecc.) non cambia
+     durante l'uso normale dell'app: lo si calcola una volta e lo si tiene
+     in memoria per tutta la sessione, non ad ogni ricetta/condimento/pasto.
+     Si ricalcola SOLO quando le impostazioni vengono davvero salvate
+     (vedi invalidaConfigRuntime, chiamata dall'interfaccia al commit di
+     Set/Nutrizionista) - mai per abitudine o "per sicurezza". */
+  if(!forzaRicalcolo&&state.runtimeConfigCache) return state.runtimeConfigCache;
   const resolved=await caricaConfigurazioneNutrizionaleRisolta();
-  return {
+  state.runtimeConfigCache={
     resolved,
     allergie:resolved.safety.allergens,
     blockedIngredientIds:new Set(resolved.safety.blockedIngredientIds),
@@ -824,7 +832,9 @@ async function configRuntime(){
     weeklyLimits:resolved.subtypeCaps,
     maxProteinSourcesPerDay:resolved.maxProteinSourcesPerDay
   };
+  return state.runtimeConfigCache;
 }
+function invalidaConfigRuntime(){ state.runtimeConfigCache=null; }
 
 function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
   counts=counts||{};origins=origins||{};states=states||{};
@@ -2307,6 +2317,7 @@ global.DietaPlannerMotorV12={
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
   prioritaVerdureProgrammazionePasti,
-  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi
+  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,
+  invalidaConfigRuntime
 };
 })(typeof window!=='undefined'?window:globalThis);
