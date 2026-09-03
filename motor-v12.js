@@ -1517,7 +1517,8 @@ async function generaCandidatiPasto(target,data,opts){
 }
 async function contestoConteggiSettimana(giorno){
   const runtimeConfig=await configRuntime();
-  const weeklyIngredientCounts={},weeklySubtypeCounts={},weeklyStackKeys=new Set();
+  const weeklyIngredientCounts={},weeklySubtypeCounts={},weeklyStackKeys=new Set(),weeklyCarbCounts={},carboidratoGiorno=new Map();
+  const registraCarboGiorno=(g,chiave)=>{if(!chiave||!g)return;if(!carboidratoGiorno.has(g))carboidratoGiorno.set(g,new Set());carboidratoGiorno.get(g).add(chiave);};
   if(typeof getAll==='function'){
     const settimana=startOfWeekISO(new Date((giorno||isoDate(new Date()))+'T12:00:00'));
     const [log,piano]=await Promise.all([getAll('consumoGiorno'),getAll('piano')]);
@@ -1526,6 +1527,8 @@ async function contestoConteggiSettimana(giorno){
       const rr=ricetteDaIds(row.ricettaIds||[]);
       accumulaConteggiPasto(rr,weeklyIngredientCounts,weeklySubtypeCounts);
       rr.flatMap(r=>r.chiaviStack||[]).forEach(k=>weeklyStackKeys.add(k));
+      const carb=row.carboidratoPianificato||carbPrincipaleRicette(rr);
+      if(carb){weeklyCarbCounts[carb]=(weeklyCarbCounts[carb]||0)+1;registraCarboGiorno(row.giorno,carb);}
     }
     for(const voce of piano||[]){
       const giornoVoce=String(voce.id||'').slice(0,10);
@@ -1533,9 +1536,11 @@ async function contestoConteggiSettimana(giorno){
       const rr=ricetteDaVocePiano(voce);
       accumulaConteggiPasto(rr,weeklyIngredientCounts,weeklySubtypeCounts);
       rr.flatMap(r=>r.chiaviStack||[]).forEach(k=>weeklyStackKeys.add(k));
+      const carb=voce.carboidratoPianificato||carbPrincipaleRicette(rr);
+      if(carb){weeklyCarbCounts[carb]=(weeklyCarbCounts[carb]||0)+1;registraCarboGiorno(giornoVoce,carb);}
     }
   }
-  return {runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,variantiPrioritarie:await variantiPrioritarieDeperimento()};
+  return {runtimeConfig,weeklyIngredientCounts,weeklySubtypeCounts,weeklyStackKeys,weeklyCarbCounts,carboidratoGiorno,variantiPrioritarie:await variantiPrioritarieDeperimento()};
 }
 /* Risolve UN singolo slot pasto su richiesta (fuori dal flusso di generazione
    settimanale in blocco), con la stessa costruzione sequenziale P->C->V
@@ -1628,6 +1633,13 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   let proteine=pool.filter(r=>copertura(r).tokens.has(token)&&!usataOggi(r));
   if(!proteine.length)proteine=pool.filter(r=>copertura(r).tokens.has(token));
   proteine=ordinaPerStackPoiCaso(proteine,ctx.weeklyStackKeys);
+  /* Salvafrigo (ctx.livelliInventario presente): a parita' di token, le
+     ricette che usano scorte urgenti/avanzi/freezer vengono provate prima -
+     stesso meccanismo a livelli di applicaPrioritaInventario gia' usato nel
+     resto del motore, qui applicato al pool proteico e a ciascun pool
+     carboidrato candidato. Nessun effetto quando assente (settimana,
+     rigenerazione ordinaria). */
+  if(ctx.livelliInventario)proteine=applicaPrioritaInventario(proteine,ctx.livelliInventario);
 
   for(const proteina of proteine){
     if(copertura(proteina).C){
@@ -1639,7 +1651,8 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
     }
     for(const chiave of carbCandidati){
       if(!composizioneSeparataConsentita(proteina,chiave))continue;
-      const carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
+      let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
+      if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
       if(!carboScelte.length)continue;
       const esito=await chiudiPastoConVerdura([proteina,carboScelte[0]],token,giorno,pool,ctx);
       if(esito)return Object.assign(esito,{
@@ -1871,50 +1884,59 @@ async function verduraRicorrenteRichiesta(giorno,pasto){
   return scelta&&scelta.valore&&selezionati.has(pasto+'_'+indiceGiorno)?scelta.valore:null;
 }
 
+/* "Proponi nuovo pasto": stessa costruzione sequenziale P->C->V della
+   settimana, ma esclude fin da subito soltanto la ricetta P specifica
+   gia' nel piano (non l'intera classe) - es. pranzo con "Sogliola ai
+   ferri" (PP): la query propone un'altra ricetta PP qualsiasi, con C e V
+   ricalcolati da capo (il carboidrato attuale puo' restare se ancora
+   compatibile/nel cooldown, o cambiare). Lo storico "proposte gia' viste"
+   resta e si estende: ogni pressione esclude anche tutte le proteine gia'
+   proposte in questa sessione, non solo quella originale - altrimenti si
+   rischia di riproporre la stessa alternativa appena vista. */
 async function rigeneraPasto(giorno,pasto,target,opzioni){
   opzioni=opzioni||{};
   const id=giorno+'_'+pasto;
   const old=typeof getOne==='function'?await getOne('piano',id):null;
   target=target||(old&&old.categoriaTarget)||'legumi';
+  const token=PROTEIN_MACRO_TO_TOKEN[target]||SUBTYPE_TO_TOKEN[target]||target;
 
-  const correnti=(old&&old.realizzazioni||[])
-    .map(x=>x&&x.ricettaId)
-    .filter(Boolean)
-    .map(rid=>state.ricetteById.get(rid))
-    .filter(Boolean);
-  const firmaCorrente=firmaPastoDaRicette(correnti);
-  const chiave='pasto|'+giorno+'|'+pasto+'|'+target;
-  let visti=getPropostaSet(chiave);
-  if(firmaCorrente) visti.add(firmaCorrente);
+  const ricettaAttualeId=(old&&old.realizzazioni||[]).map(x=>x&&x.ricettaId).find(rid=>rid&&state.ricetteById.has(rid)&&copertura(state.ricetteById.get(rid)).tokens.has(token))||null;
+  const chiave='pastoP|'+giorno+'|'+pasto+'|'+target;
+  const visti=getPropostaSet(chiave);
+  if(ricettaAttualeId)visti.add(ricettaAttualeId);
 
-  const requiredCarbKey=old&&old.carboidratoPianificato||null;
   const resolved=await caricaConfigurazioneNutrizionaleRisolta();
+  if(!resolved.valid)return null;
   const requiredVegetableVariantId=await verduraRicorrenteRichiesta(giorno,pasto);
-  const opzioniCandidato={
-    vegetablePortions:resolved.vegetables,
-    usaInventario:!!opzioni.usaInventario,
-    requiredVegetableVariantId
-  };
-  if(requiredCarbKey)opzioniCandidato.carbBudget={requiredKey:requiredCarbKey};
-  const variantiPrioritarie=opzioni.usaInventario?new Set():await variantiPrioritarieDeperimento();
-  const candidati=await generaCandidatiPasto(target,giorno,opzioniCandidato);
-  let disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
-  if(!opzioni.usaInventario)disponibili=prioritaVerdureProgrammazionePasti(disponibili,giorno,variantiPrioritarie);
+  const ctx=await contestoConteggiSettimana(giorno);
+  ctx.vegetablePortions=resolved.vegetables;
+  ctx.requiredVegetableVariantId=requiredVegetableVariantId;
+  ctx.todayStackKeys=new Set();
 
-  if(!disponibili.length){
+  const cooldownEsclusi=new Set([
+    ...(ctx.carboidratoGiorno.get(giorno)||[]),
+    ...(ctx.carboidratoGiorno.get(addGiorni(giorno,-1))||[])
+  ]);
+  const residuiInfo=residuiCarboidratiFissi(resolved,ctx.weeklyCarbCounts);
+  if(opzioni.usaInventario)ctx.livelliInventario=await livelliPrioritaInventario();
+  const carbCandidati=carboidratiCandidatiSlot(resolved,residuiInfo.remaining,Infinity,cooldownEsclusi,Math.random);
+
+  const pool=(await poolAmmesso(giorno,{runtimeConfig:ctx.runtimeConfig})).filter(r=>!(copertura(r).tokens.has(token)&&visti.has(r.id)));
+
+  let x=await costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx);
+  if(!x){
+    /* Storico esaurito (tutte le proteine di questa classe gia' proposte
+       in sessione): si riparte, come per il resto del motore non si
+       blocca l'azione dell'utente. */
     azzeraProposte(chiave);
-    visti=getPropostaSet(chiave);
-    if(firmaCorrente) visti.add(firmaCorrente);
-    disponibili=candidati.filter(c=>!visti.has(c.firmaPasto));
-    if(!opzioni.usaInventario)disponibili=prioritaVerdureProgrammazionePasti(disponibili,giorno,variantiPrioritarie);
-    if(!disponibili.length) disponibili=candidati.slice();
+    const poolCompleto=await poolAmmesso(giorno,{runtimeConfig:ctx.runtimeConfig});
+    x=await costruisciPastoSequenziale(token,giorno,carbCandidati,poolCompleto,ctx);
   }
-
-  let x=scegliCasuale(disponibili);
-  if(!x) return null;
+  if(!x)return null;
   x=await assegnaCondimentiRotazioneGlobale(x,giorno);
 
-  getPropostaSet(chiave).add(x.firmaPasto);
+  const ricettaScelta=(x.realizzazioni||[]).map(r=>r.ricettaId).find(rid=>rid&&state.ricetteById.has(rid)&&copertura(state.ricetteById.get(rid)).tokens.has(token));
+  if(ricettaScelta)getPropostaSet(chiave).add(ricettaScelta);
 
   const voce=Object.assign({},old||{id},{
     modo:'multi',
@@ -1925,6 +1947,7 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
     origine:'motore-nuovo',
     programmatoIl:new Date().toISOString(),
     categoriaTarget:target,
+    carboidratoPianificato:x.carbKeyUsato||null,
     avvisoCarboidrato:x.avviso||null
   });
   if(opzioni.usaInventario){
