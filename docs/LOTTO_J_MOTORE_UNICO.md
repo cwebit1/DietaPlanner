@@ -959,3 +959,47 @@ nella repository.
   residuo sotto 50 g senza entrambi `S` e `G`, mantenendo l'invariante già
   dichiarata. Batteria completa: 26/26 suite superate; stress V/S/G: 25
   settimane e 350 pasti completi; sintassi e `git diff --check` superati.
+- **Intervento 04/09/2026 — falso avviso di sostituzione carboidrato con
+  slot interamente AUTO.** Segnalato da Cwe con caso reale ("Tagliolini
+  all'uovo con zucchine e carote" con triangolo giallo, Set senza alcun
+  carboidrato FIXED impostato). Causa in `costruisciPastoSequenziale`: il
+  confronto `chiave!==carbCandidati[0]` usava come riferimento il primo
+  elemento di `carbCandidati`, una lista **mescolata** (`mescolaValori`) —
+  posizione casuale, mai una condizione utente esplicita. Con tutti i
+  carboidrati AUTO l'avviso scattava quindi quasi sempre, anche quando
+  nessuna sostituzione era realmente avvenuta. Fix: l'avviso ora confronta
+  la chiave usata con l'insieme dei candidati **FIXED con residuo>0**
+  (`ctx.residuiCarboidrati`, già disponibile in tutti e tre i chiamanti —
+  settimana, rigenerazione, slot singolo); scatta solo se un FIXED era
+  disponibile fra i candidati e non è stato usato. Nessun avviso quando lo
+  slot è interamente AUTO, qualunque sia l'ordine casuale dei candidati.
+  Verificato empiricamente: prima del fix, 48-57 falsi avvisi per
+  generazione settimanale (14 slot) su Set interamente AUTO; dopo il fix,
+  0 su 20 generazioni. Aggiunto
+  `tests/lotto-j-avviso-solo-per-fissi-sostituiti.test.js` (fallisce sul
+  codice precedente, passa dopo il fix; controprova con un FIXED
+  configurato per verificare che l'avviso legittimo non sia stato
+  disattivato insieme al falso positivo). Batteria completa: 28/28 test.
+  Verificati anche in questa sessione, senza modifiche necessarie: fase
+  1-3 di costruzione P→C.user→C (già corrispondenti alla specifica sez. 6
+  e a `carboidratoCombinatoAmmesso`), separazione sughi/condimenti dalla
+  scelta P/C (già post-hoc in `chiudiPastoConVerdura`/`completaResiduoVerduraRicette`),
+  cache `configRuntime()` (il bypass a `{}` nei 5 punti Roll/condimento
+  documentato l'03/09 è di fatto neutralizzato dalla cache di sessione
+  aggiunta lo stesso giorno, non riletto da IndexedDB a ogni chiamata).
+  **Trovato ma non toccato, in attesa di indicazioni di Cwe**: (1) latenza
+  Roll — `statoRollPasto` ricalcola sempre tutte e tre le alternative
+  C/P/V a ogni render, anche dopo un Roll di un solo tipo; richiede un
+  intervento con verifica prima/dopo sui tempi reali, non fatto in questa
+  sessione priva di browser. (2) L'editor manuale "tocca la ricetta, si
+  apre una finestra, scegli e salva" descritto da Cwe non corrisponde a
+  nessun percorso raggiungibile nel codice attuale: `renderPastoTabContenuto`/
+  `draftPasto`/`primoId`/`secondoId`/`contornoId` esistono ancora nel
+  sorgente ma non sono più chiamati da nessun click reale (confermato con
+  grep su tutti i chiamanti) — sono lo stesso "editor manuale finestra
+  pasto" già segnalato come deliberatamente fuori scope il 02/09. Il
+  meccanismo oggi realmente raggiunto (Roll 🔄 + bozza `bozzeRollPendenti`
+  + `menuDraft` + Salva) risulta invece corretto per costruzione e
+  già verificato più volte in sessioni precedenti. Da chiarire con Cwe se
+  il codice morto va rimosso o se descriveva un'interazione diversa non
+  ancora implementata.

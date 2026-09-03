@@ -211,3 +211,23 @@ Ultimo commit di questa sezione: `8d2be4e`.
   per i carboidrati, o accettare l'errore esplicito.
 - Dettaglio completo di ogni intervento nella memoria di sessione di Claude
   e nei messaggi del commit corrispondente su GitHub.
+
+## Aggiornamento 04/09/2026
+
+- Corretto falso avviso (triangolo giallo) di sostituzione carboidrato
+  quando tutti gli slot sono AUTO (nessun FIXED nel Set): l'avviso
+  confrontava la chiave scelta con il primo elemento di una lista
+  mescolata casualmente, non con una reale condizione utente. Ora scatta
+  solo se un carboidrato FIXED disponibile è stato scartato. Dettaglio in
+  `LOTTO_J_MOTORE_UNICO.md`. Aggiunto
+  `tests/lotto-j-avviso-solo-per-fissi-sostituiti.test.js`. 28/28 suite.
+- Verificati senza necessità di modifiche: sequenza P→C.user→C (spec
+  sez. 6), separazione sughi/condimenti dalla scelta P/C, cache
+  `configRuntime()`.
+- **Ancora aperto, non affrontato in questa sessione**: latenza percepita
+  sul Roll (`statoRollPasto` ricalcola tutte e tre le alternative C/P/V a
+  ogni render, anche quando ne è stata usata una sola) — diagnosi fatta,
+  fix non applicato, richiede verifica di tempi reali in browser. Il
+  codice morto `renderPastoTabContenuto`/`draftPasto` (editor manuale mai
+  raggiungibile dal click reale, distinto dal Roll che invece funziona)
+  resta da chiarire con Cwe: rimuovere o completare.

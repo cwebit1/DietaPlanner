@@ -1705,10 +1705,23 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
          il carboidrato in se' sia incompatibile. */
       for(const carboScelto of carboScelte){
         const esito=await chiudiPastoConVerdura([proteina,carboScelto],token,giorno,pool,ctx);
-        if(esito)return Object.assign(esito,{
-          carbKeyUsato:chiave,
-          avviso:chiave!==carbCandidati[0]?('Carboidrato '+carbCandidati[0]+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
-        });
+        if(esito){
+          /* L'avviso segnala soltanto la sostituzione di una condizione
+             utente esplicita: un carboidrato FIXED (residuo ancora da
+             piazzare) che risultava fra i candidati ma non e' stato
+             usato. carbCandidati e' una lista mescolata (mescolaValori) -
+             la sua posizione [0] e' casuale e non rappresenta mai una
+             scelta dell'utente, quindi non va usata come riferimento.
+             Quando lo slot e' interamente AUTO (nessun fisso fra i
+             candidati) non esiste alcuna condizione utente sostituita:
+             un AUTO scelto al posto di un altro AUTO non genera avviso. */
+          const fissiDisponibili=carbCandidati.filter(k=>(ctx.residuiCarboidrati||{})[k]>0);
+          const fissoSostituito=fissiDisponibili.length&&!fissiDisponibili.includes(chiave)?fissiDisponibili[0]:null;
+          return Object.assign(esito,{
+            carbKeyUsato:chiave,
+            avviso:fissoSostituito?('Carboidrato '+fissoSostituito+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
+          });
+        }
       }
     }
     /* Nessun carboidrato fra i candidati e' compatibile con questa
