@@ -1564,6 +1564,13 @@ async function risolviSlotSingolo(giorno,pasto,target,opzioni){
   if(!resolved.valid)return null;
   const ctx=await contestoConteggiSettimana(giorno);
   ctx.vegetablePortions=resolved.vegetables;
+  ctx.resolved=resolved;
+  const cooldownEsclusi=new Set([
+    ...(ctx.carboidratoGiorno.get(giorno)||[]),
+    ...(ctx.carboidratoGiorno.get(addGiorni(giorno,-1))||[])
+  ]);
+  ctx.cooldownCarboidrati=cooldownEsclusi;
+  ctx.residuiCarboidrati=residuiCarboidratiFissi(resolved,ctx.weeklyCarbCounts).remaining;
   const auto=(resolved.carbohydrates&&resolved.carbohydrates.autoEligibleKeys||[]).slice();
   const carbCandidati=opzioni.carbKey?[opzioni.carbKey]:mescolaValori(auto,Math.random);
   if(!carbCandidati.length)return null;
@@ -1650,6 +1657,21 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
   if(!risultato.bilancioVerdura.coperturaCompleta)return null;
   return risultato;
 }
+/* Una ricetta P+C gia' combinata e' un candidato P come tutti gli altri:
+   entra in gioco solo se il suo carboidrato incorporato e' ammissibile di
+   per se' - non e' mai preferita per il solo fatto di essere gia'
+   combinata (specifica sez. 6). Ammissibile vuol dire: non e' una voce
+   esclusa; se e' una voce a tetto settimanale, ne resta ancora da
+   piazzare; se e' una voce libera (AUTO), sempre ammessa rispettando
+   solo il cooldown di un giorno gia' in vigore per tutti gli AUTO. */
+function carboidratoCombinatoAmmesso(chiave,ctx){
+  const cfg=(ctx.resolved&&ctx.resolved.carbohydrates)||{};
+  if((cfg.excludedKeys||[]).includes(chiave))return false;
+  const residui=ctx.residuiCarboidrati||{};
+  if(Object.prototype.hasOwnProperty.call(residui,chiave))return residui[chiave]>0;
+  if((ctx.cooldownCarboidrati||new Set()).has(chiave))return false;
+  return true;
+}
 async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   const oggi=ctx.todayStackKeys||new Set();
   const usataOggi=r=>chiaviGiornoRicetta(r).some(k=>oggi.has(k));
@@ -1666,7 +1688,7 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
 
   for(const proteina of proteine){
     if(copertura(proteina).C){
-      const chiave=carbKeysRicetta(proteina).find(k=>carbCandidati.includes(k));
+      const chiave=carbKeysRicetta(proteina).find(k=>carboidratoCombinatoAmmesso(k,ctx));
       if(!chiave)continue;
       const esito=await chiudiPastoConVerdura([proteina],token,giorno,pool,ctx);
       if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
@@ -1836,7 +1858,7 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
       const vietate=new Set([...proteineGiorno.get(slot.day)].filter(k=>k!==p));
       for(const k of futureFissiGiorno)if(k!==p)vietate.add(k);
       const token=PROTEIN_MACRO_TO_TOKEN[p]||SUBTYPE_TO_TOKEN[p]||p;
-      const ctxPasto=Object.assign({},ctx,{forbiddenProteinMacros:vietate,requiredVegetableVariantId:ctx.requiredVegetable(slot)});
+      const ctxPasto=Object.assign({},ctx,{forbiddenProteinMacros:vietate,requiredVegetableVariantId:ctx.requiredVegetable(slot),residuiCarboidrati:residui,cooldownCarboidrati:cooldownEsclusi});
       candidato=await costruisciPastoSequenziale(token,slot.day,carbCandidati,pool,ctxPasto);
       if(candidato){target=p;break;}
     }
@@ -1967,6 +1989,7 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
   const residuiInfo=residuiCarboidratiFissi(resolved,ctx.weeklyCarbCounts);
   if(opzioni.usaInventario)ctx.livelliInventario=await livelliPrioritaInventario();
   const carbCandidati=carboidratiCandidatiSlot(resolved,residuiInfo.remaining,Infinity,cooldownEsclusi,Math.random);
+  ctx.resolved=resolved;ctx.residuiCarboidrati=residuiInfo.remaining;ctx.cooldownCarboidrati=cooldownEsclusi;
 
   const pool=(await poolAmmesso(giorno,{runtimeConfig:ctx.runtimeConfig})).filter(r=>!(copertura(r).tokens.has(token)&&visti.has(r.id)));
 
