@@ -2211,6 +2211,11 @@ async function salvaConfigAvanzata(){
   await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:cloneConfigurazione(vincoliIngredientiNutrizionistaDraft)});
   await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:classi});
   await put('impostazioni',{chiave:'ingredientiBloccati',valore:ingredientiEsclusi});
+  /* Allergeni, vincoli e blocchi ingrediente sono letti dal motore tramite
+     una cache in memoria valida per tutta la sessione (vedi motor-v12.js,
+     configRuntime) - va invalidata qui, all'unico punto reale dove queste
+     impostazioni cambiano davvero, non con controlli sparsi altrove. */
+  if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();
   applicaConfigAvanzataRuntime(cfgEffettiva);
   await renderConfigAvanzata();
   const note=resolved.warnings&&resolved.warnings.length?' · valori ricondotti ai limiti PDF: '+resolved.warnings.join(' '):'';
@@ -2885,6 +2890,10 @@ async function salvaSetCompleto(mostraMessaggio){
   await commitSetDraftAtomico();
   if(setDraft){setDraft.voci.clear();setDraft.modificata=false;}
   tabellaProteineAnteprima=null;
+  /* I limiti personali appena salvati entrano nella config nutrizionale
+     che il motore tiene in cache per tutta la sessione (motor-v12.js,
+     configRuntime) - stessa invalidazione fatta al salvataggio Nutrizionista. */
+  if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();
   if(mostraMessaggio!==false)await avviso('✅ Configurazione Set salvata.');
   return {ok:true};
 }
@@ -8191,7 +8200,7 @@ document.getElementById('btnSalvaConfigAvanzata').addEventListener('click',salva
 document.getElementById('btnApriNutrizionista').addEventListener('click',()=>mostraVista('nutrizionista'));
 document.getElementById('btnTornaImpostazioni').addEventListener('click',()=>mostraVista('impostazioni'));
 document.getElementById('configProfiloAlimentare').addEventListener('change',async()=>{aggiornaCampiProfiloNutrizionista();await renderVincoliIngredientiNutrizionista();});
-document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{const def=configAvanzataDefaultCanonico();await put('impostazioni',{chiave:'configAvanzata',valore:def});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await put('impostazioni',{chiave:'ingredientiBloccati',valore:[]});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:{}});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:{}});applicaConfigAvanzataRuntime(def);await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati dalla baseline canonica.';});
+document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{const def=configAvanzataDefaultCanonico();await put('impostazioni',{chiave:'configAvanzata',valore:def});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await put('impostazioni',{chiave:'ingredientiBloccati',valore:[]});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:{}});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:{}});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();applicaConfigAvanzataRuntime(def);await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati dalla baseline canonica.';});
 document.getElementById('btnRicostruisciDopoProfilo').addEventListener('click',async()=>{
   /* Il profilo alimentare non cambia mai da solo durante l'uso normale -
      va ricalcolato solo quando lo decide chi gestisce il Nutrizionista.
