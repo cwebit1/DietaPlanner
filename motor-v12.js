@@ -1562,8 +1562,7 @@ async function risolviSlotSingolo(giorno,pasto,target,opzioni){
   const token=PROTEIN_MACRO_TO_TOKEN[target]||SUBTYPE_TO_TOKEN[target]||target;
   const pool=await poolAmmesso(giorno,{runtimeConfig:ctx.runtimeConfig});
   const candidato=await costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx);
-  if(!candidato)return null;
-  return await assegnaCondimentiRotazioneGlobale(candidato,giorno);
+  return candidato;
 }
 async function generaPasto(target,data,opts){
   let candidati=await generaCandidatiPasto(target,data,opts||{});
@@ -1625,7 +1624,21 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
   if(ctx.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===ctx.requiredVegetableVariantId)))return null;
   if(ctx.forbiddenProteinMacros&&[...macroProteicheRicette(ricette)].some(k=>ctx.forbiddenProteinMacros.has(k)))return null;
   if(!pastoRispettaConteggi(ricette,ctx.runtimeConfig,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts))return null;
-  return risultatoPasto(token,ricette,0,null,ctx.vegetablePortions);
+  /* Il pasto si chiude qui, per intero, in un solo passaggio: la
+     rotazione condimento fa parte della chiusura, non un passaggio
+     successivo che riapre un pasto gia' considerato completo. La
+     rotazione puo' spostare i grammi di S/G di una ricetta (varianti
+     diverse hanno quantita' diverse) e rompere una copertura V appena
+     validata sopra: si ricontrolla qui, subito, sulla forma finale. Se
+     non regge, questa combinazione non era valida e si scarta - il
+     chiamante (costruisciPastoSequenziale) prova gia' la prossima
+     proteina/carboidrato candidato nello stesso ciclo, senza alcun
+     nuovo meccanismo di ripetizione. */
+  let risultato=await assegnaCondimentiRotazioneGlobale(risultatoPasto(token,ricette,0,null,ctx.vegetablePortions),giorno);
+  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions);
+  risultato.bilancioVerdura=await bilancioVerduraDaRealizzazioni(risultato.realizzazioni,ctx.vegetablePortions);
+  if(!risultato.bilancioVerdura.coperturaCompleta)return null;
+  return risultato;
 }
 async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   const oggi=ctx.todayStackKeys||new Set();
@@ -1843,22 +1856,20 @@ async function generaPianoSettimana(scarto,opzioni){
     requiredVegetable:s=>vrId&&vrPasti.has(s.pasto+'_'+s.di)?vrId:null
   });
   if(!soluzione.ok){
-    const retry=Number(opzioni._retryCompatibilita)||0;
-    if(retry<20)return generaPianoSettimana(scarto,Object.assign({},opzioni,{_retryCompatibilita:retry+1}));
+    /* Niente retry sull'intera settimana: ogni slot ha già esaurito
+       deterministicamente tutte le proteine e i carboidrati candidati
+       dentro risolviSettimanaSequenziale. Rifare tutto da capo non
+       cambia l'esito nella quasi totalità dei casi e moltiplica solo
+       l'attesa (fino a 20x su IndexedDB reale) senza risolvere nulla:
+       se non c'è una combinazione valida, va segnalato subito e con
+       precisione, non nascosto dietro un loop lungo. */
     return {generati:[],errori:soluzione.errori||['Nessuna composizione settimanale valida.']};
   }
   const slotDefs=soluzione.slotDefs;
   const generated=[],records=[];
   for(let si=0;si<slotDefs.length;si++){
       const {day,pasto,target}=slotDefs[si],id=day+'_'+pasto;
-      const x=await assegnaCondimentiRotazioneGlobale(soluzione.scelte[si],day);
-      x.realizzazioni=await normalizzaRealizzazioniVerdura(x.realizzazioni,day,resolved.vegetables);
-      x.bilancioVerdura=await bilancioVerduraDaRealizzazioni(x.realizzazioni,resolved.vegetables);
-      if(!x.bilancioVerdura.coperturaCompleta){
-        const retry=Number(opzioni._retryCompatibilita)||0;
-        if(retry<20)return generaPianoSettimana(scarto,Object.assign({},opzioni,{_retryCompatibilita:retry+1}));
-        return {generati:[],errori:['Copertura verdura incompleta dopo la chiusura dello slot '+day+' '+pasto+'.']};
-      }
+      const x=soluzione.scelte[si];
       records.push({
         id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,bilancioVerdura:x.bilancioVerdura||null,
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),
@@ -1869,7 +1880,7 @@ async function generaPianoSettimana(scarto,opzioni){
       generated.push(id);
   }
   for(const record of records)await put('piano',record);
-  return {generati:generated,errori:[],diagnostica:{pastiCompletati:soluzione.completati,tentativoCompleto:Number(opzioni._retryCompatibilita)||0}};
+  return {generati:generated,errori:[],diagnostica:{pastiCompletati:soluzione.completati}};
 }
 
 async function verduraRicorrenteRichiesta(giorno,pasto){
@@ -1933,7 +1944,6 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
     x=await costruisciPastoSequenziale(token,giorno,carbCandidati,poolCompleto,ctx);
   }
   if(!x)return null;
-  x=await assegnaCondimentiRotazioneGlobale(x,giorno);
 
   const ricettaScelta=(x.realizzazioni||[]).map(r=>r.ricettaId).find(rid=>rid&&state.ricetteById.has(rid)&&copertura(state.ricetteById.get(rid)).tokens.has(token));
   if(ricettaScelta)getPropostaSet(chiave).add(ricettaScelta);
