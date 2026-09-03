@@ -940,3 +940,22 @@ nella repository.
   l'elaborazione parte dalla vista Menù. Aggiunto
   `tests/menu-consumo-automatico-store-reale.test.js`; batteria completa:
   25/25 test superati. Nessuna modifica al motore o ai cataloghi.
+- **Intervento successivo — generazione settimanale sequenziale a layer:**
+  rimosso dal percorso runtime di `generaPianoSettimana` il preassemblaggio
+  globale delle sequenze proteiche e dei riabbinamenti C/P. Ogni slot viene
+  ora chiuso nell'ordine P/G -> C/S -> V; tabella completa e celle parziali
+  dell'utente sono vincolanti, mentre soltanto le celle assenti sono estratte
+  casualmente. Contatori, budget e stack di rotazione avanzano esclusivamente
+  dopo l'accettazione del pasto. Il vincolo giornaliero considera tutte le
+  macro proteiche concrete della ricetta, impedendo casi come Taleggio in una
+  ricetta mista seguito da un altro formaggio a cena. Se il profilo non offre
+  una seconda macro ammessa, la ripetizione necessaria resta consentita senza
+  violare il profilo. La scelta finale privilegia sempre i candidati con il
+  minor riuso delle chiavi di rotazione già collocate. Dopo l'assegnazione del
+  condimento lo snapshot V/S/G viene normalizzato e validato prima di entrare
+  nel buffer atomico. Aggiunto `tests/menu-layer-sequenziale.test.js`, con
+  tabella completa, parziale e assente e verifica delle macro effettive nei
+  due pasti giornalieri. Scartate a monte le basi che presenterebbero un
+  residuo sotto 50 g senza entrambi `S` e `G`, mantenendo l'invariante già
+  dichiarata. Batteria completa: 26/26 suite superate; stress V/S/G: 25
+  settimane e 350 pasti completi; sintassi e `git diff --check` superati.

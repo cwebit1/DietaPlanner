@@ -135,6 +135,19 @@ Sono due meccaniche collegate ma distinte.
   non acquisiscono priorità per il solo fatto di essere già combinate.
 - Dopo P e C viene calcolato matematicamente il solo residuo `V`; quindi lo
   slot viene validato, chiuso e il motore passa al successivo.
+- Quando `tabellaGiornoCategoria` esiste, ogni cella definita dall'utente è
+  vincolante. Le celle non definite vengono completate casualmente fra le
+  classi ancora ammesse; se la tabella non esiste, tutte le celle vengono
+  assegnate con lo stesso criterio casuale.
+- Pranzo e cena non ripetono la stessa macro proteica quando esiste una classe
+  alternativa ammessa. Il controllo usa tutte le macro realmente contenute
+  nelle ricette, non soltanto la categoria target: una ricetta mista che porta
+  anche formaggio rende il formaggio già usato per quel giorno. Nei profili
+  che lasciano una sola possibilità reale non viene inventata una categoria
+  vietata per simulare una rotazione impossibile.
+- Frequenze, cap, carboidrati e rotazione vengono aggiornati in memoria
+  soltanto dopo che il singolo pasto è stato costruito e accettato. Una scelta
+  tentata ma non collocata non è consumata e non influenza lo slot seguente.
 - Sono vietati sia il prodotto cartesiano fra pool indipendenti sia un
   risolutore globale che ricompili l'intera settimana in un'unica ricerca.
 - Gli esempi forniti durante diagnosi e revisione servono a dimostrare una

@@ -124,6 +124,16 @@ corrente. I test automatici e di contratto non sostituiscono questo gate.
 La checklist eseguibile e il criterio di rilascio sono consolidati in
 `LOTTO_H_CHECKLIST_RELEASE.md`.
 
+### Intervento sequenziale sul generatore
+
+La generazione settimanale chiude ora ogni slot prima di avanzare al
+successivo. Le celle proteiche utente sono vincolanti, le sole celle mancanti
+sono casuali e la rotazione avanza dopo il pasto accettato. Il controllo
+giornaliero usa le macro effettive delle ricette miste. Copertura finale e
+assenza di scritture parziali restano protette. Test dedicato:
+`tests/menu-layer-sequenziale.test.js`. Batteria completa: 26/26 suite
+superate; stress V/S/G: 25 settimane e 350 pasti completi.
+
 ### Verificato automaticamente
 
 - settimana vuota, parziale e piena;

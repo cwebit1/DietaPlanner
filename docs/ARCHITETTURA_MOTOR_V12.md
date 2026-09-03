@@ -35,7 +35,7 @@ per i test; non costituiscono una seconda pipeline runtime.
 - espande i template a gruppi;
 - materializza ingredienti, quantità, nutrienti e nomi;
 - applica configurazione risolta, profilo, allergie, esclusioni e cap;
-- costruisce sequenze settimanali C e P;
+- costruisce ogni slot in sequenza P/G -> C/S -> V;
 - genera l'intera settimana in memoria e la salva solo a esito completo;
 - mantiene tracking, cooldown e rotazione condimenti;
 - espone rigenerazione, Roll C/P/V, Salvafrigo e accesso alle ricette.
@@ -55,13 +55,17 @@ moltiplica le combinazioni base.
 
 1. Risolve la configurazione nutrizionale.
 2. Conta consumi della settimana e pasti da preservare.
-3. Costruisce la sequenza carboidrati: FIXED residui più AUTO ammessi.
-4. Costruisce la sequenza proteica coerente con frequenze e profilo.
-5. Per ogni slot cerca soltanto combinazioni ammesse da copertura, cap,
-   esclusioni e carboidrato pianificato.
-6. Aggiorna progressivamente i contatori in memoria.
-7. Se uno slot non è costruibile, restituisce errore senza scritture parziali.
-8. Se tutti gli slot sono validi, salva il buffer completo.
+3. Visita gli slot in ordine, un pasto alla volta.
+4. Usa la cella proteica utente quando definita; altrimenti estrae una classe
+   ancora ammessa, evitando la macro già realmente usata nello stesso giorno
+   quando esiste un'alternativa.
+5. Sceglie per lo slot un carboidrato fra FIXED residui e AUTO ammessi, senza
+   creare prima una sequenza settimanale né riabbinarla globalmente.
+6. Costruisce P/G, poi C/S, poi il solo residuo V e valida lo snapshot finale.
+7. Soltanto dopo l'accettazione aggiorna contatori, budget e rotazione in
+   memoria; i tentativi scartati non risultano usati.
+8. Se uno slot non è costruibile, restituisce errore senza scritture parziali.
+9. Se tutti gli slot sono validi, salva il buffer completo.
 
 La programmazione non filtra negativamente per inventario. Ordina le verdure
 secondo la priorità di deperibilità della programmazione e costruisce il
