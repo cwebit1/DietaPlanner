@@ -284,3 +284,22 @@ Ultimo commit di questa sezione: `8d2be4e`.
   con IndexedDB reale via harness Node. Latenza misurata nello stesso
   harness (non browser), qualitativamente conclusiva: il rendering
   ordinario non chiama più il motore, prima lo faceva a ogni apertura.
+
+## Aggiornamento 04/09/2026 (4) — Regressione icone proteiche
+
+- Corretto: dal commit `8d2be4e` ogni proteina in Pasto/Programmazione
+  mostrava genericamente '🥩' (`ICONE_VSG.P`), ignorando il vero gruppo.
+  `iconaGruppoProteico()` esisteva già e non veniva più usata da quel
+  punto per le righe C/P/V.
+- `righeVsgUniche()` propaga ora `gruppoProteico` per riga; nuova
+  `iconeRigaVsg(riga)` (unica fonte condivisa, C/V fissi, P sempre via
+  `iconaGruppoProteico`) usata nei 3 renderer (Pasto, pannello proposta,
+  Programmazione). `iconaPastoDaVoce()` (calendario storico): non
+  riduce più al primo gruppo proteico trovato, niente più fallback
+  `'🍝'`, condizioni temporali invariate. `motor-v12.js` non toccato.
+- Nuovo test `tests/lotto-icone-gruppo-proteico.test.js` (esegue
+  davvero le funzioni estratte da `index.html`, fallisce sul codice
+  precedente, passa dopo): tutti gli 11 gruppi proteici, coerenza fra
+  le tre viste, combo C+P/P+V, doppia proteina reale non ridotta,
+  nessun default 🥩/🍝, record legacy con/senza gruppoProteico.
+- Suite: 31/31.

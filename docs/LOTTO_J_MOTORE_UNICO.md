@@ -1154,3 +1154,35 @@ nella repository.
   **Non verificato con un browser reale** in questa sessione (stesso
   limite di risorse) - copertura a livello di motore con IndexedDB reale
   via harness Node, come sopra.
+- **Intervento 04/09/2026 (4) — regressione icone proteiche generiche.**
+  Il commit `8d2be4e` aveva sostituito il rendering C/P/V con
+  `ICONE_VSG={C:'🍞',P:'🥩',V:'🥬'}`, mostrando '🥩' per qualsiasi
+  gruppo proteico invece della sua icona vera - `iconaGruppoProteico()`
+  esisteva già, semplicemente non più chiamata da quel punto in poi.
+  Fix in `index.html` soltanto (nessuna modifica a `motor-v12.js`):
+  `righeVsgUniche()` propaga `gruppoProteico` per riga (letto dalla
+  ricetta materializzata, campo già popolato dal motore in
+  `compilaRicetta`/`snapshotRealizzazione`, mai dedotto qui); nuova
+  `iconeRigaVsg(riga)` come unica fonte condivisa (C/V icone fisse, P
+  sempre `iconaGruppoProteico(riga.gruppoProteico)`), usata nei 3
+  renderer C/P/V (Pasto, pannello proposta, Programmazione).
+  `iconaPastoDaVoce()` (calendario storico, il modal calendario a salto
+  mese `renderCalendarioVisuale`): correggeva già in parte tramite
+  `iconaGruppoProteico`, ma riduceva al primo gruppo proteico trovato e
+  usava `'🍝'` come fallback per proteina non riconosciuta - entrambi
+  corretti (ora raccoglie tutti i gruppi reali distinti in ordine di
+  comparsa, nessun fallback alimentare), condizioni temporali
+  (`consumato`, schema nuovo/legacy) invariate. Record legacy
+  (`secondoId`/`ricettaId`) già gestiti leggendo `gruppoProteico` dalla
+  ricetta nel vecchio store `ricette`, comportamento confermato corretto.
+  **Verificato**: nuovo `tests/lotto-icone-gruppo-proteico.test.js`, che
+  estrae ed esegue davvero le funzioni da `index.html` (non un semplice
+  controllo di stringa) - tutti gli 11 gruppi proteici richiesti,
+  coerenza fra le tre viste per lo stesso gruppo, combo C+P e P+V con
+  icone corrette e una sola riga, due proteine reali distinte non
+  ridotte a una, nessun default 🥩/🍝, record legacy con e senza
+  `gruppoProteico` sulla ricetta. Fallisce sul codice precedente
+  (dimostrato con `git stash`), passa dopo. Aggiornato il contratto
+  obsoleto in `lotto-g-atomic-realizations.test.js` che imponeva la
+  vecchia mappa con `P:'🥩'`. Suite completa: 31/31. Sintassi, script
+  inline e JSON validati, `git diff --check` pulito.
