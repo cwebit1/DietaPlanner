@@ -5423,19 +5423,31 @@ function valoriRigaVsg(materializzate,tipo){
    proteina e verdura). Va scritta una sola volta, con le icone di tutti
    i ruoli che copre - non ripetuta identica su piu' righe. Ordine di
    lettura invariato: C, poi P, poi V; una ricetta gia' vista in una riga
-   precedente non genera una riga nuova, si aggiunge solo l'icona. */
-const ICONE_VSG={C:'🍞',P:'🥩',V:'🥬'};
+   precedente non genera una riga nuova, si aggiunge solo l'icona.
+   gruppoProteico viaggia con la riga (mai dedotto qui) cosi' il
+   renderer puo' sempre chiedere l'icona vera alla ricetta, mai a un
+   valore fisso per il ruolo P - vedi iconeRigaVsg. */
+const ICONE_VSG={C:'🍞',V:'🥬'};
 function righeVsgUniche(materializzate){
   const viste=new Map(),ordine=[];
   for(const tipo of ['C','P','V']){
     for(const r of (materializzate||[]).filter(x=>ricettaCopreRigaVsg(x,tipo))){
       const chiave=r.id||r.nome;
       if(!chiave)continue;
-      if(!viste.has(chiave)){viste.set(chiave,{id:r.id||null,nome:r.nome,tipi:[]});ordine.push(chiave);}
+      if(!viste.has(chiave)){viste.set(chiave,{id:r.id||null,nome:r.nome,tipi:[],gruppoProteico:r&&r.gruppoProteico||null});ordine.push(chiave);}
       if(!viste.get(chiave).tipi.includes(tipo))viste.get(chiave).tipi.push(tipo);
     }
   }
   return ordine.map(k=>viste.get(k));
+}
+/* Icone di una riga (Pasto, Programmazione): C e V restano fisse, P usa
+   SEMPRE iconaGruppoProteico() sul gruppo proteico vero della ricetta -
+   mai un'icona generica per la proteina, mai una seconda tabella di
+   corrispondenza. Una riga senza gruppoProteico riconosciuto (placeholder
+   di ruolo non coperto, o proteina non riconosciuta) non produce alcuna
+   icona per quel ruolo, mai un default alimentare arbitrario. */
+function iconeRigaVsg(riga){
+  return (riga&&riga.tipi||[]).map(t=>t==='P'?(iconaGruppoProteico(riga.gruppoProteico)||''):(ICONE_VSG[t]||'')).join('');
 }
 
 async function renderBloccoNuovoMotore(pasto,giorno,elementId){
@@ -5476,7 +5488,7 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   const copertiUnica=new Set(righeUniche.flatMap(r=>r.tipi));
   for(const tipo of ['C','P','V'])if(!copertiUnica.has(tipo))righeUniche.push({nome:null,tipi:[tipo]});
   righeUniche.forEach((riga,indice)=>{
-    const icone=riga.tipi.map(t=>ICONE_VSG[t]).join('');
+    const icone=iconeRigaVsg(riga);
     const valore=riga.nome||'Seleziona pasto';
     const avvisoCarb=riga.tipi.includes('C')&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classeAvviso=avvisoCarb?' avviso-programmazione':'',titoloAvviso=avvisoCarb?' title="'+esc(messaggioAvviso)+'"':'';
     /* Nessun click diretto sulla ricetta e nessun Roll per riga in questa
@@ -5565,7 +5577,7 @@ async function renderPannelloPropostaPasto(id,giorno,pasto,elementId){
   let html='<div class="meta" style="margin-top:10px;color:var(--accent);">'+(bozza.modalita==='salvafrigo'?'♻️ Proposta Salvafrigo':'Proposta alternativa')+' — non ancora salvata</div>';
   html+='<div class="pasto-griglia-compatta">';
   righeUniche.forEach(riga=>{
-    const icone=riga.tipi.map(t=>ICONE_VSG[t]).join('');
+    const icone=iconeRigaVsg(riga);
     const avvisoRiga=riga.tipi.includes('C')&&avvisoProposta;
     html+='<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icone+'</span><span class="pasto-riga-piatto"'+(avvisoRiga?' title="'+esc(avvisoProposta)+'"':'')+'>'+esc(riga.nome||'—')+(avvisoRiga?' ⚠':'')+'</span><span class="pasto-riga-comando"></span></div>';
   });
@@ -7113,7 +7125,7 @@ async function riepilogoGrigliaPastoMenu(giorno,pasto){
   for(const tipo of ['C','P','V'])if(!copertiUnica.has(tipo))righeUniche.push({id:null,nome:null,tipi:[tipo]});
   const stato=voce.consumato?'✓ ':voce.origine==='utente'?'⭐ ':'';
   return righeUniche.map((riga,indice)=>{
-    const icone=riga.tipi.map(t=>ICONE_VSG[t]).join('');
+    const icone=iconeRigaVsg(riga);
     const avviso=riga.tipi.includes('C')&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
     /* Un solo lucchetto per riga: se la riga copre piu' ruoli insieme
        (icone unite), il lucchetto blocca l'intera realizzazione che li
@@ -8093,12 +8105,20 @@ async function apriCalendarioVisuale(){
 function iconaPastoDaVoce(voce, ricettePerId){
   // Restituisce {icona, speciale} - gestisce sia lo schema nuovo
   // (motoreNuovo + realizzazioni, con gruppoProteico già nello snapshot)
-  // sia il vecchio (secondoId/ricettaId su store 'ricette').
+  // sia il vecchio (secondoId/ricettaId su store 'ricette'). Se la ricetta
+  // ha davvero piu' gruppi proteici (es. formaggio+affettati), li mostra
+  // tutti, senza duplicati e nell'ordine in cui compaiono nelle
+  // realizzazioni - mai ridotti arbitrariamente al primo trovato. Nessun
+  // fallback alimentare (niente '🍝'): una proteina non riconosciuta non
+  // produce icona, mai un'icona sbagliata al suo posto.
   if(!voce) return {icona:'', speciale:false};
   if(voce.motoreNuovo && Array.isArray(voce.realizzazioni) && voce.realizzazioni.length){
     if(!voce.consumato) return {icona:'', speciale:false};
-    const conGruppo = voce.realizzazioni.find(r => r && r.gruppoProteico);
-    return {icona: conGruppo ? iconaGruppoProteico(conGruppo.gruppoProteico) : '🍝', speciale:false};
+    const gruppi=[];
+    for(const r of voce.realizzazioni){
+      if(r&&r.gruppoProteico&&!gruppi.includes(r.gruppoProteico))gruppi.push(r.gruppoProteico);
+    }
+    return {icona: gruppi.map(g=>iconaGruppoProteico(g)).filter(Boolean).join(''), speciale:false};
   }
   const idRicette = voce.modo==='multi'
     ? [voce.secondoId].filter(Boolean)
@@ -8107,8 +8127,7 @@ function iconaPastoDaVoce(voce, ricettePerId){
     const r = ricettePerId[rid];
     if(r){
       if(r.piattoSpeciale) return {icona:'<span class="icona-pizza">🍕</span>', speciale:true};
-      if(voce.consumato && r.gruppoProteico) return {icona: iconaGruppoProteico(r.gruppoProteico), speciale:false};
-      if(voce.consumato) return {icona:'🍝', speciale:false};
+      if(voce.consumato) return {icona: r.gruppoProteico?(iconaGruppoProteico(r.gruppoProteico)||''):'', speciale:false};
     }
   }
   return {icona:'', speciale:false};

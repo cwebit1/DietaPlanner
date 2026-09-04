@@ -38,7 +38,8 @@ assert.equal(M.ordinaVerdureProgrammazione([fragile,durable],'2026-09-06')[0].id
 assert(motorSource.includes('const livelli=opts.usaInventario?await livelliPrioritaInventario():[]'));
 assert(index.includes('realizzazioni:voce.realizzazioni?structuredClone(voce.realizzazioni):[]'));
 assert(index.includes('if(!ing.variantId||ing.nonRichiedeInventario)continue'));
-assert(index.includes("const ICONE_VSG={C:'🍞',P:'🥩',V:'🥬'}"),'le icone C/P/V devono restare definite in un unico punto condiviso');
+assert(index.includes("const ICONE_VSG={C:'🍞',V:'🥬'}"),'C/V restano icone fisse definite in un unico punto condiviso');
+assert(index.includes("function iconeRigaVsg(riga)")&&index.includes("iconaGruppoProteico(riga.gruppoProteico)"),'la proteina di una riga deve usare sempre iconaGruppoProteico(), mai un\'icona generica fissa');
 assert(index.includes('function righeVsgUniche(materializzate)'),'una ricetta a piu ruoli deve essere raggruppata in una riga sola, non ripetuta');
 assert(index.includes('righeVsgUniche(materializzate)')&&(index.match(/righeVsgUniche\(materializzate\)/g)||[]).length>=2,'Menù e Pasto devono condividere la stessa logica di raggruppamento C/P/V');
 assert(index.includes('data-menu-macro'));
