@@ -10,7 +10,7 @@ assert.match(motor,/bilancioVerdura:await bilancioVerduraDaRealizzazioni\(realiz
 assert.match(motor,/if\(!c\.V\) return \[\];[\s\S]*async function proprietarioRoll/,'Roll V deve accettare soltanto una vera V');
 assert.match(motor,/if\(opzioni\.usaInventario\)ctx\.livelliInventario=await livelliPrioritaInventario\(\);[\s\S]{0,400}costruisciPastoSequenziale\(token,giorno,carbCandidati,pool,ctx\)/,'rigenerazione e Salvafrigo devono usare la pipeline comune con priorità inventario attivabile');
 assert.match(motor,/if\(ctx\.livelliInventario\)proteine=applicaPrioritaInventario\(proteine,ctx\.livelliInventario\)/,'Salvafrigo deve applicare davvero la priorità di scorte urgenti/avanzi/freezer al pool proteico');
-assert.match(html,/rigeneraPasto\(giorno,pasto,target,\{usaInventario:true\}\)/,'Salvafrigo deve attivare la stessa rigenerazione con priorità inventario');
+assert.match(html,/modalita==='salvafrigo'\?\{soloAnteprima:true,usaInventario:true\}:\{soloAnteprima:true\}/,'Salvafrigo (pagina Pasto) deve attivare la stessa rigenerazione con priorità inventario, come anteprima non salvata');
 assert.match(motor,/programmatoOriginale=\{[\s\S]{0,180}bilancioVerdura:clone\(old\.bilancioVerdura\|\|null\)/,'Salvafrigo deve preservare anche il bilancio programmato originale');
 
 console.log('lotto J Roll, Salvafrigo e rigenerazione V/S/G: ok');

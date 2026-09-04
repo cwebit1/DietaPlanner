@@ -1061,3 +1061,96 @@ nella repository.
   verifica end-to-end resta da fare quando servirà, la logica è comunque
   coperta a livello di motore con IndexedDB reale (harness Node, stessa
   tecnica già in uso per tutti i test di questo lotto).
+- **Intervento 04/09/2026 (3) — pagina Pasto: pulizia editor morto,
+  Alternativa/Salvafrigo come pura anteprima, rimossa la latenza di
+  rendering.** Ricostruito il call graph reale prima di ogni modifica.
+  **Codice morto eliminato** (righe 5636-6360 di `index.html`, ~725
+  righe, verificato chiamante per chiamante prima di toccarle - zero
+  riferimenti dal flusso reale `renderPiano`→`renderBloccoCompleto`→
+  `renderBloccoNuovoMotore`): `renderPastoTabContenutoLegacyV72`,
+  `renderPastoTabContenuto`, `renderContenutoAlternativaCompleta`,
+  `generaCandidatoDraft`, `generaCandidatoDraftModulare`,
+  `rigeneraPortataDraft`, `cambiaCellaDraft`, `confermaPastoDaTab`,
+  `abilitaRicercaDirettaPasto(LegacyV72)`, `applicaSalvafrigoAPortata`,
+  `applicaSelezioneRicercaPasto`, `applicaRicettaSceltaCopertura`,
+  `applicaEsitoCoperturaDraft`, `sincronizzaLegacyCoperturaDraft`,
+  `ricetteRealizzazioniUi`, `tokenProteinaUi`, `macroProteicaDraftRefresh`,
+  `carboidratoPrincipaleRicetta`, `preparaCandidatoPerTabDraft`,
+  `sincronizzaSoggettoProteicoDraft`, `trovaPiattoUnicoCompatibileDraft`,
+  `infoCombinazioneDraft`, `validaCarboidratoDraft`,
+  `carboidratiAmmessiCambioDraft`, `contaCarboidratiSettimanaDraft`,
+  `giorniSettimanaDiDataMotore`, `cottureAmmesseProteina`, e la variabile
+  `draftPasto` (comprese le 3 righe di reset in "Azzera storico
+  settimana/tutto" e "Resetta piano", aggiornate per azzerare la nuova
+  bozza al loro posto). **Non toccato** (verificato reachable e vivo):
+  `apriModalEditorPasto` (usata dagli spuntini, "Cosa hai mangiato?"),
+  `renderBloccoSemplice`/`renderContenutoAlternativaSemplice` (spuntini),
+  tutti i campi `primoId/secondoId/contornoId` usati altrove per
+  compatibilità con record piano in formato legacy (storico, lista
+  spesa, consumo) - questi non fanno parte dell'editor morto, restano
+  necessari. Anche `ruotaPasto`/`statoRollPasto` nel motore sono rimaste
+  definite ma non sono più chiamate da nessuna UI dopo questa modifica
+  (unico chiamante era proprio `renderBloccoNuovoMotore`, riscritta) -
+  **non rimosse**, non erano nell'elenco esplicito richiesto da Cwe;
+  segnalato per una decisione esplicita in una sessione futura.
+  **Causa della latenza, confermata con precisione**: `renderBloccoNuovoMotore`
+  chiamava `DietaPlannerMotorV12.statoRollPasto()` a ogni singolo
+  rendering del pasto (anche solo aprendo la pagina), calcolando in
+  anticipo tutte le alternative C/P/V anche quando l'utente non le
+  chiedeva. Rimossa dal rendering ordinario: ora zero chiamate al motore
+  finché non si preme Alternativa/Salvafrigo/Rigenera.
+  **Nuova interfaccia**: sotto ogni pasto modificabile, due soli
+  pulsanti (Alternativa, Salvafrigo) più un div proposta condiviso
+  (`propostaPasto_<giorno>_<pasto>`, indipendente per pranzo/cena),
+  inizialmente nascosto. Aperto, mostra la proposta completa e tre
+  pulsanti: Imposta come pasto, Rigenera, Annulla. Nessun click diretto
+  sulla ricetta, nessun Roll separato per riga (rimossi insieme al resto
+  del vecchio meccanismo `bozzeRollPendenti`/`ruotaPasto`/`salvaRoll`
+  come editor immediato).
+  **Comportamento**: `DietaPlannerMotorV12.rigeneraPasto` riceve un nuovo
+  parametro opzionale `opzioni.soloAnteprima` (additivo, comportamento
+  invariato quando assente - usato da "Genera pasto" su slot vuoto,
+  identico a prima) che salta l'unico `put('piano',...)` della funzione:
+  Alternativa passa `{soloAnteprima:true}`, Salvafrigo
+  `{soloAnteprima:true,usaInventario:true}` (stessa priorità inventario
+  di sempre), Rigenera-nel-pannello richiama la stessa modalità con cui
+  il pannello è stato aperto. La bozza risultante vive solo in
+  `bozzePropostaPasto[giorno_pasto]` (in memoria, mai in IndexedDB) fino
+  a "Imposta come pasto", che è l'**unico punto di salvataggio** di tutta
+  la pagina: riusa il committer generico già esistente `salvaRoll`
+  (`put('piano',voce)` e basta, nessuna logica specifica del Roll -
+  nome invariato per minimizzare il diff, il suo unico compito è sempre
+  stato "salva questa voce", coerente col riuso). Annulla scarta la
+  bozza senza toccare il pasto originale. Bozze azzerate a ogni ingresso
+  in Piano (cambio giorno o pagina, `renderPiano`), indipendenti per
+  pranzo/cena per costruzione (chiave `giorno_pasto`). Stati di
+  caricamento sui singoli pulsanti toccati (mai un overlay a pagina
+  intera) e nessun doppio submit (pulsante disabilitato durante la
+  generazione). Errori di generazione o salvataggio: pasto originale
+  sempre intatto (la ricerca lavora su una copia, `put()` avviene solo
+  al successo di "Imposta come pasto"; un fallimento del salvataggio
+  stesso lascia il pannello aperto con la stessa bozza, mai chiuso né
+  spacciato per confermato).
+  **Logica alimentare**: non toccata - `rigeneraPasto` continua a
+  chiamare `costruisciPastoSequenziale`/`chiudiPastoConVerdura` esistenti
+  (sequenza P→C.user→C, sughi/condimenti solo dopo, residuo V invariati).
+  **Verificato**: `tests/lotto-pasto-anteprima-non-salvata.test.js`
+  (nuovo, fallisce sul codice precedente - dimostrato con `git stash` -
+  passa dopo): 10 chiamate soloAnteprima (5 Alternativa, 5 Salvafrigo)
+  senza mai una scrittura su 'piano', "Imposta come pasto" come unico
+  punto che scrive, compatibilità confermata per la generazione su slot
+  vuoto (nessun flag, scrive subito come prima). Due contratti di test
+  pre-esistenti aggiornati alla nuova forma della chiamata (comportamento
+  verificato invariato): `lotto-g-atomic-realizations.test.js`,
+  `lotto-j-vsg-roll-salvafrigo.test.js`. Suite completa: 29/29 (stessa
+  flakiness pre-esistente e nota di `lotto-g-weekly-generation.test.js`
+  e `lotto-j-vsg-stress.test.js`, confermata invariata). Sintassi, script
+  inline e JSON validati, `git diff --check` pulito. Diff netto: -778/+232
+  righe in `index.html` (solo pagina Pasto, verificato hunk per hunk che
+  nessuno tocchi Programmazione/colazione/spuntini). Latenza: misurata in
+  harness Node (non browser reale, per lo stesso limite di risorse) la
+  sola `statoRollPasto()` che PRIMA veniva rifatta a ogni render; DOPO il
+  rendering ordinario non chiama più il motore (zero, non solo "meno").
+  **Non verificato con un browser reale** in questa sessione (stesso
+  limite di risorse) - copertura a livello di motore con IndexedDB reale
+  via harness Node, come sopra.

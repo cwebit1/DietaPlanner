@@ -2212,7 +2212,13 @@ async function rigeneraPasto(giorno,pasto,target,opzioni){
       programmatoIl:old.programmatoIl||null
     };
   }
-  if(typeof put==='function') await put('piano',voce);
+  /* opzioni.soloAnteprima: la pagina Pasto usa questa stessa funzione per
+     generare "Alternativa"/"Salvafrigo"/"Rigenera" come pura anteprima in
+     memoria - nessuna scrittura su IndexedDB finche' l'utente non preme
+     "Imposta come pasto" (che poi commit la stessa voce restituita qui,
+     tramite salvaRoll). Comportamento invariato per ogni altro chiamante
+     (Genera pasto su slot vuoto, Roll) che non passa questo flag. */
+  if(!opzioni.soloAnteprima&&typeof put==='function') await put('piano',voce);
   return voce;
 }
 

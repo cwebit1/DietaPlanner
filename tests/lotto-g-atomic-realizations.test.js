@@ -47,7 +47,7 @@ assert(index.includes('riepilogoGrigliaPastoMenu(g,pasto)'),'il Menù deve rende
 assert(index.includes("LABEL_PASTO[pasto].toUpperCase()+':'"),'Pasto deve mostrare PRANZO/CENA su una riga propria');
 assert(index.includes('await generaColazioniSettimanaCorrente(scartoSettimane,opzioni)'),'la generazione corrente deve includere le colazioni');
 assert(index.includes("getOne('impostazioni','colazionePreferitaGiorni')"),'le colazioni generate devono rispettare i giorni ricorrenti del Set');
-assert(index.includes("rigeneraPasto(giorno,pasto,target,{usaInventario:true})"));
+assert(index.includes("modalita==='salvafrigo'?{soloAnteprima:true,usaInventario:true}:{soloAnteprima:true}")&&index.includes('rigeneraPasto(giorno,pasto,target,opzioni)'),'Salvafrigo (pagina Pasto) deve attivare la stessa rigenerazione con priorità inventario, come anteprima non salvata');
 assert(index.includes('programmatoOriginale'));
 
 for(const block of index.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){

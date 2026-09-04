@@ -251,3 +251,36 @@ Ultimo commit di questa sezione: `8d2be4e`.
   Chromium/Playwright ancora da fare quando servirà.
 - Punti già noti e ancora aperti (latenza Roll, editor manuale morto)
   restano tali, non toccati in questo intervento.
+
+## Aggiornamento 04/09/2026 (3) — Pagina Pasto
+
+- Eliminato l'editor Pasto morto (`draftPasto` e ~725 righe collegate:
+  `renderPastoTabContenuto(LegacyV72)`, `renderContenutoAlternativaCompleta`,
+  `generaCandidatoDraft`, `confermaPastoDaTab` e tutti gli helper usati
+  solo da questi), verificato irraggiungibile chiamante per chiamante
+  prima di toccarlo. Non toccati: `apriModalEditorPasto` (spuntini),
+  `renderBloccoSemplice`/`renderContenutoAlternativaSemplice` (spuntini),
+  i campi `primoId/secondoId/contornoId` usati per compatibilità con
+  record piano legacy altrove nel codice.
+- Causa della latenza confermata: `renderBloccoNuovoMotore` chiamava
+  `statoRollPasto()` a ogni render, anche senza alcuna richiesta
+  dell'utente. Rimossa dal rendering ordinario.
+- Nuova interfaccia: sotto ogni pasto modificabile, solo "Alternativa" e
+  "Salvafrigo"; un pannello proposta con "Imposta come pasto"/"Rigenera"/
+  "Annulla". `rigeneraPasto` ha un nuovo parametro opzionale
+  `soloAnteprima` (additivo, invariato se assente) che salta il
+  `put('piano',...)`: l'unico salvataggio di tutta la pagina avviene ora
+  su "Imposta come pasto" (riusa `salvaRoll`). Dettaglio completo in
+  `LOTTO_J_MOTORE_UNICO.md`.
+- Nuovo test `tests/lotto-pasto-anteprima-non-salvata.test.js` (fallisce
+  sul codice precedente, passa dopo). Suite: 29/29 (stessa flakiness
+  pre-esistente nota di `lotto-g-weekly-generation.test.js` e
+  `lotto-j-vsg-stress.test.js`). Diff netto: -778/+232 righe.
+- `ruotaPasto`/`statoRollPasto` nel motore non hanno più alcun chiamante
+  dopo questa modifica ma non sono state rimosse (non erano nell'elenco
+  esplicito richiesto) — da decidere con Cwe.
+- **Non verificato con un browser reale in questa sessione** (limite di
+  risorse posto esplicitamente da Cwe): copertura a livello di motore
+  con IndexedDB reale via harness Node. Latenza misurata nello stesso
+  harness (non browser), qualitativamente conclusiva: il rendering
+  ordinario non chiama più il motore, prima lo faceva a ogni apertura.

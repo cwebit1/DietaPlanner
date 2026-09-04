@@ -181,6 +181,21 @@ Sono due meccaniche collegate ma distinte.
   prevista/acquistabile. L'assenza di scorta non blocca il pasto.
 - La scelta diretta dell'utente resta finché l'utente non la cambia.
 - Oggi resta modificabile manualmente fino alla relativa fascia oraria.
+- **Alternativa/Salvafrigo come pura anteprima (implementato 04/09/2026).**
+  Il rendering ordinario del pasto non calcola mai anticipatamente le
+  alternative: la ricerca parte solo alla pressione di Alternativa,
+  Salvafrigo o Rigenera. Entrambe generano un pasto completo con la
+  stessa pipeline della Programmazione (nessuna regola diversa), ma il
+  risultato resta soltanto una bozza in memoria (mai in IndexedDB, mai
+  in inventario/spesa/storico/consumi/utilizzi settimanali) finché
+  l'utente non preme "Imposta come pasto" — unico punto di salvataggio
+  della pagina. "Rigenera" all'interno del pannello resta nella stessa
+  modalità con cui è stato aperto (Alternativa resta Alternativa,
+  Salvafrigo resta Salvafrigo) e sostituisce solo la bozza. "Annulla"
+  scarta la bozza e lascia il pasto originale invariato. Le bozze di
+  pranzo e cena sono sempre indipendenti e vengono scartate a ogni
+  cambio di giorno o di pagina. Un pasto concluso, consumato o di un
+  giorno non modificabile non espone questi comandi.
 
 ## 7. Piano, consumo e storico
 
