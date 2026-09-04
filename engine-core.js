@@ -86,21 +86,125 @@ function coverageForRecipe(recipe,ingredientMeta){
   }
   if(carb)tokens.push('C');if(salad>=70||vegGrams>=200)tokens.push('V');return tokens;
 }
+/* buildProteinGrid: costruisce (o valida) la tabella proteica dei 7 giorni
+   x 2 pasti (pranzo/cena), rispettando SEMPRE contemporaneamente: minimi e
+   massimi settimanali per categoria, target come preferenza morbida,
+   categorie escluse (assenti da cfg.proteinFrequencies o con max=0),
+   celle fissate a mano (userTable) e il numero di fonti proteiche
+   giornaliere (cfg.maxProteinSourcesPerDay, letto dalla configurazione
+   canonica passata dal chiamante - mai un default locale duplicato).
+   Con maxProteinSourcesPerDay===2 (default): pranzo e cena dello stesso
+   giorno devono avere SEMPRE categorie diverse, garantito con vero
+   backtracking (mai un fallback che riusa la categoria precedente
+   quando il pool alternativo e' temporaneamente vuoto - quella era la
+   causa esatta del duplicato ['carne','carne']). Con
+   maxProteinSourcesPerDay===1: una singola categoria vale per entrambi
+   i pasti dello stesso giorno (stessa semantica di
+   opzioniProteinaPerSlot in motor-v12.js) - non dedotto mai dal numero
+   di caselle riempite, letto sempre e solo dalla configurazione.
+   Se i vincoli sono realmente incompatibili tra loro, restituisce
+   errors non vuoto e cells={} - mai una griglia formalmente completa
+   ma invalida. */
 function buildProteinGrid(days,userTable,config,history,rng){
-  const cfg=mergeConfig(config),cells={},counts={carne:0,pesce:0,formaggi:0,uova:0,legumi:0},errors=[];
-  for(const day of days){cells[day]={pranzo:{macro:null,source:'auto'},cena:{macro:null,source:'auto'}};const chosen=(userTable&&userTable[day]||[]).slice(0,2);chosen.forEach((macro,i)=>{if(!cfg.proteinFrequencies[macro])return;const meal=i?'cena':'pranzo';cells[day][meal]={macro,source:'user'};counts[macro]++;});}
-  for(const [m,n] of Object.entries(counts)){const max=cfg.proteinFrequencies[m].max;if(max!==null&&n>max)errors.push(`${m}: ${n} > ${max}`);}
-  let previous=null;
-  for(const day of days)for(const meal of ['pranzo','cena']){const cell=cells[day][meal];if(cell.macro){previous=cell.macro;continue;}
-    let pool=Object.keys(cfg.proteinFrequencies).filter(m=>counts[m]<cfg.proteinFrequencies[m].min);
-    if(!pool.length)pool=Object.keys(cfg.proteinFrequencies).filter(m=>counts[m]<(cfg.proteinFrequencies[m].target||cfg.proteinFrequencies[m].min)&&(cfg.proteinFrequencies[m].max===null||counts[m]<cfg.proteinFrequencies[m].max));
-    if(!pool.length)pool=Object.keys(cfg.proteinFrequencies).filter(m=>cfg.proteinFrequencies[m].max===null||counts[m]<cfg.proteinFrequencies[m].max);
-    const alt=pool.filter(m=>m!==previous);if(alt.length)pool=alt;
-    pool.sort((a,b)=>((history&&history.lastMacro&&history.lastMacro[a])||0)-((history&&history.lastMacro&&history.lastMacro[b])||0));
-    const macro=pool.length?shuffle(pool.filter(x=>((history&&history.lastMacro&&history.lastMacro[x])||0)===((history&&history.lastMacro&&history.lastMacro[pool[0]])||0)),rng)[0]:null;
-    if(!macro){errors.push(`nessuna proteina per ${day} ${meal}`);continue;}cell.macro=macro;counts[macro]++;previous=macro;
+  const cfg=mergeConfig(config);
+  const maxPerDay=Math.max(1,Math.min(2,Number(cfg.maxProteinSourcesPerDay)||2));
+  const categorie=Object.keys(cfg.proteinFrequencies).filter(m=>{
+    const f=cfg.proteinFrequencies[m];return f&&f.max!==0;
+  });
+  const counts={};for(const m of Object.keys(cfg.proteinFrequencies))counts[m]=0;
+  const errors=[];
+  const stato={};
+  for(const day of days){
+    const scelte=(userTable&&userTable[day]||[]).slice(0,2);
+    const pranzo=scelte[0]&&cfg.proteinFrequencies[scelte[0]]?scelte[0]:null;
+    const cena=scelte[1]&&cfg.proteinFrequencies[scelte[1]]?scelte[1]:null;
+    if(pranzo&&cena){
+      if(maxPerDay===2&&pranzo===cena)errors.push(`${day}: la stessa categoria (${pranzo}) non puo' comparire due volte con fonti proteiche/giorno=2.`);
+      if(maxPerDay===1&&pranzo!==cena)errors.push(`${day}: con fonti proteiche/giorno=1 pranzo e cena devono coincidere (trovati ${pranzo} e ${cena}).`);
+    }
+    stato[day]={pranzo,cena};
+    if(pranzo)counts[pranzo]++;
+    if(cena)counts[cena]++;
   }
-  return {cells,counts,errors};
+  if(errors.length)return {cells:{},counts,errors};
+  for(const m of categorie){
+    const max=cfg.proteinFrequencies[m].max;
+    if(max!=null&&counts[m]>max)errors.push(`${m}: superato il massimo settimanale (${counts[m]}/${max}) solo con le celle fissate.`);
+  }
+  if(errors.length)return {cells:{},counts,errors};
+
+  const liberi=[];
+  for(const day of days){
+    if(!stato[day].pranzo)liberi.push({day,pasto:'pranzo'});
+    if(!stato[day].cena)liberi.push({day,pasto:'cena'});
+  }
+  // controllo rapido di fattibilita' residua: se la somma dei deficit ai
+  // minimi supera gli slot liberi disponibili, e' gia' impossibile,
+  // nessun bisogno di avviare la ricerca.
+  const deficitTotale=categorie.reduce((tot,m)=>tot+Math.max(0,Number(cfg.proteinFrequencies[m].min||0)-counts[m]),0);
+  if(deficitTotale>liberi.length){
+    errors.push('Impossibile rispettare i minimi settimanali con gli slot liberi rimasti: servirebbero almeno '+deficitTotale+' pasti liberi, ne restano '+liberi.length+'.');
+    return {cells:{},counts,errors};
+  }
+
+  const ordinaCandidati=(candidati)=>{
+    const mischiati=shuffle(candidati,rng);
+    return mischiati.slice().sort((a,b)=>{
+      const da=Math.max(0,Number(cfg.proteinFrequencies[a].min||0)-counts[a]);
+      const db=Math.max(0,Number(cfg.proteinFrequencies[b].min||0)-counts[b]);
+      if(db!==da)return db-da; // maggior deficit al minimo prima
+      const la=(history&&history.lastMacro&&history.lastMacro[a])||0;
+      const lb=(history&&history.lastMacro&&history.lastMacro[b])||0;
+      return la-lb; // usato meno di recente prima
+    });
+  };
+  // Backtracking limitato ai soli slot liberi (al massimo 14): mai un
+  // retry casuale illimitato. Il budget e' un limite di sicurezza sui
+  // tentativi di candidato esplorati, ampiamente sufficiente per lo
+  // spazio di ricerca reale (5 categorie, max 14 incognite) e mai
+  // raggiunto da una configurazione davvero fattibile.
+  const budget={n:20000};
+  const assegna=(idx)=>{
+    if(idx>=liberi.length){
+      for(const m of categorie){
+        const min=Number(cfg.proteinFrequencies[m].min||0);
+        if(counts[m]<min)return false;
+      }
+      return true;
+    }
+    const slot=liberi[idx],altro=slot.pasto==='pranzo'?stato[slot.day].cena:stato[slot.day].pranzo;
+    let candidati=categorie.filter(m=>{
+      const max=cfg.proteinFrequencies[m].max;
+      if(max!=null&&counts[m]>=max)return false;
+      if(altro!=null){
+        if(maxPerDay===2&&m===altro)return false;
+        if(maxPerDay===1&&m!==altro)return false;
+      }
+      return true;
+    });
+    candidati=ordinaCandidati(candidati);
+    for(const macro of candidati){
+      if(budget.n--<=0)return false;
+      stato[slot.day][slot.pasto]=macro;counts[macro]++;
+      if(assegna(idx+1))return true;
+      counts[macro]--;stato[slot.day][slot.pasto]=null;
+    }
+    return false;
+  };
+  const risolto=assegna(0);
+  if(!risolto){
+    errors.push('Nessuna combinazione valida trovata per i vincoli attuali (minimi/massimi settimanali, categorie escluse, celle fissate, fonti proteiche/giorno).');
+    return {cells:{},counts,errors};
+  }
+  const cells={};
+  for(const day of days){
+    const scelteOriginali=(userTable&&userTable[day]||[]).slice(0,2);
+    cells[day]={
+      pranzo:{macro:stato[day].pranzo,source:scelteOriginali[0]&&scelteOriginali[0]===stato[day].pranzo?'user':'auto'},
+      cena:{macro:stato[day].cena,source:scelteOriginali[1]&&scelteOriginali[1]===stato[day].cena?'user':'auto'}
+    };
+  }
+  return {cells,counts,errors:[]};
 }
 function validateCarbBudget(budget,carbConfig,config){
   const cfg=mergeConfig(config),errors=[],normalized={},defs=carbConfig||{};let total=0,limited=0;

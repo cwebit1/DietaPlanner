@@ -2923,7 +2923,13 @@ function validaFattibilitaProteineSet(tabella,frequenze,maxGiorno){
   const freq=frequenze||frequenzeProteineSetCorrenti||{},limiteGiorno=Math.max(1,Math.min(2,Number(maxGiorno||maxFontiProteicheGiornaliereSet)||2)),conteggi={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
   let occupati=0;
   for(let i=0;i<7;i++){
-    const arr=(tabella['giorno_'+i]||[]);if(arr.length>limiteGiorno)return {ok:false,reason:'day-max',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
+    const arr=(tabella['giorno_'+i]||[]);
+    if(arr.length>limiteGiorno)return {ok:false,reason:'day-max',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
+    /* arr.length da solo non basta: ['carne','carne'] ha lunghezza 2 (pari
+       al limite con 2 fonti/giorno) ma non contiene due fonti diverse -
+       con 2 fonti/giorno le due caselle devono essere categorie distinte,
+       mai la stessa ripetuta due volte. */
+    if(limiteGiorno===2&&arr.length===2&&arr[0]===arr[1])return {ok:false,reason:'day-duplicate',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
     occupati+=arr.length;for(const cat of arr)if(conteggi[cat]!==undefined)conteggi[cat]++;
   }
   for(const [cat,n] of Object.entries(conteggi)){const max=freq[cat]&&freq[cat].max;if(max!==null&&max!==undefined&&n>Number(max))return {ok:false,reason:'weekly-max',categoria:cat,conteggi,slotLiberi:14-occupati,deficitMinimi:0};}
@@ -2969,10 +2975,21 @@ async function completaTabellaProteine(daZero){
      In nessuno dei due casi si tocca tabellaProteineDraft - è solo
      un'anteprima, mai scritta da sola. */
   const base=daZero?{}:cloneConfigurazione(tabellaProteineDraft||{});
-  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze},{},Math.random):null;
+  /* maxProteinSourcesPerDay va passato esplicitamente: senza, buildProteinGrid
+     ricadrebbe sul default interno (2) invece del valore effettivo del
+     nutrizionista, e con esso il generatore garantisce pranzo!==cena
+     (o pranzo===cena a 1 fonte/giorno) con vero backtracking, mai un
+     fallback che riusa la categoria precedente a pool vuoto. */
+  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze,maxProteinSourcesPerDay:cfg.maxProteinSourcesPerDay},{},Math.random):null;
+  if(griglia&&griglia.errors&&griglia.errors.length){
+    tabellaProteineAnteprima=null;
+    await renderSetTabellaGiorno();
+    await avviso('Nessuna proposta valida: '+griglia.errors[0]);
+    return griglia;
+  }
   if(griglia){
     const anteprima={};
-    for(const g of giorni)anteprima[g]=['pranzo','cena'].map(p=>griglia.cells[g][p].macro).filter(Boolean);
+    for(const g of giorni)anteprima[g]=[...new Set(['pranzo','cena'].map(p=>griglia.cells[g][p].macro).filter(Boolean))];
     tabellaProteineAnteprima=anteprima;
   }
   await renderSetTabellaGiorno();return griglia;

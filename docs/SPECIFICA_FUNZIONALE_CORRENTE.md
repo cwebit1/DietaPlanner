@@ -63,6 +63,22 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - Tonno e sgombro conservati e salmone affumicato contribuiscono al pesce
   conservato anche quando non sono la proteina dominante della ricetta.
 - Pasti preservati e consumi reali della settimana concorrono ai contatori.
+- **Tabella Set → Proteine, Casuale/Completa (corretto 04/09/2026).**
+  `maxProteinSourcesPerDay` (letto sempre dalla configurazione
+  nutrizionista effettiva, mai dedotto dal numero di caselle riempite in
+  tabella) governa sia l'anteprima (`engine-core.buildProteinGrid`,
+  usata identicamente da Casuale e Completa) sia il salvataggio
+  (`validaFattibilitaProteineSet`) sia la generazione reale
+  (`motor-v12.js`). Con valore 2 (default): pranzo e cena dello stesso
+  giorno hanno sempre categorie proteiche diverse, garantito con
+  backtracking vero (mai un fallback che riusa la categoria precedente
+  a pool temporaneamente vuoto) — un array come `['carne','carne']` non
+  viene mai prodotto né in anteprima né salvato. Con valore 1: pranzo e
+  cena condividono sempre la stessa categoria; una singola cella
+  fissata a mano vale per entrambi i pasti. Una configurazione
+  realmente incompatibile con i vincoli (minimi/massimi settimanali,
+  categorie escluse, celle fissate, fonti/giorno) produce un errore
+  esplicito, mai un'anteprima o un salvataggio parzialmente invalidi.
 
 ## 5. Verdure e residuo quantitativo
 

@@ -1242,3 +1242,117 @@ nella repository.
   non toccato in questo intervento). Sintassi script inline e JSON
   validati, `git diff --check` pulito. Diff: 2 condizioni corrette in
   `renderBloccoNuovoMotore`, nessun'altra riga toccata in `index.html`.
+- **Intervento 04/09/2026 (7) — Set → Proteine → Casuale/Completa:
+  duplicati giornalieri.** Causa esatta, verificata leggendo il codice
+  prima di ogni modifica: `engine-core.buildProteinGrid()` sceglieva la
+  categoria per ogni slot libero filtrando `pool.filter(m=>m!==previous)`
+  ma, se quel filtro produceva un pool vuoto, ricadeva silenziosamente
+  sul pool NON filtrato (che poteva includere `previous`) - permettendo
+  a pranzo e cena dello stesso giorno di ricevere la stessa categoria.
+  La funzione inoltre non riceveva affatto `maxProteinSourcesPerDay`:
+  `index.html` (`completaTabellaProteine`) passava solo
+  `{proteinFrequencies:cfg.frequenze}`, mai il vincolo giornaliero
+  effettivo del nutrizionista. La tabella grafica (`renderSetTabellaGiorno`)
+  nascondeva visivamente il sintomo disegnando una sola casella attiva
+  con `.includes()`, ma il dato duplicato esisteva davvero a monte.
+  **Riscrittura di `buildProteinGrid`** (unica funzione toccata in
+  `engine-core.js`), stessa firma `(days,userTable,config,history,rng)`:
+  1. legge celle fissate (`userTable`), valida da subito eventuali
+     coppie manuali incompatibili con `maxProteinSourcesPerDay` (2:
+     uguali → errore; 1: diverse → errore) e i massimi settimanali già
+     saturati dalle sole celle fisse - in tal caso ritorna
+     `{cells:{},counts,errors}` senza proseguire;
+  2. calcola gli slot liberi rimasti e un controllo di fattibilità
+     residua rapido (somma dei deficit ai minimi settimanali contro il
+     numero di slot liberi) per fallire subito, senza avviare la
+     ricerca, quando è già evidente che i minimi non sono raggiungibili;
+  3. **vero backtracking** sui soli slot liberi (mai un retry casuale
+     illimitato): per ogni slot, i candidati ammessi sono filtrati per
+     massimo settimanale non superato e per il vincolo giorno
+     (`maxProteinSourcesPerDay===2` esclude la categoria dell'altro
+     pasto dello stesso giorno; `===1` la richiede identica - lo stesso
+     meccanico "altro" copre sia una cella fissata sia una cella appena
+     assegnata in questo stesso passaggio, quindi una singola cella
+     fissata sotto vincolo 1 si propaga correttamente all'altro pasto,
+     mai dedotta dal numero di caselle riempite ma sempre dal valore
+     letto in configurazione); i candidati sono ordinati per maggior
+     deficit al minimo settimanale poi per uso meno recente (con
+     mescolamento iniziale per la variabilità di "Casuale"); se un ramo
+     fallisce si torna indietro e si prova il candidato successivo,
+     fino a un budget di tentativi generoso ma finito (20.000, mai
+     avvicinato da una configurazione realmente fattibile: 5 categorie,
+     14 incognite al massimo);
+  4. la condizione di successo del backtracking include ORA anche il
+     rispetto dei minimi settimanali (prima verificati solo dopo, fuori
+     dalla ricerca) - un ramo che soddisfa massimi/vincolo-giorno ma non
+     i minimi viene scartato e si torna indietro, non accettato.
+  Se il backtracking non trova soluzione, `errors` non vuoto e
+  `cells:{}` - mai una griglia formalmente completa ma invalida.
+  **`index.html`**: `completaTabellaProteine` passa ora
+  `maxProteinSourcesPerDay:cfg.maxProteinSourcesPerDay` (letto da
+  `caricaVincoliProteineSet()`/`getConfigProteine()`, nessuna
+  configurazione duplicata) a `buildProteinGrid`; se `griglia.errors`
+  non è vuoto, l'anteprima resta `null`, si aggiorna comunque la vista
+  (per rimuovere un'eventuale anteprima precedente ormai obsoleta) e si
+  mostra un avviso esplicito col primo errore - mai una proposta
+  invalida mostrata o copiata in bozza. L'array anteprima per giorno è
+  ora deduplicato (`[...new Set(...)]`, innocuo: sotto vincolo 2 non
+  può mai contenere duplicati per costruzione, sotto vincolo 1 la
+  singola categoria che vale per entrambi i pasti va rappresentata una
+  volta sola nell'evidenziazione grafica). `validaFattibilitaProteineSet`:
+  aggiunto un controllo esplicito (`limiteGiorno===2&&arr.length===2&&arr[0]===arr[1]`)
+  che il vecchio `arr.length>limiteGiorno` non rilevava (`['carne','carne']`
+  ha lunghezza 2, pari al limite con 2 fonti/giorno, ma non contiene due
+  fonti diverse) - usato sia dal salvataggio (`salvaSetCompleto`, non
+  toccata, chiama già questa funzione) sia dal click sulla singola
+  cella. `renderSetTabellaGiorno`/`.includes()` non toccati
+  deliberatamente: con il dato ormai corretto a monte non c'è più nulla
+  da nascondere, e la richiesta esplicita del compito era correggere il
+  dato, non solo la sua lettura grafica. **`motor-v12.js` verificato,
+  non modificato**: `opzioniProteinaPerSlot`/`targetTabellaPerSlot`
+  distinguono già correttamente `['carne']` (fissa solo pranzo, cena
+  libera ma esclusa da 'carne' sotto vincolo 2 o forzata a 'carne' sotto
+  vincolo 1) da `['carne','carne']` (con vincolo 2, la seconda
+  occorrenza fissata viene rifiutata con un errore esplicito già oggi:
+  `'La tabella proteine assegna due volte '+fissata+...'`); e usano
+  `usateGiorno`, popolato dalle macro REALMENTE presenti nelle
+  realizzazioni (non solo `categoriaTarget`), coerente coi punti 6/13/14
+  del compito - confermato con un nuovo test sulla generazione reale,
+  nessuna modifica necessaria.
+  **Verificato**: `tests/lotto-set-proteine-buildgrid.test.js` (nuovo,
+  esegue davvero `engine-core.js`) - 10.000 generazioni Casuali con
+  vincolo 2: 0 duplicati, 0 errori, 0 violazioni min/max, 288ms (prima
+  del fix: 3.932/10.000 duplicati, 39,3%, misurato via `git stash` sullo
+  stesso identico test); pranzo≠cena su 200 seed aggiuntive; minimi e
+  massimi rispettati simultaneamente; celle manuali rispettate (singola
+  o doppia); una cella Carne fissata con vincolo 2 forza il secondo
+  pasto a categoria diversa; `['carne','carne']` fissato a mano
+  respinto con errore esplicito; Casuale (base vuota) e Completa (base
+  = celle esistenti) applicano le stesse regole sullo stesso seed;
+  configurazione con minimi irraggiungibili (16 richiesti su 14 slot) →
+  errore esplicito, `cells:{}`; vincolo 1 sempre pranzo=cena su 200
+  seed, singola cella fissata si propaga a entrambi i pasti, due
+  categorie diverse fissate con vincolo 1 → errore. Fallisce sul codice
+  precedente (dimostrato con `git stash`), passa dopo.
+  `tests/lotto-set-proteine-validazione.test.js` (nuovo, estrae ed
+  esegue `validaFattibilitaProteineSet` da `index.html`) - rifiuta
+  `['carne','carne']` con vincolo 2, accetta categorie distinte,
+  accetta una singola cella con vincolo 1, respinge ancora una terza
+  casella nello stesso giorno (invariato); contratti di sorgente su
+  `salvaSetCompleto` (valida prima di scrivere) e `completaTabellaProteine`
+  (passa il vincolo, controlla gli errori prima di assegnare
+  l'anteprima). Fallisce sul codice precedente, passa dopo.
+  `tests/lotto-set-proteine-menu-reale.test.js` (nuovo, genera davvero
+  una settimana con `motor-v12.js` invariato) - 10 settimane valide con
+  vincolo 2, 0 violazioni `categoriaTarget`, 0 violazioni sulle macro
+  REALMENTE presenti nelle realizzazioni (mappate con
+  `E.SUBTYPE_TO_MACRO`, non solo la categoria dichiarata) - conferma che
+  il motore reale non necessitava di alcuna modifica.
+  Suite completa: 35/35 (stessa flakiness pre-esistente e nota di
+  `lotto-g-weekly-generation.test.js`/`lotto-j-una-fonte-proteica-giorno.test.js`,
+  confermata invariata - non correlata, `motor-v12.js` non toccato in
+  questo intervento). Sintassi, script inline e JSON validati,
+  `git diff --check` pulito. **Non verificato con un browser reale** in
+  questa sessione (stesso limite di risorse delle sessioni precedenti) -
+  copertura completa a livello di funzione pura (`engine-core.js`,
+  eseguito realmente) e di motore con IndexedDB reale via harness Node.

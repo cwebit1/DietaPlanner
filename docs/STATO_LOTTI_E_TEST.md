@@ -336,3 +336,33 @@ Ultimo commit di questa sezione: `8d2be4e`.
 - Suite: 32/32 (stessa flakiness pre-esistente e nota di
   `lotto-g-weekly-generation.test.js`/`menu-layer-sequenziale.test.js`,
   confermata invariata - `motor-v12.js` non toccato in questo intervento).
+
+## Aggiornamento 04/09/2026 (7) — Set → Proteine: duplicati giornalieri
+
+- Corretto: `engine-core.buildProteinGrid()` poteva produrre
+  `['carne','carne']` nello stesso giorno (~35-39% delle generazioni
+  casuali con i limiti predefiniti, misurato: 3.932/10.000). Causa: un
+  fallback riusava la categoria precedente quando il pool alternativo
+  era temporaneamente vuoto; inoltre la funzione non riceveva mai
+  `maxProteinSourcesPerDay` dal chiamante.
+- Riscritta con vero backtracking sui soli slot proteici liberi (mai
+  retry casuali illimitati, budget limitato, fattibilità residua
+  controllata a monte). Con valore 2: pranzo e cena sempre distinti,
+  garantito dalla ricerca stessa. Con valore 1: sempre coincidenti
+  (stessa semantica già in `motor-v12.js`), mai dedotto dal riempimento
+  della tabella. `index.html`: `completaTabellaProteine` passa ora
+  `maxProteinSourcesPerDay` a `buildProteinGrid` e non assegna mai
+  un'anteprima se la proposta è invalida (avviso esplicito invece).
+  `validaFattibilitaProteineSet` rifiuta `['carne','carne']` con 2
+  fonti/giorno (il vecchio controllo `arr.length>limiteGiorno` non lo
+  rilevava). `motor-v12.js`: verificato, non modificato — già corretto.
+- Nuovi test: `lotto-set-proteine-buildgrid.test.js` (10.000
+  generazioni, 0 duplicati, 0 errori in 288ms; mode1/mode2; celle
+  manuali; configurazione impossibile → errore esplicito; Casuale =
+  Completa), `lotto-set-proteine-validazione.test.js` (validazione Set,
+  contratti su `completaTabellaProteine`/`salvaSetCompleto`),
+  `lotto-set-proteine-menu-reale.test.js` (generazione reale, macro
+  verificate sui dati reali delle realizzazioni, non solo
+  `categoriaTarget`). Tutti dimostrati fallire sul codice precedente.
+- Suite: 35/35 (stessa flakiness pre-esistente e nota, `motor-v12.js`
+  non toccato). Sintassi, JSON, `git diff --check` puliti.
