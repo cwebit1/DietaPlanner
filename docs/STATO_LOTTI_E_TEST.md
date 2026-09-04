@@ -303,3 +303,37 @@ Ultimo commit di questa sezione: `8d2be4e`.
   le tre viste, combo C+P/P+V, doppia proteina reale non ridotta,
   nessun default 🥩/🍝, record legacy con/senza gruppoProteico.
 - Suite: 31/31.
+
+## Aggiornamento 04/09/2026 (5) — Finestra Pasto: "concluso" per fascia oraria, non per data
+
+- Corretto: dal commit `ca226c1` la finestra Pasto usava `giorno<=todayISO()`
+  (come la Programmazione, dove è corretto) sia per mostrare "pasto
+  concluso" su uno slot vuoto sia per decidere la modificabilità - alle
+  8 del mattino pranzo e cena di oggi comparivano già come conclusi,
+  prima della chiusura della loro fascia oraria.
+- `renderBloccoNuovoMotore`: "pasto concluso" su slot vuoto ora usa
+  `fasciaPastoSuperata(giorno,pasto)` invece di `giorno<=todayISO()`;
+  `modificabile` ora è `!voce.consumato&&!fasciaPastoSuperata(giorno,pasto)`
+  invece di `!voce.consumato&&giorno>=todayISO()`. Nessuna duplicazione
+  di salvataggio/inventario/storico nel renderer (resta esclusivo di
+  `elaboraConsumoAutomatico`, non toccata). Programmazione invariata
+  (`riepilogoGrigliaPastoMenu` continua a usare `giorno<=todayISO()`).
+- **Segnalato, non toccato**: `renderColazione` ha lo stesso identico
+  pattern di bug (`giorno<=todayISO()` per uno slot colazione vuoto,
+  invece di `fasciaPastoSuperata(giorno,'colazione')` - già usata
+  correttamente li accanto per lo slot NON vuoto). Non corretto in
+  questo intervento perché colazione era esplicitamente fuori scope
+  salvo segnalazione esplicita - **da confermare con Cwe prima di
+  estendere il fix**.
+- Nuovo test `tests/lotto-pasto-fascia-oraria.test.js` (estrae ed
+  esegue `fasciaPastoSuperata`/`FASCE_ORARIE_PASTO` da `index.html` con
+  orari controllati, fallisce sul codice precedente, passa dopo): tutti
+  i casi orari richiesti (08:00/13:00/13:59/14:00/19:00/19:59/20:00),
+  giorno passato/futuro, riproduzione della logica "concluso"/
+  "modificabile" reale, contratto di sorgente (niente più
+  `giorno<=todayISO()`/`giorno>=todayISO()` in `renderBloccoNuovoMotore`,
+  niente `put('piano'`/`registraConsumoStorico`/`scalaInventarioPerRicetta`
+  diretti), Programmazione confermata invariata.
+- Suite: 32/32 (stessa flakiness pre-esistente e nota di
+  `lotto-g-weekly-generation.test.js`/`menu-layer-sequenziale.test.js`,
+  confermata invariata - `motor-v12.js` non toccato in questo intervento).

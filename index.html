@@ -5459,7 +5459,13 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
   const title=LABEL_PASTO[pasto].toUpperCase()+':';
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   if(!voce||!(voce.realizzazioni&&voce.realizzazioni.length)){
-    if(giorno<=todayISO()){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-griglia-compatta"><div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto pasto-concluso">— pasto concluso —</span><span class="pasto-riga-comando"></span></div></div>';return;}
+    /* Finestra Pasto: un pasto inesistente e' "concluso" solo dopo la
+       chiusura della sua fascia oraria (fasciaPastoSuperata), mai per il
+       solo fatto che il giorno sia oggi o passato - quella regola vale
+       per la Programmazione, non per questa pagina. Prima della
+       chiusura fascia resta "non ancora programmato", con il comando
+       per generarlo. Nessun record viene creato qui in nessun caso. */
+    if(fasciaPastoSuperata(giorno,pasto)){el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="pasto-griglia-compatta"><div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto pasto-concluso">— pasto concluso —</span><span class="pasto-riga-comando"></span></div></div>';return;}
     el.innerHTML='<div class="pasto-titolo-compatto">'+title+'</div><div class="meta" style="margin-bottom:10px;">Nessun pasto programmato.</div><button class="primary" data-nm-genera>Genera pasto</button>';
     el.querySelector('[data-nm-genera]').addEventListener('click',async()=>{
       delete bozzePropostaPasto[id];
@@ -5505,7 +5511,12 @@ async function renderBloccoNuovoMotore(pasto,giorno,elementId){
     if(originali.length)html+='<div class="meta" style="margin-top:6px;">Programmato: '+esc([...new Set(originali)].join(' · '))+'</div>';
   }
 
-  const modificabile=!voce.consumato&&giorno>=todayISO();
+  /* Modificabilita' basata sulla fascia oraria, non sulla sola data: un
+     pasto resta modificabile finche' la sua fascia non e' chiusa, mai
+     "finche' il giorno e' oggi o futuro" - quel criterio da solo
+     lascerebbe modificabile un pasto anomalo non ancora archiviato
+     anche a fascia gia' scaduta. */
+  const modificabile=!voce.consumato&&!fasciaPastoSuperata(giorno,pasto);
   if(modificabile){
     html+='<div class="row" style="margin-top:10px;gap:7px;"><button class="secondary" data-nm-alternativa>Alternativa</button><button class="secondary" data-nm-salvafrigo>♻️ Salvafrigo</button></div>';
     html+='<div id="propostaPasto_'+esc(id)+'" style="display:'+(bozzePropostaPasto[id]?'block':'none')+';"></div>';

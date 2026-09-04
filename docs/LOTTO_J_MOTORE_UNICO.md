@@ -1186,3 +1186,52 @@ nella repository.
   obsoleto in `lotto-g-atomic-realizations.test.js` che imponeva la
   vecchia mappa con `P:'🥩'`. Suite completa: 31/31. Sintassi, script
   inline e JSON validati, `git diff --check` pulito.
+- **Intervento 04/09/2026 (5) — "pasto concluso" per fascia oraria, non
+  per data, nella finestra Pasto.** Il commit `ca226c1` ("Pasto concluso:
+  oggi incluso, sempre") aveva reso `giorno<=todayISO()` il criterio
+  unico sia in Programmazione (dove è corretto: oggi è sempre sola
+  lettura) sia nella finestra Pasto (dove è sbagliato: un pasto di oggi
+  deve restare aperto fino alla chiusura della sua fascia oraria, non
+  dalla mezzanotte). Effetto concreto: alle 8 del mattino, pranzo e cena
+  di oggi comparivano già come "— pasto concluso —" se non ancora
+  programmati, e un pasto esistente diventava "non modificabile" solo
+  in base alla data (`giorno>=todayISO()`), non alla fascia.
+  Fix in `renderBloccoNuovoMotore` (unica funzione toccata): il ramo
+  "nessuna realizzazione" ora mostra "pasto concluso" solo se
+  `fasciaPastoSuperata(giorno,pasto)` è vera (altrimenti resta "Nessun
+  pasto programmato" col pulsante "Genera pasto", come già accadeva per
+  i giorni futuri); `modificabile` è ora
+  `!voce.consumato&&!fasciaPastoSuperata(giorno,pasto)` invece di
+  `!voce.consumato&&giorno>=todayISO()` - un record anomalo non ancora
+  archiviato ma con fascia scaduta non resta più modificabile per
+  errore. Nessuna duplicazione: il renderer non scrive mai su `piano`,
+  non chiama `registraConsumoStorico`/`scalaInventarioPerRicetta` -
+  l'archiviazione resta esclusiva di `elaboraConsumoAutomatico`
+  (chiamata da `renderPiano` prima di ogni render dei blocchi pasto),
+  non toccata. Programmazione (`riepilogoGrigliaPastoMenu`, `solaLettura`)
+  resta `giorno<=todayISO()`, invariata per costruzione (nessuna riga
+  toccata).
+  **Trovato ma non toccato, segnalato per conferma**: `renderColazione`
+  ha lo stesso identico pattern di bug per lo slot colazione VUOTO
+  (`giorno<=todayISO()` invece di `fasciaPastoSuperata(giorno,'colazione')`,
+  che è già usata correttamente nella riga accanto per lo slot NON
+  vuoto). Colazione era esplicitamente fuori scope in questo intervento
+  salvo dimostrazione+segnalazione separata - fatto qui, ma non corretto:
+  serve conferma esplicita di Cwe prima di estendere il fix.
+  **Verificato**: nuovo `tests/lotto-pasto-fascia-oraria.test.js`, che
+  estrae ed esegue davvero `fasciaPastoSuperata`/`FASCE_ORARIE_PASTO` da
+  `index.html` con orari controllati (nessuna dipendenza dall'orologio
+  reale) - tutti i casi orari richiesti (08:00, 13:00, 13:59, 14:00,
+  19:00, 19:59, 20:00), giorno passato sempre concluso, giorno futuro
+  mai concluso, riproduzione della logica reale "concluso"/"modificabile",
+  contratto di sorgente (niente più `giorno<=todayISO()`/
+  `giorno>=todayISO()` in `renderBloccoNuovoMotore`, niente
+  `put('piano'`/`registraConsumoStorico`/`scalaInventarioPerRicetta`
+  diretti in quella funzione, Programmazione confermata invariata sul
+  proprio sorgente). Fallisce sul codice precedente (dimostrato con
+  `git stash`), passa dopo. Suite completa: 32/32 (stessa flakiness
+  pre-esistente e nota di `lotto-g-weekly-generation.test.js`/
+  `menu-layer-sequenziale.test.js`, confermata invariata - `motor-v12.js`
+  non toccato in questo intervento). Sintassi script inline e JSON
+  validati, `git diff --check` pulito. Diff: 2 condizioni corrette in
+  `renderBloccoNuovoMotore`, nessun'altra riga toccata in `index.html`.

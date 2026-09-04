@@ -181,6 +181,19 @@ Sono due meccaniche collegate ma distinte.
   prevista/acquistabile. L'assenza di scorta non blocca il pasto.
 - La scelta diretta dell'utente resta finché l'utente non la cambia.
 - Oggi resta modificabile manualmente fino alla relativa fascia oraria.
+- **Distinzione esplicita Programmazione/Pasto per "concluso"
+  (corretto 04/09/2026).** "Concluso" è un concetto diverso nelle due
+  pagine: in Programmazione oggi è sempre sola lettura
+  (`giorno<=todayISO()`, generazione automatica solo da today+1, mai
+  toccato da questo punto). Nella finestra Pasto invece "concluso" segue
+  esclusivamente `fasciaPastoSuperata(giorno,pasto)` (fascia chiusa),
+  mai la sola data: un pasto di oggi resta aperto/modificabile fino
+  all'orario di fine fascia (pranzo 14:00, cena 20:00), non dalla
+  mezzanotte. Un pasto realmente esistente diventa "consumato" e finisce
+  nello storico esclusivamente tramite `elaboraConsumoAutomatico()`
+  (mai duplicato nel renderer); un pasto inesistente dopo la chiusura
+  fascia è soltanto visualizzato come concluso, nessun record/inventario/
+  storico viene creato.
 - **Alternativa/Salvafrigo come pura anteprima (implementato 04/09/2026).**
   Il rendering ordinario del pasto non calcola mai anticipatamente le
   alternative: la ricerca parte solo alla pressione di Alternativa,
@@ -194,8 +207,8 @@ Sono due meccaniche collegate ma distinte.
   Salvafrigo resta Salvafrigo) e sostituisce solo la bozza. "Annulla"
   scarta la bozza e lascia il pasto originale invariato. Le bozze di
   pranzo e cena sono sempre indipendenti e vengono scartate a ogni
-  cambio di giorno o di pagina. Un pasto concluso, consumato o di un
-  giorno non modificabile non espone questi comandi.
+  cambio di giorno o di pagina. Un pasto concluso (fascia chiusa),
+  consumato o di un giorno non modificabile non espone questi comandi.
 
 ## 7. Piano, consumo e storico
 
