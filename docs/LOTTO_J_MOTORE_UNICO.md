@@ -1003,3 +1003,61 @@ nella repository.
   già verificato più volte in sessioni precedenti. Da chiarire con Cwe se
   il codice morto va rimosso o se descriveva un'interazione diversa non
   ancora implementata.
+- **Intervento 04/09/2026 — Programmazione Menù: lucchetto per singola
+  realizzazione, rimozione di editor/Roll/ricerca dalla pagina.**
+  Implementa quanto già anticipato in `SPECIFICA_FUNZIONALE_CORRENTE.md`
+  sez. 10 ("Rigenera rispetta i blocchi") ma mai realizzato prima.
+  UI (`index.html`): rimossi `<details>`/`<summary>`/toggle-to-expand e
+  il lucchetto a livello di pasto (`data-blocca-menu`) dalla
+  Programmazione; ogni pasto è ora un blocco statico, nessun click su
+  nome/riga apre più nulla. `riepilogoGrigliaPastoMenu` riscritta: un
+  lucchetto per riga (`data-lock-real`), riusando `iconaBloccoGlifo`
+  invariata; `righeVsgUniche` estesa con l'id ricetta (aggiunta
+  additiva, retrocompatibile) per legare il lucchetto alla realizzazione
+  giusta anche quando una ricetta copre più ruoli (un solo lucchetto in
+  quel caso). Nuova `toggleLockRealizzazioneMenu`: scrive solo
+  `realizzazione.bloccata` tramite lo stesso `put('piano',...)` già
+  intercettato da `menuDraft` — nessuna nuova infrastruttura di bozza,
+  Salva/Annulla restano atomici su menù e lucchetti insieme perché è
+  lo stesso record. Giorni `<=today` restano di sola lettura (nessun
+  lucchetto, coerente col vincolo Rigenera/today+1 già esistente e
+  invariato). `renderBloccoCompleto`/`renderColazione` (editor, Roll,
+  ricerca, alternative) restano **solo** nel Pasto del giorno, non toccati.
+  Motore (`motor-v12.js`), tutte modifiche additive/retrocompatibili
+  (nuovo parametro opzionale, comportamento identico quando assente —
+  verificato riseguendo l'intera suite pre-esistente):
+  `assegnaCondimentiRotazioneGlobale`, `completaResiduoVerduraRicette`,
+  `normalizzaRealizzazioniVerdura`, `chiudiPastoConVerdura` accettano ora
+  un insieme di id bloccati e non li ridimensionano/riassegnano mai (se
+  la redistribuzione S/G o il resize V dovrebbe toccare un bloccato, si
+  aggiunge una V supplementare separata o si segnala un residuo scoperto,
+  mai una modifica silenziosa). `costruisciPastoSequenziale` accetta
+  `ctx.basiExtra` (realizzazioni da preservare sempre nella base finale).
+  Nuova `completaPastoConBloccate`: dati 0+ realizzazioni bloccate,
+  completa solo i ruoli mancanti riusando la stessa ricerca sequenziale
+  P→C→V (bloccate=[] equivale esattamente a `costruisciPastoSequenziale`
+  di prima — è il punto di innesto in `risolviSettimanaSequenziale`).
+  `generaPianoSettimana` legge `realizzazione.bloccata` per pasto: se
+  tutte le realizzazioni di un pasto sono bloccate il pasto è saltato per
+  intero (comportamento identico al vecchio `voce.bloccata`); se parziale,
+  passa le realizzazioni materializzate a `completaPastoConBloccate`.
+  Nessun'altra regola toccata: allergeni/esclusioni, cap PDF/utente,
+  cooldown, rotazione, sequenza P→C.user→C, tutto invariato.
+  **Verificato**: nuovo test dedicato
+  `tests/lotto-programmazione-lucchetti.test.js` (fallisce sul codice
+  precedente, passa dopo) copre blocco parziale conservato esattamente
+  su 5 rigenerazioni consecutive, blocco totale byte-per-byte identico,
+  e un caso costruito di impossibilità (proteina bloccata in conflitto
+  con la tabella dell'altro pasto dello stesso giorno) che fallisce con
+  errore preciso senza scrivere nulla. Due contratti di test pre-esistenti
+  aggiornati per riflettere le nuove firme di funzione, non il
+  comportamento che verificano (`lotto-j-vsg-roll-salvafrigo.test.js`,
+  `lotto-g-atomic-realizations.test.js`). Suite completa: 29/29 (a parte
+  la flakiness pre-esistente e nota di `lotto-j-vsg-stress.test.js`,
+  confermata invariata con/senza queste modifiche). Sintassi, script
+  inline e JSON validati, `git diff --check` pulito. **Non verificato in
+  questa sessione con un browser reale** (Chromium/Playwright) su
+  richiesta esplicita di Cwe per limitare il consumo di risorse — la
+  verifica end-to-end resta da fare quando servirà, la logica è comunque
+  coperta a livello di motore con IndexedDB reale (harness Node, stessa
+  tecnica già in uso per tutti i test di questo lotto).

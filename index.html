@@ -5428,7 +5428,7 @@ function righeVsgUniche(materializzate){
     for(const r of (materializzate||[]).filter(x=>ricettaCopreRigaVsg(x,tipo))){
       const chiave=r.id||r.nome;
       if(!chiave)continue;
-      if(!viste.has(chiave)){viste.set(chiave,{nome:r.nome,tipi:[]});ordine.push(chiave);}
+      if(!viste.has(chiave)){viste.set(chiave,{id:r.id||null,nome:r.nome,tipi:[]});ordine.push(chiave);}
       if(!viste.get(chiave).tipi.includes(tipo))viste.get(chiave).tipi.push(tipo);
     }
   }
@@ -7729,29 +7729,57 @@ async function riepilogoTestualePasto(giorno, pasto){
   return testoVuoto;
 }
 
-async function riepilogoGrigliaPastoMenu(giorno,pasto,azioneHtml){
+async function riepilogoGrigliaPastoMenu(giorno,pasto){
   const voce=await getOne('piano',giorno+'_'+pasto),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const solaLettura=giorno<=todayISO();
   const realizzazioni=[];
   if(voce&&Array.isArray(voce.realizzazioni))for(let indice=0;indice<voce.realizzazioni.length;indice++){
     const ricetta=await ricettaNuovoDaRealizzazione(voce.realizzazioni[indice]);
     if(ricetta)realizzazioni.push({indice,ricetta});
   }
   if(!realizzazioni.length){
-    if(giorno<=todayISO()){
+    if(solaLettura){
       return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto pasto-concluso">— pasto concluso —</span><span class="pasto-riga-comando"></span></div>';
     }
-    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto">— non ancora programmato —</span><span class="pasto-riga-comando">'+azioneHtml+'</span></div>';
+    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">🍞🥩🥬</span><span class="pasto-riga-piatto">— non ancora programmato —</span><span class="pasto-riga-comando"></span></div>';
   }
   const materializzate=realizzazioni.map(x=>x.ricetta);
   const righeUniche=righeVsgUniche(materializzate);
   const copertiUnica=new Set(righeUniche.flatMap(r=>r.tipi));
-  for(const tipo of ['C','P','V'])if(!copertiUnica.has(tipo))righeUniche.push({nome:null,tipi:[tipo]});
+  for(const tipo of ['C','P','V'])if(!copertiUnica.has(tipo))righeUniche.push({id:null,nome:null,tipi:[tipo]});
   const stato=voce.consumato?'✓ ':voce.origine==='utente'?'⭐ ':'';
   return righeUniche.map((riga,indice)=>{
     const icone=riga.tipi.map(t=>ICONE_VSG[t]).join('');
     const avviso=riga.tipi.includes('C')&&(voce.avvisoProgrammazione||voce.avvisoCarboidrato),messaggioAvviso=(voce.avvisoProgrammazione&&voce.avvisoProgrammazione.messaggio)||voce.avvisoCarboidrato||'',classe=avviso?' avviso-programmazione':'',titolo=avviso?' title="'+esc(messaggioAvviso)+'"':'';
-    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.nome||'Seleziona pasto')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+(indice===0?azioneHtml:'')+'</span></div>';
+    /* Un solo lucchetto per riga: se la riga copre piu' ruoli insieme
+       (icone unite), il lucchetto blocca l'intera realizzazione che li
+       copre tutti, mai un lucchetto per ruolo. Nessun lucchetto quando
+       il ruolo non e' coperto da nessuna realizzazione reale (riga
+       placeholder, id nullo) o quando il giorno e' in sola lettura. */
+    const real=riga.id?(voce.realizzazioni||[]).find(r=>r.ricettaId===riga.id):null;
+    const lucchetto=(!solaLettura&&real)
+      ?'<button type="button" data-lock-real data-lock-giorno="'+esc(giorno)+'" data-lock-pasto="'+esc(pasto)+'" data-lock-id="'+esc(riga.id)+'" title="'+(real.bloccata?'Sblocca questa realizzazione':'Blocca questa realizzazione (non verrà sostituita da Rigenera)')+'" style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;flex-shrink:0;margin-left:auto;">'+iconaBloccoGlifo(!!real.bloccata)+'</button>'
+      :'';
+    return '<div class="pasto-riga-griglia"><span class="pasto-riga-icone">'+icone+'</span><span class="pasto-riga-piatto'+classe+'"'+titolo+'>'+(indice===0?stato:'')+esc(riga.nome||'Seleziona pasto')+(avviso?' ⚠':'')+'</span><span class="pasto-riga-comando">'+lucchetto+'</span></div>';
   }).join('');
+}
+/* Blocca/sblocca UNA singola realizzazione di un pasto in Programmazione.
+   Scrive soltanto sulla bozza menuDraft (put intercettato mentre la vista
+   Menù e' attiva, come qualunque altra scrittura su 'piano' in questa
+   vista) - nessun pannello si apre, nessuna rigenerazione parte. "Salva"
+   commit atomicamente menù e lucchetti insieme (sono lo stesso record);
+   "Annulla" li scarta insieme. Aggiorna soltanto il pulsante toccato. */
+async function toggleLockRealizzazioneMenu(giorno,pasto,ricettaId,btnEl){
+  const id=giorno+'_'+pasto;
+  const voce=await getOne('piano',id);
+  if(!voce||!Array.isArray(voce.realizzazioni))return;
+  const real=voce.realizzazioni.find(r=>r.ricettaId===ricettaId);
+  if(!real)return;
+  real.bloccata=!real.bloccata;
+  await put('piano',voce);
+  menuDraft&&(menuDraft.modificata=true);
+  btnEl.innerHTML=iconaBloccoGlifo(!!real.bloccata);
+  btnEl.title=real.bloccata?'Sblocca questa realizzazione':'Blocca questa realizzazione (non verrà sostituita da Rigenera)';
 }
 
 async function renderMenuSettimanale(){
@@ -7791,67 +7819,27 @@ async function renderMenuSettimanale(){
     let html = `<div class="pasto-header">${labelGiornoEsteso(g)}</div>`;
 
     // Gli spuntini sono facoltativi e vivono solo nella sezione giornaliera (Piano):
-    // qui nel Menù settimanale mostriamo solo i pasti principali.
+    // qui nel Menù settimanale mostriamo solo i pasti principali. La
+    // Programmazione mostra soltanto ricetta + lucchetto: nessun click che
+    // apra un pannello, nessun editor, nessuna alternativa, nessun Roll -
+    // quelle funzioni restano esclusivamente nel Pasto del giorno.
     for(const pasto of ['colazione','pranzo','cena']){
-      let riepilogo = '';
-      // Il lucchetto vive nel summary (sempre visibile, senza aprire il dettaglio):
-      // la logica del giudizio "mi piace/non mi piace" si fa leggendo il riepilogo,
-      // non aprendo il pasto — bloccare deve essere possibile da lì direttamente.
-      // Non si applica alla colazione (non ha un blocco F6, è composta a gruppi).
-      let iconaBloccoMenu = '';
-      let iconaStatoMenu = '';
-      if(pasto !== 'colazione'){
-        const voceBlocco = await getOne('piano', g+'_'+pasto);
-        const bloccataOra = !!(voceBlocco && voceBlocco.bloccata);
-        if(voceBlocco && voceBlocco.consumato) iconaStatoMenu = '';
-        iconaBloccoMenu = `<button data-blocca-menu="${g}|${pasto}" title="${bloccataOra?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)'}"
-          style="background:none;border:none;cursor:pointer;font-size:1.05rem;line-height:1;padding:2px 4px;flex-shrink:0;margin-left:auto;">${iconaBloccoGlifo(bloccataOra)}</button>`;
-      }
-      riepilogo=pasto==='colazione'?await riepilogoTestualePasto(g,pasto):await riepilogoGrigliaPastoMenu(g,pasto,iconaBloccoMenu);
-      html += `<details class="pasto-sub-panel" data-menu-giorno="${g}" data-menu-pasto="${pasto}">
-        <summary class="menu-pasto-summary">${pasto==='colazione'?`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="menu-colazione-riga"><span class="menu-colazione-icona">${ICONA_PASTO[pasto]}</span><span class="menu-colazione-testo">${riepilogo}${iconaStatoMenu}</span></div>`:`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="pasto-griglia-compatta">${riepilogo}</div>`}</summary>
-        <div class="contenuto" id="menuBloc_${g}_${pasto}"></div>
-      </details>`;
+      const riepilogo=pasto==='colazione'?await riepilogoTestualePasto(g,pasto):await riepilogoGrigliaPastoMenu(g,pasto);
+      html += `<div class="pasto-sub-panel" data-menu-giorno="${g}" data-menu-pasto="${pasto}">
+        ${pasto==='colazione'?`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="menu-colazione-riga"><span class="menu-colazione-icona">${ICONA_PASTO[pasto]}</span><span class="menu-colazione-testo">${riepilogo}</span></div>`:`<div class="pasto-titolo-compatto">${LABEL_PASTO[pasto].toUpperCase()}:</div><div class="pasto-griglia-compatta">${riepilogo}</div>`}
+      </div>`;
     }
     if(mieGen !== menuRenderGen) return; // un rendering più recente è già partito: mi fermo qui
     giornoDiv.innerHTML = html;
     el.appendChild(giornoDiv);
 
-    // ogni tendina, aperta per la prima volta, carica il modulo di vista+modifica reale
-    // (le stesse funzioni usate in Piano, solo puntate su un giorno/contenitore diversi)
-    giornoDiv.querySelectorAll('[data-menu-giorno]').forEach(det=>{
-      const giorno = det.dataset.menuGiorno;
-      const pasto = det.dataset.menuPasto;
-      const targetId = `menuBloc_${giorno}_${pasto}`;
-      let caricato = false;
-      det.addEventListener('toggle', ()=>{
-        if(det.open && !caricato){
-          caricato = true;
-          if(pasto==='colazione') renderColazione(giorno, targetId);
-          else renderBloccoCompleto(pasto, giorno, targetId);
-        }
-      });
-    });
-    // Lucchetto nel summary: click gestito a parte, con preventDefault/stopPropagation
-    // per non far scattare anche l'apertura/chiusura della tendina sottostante.
-    giornoDiv.querySelectorAll('[data-blocca-menu]').forEach(btn=>{
-      btn.addEventListener('click', async (e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-        const [giorno, pasto] = btn.dataset.bloccaMenu.split('|');
-        const pianoId = giorno+'_'+pasto;
-        let voce = await getOne('piano', pianoId);
-        if(!voce) voce = {id:pianoId};
-        voce.bloccata = !voce.bloccata;
-        await put('piano', voce);
-        // Aggiorno solo questo pulsante: un rebuild completo della vista
-        // (renderMenuSettimanale) qui non serve a nulla per un singolo lucchetto,
-        // e riapre/ricarica da capo qualsiasi altro pannello fosse aperto altrove
-        // nella pagina — causando un flash visibile senza motivo.
-        giornoDiv.querySelectorAll(`[data-blocca-menu="${giorno}|${pasto}"]`).forEach(b=>{
-          b.innerHTML=iconaBloccoGlifo(voce.bloccata);
-          b.title=voce.bloccata?'Sblocca questo pasto (tornerà rigenerabile)':'Blocca questo pasto (non verrà sostituito alla rigenerazione)';
-        });
+    // Un solo lucchetto per riga/realizzazione (mai per ruolo separato se
+    // la ricetta ne copre più di uno): aggiorna soltanto la bozza menuDraft,
+    // niente pannelli, niente rigenerazioni. Aggiorno solo il pulsante
+    // toccato, senza ricostruire la vista.
+    giornoDiv.querySelectorAll('[data-lock-real]').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        await toggleLockRealizzazioneMenu(btn.dataset.lockGiorno, btn.dataset.lockPasto, btn.dataset.lockId, btn);
       });
     });
   }

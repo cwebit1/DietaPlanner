@@ -231,3 +231,23 @@ Ultimo commit di questa sezione: `8d2be4e`.
   codice morto `renderPastoTabContenuto`/`draftPasto` (editor manuale mai
   raggiungibile dal click reale, distinto dal Roll che invece funziona)
   resta da chiarire con Cwe: rimuovere o completare.
+
+## Aggiornamento 04/09/2026 (2) — Programmazione Menù
+
+- Implementato il lucchetto per singola realizzazione (P/C/V, o l'intera
+  realizzazione se una ricetta copre più ruoli) nella pagina
+  Programmazione/Menù settimanale, rimuovendo da quella pagina editor,
+  pannelli a comparsa, Roll e ricerca (restano solo nel Pasto del giorno).
+  Dettaglio completo in `LOTTO_J_MOTORE_UNICO.md`.
+- `Rigenera` (e "Genera menù") preservano ora esattamente le realizzazioni
+  bloccate e rigenerano solo quelle libere; un pasto interamente bloccato
+  resta intatto; un blocco che rende impossibile completare un pasto fa
+  fallire la generazione con un errore preciso, senza sbloccare nulla.
+- Nuovo test `tests/lotto-programmazione-lucchetti.test.js`. Suite: 29/29
+  (a parte la flakiness pre-esistente nota di `lotto-j-vsg-stress.test.js`).
+- **Non verificato con un browser reale in questa sessione** (limite di
+  risorse posto esplicitamente da Cwe): la copertura resta a livello di
+  motore con IndexedDB reale via harness Node. Verifica end-to-end in
+  Chromium/Playwright ancora da fare quando servirà.
+- Punti già noti e ancora aperti (latenza Roll, editor manuale morto)
+  restano tali, non toccati in questo intervento.

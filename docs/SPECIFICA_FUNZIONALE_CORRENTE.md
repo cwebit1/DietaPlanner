@@ -233,6 +233,42 @@ flusso testuale continuo.
 - La navigazione prevista è un carosello di settimane, una settimana per
   schermata, non limitato a questa/prossima.
 - Il consumo automatico è un fatto reale e non resta sospeso nella bozza.
+- **Blocco per singola realizzazione (implementato 04/09/2026).** Il
+  "blocco" della riga precedente è per singola realizzazione (P, C, V, o
+  una ricetta combinata che ne copre più di uno insieme), non più per
+  intero pasto: `realizzazione.bloccata` (booleano) vive sullo stesso
+  record `piano` già gestito dalla bozza `menuDraft` — un lucchetto non
+  apre nulla, non avvia ricerche o rigenerazioni, scrive solo quel campo.
+  Essendo lo stesso record, `Salva`/`Annulla` committano o scartano
+  menù e lucchetti insieme, atomicamente, senza meccanismo separato.
+  Una ricetta che copre più ruoli (icone unite) ha un solo lucchetto che
+  blocca l'intera realizzazione, mai un lucchetto per ruolo.
+  `Rigenera` (e "Genera menù", che usa la stessa funzione) preserva
+  esattamente le realizzazioni bloccate di ogni pasto e rigenera soltanto
+  quelle libere, riusando la stessa ricerca sequenziale P→C→V della
+  generazione ordinaria: se la proteina è bloccata resta quella (categoria
+  già nota, non ripescata), se il carboidrato è bloccato resta quello
+  (nessuna nuova chiave provata), la verdura residua si completa secondo
+  la stessa matematica V/S/G di sempre. Le realizzazioni bloccate
+  partecipano ai conteggi settimanali (frequenze, budget, cooldown) come
+  qualunque altra, ma non vengono mai ridimensionate/riassegnate di
+  condimento: se la ridistribuzione S/G o il ridimensionamento V dovrebbe
+  toccarne una, si aggiunge invece una verdura supplementare separata o si
+  segnala soltanto un residuo scoperto (stesso pattern già in uso per il
+  caso strutturale S/G non simultanei), mai una modifica silenziosa a una
+  quantità bloccata. Un pasto con ogni realizzazione bloccata resta
+  intatto, non passa nemmeno dal motore. Se i blocchi rendono impossibile
+  completare un pasto (es. una proteina bloccata in conflitto con la
+  tabella dell'altro pasto dello stesso giorno), la generazione fallisce
+  con un errore preciso sullo slot coinvolto, senza sbloccare nulla e
+  senza scrivere alcuna modifica parziale.
+- La Programmazione (Menù) non ha più editor, pannelli a comparsa, Roll,
+  ricerca o alternative: toccare il nome di una ricetta non apre nulla.
+  Quelle funzioni restano esclusivamente nel Pasto del giorno
+  (`renderBloccoCompleto`/`renderColazione`, invariate). L'unico comando
+  per riga in Programmazione è il lucchetto (icona invariata:
+  `iconaBloccoGlifo`, 🔒 stilizzato quando chiuso, glifo lineare quando
+  aperto).
 
 ## 11. Ricerca diretta e sicurezza
 

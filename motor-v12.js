@@ -1178,14 +1178,23 @@ async function scegliCondimentoGlobale(base,data){
   }
   return scelto;
 }
-async function assegnaCondimentiRotazioneGlobale(risultato,data){
+async function assegnaCondimentiRotazioneGlobale(risultato,data,bloccatiIds){
   if(!risultato||!Array.isArray(risultato.realizzazioni)) return risultato;
   if(!state.tracking.condimentoRotazione) state.tracking.condimentoRotazione={contatore:0,ultimo:{}};
+  bloccatiIds=bloccatiIds||new Set();
 
   const realizzazioni=[];
   let cambiato=false;
   for(const real of risultato.realizzazioni){
     const copia=clone(real);
+    if(bloccatiIds.has(copia&&copia.ricettaId)){
+      /* Realizzazione bloccata dalla Programmazione (lucchetto): nessuna
+         nuova rotazione condimento, nessuna riscrittura di quantita' - la
+         realizzazione bloccata deve restare esattamente quella gia'
+         materializzata, mai ritoccata qui. */
+      realizzazioni.push(copia);
+      continue;
+    }
     const base=state.ricetteById.get(copia&&copia.ricettaId);
     if(base){
       const raw={slot:clone(base.slot||[]),condimenti:clone(base.condimentiDisponibili||base.condimenti||[])};
@@ -1339,17 +1348,23 @@ function prioritaVerdureProgrammazionePasti(candidati,data,variantiPrioritarie){
   const max=candidati.map(score).reduce((a,b)=>Math.max(a,b),-Infinity);
   return candidati.filter(c=>score(c)===max);
 }
-function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie){
+function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie,bloccateIds){
+  bloccateIds=bloccateIds||new Set();
   let out=(ricette||[]).slice();
   const totale=coperturaVerduraRicette(out,portionConfig);
   let dedicata=out.find(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length;});
   if(totale.residuoGrammi>0&&totale.residuoGrammi<50){
-    if(!(totale.grammiS>0&&totale.grammiG>0)){
+    const sBloccata=out.some(r=>bloccateIds.has(r.id)&&ruoliVerduraDaClasse(r.classe).S);
+    const gBloccata=out.some(r=>bloccateIds.has(r.id)&&ruoliVerduraDaClasse(r.classe).G);
+    if(!(totale.grammiS>0&&totale.grammiG>0)||sBloccata||gBloccata){
       /* Caso strutturale raro (una proteina con sola G abbinata a un
          carboidrato senza S, o viceversa): la redistribuzione richiede
          entrambi i ruoli e qui non sono presenti insieme. Non si blocca la
          generazione - il residuo resta scoperto e si segnala soltanto,
-         invece di lanciare un'eccezione che ferma l'intero pasto. */
+         invece di lanciare un'eccezione che ferma l'intero pasto. Stessa
+         cosa se il ruolo S o G appartiene a una realizzazione bloccata
+         dalla Programmazione: la redistribuzione dovrebbe ritoccarne le
+         quantita', e una realizzazione bloccata non va mai modificata. */
       return out.map(r=>Object.assign(clone(r),{avvisoResiduoVerdura:true}));
     }
     const meta={
@@ -1381,6 +1396,19 @@ function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiP
   }
   if(totale.remainingFraction<=0&&!dedicata)return out;
   if(totale.remainingFraction<=0&&dedicata&&Math.abs(totale.rawFraction-1)<0.000001)return out;
+  if(dedicata&&bloccateIds.has(dedicata.id)){
+    /* La V dedicata gia' presente e' bloccata dalla Programmazione: non va
+       mai ridimensionata o rimossa. Se copre gia' per intero (verificato
+       sopra) non serve altro; se resta un residuo si aggiunge una V
+       supplementare separata, dimensionata sul solo residuo, invece di
+       alterare quella bloccata. */
+    const copertoDaAltre=N.vegetableCoverage(righeCoperturaVerdura(out,dedicata.id),portionConfig);
+    const frazioneMancante=Math.max(0,1-copertoDaAltre.coveredFraction);
+    if(frazioneMancante<=0)return out;
+    const supplementare=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie)[0]||null;
+    if(!supplementare)return out;
+    return out.concat(ridimensionaVerdureRicetta(supplementare,frazioneMancante,portionConfig));
+  }
   if(!dedicata){
     dedicata=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie)[0]||null;
     if(dedicata)out.push(dedicata);
@@ -1636,7 +1664,14 @@ function componiBasiProteinaCarboidrato(proteine,fontiCarboidrato){
    una verdura valida e rispetta i conteggi settimanali vince: nessuna
    enumerazione delle alternative scartate. */
 async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
-  const ricette=completaResiduoVerduraRicette(base,pool,giorno,ctx.vegetablePortions,ctx.variantiPrioritarie);
+  /* ctx.realizzazioniBloccateIds (Set di ricettaId) segnala le
+     realizzazioni bloccate dalla Programmazione (lucchetto per riga):
+     partecipano al calcolo di copertura/residuo come chiunque altro, ma
+     non vengono mai ridimensionate, riassegnate di condimento o
+     altrimenti modificate. Vuoto/assente per ogni chiamante che non
+     conosce blocchi: comportamento identico a prima. */
+  const bloccateIds=ctx.realizzazioniBloccateIds||new Set();
+  const ricette=completaResiduoVerduraRicette(base,pool,giorno,ctx.vegetablePortions,ctx.variantiPrioritarie,bloccateIds);
   if(!pastoCompletoPerToken(ricette,token,ctx.vegetablePortions))return null;
   if(ctx.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===ctx.requiredVegetableVariantId)))return null;
   if(ctx.forbiddenProteinMacros&&[...macroProteicheRicette(ricette)].some(k=>ctx.forbiddenProteinMacros.has(k)))return null;
@@ -1651,8 +1686,8 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
      chiamante (costruisciPastoSequenziale) prova gia' la prossima
      proteina/carboidrato candidato nello stesso ciclo, senza alcun
      nuovo meccanismo di ripetizione. */
-  let risultato=await assegnaCondimentiRotazioneGlobale(risultatoPasto(token,ricette,0,null,ctx.vegetablePortions),giorno);
-  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions);
+  let risultato=await assegnaCondimentiRotazioneGlobale(risultatoPasto(token,ricette,0,null,ctx.vegetablePortions),giorno,bloccateIds);
+  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions,bloccateIds);
   risultato.bilancioVerdura=await bilancioVerduraDaRealizzazioni(risultato.realizzazioni,ctx.vegetablePortions);
   if(!risultato.bilancioVerdura.coperturaCompleta)return null;
   return risultato;
@@ -1675,6 +1710,13 @@ function carboidratoCombinatoAmmesso(chiave,ctx){
 async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   const oggi=ctx.todayStackKeys||new Set();
   const usataOggi=r=>chiaviGiornoRicetta(r).some(k=>oggi.has(k));
+  /* ctx.basiExtra: realizzazioni gia' decise (in pratica, dalla
+     Programmazione, una V bloccata quando ne' la proteina ne' il
+     carboidrato di questo pasto sono bloccati) da includere sempre nella
+     base finale, senza mai essere ripescate o rigenerate. Vuoto/assente
+     per ogni chiamante che non conosce blocchi: comportamento identico
+     a prima. */
+  const extra=ctx.basiExtra||[];
   let proteine=pool.filter(r=>copertura(r).tokens.has(token)&&!usataOggi(r));
   if(!proteine.length)proteine=pool.filter(r=>copertura(r).tokens.has(token));
   proteine=ordinaPerStackPoiCaso(proteine,ctx.weeklyStackKeys);
@@ -1690,7 +1732,7 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
     if(copertura(proteina).C){
       const chiave=carbKeysRicetta(proteina).find(k=>carboidratoCombinatoAmmesso(k,ctx));
       if(!chiave)continue;
-      const esito=await chiudiPastoConVerdura([proteina],token,giorno,pool,ctx);
+      const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
       if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
       continue;
     }
@@ -1704,7 +1746,7 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
          ricetta specifica puo' non chiudere (verdura, conteggi) senza che
          il carboidrato in se' sia incompatibile. */
       for(const carboScelto of carboScelte){
-        const esito=await chiudiPastoConVerdura([proteina,carboScelto],token,giorno,pool,ctx);
+        const esito=await chiudiPastoConVerdura([proteina,carboScelto,...extra],token,giorno,pool,ctx);
         if(esito){
           /* L'avviso segnala soltanto la sostituzione di una condizione
              utente esplicita: un carboidrato FIXED (residuo ancora da
@@ -1728,10 +1770,103 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
        proteina: si procede senza, invece di bloccare il pasto o forzare
        una combinazione incompatibile. Segnalato con avviso per capire
        quali ricette mancano nel catalogo. */
-    const esito=await chiudiPastoConVerdura([proteina],token,giorno,pool,ctx);
+    const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
     if(esito)return Object.assign(esito,{carbKeyUsato:null,avviso:'Nessun carboidrato compatibile trovato per questa proteina in questo pasto.'});
   }
   return null;
+}
+/* Marca nelle realizzazioni finali quali provengono da un lucchetto della
+   Programmazione (bloccateIds), cosi' che il record salvato su 'piano'
+   ricordi il blocco dopo Rigenera/Salva/ricaricamento. Nessun'altra
+   proprieta' viene toccata. */
+function marcaRealizzazioniBloccate(esito,bloccateIds){
+  if(!esito||!Array.isArray(esito.realizzazioni))return esito;
+  bloccateIds=bloccateIds||new Set();
+  esito.realizzazioni=esito.realizzazioni.map(r=>{
+    const copia=clone(r);
+    if(bloccateIds.has(copia.ricettaId))copia.bloccata=true;
+    else delete copia.bloccata;
+    return copia;
+  });
+  return esito;
+}
+/* Completa un pasto rispettando le realizzazioni gia' bloccate dalla
+   Programmazione (un lucchetto per riga, sez. "Programmazione Menù"):
+   "bloccate" sono ricette gia' materializzate (via materializzaRealizzazione)
+   che devono restare ESATTAMENTE come sono - mai una nuova rotazione
+   condimento, mai una ridistribuzione S/G/V le riguarda (garantito da
+   ctx.realizzazioniBloccateIds dentro chiudiPastoConVerdura). Si completano
+   soltanto i ruoli mancanti (P, C, V) con la stessa identica ricerca
+   sequenziale P->C->V gia' in vigore quando non c'e' alcun blocco:
+   bloccate=[] equivale in tutto e per tutto a costruisciPastoSequenziale. */
+async function completaPastoConBloccate(token,giorno,carbCandidati,pool,ctx,bloccate){
+  bloccate=bloccate||[];
+  if(!bloccate.length)return costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx);
+  const bloccateIds=new Set(bloccate.map(r=>r.id));
+  const ctxConBlocco=Object.assign({},ctx,{realizzazioniBloccateIds:bloccateIds});
+  const proteinaBloccata=bloccate.find(r=>copertura(r).P);
+  const carboBloccato=bloccate.find(r=>copertura(r).C);
+
+  if(proteinaBloccata){
+    if(carboBloccato||copertura(proteinaBloccata).C){
+      /* P e C sono gia' entrambi definiti dai blocchi (stessa ricetta
+         combinata, o due realizzazioni separate): resta solo da
+         completare la verdura. */
+      const esito=await chiudiPastoConVerdura(bloccate,token,giorno,pool,ctxConBlocco);
+      if(!esito)return null;
+      const chiaveUsata=carbKeysRicetta(bloccate.find(r=>copertura(r).C)||{})[0]||null;
+      return marcaRealizzazioniBloccate(Object.assign(esito,{carbKeyUsato:chiaveUsata,avviso:null}),bloccateIds);
+    }
+    /* Proteina bloccata, carboidrato libero: stessa ricerca di
+       costruisciPastoSequenziale, ma la proteina resta quella gia'
+       bloccata - mai ripescata dal pool. */
+    for(const chiave of carbCandidati){
+      if(!composizioneSeparataConsentita(proteinaBloccata,chiave))continue;
+      let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
+      if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
+      for(const carboScelto of carboScelte){
+        const esito=await chiudiPastoConVerdura([...bloccate,carboScelto],token,giorno,pool,ctxConBlocco);
+        if(esito){
+          const fissiDisponibili=carbCandidati.filter(k=>(ctx.residuiCarboidrati||{})[k]>0);
+          const fissoSostituito=fissiDisponibili.length&&!fissiDisponibili.includes(chiave)?fissiDisponibili[0]:null;
+          return marcaRealizzazioniBloccate(Object.assign(esito,{
+            carbKeyUsato:chiave,
+            avviso:fissoSostituito?('Carboidrato '+fissoSostituito+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
+          }),bloccateIds);
+        }
+      }
+    }
+    const esito=await chiudiPastoConVerdura(bloccate,token,giorno,pool,ctxConBlocco);
+    if(esito)return marcaRealizzazioniBloccate(Object.assign(esito,{carbKeyUsato:null,avviso:'Nessun carboidrato compatibile trovato per questa proteina in questo pasto.'}),bloccateIds);
+    return null;
+  }
+
+  if(carboBloccato){
+    /* Carboidrato bloccato (realizzazione separata), proteina libera:
+       si prova ogni proteina candidata del pool, ma l'unico carboidrato
+       ammesso resta quello gia' bloccato - mai una ricerca fra piu'
+       chiavi come nel percorso ordinario. */
+    const chiave=carbKeysRicetta(carboBloccato)[0]||null;
+    const oggi=ctx.todayStackKeys||new Set();
+    const usataOggi=r=>chiaviGiornoRicetta(r).some(k=>oggi.has(k));
+    let proteine=pool.filter(r=>copertura(r).tokens.has(token)&&!copertura(r).C&&!usataOggi(r));
+    if(!proteine.length)proteine=pool.filter(r=>copertura(r).tokens.has(token)&&!copertura(r).C);
+    proteine=ordinaPerStackPoiCaso(proteine,ctx.weeklyStackKeys);
+    if(ctx.livelliInventario)proteine=applicaPrioritaInventario(proteine,ctx.livelliInventario);
+    for(const proteina of proteine){
+      if(chiave&&!composizioneSeparataConsentita(proteina,chiave))continue;
+      const esito=await chiudiPastoConVerdura([proteina,...bloccate],token,giorno,pool,ctxConBlocco);
+      if(esito)return marcaRealizzazioniBloccate(Object.assign(esito,{carbKeyUsato:chiave,avviso:null}),bloccateIds);
+    }
+    return null;
+  }
+
+  /* Nessun P/C bloccato (al massimo una V bloccata a parte): ricerca
+     piena identica a costruisciPastoSequenziale, che riceve le
+     realizzazioni bloccate come base aggiuntiva da preservare
+     (ctx.basiExtra) senza mai rigenerarle o ridimensionarle. */
+  const esito=await costruisciPastoSequenziale(token,giorno,carbCandidati,pool,Object.assign({},ctxConBlocco,{basiExtra:bloccate}));
+  return esito?marcaRealizzazioniBloccate(esito,bloccateIds):null;
 }
 
 function mescolaValori(valori,rng){
@@ -1854,7 +1989,23 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
     ctx.todayStackKeys=new Set();
     for(const precedente of slotDefs)if(precedente.day===slot.day)chiaviGiornoPasto(scelte[slotDefs.indexOf(precedente)]).forEach(k=>ctx.todayStackKeys.add(k));
 
-    const proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng,targetGiorno.get(slot.day));
+    /* Realizzazioni gia' bloccate dalla Programmazione per questo slot
+       (lucchetto per riga): quando la proteina e' fra queste, la sua
+       categoria e' gia' decisa (slot.targetBloccato, la stessa
+       categoriaTarget con cui il pasto era stato programmato) e non va
+       ripescata da opzioniProteinaPerSlot - un solo tentativo, mai una
+       nuova selezione libera. Bloccate=[] (caso ordinario, nessun
+       lucchetto) si comporta esattamente come prima. */
+    const bloccate=slot.bloccate||[];
+    const haProteinaBloccata=bloccate.some(r=>copertura(r).P);
+    const haCarboBloccato=bloccate.some(r=>copertura(r).C);
+    let proteine;
+    if(haProteinaBloccata){
+      if(!slot.targetBloccato)return {ok:false,errori:['Realizzazione proteica bloccata senza categoria riconoscibile per '+slot.day+' '+slot.pasto+'.'],completati:i};
+      proteine={errors:[],targets:[slot.targetBloccato]};
+    }else{
+      proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng,targetGiorno.get(slot.day));
+    }
     if(proteine.errors.length)return {ok:false,errori:proteine.errors,completati:i};
 
     const cooldownEsclusi=new Set([
@@ -1862,7 +2013,7 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
       ...(carboidratoGiorno.get(addGiorni(slot.day,-1))||[])
     ]);
     const carbCandidati=carboidratiCandidatiSlot(ctx.resolved,residui,slotRefs.length-i,cooldownEsclusi,ctx.rng);
-    if(!carbCandidati.length)return {ok:false,errori:['Nessun carboidrato ammesso per '+slot.day+' '+slot.pasto+'.'],completati:i};
+    if(!carbCandidati.length&&!haCarboBloccato)return {ok:false,errori:['Nessun carboidrato ammesso per '+slot.day+' '+slot.pasto+'.'],completati:i};
 
     const pool=await poolAmmesso(slot.day,{runtimeConfig:ctx.runtimeConfig});
     const futureFissiGiorno=new Set(slotRefs.slice(i+1).filter(s=>s.day===slot.day).map(s=>targetTabellaPerSlot(ctx.tabella,s)).filter(Boolean));
@@ -1872,10 +2023,10 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
       for(const k of futureFissiGiorno)if(k!==p)vietate.add(k);
       const token=PROTEIN_MACRO_TO_TOKEN[p]||SUBTYPE_TO_TOKEN[p]||p;
       const ctxPasto=Object.assign({},ctx,{forbiddenProteinMacros:vietate,requiredVegetableVariantId:ctx.requiredVegetable(slot),residuiCarboidrati:residui,cooldownCarboidrati:cooldownEsclusi});
-      candidato=await costruisciPastoSequenziale(token,slot.day,carbCandidati,pool,ctxPasto);
+      candidato=await completaPastoConBloccate(token,slot.day,carbCandidati,pool,ctxPasto,bloccate);
       if(candidato){target=p;break;}
     }
-    if(!candidato)return {ok:false,errori:['Nessuna composizione valida per '+slot.day+' '+slot.pasto+' rispettando tabella e carboidrati configurati.'],completati:i};
+    if(!candidato)return {ok:false,errori:['Nessuna composizione valida per '+slot.day+' '+slot.pasto+' rispettando tabella, carboidrati configurati e i blocchi impostati.'],completati:i};
 
     const definizione=Object.assign({},slot,{target,carbKey:candidato.carbKeyUsato,requiredVegetableVariantId:ctx.requiredVegetable(slot)});
     scelte.push(candidato);slotDefs.push(definizione);
@@ -1905,7 +2056,27 @@ async function generaPianoSettimana(scarto,opzioni){
   const days=giorniSettimana(scarto), today=typeof todayISO==='function'?todayISO():isoDate(new Date()),resolved=await caricaConfigurazioneNutrizionaleRisolta();
   if(!resolved.valid)return {generati:[],errori:resolved.errors};
   const slotDaGenerare=[];
-  for(let di=0;di<days.length;di++){const day=days[di];if(day<=today)continue;for(const pasto of ['pranzo','cena']){const old=await getOne('piano',day+'_'+pasto);if(old&&old.bloccata)continue;if(old&&old.consumato)continue;if(old&&!opzioni.forza&&old.realizzazioni&&old.realizzazioni.length)continue;slotDaGenerare.push({day,di,pasto});}}
+  for(let di=0;di<days.length;di++){
+    const day=days[di];if(day<=today)continue;
+    for(const pasto of ['pranzo','cena']){
+      const old=await getOne('piano',day+'_'+pasto);
+      if(old&&old.consumato)continue;
+      const realizzazioniVecchie=old&&Array.isArray(old.realizzazioni)?old.realizzazioni:[];
+      const bloccateVecchie=realizzazioniVecchie.filter(r=>r&&r.bloccata);
+      /* Un pasto con OGNI realizzazione bloccata dalla Programmazione si
+         comporta come il vecchio blocco a livello di pasto: resta
+         invariato, mai toccato da questa generazione. */
+      const interoPastoBloccato=realizzazioniVecchie.length>0&&bloccateVecchie.length===realizzazioniVecchie.length;
+      if(old&&(old.bloccata||interoPastoBloccato))continue;
+      if(old&&!opzioni.forza&&realizzazioniVecchie.length)continue;
+      let bloccate=[],targetBloccato=null;
+      if(bloccateVecchie.length){
+        for(const real of bloccateVecchie){const r=await materializzaRealizzazione(real);if(r)bloccate.push(r);}
+        if(bloccate.some(r=>copertura(r).P))targetBloccato=old.categoriaTarget||null;
+      }
+      slotDaGenerare.push({day,di,pasto,bloccate,targetBloccato});
+    }
+  }
   let tab={};
   try{const r=await getOne('impostazioni','tabellaGiornoCategoria');tab=r&&r.valore||{};}catch(e){}
   const runtimeConfig=await configRuntime(),weeklyIngredientCounts={},weeklySubtypeCounts={},weeklyStackKeys=new Set(),generatedIds=new Set(slotDaGenerare.map(x=>x.day+'_'+x.pasto)),seenSlots=new Set(),proteineGiorno=new Map();
@@ -2091,10 +2262,10 @@ async function materializzaRealizzazione(realizzazione){
   return ricetta;
 }
 
-async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig){
+async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig,bloccateIds){
   const materializzate=[];
   for(const real of realizzazioni||[]){const r=await materializzaRealizzazione(real);if(r)materializzate.push(r);}
-  const pool=await poolAmmesso(giorno,{}),complete=completaResiduoVerduraRicette(materializzate,pool,giorno,portionConfig);
+  const pool=await poolAmmesso(giorno,{}),complete=completaResiduoVerduraRicette(materializzate,pool,giorno,portionConfig,undefined,bloccateIds);
   const usati=new Set();
   return complete.map(r=>{
     const indice=(realizzazioni||[]).findIndex((real,i)=>!usati.has(i)&&real.ricettaId===r.id);
