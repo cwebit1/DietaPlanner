@@ -4751,12 +4751,15 @@ async function renderColazione(giorno, elementId){
   // Nel Menù uno slot vuoto resta realmente vuoto: aprire il pannello non crea
   // una proposta implicita. La colazione viene composta solo dalla generazione
   // settimanale o da un'azione esplicita dell'utente nella vista Piano.
+  // "Concluso" segue la fascia oraria (colazione: fino alle 9), non la sola
+  // data - stessa correzione gia' applicata a renderBloccoNuovoMotore per
+  // pranzo/cena, stessa regressione (commit ca226c1).
   if(elementId && !haContenutoColazione){
-    if(giorno<=todayISO()){el.innerHTML='<div class="pasto-concluso">— pasto concluso —</div>';return;}
+    if(fasciaPastoSuperata(giorno,'colazione')){el.innerHTML='<div class="pasto-concluso">— pasto concluso —</div>';return;}
     el.innerHTML='<div class="meta">Nessuna colazione programmata.</div>';
     return;
   }
-  if(giorno <= todayISO() && !haContenutoColazione){
+  if(fasciaPastoSuperata(giorno,'colazione') && !haContenutoColazione){
     el.innerHTML='<div class="pasto-header">'+ICONA_PASTO.colazione+' Colazione</div><div class="pasto-concluso">— pasto concluso —</div>';
     return;
   }

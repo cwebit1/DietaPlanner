@@ -114,4 +114,19 @@ assert(!corpoRenderBlocco.includes('scalaInventarioPerRicetta('),'renderBloccoNu
 const corpoRiepilogoMenu=estraiFunzione('riepilogoGrigliaPastoMenu');
 assert(corpoRiepilogoMenu.includes('giorno<=todayISO()'),'la Programmazione deve continuare a usare giorno<=todayISO() per la sola lettura del Menu (invariato)');
 
-console.log('OK: la finestra Pasto usa fasciaPastoSuperata (non piu\' la sola data) per "pasto concluso" e modificabilita\'; la Programmazione resta invariata.');
+// --- Estensione: stessa identica regressione, stessa correzione, in
+//     renderColazione (segnalata separatamente, ora estesa su richiesta
+//     esplicita). Fascia colazione: [6,9], fine=9. ---
+assert.equal(fasciaPastoSuperata(OGGI,'colazione',oraDi(8,0)),false,'oggi 08:00: colazione vuota non ancora conclusa');
+assert.equal(fasciaPastoSuperata(OGGI,'colazione',oraDi(8,59)),false,'oggi 08:59: colazione ancora aperta');
+assert.equal(fasciaPastoSuperata(OGGI,'colazione',oraDi(9,0)),true,'oggi 09:00: colazione conclusa');
+assert.equal(fasciaPastoSuperata(IERI,'colazione',oraDi(8,0)),true,'giorno passato: colazione sempre conclusa');
+assert.equal(fasciaPastoSuperata(DOMANI,'colazione',oraDi(23,0)),false,'giorno futuro: colazione mai conclusa');
+
+const corpoRenderColazione=estraiFunzione('renderColazione');
+assert(!corpoRenderColazione.includes('giorno<=todayISO()'),'renderColazione non deve piu\' usare giorno<=todayISO() per decidere "concluso"');
+assert(!corpoRenderColazione.includes('giorno <= todayISO()'),'renderColazione non deve piu\' usare giorno <= todayISO() (con spazi) per decidere "concluso"');
+assert((corpoRenderColazione.match(/fasciaPastoSuperata\(giorno,\s*'colazione'\)/g)||[]).length>=2,'renderColazione deve usare fasciaPastoSuperata(giorno,\'colazione\') per ENTRAMBI i rami (Menu ed elenco pasto) che decidono "concluso" su uno slot vuoto');
+assert(corpoRenderColazione.includes("giorno === todayISO()"),'il confronto giorno===todayISO() del premio costanza (non un bug di fascia, riguarda solo "oggi esatto") deve restare invariato');
+
+console.log('OK: la finestra Pasto (pranzo, cena, colazione) usa fasciaPastoSuperata (non piu\' la sola data) per "pasto concluso" e modificabilita\'; la Programmazione resta invariata.');

@@ -318,13 +318,12 @@ Ultimo commit di questa sezione: `8d2be4e`.
   di salvataggio/inventario/storico nel renderer (resta esclusivo di
   `elaboraConsumoAutomatico`, non toccata). Programmazione invariata
   (`riepilogoGrigliaPastoMenu` continua a usare `giorno<=todayISO()`).
-- **Segnalato, non toccato**: `renderColazione` ha lo stesso identico
-  pattern di bug (`giorno<=todayISO()` per uno slot colazione vuoto,
-  invece di `fasciaPastoSuperata(giorno,'colazione')` - già usata
-  correttamente li accanto per lo slot NON vuoto). Non corretto in
-  questo intervento perché colazione era esplicitamente fuori scope
-  salvo segnalazione esplicita - **da confermare con Cwe prima di
-  estendere il fix**.
+- **Corretto anche qui, su richiesta esplicita ("Estendi correzione")**:
+  `renderColazione` aveva lo stesso identico pattern di bug
+  (`giorno<=todayISO()` per uno slot colazione vuoto, in entrambi i suoi
+  rami) - sostituito con `fasciaPastoSuperata(giorno,'colazione')` in
+  entrambi, come già per pranzo/cena. Non toccato il confronto
+  `giorno===todayISO()` (banner premio costanza, non un bug di fascia).
 - Nuovo test `tests/lotto-pasto-fascia-oraria.test.js` (estrae ed
   esegue `fasciaPastoSuperata`/`FASCE_ORARIE_PASTO` da `index.html` con
   orari controllati, fallisce sul codice precedente, passa dopo): tutti

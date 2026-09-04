@@ -1211,13 +1211,20 @@ nella repository.
   non toccata. Programmazione (`riepilogoGrigliaPastoMenu`, `solaLettura`)
   resta `giorno<=todayISO()`, invariata per costruzione (nessuna riga
   toccata).
-  **Trovato ma non toccato, segnalato per conferma**: `renderColazione`
-  ha lo stesso identico pattern di bug per lo slot colazione VUOTO
-  (`giorno<=todayISO()` invece di `fasciaPastoSuperata(giorno,'colazione')`,
-  che è già usata correttamente nella riga accanto per lo slot NON
-  vuoto). Colazione era esplicitamente fuori scope in questo intervento
-  salvo dimostrazione+segnalazione separata - fatto qui, ma non corretto:
-  serve conferma esplicita di Cwe prima di estendere il fix.
+  **Trovato e ora corretto anche qui (04/09/2026 (6), su richiesta
+  esplicita di Cwe "Estendi correzione")**: `renderColazione` aveva lo
+  stesso identico pattern di bug per lo slot colazione VUOTO, in
+  **entrambi** i suoi rami — quello con `elementId` (contesto Menù,
+  attualmente irraggiungibile dal click reale dopo la pulizia editor
+  della pagina Pasto, ma corretto comunque per non lasciare un difetto
+  latente pronto a riemergere) e quello senza (il vero blocco colazione
+  della pagina Piano). `giorno<=todayISO()`/`giorno <= todayISO()`
+  sostituiti con `fasciaPastoSuperata(giorno,'colazione')` (fascia
+  colazione: fino alle 9) in entrambi, identico al fix già applicato a
+  pranzo/cena. Non toccato il terzo confronto `giorno===todayISO()`
+  presente nella stessa funzione (per `mostraPremioCostanza`): quello
+  non è un bug di fascia, è un confronto "solo oggi esatto" intenzionale
+  per un banner mostrato unicamente nel giorno corrente.
   **Verificato**: nuovo `tests/lotto-pasto-fascia-oraria.test.js`, che
   estrae ed esegue davvero `fasciaPastoSuperata`/`FASCE_ORARIE_PASTO` da
   `index.html` con orari controllati (nessuna dipendenza dall'orologio
