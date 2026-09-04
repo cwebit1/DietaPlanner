@@ -1356,3 +1356,124 @@ nella repository.
   questa sessione (stesso limite di risorse delle sessioni precedenti) -
   copertura completa a livello di funzione pura (`engine-core.js`,
   eseguito realmente) e di motore con IndexedDB reale via harness Node.
+- **Intervento 04/09/2026 (8) — C.user: la logica di scelta P→C non
+  seguiva la sequenza obbligatoria, non solo il conteggio finale.**
+  Causa precisa, in `motor-v12.js`:
+  1. `carboidratiCandidatiSlot` costruiva `mescolaValori(fissi.concat(base...))`
+     — un unico shuffle su fissi (C.user ancora da collocare) e AUTO
+     insieme, permettendo a un C.user di essere provato dopo diversi AUTO.
+  2. `costruisciPastoSequenziale` provava i PX in ordine di rotazione
+     (`ordinaPerStackPoiCaso`) senza mai cercare PRIMA, in tutto il pool,
+     quelli che realizzano già PX+C.user — la priorità dipendeva
+     dall'ordine di rotazione, non dalla presenza reale di un C.user.
+  3. Una ricetta PX+C già combinata veniva accettata SUBITO
+     (`if(copertura(proteina).C){...return esito;}`, primo controllo del
+     ciclo) se il suo carboidrato incorporato era ammissibile in
+     qualunque forma — anche solo AUTO — permettendo a un PX+C.AUTO di
+     precedere un possibile PX+C.user altrove nel pool, mai ancora
+     raggiunto dal ciclo.
+  4. Se nessun carboidrato tra i candidati risultava compatibile con la
+     proteina scelta, il pasto si chiudeva comunque con la sola
+     proteina (`chiudiPastoConVerdura([proteina,...extra],...)` seguito
+     da `carbKeyUsato:null` e un avviso) — un pasto ordinario senza C,
+     mai dichiarato come tale a valle nel renderer.
+  **Ordine effettivamente implementato ora** (`costruisciPastoSequenziale`,
+  riscritta): (a) pool PX valido (già esisteva, invariato); (b) *fase
+  1*: si scorre l'intero pool PX (nell'ordine di rotazione esistente,
+  invariato) cercando quelli che coprono già uno dei C.user ancora da
+  collocare (`fissiRimasti`, calcolato da `carbCandidati` incrociato con
+  `ctx.residuiCarboidrati`) — il primo che chiude il pasto vince,
+  PRIMA di qualunque altra strada; (c) *fase 2*, solo se la fase 1 non
+  ha prodotto nulla: si torna a scorrere il pool PX, ma ora una ricetta
+  PX+C già combinata è ammessa SOLO se il suo carboidrato è uno degli
+  AUTO ammessi in questo slot (`autoCandidati`, cioè `carbCandidati`
+  meno `fissiRimasti`) — non basta più "ammissibile in qualunque forma";
+  per un PX senza C incorporato, si cerca un carboidrato separato con la
+  nuova `cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,...)`,
+  che prova **sempre** prima ogni C.user rimasto (rispettando
+  `composizioneSeparataConsentita`) e solo poi ogni C.auto — mai
+  mescolati, mai la regola generica "cerca C compatibile con PX"; (d) se
+  nessuna combinazione produce C, lo slot fallisce (`return null`), mai
+  più un pasto senza C. La stessa `cercaCarboSeparato` è riusata identica
+  nella branch "proteina bloccata, carboidrato libero" di
+  `completaPastoConBloccate` (rimosso lì lo stesso fallback senza C).
+  **Funzioni modificate**: `carboidratiCandidatiSlot` (fissi e auto
+  mescolati solo al proprio interno, mai insieme — `mescolaValori(fissi,rng).concat(mescolaValori(auto,rng))`),
+  `costruisciPastoSequenziale` (riscritta), `completaPastoConBloccate`
+  (branch P-bloccato/C-libero riscritta), nuova `cercaCarboSeparato`,
+  nuova `erroreValidazionePastoFinale`, `generaPianoSettimana` (chiama
+  la nuova validazione per ogni slot prima di costruire un solo record
+  da scrivere — se un pasto non passa, `{generati:[],errori:[...]}`
+  con giorno/pasto precisi, zero `put()`). Nessun'altra funzione toccata:
+  frequenze proteiche, Set proteine, `maxProteinSourcesPerDay`, ricette,
+  tetti PDF, cooldown AUTO (integrato correttamente dopo la priorità
+  FIXED, non toccato in sé), calcolo S/G/V, icone, pagina Pasto/Alternativa/
+  Salvafrigo, fasce orarie, Programmazione "today+1", stile lucchetto —
+  tutti invariati, verificato dal diff e dalla suite pre-esistente
+  (35/35 prima di aggiungere i nuovi test, tutti verdi).
+  **Validazione atomica** (`erroreValidazionePastoFinale`): verifica,
+  per ogni pasto prima di scrivere, `pastoCompletoPerToken` (P/C/V
+  coperti rispetto al token richiesto), `carbKeyUsato` non nullo,
+  carboidrato non in `excludedKeys`, `bilancioVerdura.coperturaCompleta`
+  — un solo slot non valido annulla l'intera scrittura della settimana,
+  con l'identificativo preciso di giorno e pasto nel messaggio di
+  errore. Testata in isolamento (estrazione della funzione dal
+  sorgente, eseguita davvero con casi sintetici: candidato regolare →
+  passa; `carbKeyUsato` nullo, carboidrato escluso, copertura V
+  incompleta, nessuna realizzazione P per il token, candidato assente →
+  tutti respinti).
+  **Set UI carboidrati (problema 6)**: verificato a fondo — il modello a
+  tre stati canonici (AUTO/FIXED/EXCLUDED) era già corretto (cella
+  selezionata → FIXED; `0` esplicito e rimozione dell'ultima cella →
+  EXCLUDED; nessuna trasformazione accidentale AUTO→FIXED trovata).
+  Unico intervento: aggiunto testo esplicativo (tooltip sui pulsanti +
+  nota sotto) che "Casuale 14" e "Completa e fissa" impostano davvero
+  tutte le celle come FIXED (nessuna resta AUTO) — comportamento già
+  presente, ora reso esplicito senza alcun cambio di semantica.
+  **Blocchi della Programmazione (Problema Blocchi)**: verificato che
+  `completaPastoConBloccate` conta correttamente una C bloccata (la
+  base passata a `chiudiPastoConVerdura` include sempre le realizzazioni
+  bloccate, il cui `carbKeyUsato`/conteggi settimanali vengono
+  aggiornati come per qualunque altra scelta), lascia invariato un PX
+  bloccato (mai ripescato dal pool, propagato per riferimento), e con
+  P bloccato/C mancante cerca ora un C o C+V valido con la stessa
+  priorità C.user→C.auto (fix esteso lì) senza mai sbloccare o
+  sostituire silenziosamente una realizzazione. Se il blocco rende
+  impossibile completare, lo slot fallisce come ogni altro (`return
+  null`), propagato come errore dalla catena esistente.
+  **Verificato**: `tests/lotto-carboidrati-priorita-pxcuser.test.js`
+  (nuovo) — 100 generazioni reali con 'pane' FIXED=1 e uno slot forzato
+  a target 'carne' (token PC, combo reale Panino+Prosciutto crudo, id
+  32 del catalogo): PX+C.user scelto in 100/100 generazioni dopo il fix
+  (verificato **32/97, ~33%** prima del fix, dimostrato con `git stash`
+  sullo stesso identico test) — non una tendenza statistica ma una
+  regola che deve valere sempre quando l'opportunità esiste, verificata
+  come tale. Contratti di sorgente: nessuna chiamata diretta a
+  `completaResiduoVerduraRicette`/`assegnaCondimentiRotazioneGlobale`
+  dentro `costruisciPastoSequenziale`/`cercaCarboSeparato` (S/G/V
+  intervengono solo dentro `chiudiPastoConVerdura`, sempre dopo che P e
+  C sono già decisi); `carboidratiCandidatiSlot` non mescola più fissi e
+  auto in un solo shuffle. `tests/lotto-carboidrati-stress-validazione.test.js`
+  (nuovo) — **180 generazioni** (30 per ciascuna delle 6 combinazioni
+  richieste: tutti AUTO; FIXED liberi; FIXED con tetto reale, gnocchi/
+  friselle; EXCLUDED, patate/polenta; FIXED+AUTO+EXCLUDED insieme;
+  realizzazioni bloccate), verificando per ogni settimana valida:
+  `carboidratoPianificato` sempre presente, mai un EXCLUDED usato, ogni
+  FIXED (anche a tetto) esattamente nel numero scelto mai oltre, ogni
+  pasto con una realizzazione C reale con nome (mai un placeholder
+  "Seleziona pasto" in un menù completato), i blocchi preservati dopo
+  Rigenera. Più lo scenario impossibile (tutti i carboidrati esclusi):
+  errore esplicito, **zero scritture parziali** (snapshot di `piano`
+  identico prima/dopo, verificato byte-per-byte). Entrambi i nuovi test
+  falliscono sul codice precedente (dimostrato con `git stash`), passano
+  dopo. **Nota onesta**: il test di stress (180 generazioni) passa
+  anche sul codice precedente al fix, perché i conteggi finali FIXED/
+  EXCLUDED erano già corretti prima — la regressione reale riguardava
+  solo l'ORDINE/la priorità di scelta (dimostrata dal test dedicato
+  sopra), non il conteggio finale, esattamente come descritto nel
+  compito ("non limitarti a garantire il conteggio finale"). Suite
+  completa: 37/37 (stessa flakiness pre-esistente e nota, non
+  ricomparsa in queste esecuzioni). Sintassi, script inline e JSON
+  validati, `git diff --check` pulito. **Non verificato con un browser
+  reale** in questa sessione (stesso limite di risorse) — copertura
+  completa a livello di motore con IndexedDB reale via harness Node.

@@ -366,3 +366,38 @@ Ultimo commit di questa sezione: `8d2be4e`.
   `categoriaTarget`). Tutti dimostrati fallire sul codice precedente.
 - Suite: 35/35 (stessa flakiness pre-esistente e nota, `motor-v12.js`
   non toccato). Sintassi, JSON, `git diff --check` puliti.
+
+## Aggiornamento 04/09/2026 (8) — C.user: priorità PX+C.user, no fallback senza C
+
+- Corretto: il motore non rispettava il processo logico "filtra PX →
+  cerca PX+C.user → posiziona → solo dopo C/C+V". Cause: (1)
+  `carboidratiCandidatiSlot` mescolava FIXED (C.user) e AUTO in un solo
+  shuffle; (2) i PX venivano provati in ordine di rotazione senza mai
+  cercare prima, in tutto il pool, quelli che realizzano già PX+C.user;
+  (3) un PX già combinato con C veniva accettato subito se il C
+  incorporato era ammissibile in qualunque forma (anche solo AUTO),
+  precedendo un possibile PX+C.user altrove nel pool; (4) se nessun
+  carboidrato risultava compatibile, il pasto si chiudeva comunque con
+  la sola proteina (`carbKeyUsato:null`).
+- Riscritte `costruisciPastoSequenziale` (sequenza fase-per-fase: prima
+  tutto il pool per PX+C.user, poi PX libero → C.user separato → C.auto,
+  mai un fallback senza C) e la branch analoga di
+  `completaPastoConBloccate` (P bloccato, C libero). Nuova funzione
+  condivisa `cercaCarboSeparato`. `carboidratiCandidatiSlot` ora
+  restituisce sempre fissi-poi-auto, mai mescolati. Nuova
+  `erroreValidazionePastoFinale`, chiamata in `generaPianoSettimana`
+  prima di ogni `put()`: nessuna scrittura se anche un solo pasto non ha
+  P/C/V completi, `carbKeyUsato` non nullo, nessun EXCLUDED.
+- Verificato con dati reali: PX+C.user (combo Panino+Prosciutto crudo,
+  carboidrato 'pane') scelto in **100/100** generazioni dopo il fix,
+  **32/97 (~33%)** prima — regressione dimostrata e risolta. 180
+  generazioni di stress su 6 combinazioni (tutti AUTO, FIXED, FIXED con
+  tetto, EXCLUDED, misti, blocchi): sempre C presente, FIXED esatti,
+  EXCLUDED mai usati, tetti rispettati. Scenario impossibile (tutti i
+  carboidrati esclusi): errore esplicito, zero scritture parziali.
+- Nuovi test: `lotto-carboidrati-priorita-pxcuser.test.js`,
+  `lotto-carboidrati-stress-validazione.test.js`. Dettaglio completo in
+  `LOTTO_J_MOTORE_UNICO.md`. Suite: 37/37. Set UI carboidrati:
+  verificata già corretta (tre stati canonici), aggiunto solo testo
+  esplicativo che "Casuale 14"/"Completa e fissa" producono FIXED (nessun
+  cambio di comportamento).

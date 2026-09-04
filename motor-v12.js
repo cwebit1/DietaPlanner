@@ -1707,6 +1707,43 @@ function carboidratoCombinatoAmmesso(chiave,ctx){
   if((ctx.cooldownCarboidrati||new Set()).has(chiave))return false;
   return true;
 }
+/* Cerca, per UNA proteina gia' scelta (libera o gia' bloccata dalla
+   Programmazione), un carboidrato separato che chiuda il pasto: prova
+   prima ogni C.user ancora da collocare (fissiRimasti), poi ogni C.auto
+   ammesso (autoCandidati) - mai mescolati nello stesso livello di
+   priorita'. Non e' mai "cerca C compatibile con PX": e' sempre "prova
+   prima tutti i C.user rimasti, poi tutti gli AUTO", con la sola
+   compatibilita' di composizioneSeparataConsentita a filtrare le chiavi
+   non abbinabili a QUESTA proteina. base0 sono le realizzazioni gia'
+   decise da includere sempre insieme a [proteina] (ctx.basiExtra nella
+   ricerca libera, o le realizzazioni bloccate quando la proteina stessa
+   e' bloccata). Ritorna l'esito gia' completo di carbKeyUsato/avviso, o
+   null se nessuna combinazione chiude il pasto. */
+async function cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,token,giorno,pool,ctx,base0){
+  const tenta=async(chiave,eraAuto)=>{
+    let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
+    if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
+    for(const carboScelto of carboScelte){
+      const esito=await chiudiPastoConVerdura([proteina,carboScelto,...base0],token,giorno,pool,ctx);
+      if(esito){
+        const avviso=eraAuto&&fissiRimasti.length?('Carboidrato '+fissiRimasti[0]+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null;
+        return Object.assign(esito,{carbKeyUsato:chiave,avviso});
+      }
+    }
+    return null;
+  };
+  for(const chiave of fissiRimasti){
+    if(!composizioneSeparataConsentita(proteina,chiave))continue;
+    const esito=await tenta(chiave,false);
+    if(esito)return esito;
+  }
+  for(const chiave of autoCandidati){
+    if(!composizioneSeparataConsentita(proteina,chiave))continue;
+    const esito=await tenta(chiave,true);
+    if(esito)return esito;
+  }
+  return null;
+}
 async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   const oggi=ctx.todayStackKeys||new Set();
   const usataOggi=r=>chiaviGiornoRicetta(r).some(k=>oggi.has(k));
@@ -1728,51 +1765,47 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
      rigenerazione ordinaria). */
   if(ctx.livelliInventario)proteine=applicaPrioritaInventario(proteine,ctx.livelliInventario);
 
-  for(const proteina of proteine){
-    if(copertura(proteina).C){
-      const chiave=carbKeysRicetta(proteina).find(k=>carboidratoCombinatoAmmesso(k,ctx));
+  /* Sequenza obbligatoria: (1) pool PX valido - sopra; (2) fra quei PX,
+     quelli che realizzano gia' PX+C.user hanno priorita' assoluta su
+     qualunque altra strada, PRIMA di scegliere un PX libero e PRIMA di
+     considerare un PX+C.AUTO gia' combinato. La priorita' dipende dal
+     fatto che la ricetta realizzi realmente uno dei C.user ancora da
+     collocare (fissiRimasti), mai dal semplice fatto di contenere un
+     carboidrato generico. */
+  const fissiRimasti=carbCandidati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
+  const autoCandidati=carbCandidati.filter(k=>!fissiRimasti.includes(k));
+
+  if(fissiRimasti.length){
+    for(const proteina of proteine){
+      if(!copertura(proteina).C)continue;
+      const chiave=carbKeysRicetta(proteina).find(k=>fissiRimasti.includes(k));
       if(!chiave)continue;
       const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
       if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
-      continue;
     }
-    for(const chiave of carbCandidati){
-      if(!composizioneSeparataConsentita(proteina,chiave))continue;
-      let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
-      if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
-      /* Prima di scartare la chiave e passare al carboidrato candidato
-         successivo, si provano tutte le ricette disponibili per QUESTA
-         chiave, in ordine di priorita' - non solo la prima. Un'unica
-         ricetta specifica puo' non chiudere (verdura, conteggi) senza che
-         il carboidrato in se' sia incompatibile. */
-      for(const carboScelto of carboScelte){
-        const esito=await chiudiPastoConVerdura([proteina,carboScelto,...extra],token,giorno,pool,ctx);
-        if(esito){
-          /* L'avviso segnala soltanto la sostituzione di una condizione
-             utente esplicita: un carboidrato FIXED (residuo ancora da
-             piazzare) che risultava fra i candidati ma non e' stato
-             usato. carbCandidati e' una lista mescolata (mescolaValori) -
-             la sua posizione [0] e' casuale e non rappresenta mai una
-             scelta dell'utente, quindi non va usata come riferimento.
-             Quando lo slot e' interamente AUTO (nessun fisso fra i
-             candidati) non esiste alcuna condizione utente sostituita:
-             un AUTO scelto al posto di un altro AUTO non genera avviso. */
-          const fissiDisponibili=carbCandidati.filter(k=>(ctx.residuiCarboidrati||{})[k]>0);
-          const fissoSostituito=fissiDisponibili.length&&!fissiDisponibili.includes(chiave)?fissiDisponibili[0]:null;
-          return Object.assign(esito,{
-            carbKeyUsato:chiave,
-            avviso:fissoSostituito?('Carboidrato '+fissoSostituito+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
-          });
-        }
-      }
-    }
-    /* Nessun carboidrato fra i candidati e' compatibile con questa
-       proteina: si procede senza, invece di bloccare il pasto o forzare
-       una combinazione incompatibile. Segnalato con avviso per capire
-       quali ricette mancano nel catalogo. */
-    const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
-    if(esito)return Object.assign(esito,{carbKeyUsato:null,avviso:'Nessun carboidrato compatibile trovato per questa proteina in questo pasto.'});
   }
+
+  /* Nessun PX+C.user disponibile (o nessuno ha chiuso il pasto): si
+     posiziona un PX valido e SOLTANTO DOPO si cerca un C o C+V valido -
+     mai la regola generica "cerca C compatibile con PX". Una ricetta PX
+     gia' combinata con un carboidrato AUTO-ammesso resta un candidato
+     come un altro, valutato solo qui - non acquisisce priorita' per il
+     solo fatto di contenere gia' un carboidrato (problema 3). */
+  for(const proteina of proteine){
+    if(copertura(proteina).C){
+      const chiave=carbKeysRicetta(proteina).find(k=>autoCandidati.includes(k)&&carboidratoCombinatoAmmesso(k,ctx));
+      if(!chiave)continue;
+      const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
+      if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
+      continue; // una PX gia' combinata non cerca anche un secondo C separato
+    }
+    const esito=await cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,token,giorno,pool,ctx,extra);
+    if(esito)return esito;
+  }
+  /* Nessuna combinazione PX+C+V valida per questo slot: un pasto
+     ordinario deve sempre contenere un carboidrato, mai chiuso con la
+     sola proteina - lo slot fallisce (nessun fallback "senza C"), il
+     chiamante propaga l'errore invece di salvare un pasto incompleto. */
   return null;
 }
 /* Marca nelle realizzazioni finali quali provengono da un lucchetto della
@@ -1817,27 +1850,17 @@ async function completaPastoConBloccate(token,giorno,carbCandidati,pool,ctx,bloc
       const chiaveUsata=carbKeysRicetta(bloccate.find(r=>copertura(r).C)||{})[0]||null;
       return marcaRealizzazioniBloccate(Object.assign(esito,{carbKeyUsato:chiaveUsata,avviso:null}),bloccateIds);
     }
-    /* Proteina bloccata, carboidrato libero: stessa ricerca di
-       costruisciPastoSequenziale, ma la proteina resta quella gia'
-       bloccata - mai ripescata dal pool. */
-    for(const chiave of carbCandidati){
-      if(!composizioneSeparataConsentita(proteinaBloccata,chiave))continue;
-      let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
-      if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
-      for(const carboScelto of carboScelte){
-        const esito=await chiudiPastoConVerdura([...bloccate,carboScelto],token,giorno,pool,ctxConBlocco);
-        if(esito){
-          const fissiDisponibili=carbCandidati.filter(k=>(ctx.residuiCarboidrati||{})[k]>0);
-          const fissoSostituito=fissiDisponibili.length&&!fissiDisponibili.includes(chiave)?fissiDisponibili[0]:null;
-          return marcaRealizzazioniBloccate(Object.assign(esito,{
-            carbKeyUsato:chiave,
-            avviso:fissoSostituito?('Carboidrato '+fissoSostituito+' non disponibile per questa proteina: usato '+chiave+' al suo posto.'):null
-          }),bloccateIds);
-        }
-      }
-    }
-    const esito=await chiudiPastoConVerdura(bloccate,token,giorno,pool,ctxConBlocco);
-    if(esito)return marcaRealizzazioniBloccate(Object.assign(esito,{carbKeyUsato:null,avviso:'Nessun carboidrato compatibile trovato per questa proteina in questo pasto.'}),bloccateIds);
+    /* Proteina bloccata, carboidrato libero: stessa priorita' di
+       costruisciPastoSequenziale (C.user prima di C.auto, mai
+       mescolati), ma la proteina resta quella gia' bloccata - mai
+       ripescata dal pool. */
+    const fissiRimasti=carbCandidati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
+    const autoCandidati=carbCandidati.filter(k=>!fissiRimasti.includes(k));
+    const esitoSeparato=await cercaCarboSeparato(proteinaBloccata,fissiRimasti,autoCandidati,token,giorno,pool,ctxConBlocco,bloccate.filter(r=>r!==proteinaBloccata));
+    if(esitoSeparato)return marcaRealizzazioniBloccate(esitoSeparato,bloccateIds);
+    /* Nessun carboidrato (ne' C.user ne' C.auto) chiude il pasto con
+       questa proteina bloccata: lo slot fallisce - un pasto ordinario
+       non puo' restare senza C nemmeno quando la proteina e' bloccata. */
     return null;
   }
 
@@ -1949,7 +1972,14 @@ function carboidratiCandidatiSlot(resolved,residui,slotsRimasti,cooldownEsclusi,
      - i carboidrati AUTO (senza tetto) qui in piu' rispettano un cooldown
        di un giorno: lo stesso cereale non ricompare lo stesso giorno ne'
        il giorno successivo, cosi' da evitare sia la ridondanza pranzo/cena
-       sia sequenze di piu' giorni consecutivi con lo stesso carboidrato. */
+       sia sequenze di piu' giorni consecutivi con lo stesso carboidrato.
+     I due livelli non vengono MAI mescolati in un unico rimescolamento:
+     l'array restituito ha sempre prima tutti i fissi ancora da collocare
+     (C.user, in ordine casuale solo fra loro), poi tutti gli AUTO ammessi
+     (in ordine casuale solo fra loro) - mai un fisso mescolato dopo un
+     AUTO. Il chiamante (costruisciPastoSequenziale) legge questa stessa
+     separazione esplicitamente; l'ordine qui garantito e' comunque
+     corretto anche per chi si limita a scorrere l'array in sequenza. */
   const fissi=Object.keys(residui).filter(k=>residui[k]>0),totaleFissi=fissi.reduce((s,k)=>s+residui[k],0);
   const auto=(resolved.carbohydrates&&resolved.carbohydrates.autoEligibleKeys||[]).slice();
   if(totaleFissi>=slotsRimasti)return mescolaValori(fissi,rng);
@@ -1958,7 +1988,7 @@ function carboidratiCandidatiSlot(resolved,residui,slotsRimasti,cooldownEsclusi,
      cereali distinti), si riapre l'intero pool invece di bloccare il
      pasto: e' un vincolo di varieta', non un vincolo clinico. */
   const base=autoEleggibile.length?autoEleggibile:auto;
-  return mescolaValori(fissi.concat(base.filter(k=>!fissi.includes(k))),rng);
+  return mescolaValori(fissi,rng).concat(mescolaValori(base.filter(k=>!fissi.includes(k)),rng));
 }
 function validaMinimiProteici(resolved,counts,slotPersi){
   const errors=[],freq=resolved.proteinFrequencies||{},forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]);
@@ -2050,6 +2080,24 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
   if(minimi.length)return {ok:false,errori:minimi,completati:scelte.length};
   return {ok:true,scelte,slotDefs,completati:scelte.length};
 }
+/* Validazione atomica finale, prima di scrivere qualunque record: ogni
+   pasto ordinario (non speciale, non un override esplicito) deve avere
+   davvero P+C+V completi, mai solo formalmente completo. Ripete controlli
+   in parte gia' garantiti dalla costruzione stessa (chiudiPastoConVerdura
+   non restituisce mai un esito che non li rispetti), ma qui come
+   garanzia esplicita e finale, con identificazione precisa dello slot
+   coinvolto se qualcosa non torna - mai un put() se anche un solo pasto
+   non supera questo controllo. */
+function erroreValidazionePastoFinale(candidato,target,ctx){
+  if(!candidato||!Array.isArray(candidato.ricette)||!candidato.ricette.length)return 'pasto assente o senza realizzazioni';
+  const token=PROTEIN_MACRO_TO_TOKEN[target]||SUBTYPE_TO_TOKEN[target]||target;
+  if(!pastoCompletoPerToken(candidato.ricette,token,ctx.vegetablePortions))return 'copertura proteica, carboidrato o verdura incompleta rispetto al token richiesto ('+token+')';
+  if(!candidato.carbKeyUsato)return 'nessun carboidrato assegnato (carbKeyUsato nullo)';
+  const excludedKeys=(ctx.resolved&&ctx.resolved.carbohydrates&&ctx.resolved.carbohydrates.excludedKeys)||[];
+  if(excludedKeys.includes(candidato.carbKeyUsato))return 'carboidrato escluso (EXCLUDED) usato: '+candidato.carbKeyUsato;
+  if(!candidato.bilancioVerdura||!candidato.bilancioVerdura.coperturaCompleta)return 'copertura verdura non quantitativamente completa';
+  return null;
+}
 async function generaPianoSettimana(scarto,opzioni){
   scarto=Number(scarto)||0; opzioni=opzioni||{};
   if(typeof giorniSettimana!=='function'||typeof put!=='function'||typeof getOne!=='function') throw new Error('index non pronto');
@@ -2111,6 +2159,13 @@ async function generaPianoSettimana(scarto,opzioni){
   for(let si=0;si<slotDefs.length;si++){
       const {day,pasto,target}=slotDefs[si],id=day+'_'+pasto;
       const x=soluzione.scelte[si];
+      /* Validazione finale, uno slot alla volta, PRIMA di costruire
+         anche un solo record da scrivere: se un pasto non supera il
+         controllo, la generazione fallisce per intero, con precisione
+         su quale giorno/pasto - nessuna scrittura parziale, nessuna
+         modifica lasciata nella bozza. */
+      const problema=erroreValidazionePastoFinale(x,target,{resolved,vegetablePortions:resolved.vegetables});
+      if(problema)return {generati:[],errori:['Pasto non valido per '+day+' '+pasto+': '+problema+'.']};
       records.push({
         id,modo:'multi',motoreNuovo:true,realizzazioni:x.realizzazioni,bilancioVerdura:x.bilancioVerdura||null,
         porzioni:1,origine:'motore-nuovo',programmatoIl:new Date().toISOString(),

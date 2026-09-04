@@ -34,14 +34,27 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 
 ## 3. Carboidrati
 
-- Pranzo e cena automatici richiedono una fonte di carboidrati, salvo pasto
-  speciale o override esplicito. **Eccezione decisa il 03/09/2026**: se, dopo
-  aver provato in ordine tutti i carboidrati candidati ammessi per quello
-  slot (fissi/tetto prima, poi AUTO rispettando il cooldown), nessuno risulta
-  compatibile con la proteina scelta, il pasto procede senza carboidrato — il
-  motore non forza mai una combinazione incompatibile pur di non lasciare lo
-  slot vuoto. Il pasto viene segnalato con avviso giallo e tooltip, utile per
-  capire quali ricette mancano nel catalogo per coprire quella combinazione.
+- Pranzo e cena automatici richiedono sempre una fonte di carboidrati,
+  salvo pasto speciale o override esplicito. **Corretto 04/09/2026**:
+  l'eccezione decisa il 03/09/2026 ("se nessun carboidrato risulta
+  compatibile il pasto procede senza") è stata rimossa — un pasto
+  ordinario senza C non è più un esito accettabile in nessun caso: se
+  nessuna combinazione produce un carboidrato valido, lo slot fallisce
+  e la settimana non viene salvata (errore esplicito con giorno/pasto
+  coinvolti), invece di accettare un pasto incompleto con
+  `carbKeyUsato:null`.
+- Sequenza obbligatoria per ogni slot, mai una regola generica "cerca C
+  compatibile con PX": (1) filtra i candidati PX validi; (2) fra quei
+  PX, cerca prima quelli che realizzano già PX+C.user (un carboidrato
+  FIXED ancora da collocare incorporato nella stessa ricetta) — hanno
+  priorità assoluta su qualunque altra strada, mai per il solo fatto di
+  contenere genericamente un carboidrato; (3) se non esistono, posiziona
+  un PX libero; (4) soltanto dopo cerca un C o C+V valido, provando
+  sempre prima ogni C.user ancora da collocare e solo poi gli AUTO
+  ammessi — mai mescolati nello stesso livello di priorità. Sughi e
+  guarnizioni non intervengono mai in questa scelta: entrano solo dopo,
+  per calcolare il residuo V (`V residua = V richiesta − S − G − V già
+  completa`).
 - Il piano settimanale ordinario contiene 14 slot.
 - Stati persistenti:
   - `AUTO`: riempimento casuale con sole voci prive di tetto PDF;
@@ -52,6 +65,10 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - Un tetto non è un obiettivo: una voce limitata entra soltanto se scelta
   esplicitamente.
 - Nessun fallback può riattivare una voce esclusa o superare un numero fisso.
+- Prima di scrivere la settimana, ogni pasto ordinario è validato
+  atomicamente (copertura P/C/V, carboidrato non nullo, nessun EXCLUDED,
+  copertura verdura completa): se anche un solo pasto non supera il
+  controllo, nessuna scrittura avviene, nemmeno parziale.
 
 ## 4. Proteine
 
