@@ -394,7 +394,7 @@ IndexedDB, UI, logica carboidrati; rappresentazione pz/g non affrontata.
 
 ---
 
-## 2. Commit `6672105` — chiusura del flusso colazione per Uova e Ricotta
+## 2. Commit `0605373` — chiusura del flusso colazione per Uova e Ricotta
 
 **Obiettivo:** eliminare ogni sistema parallelo/hardcoded e chiudere il
 flusso contestuale a colazione per Uova (1 pz) e Ricotta (50 g), un solo
@@ -496,6 +496,6 @@ questo intervento, che ha rimosso solo i due blocchi in conflitto diretto
 con la colazione): decisione su un'eventuale rimozione completa lasciata
 a Cwe.
 
-**SHA finale:** `66721058828c6f10a494f731f84318154ab37ad3`.
+**SHA finale:** `060537372f71a0878859e98f40c7319d8f6e35df`.
 
 ---
