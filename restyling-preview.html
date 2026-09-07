@@ -6,21 +6,25 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#181c14">
+<meta name="theme-color" content="#174b35">
 <link rel="manifest" href="./manifest.json?v=2">
 <title>Dieta</title>
 <style>
 :root{
-  --bg:#181c14;
-  --panel:#20261a;
-  --panel-2:#262d1e;
-  --border:#374025;
-  --accent:#9cc23a;
-  --accent-dim:#4a5a2a;
+  --bg:#f3f1e9;
+  --panel:#fffef9;
+  --panel-2:#edf1e7;
+  --border:#d8decf;
+  --accent:#1f5a3e;
+  --accent-dim:#dce7d7;
   --warn:#d97757;
-  --text:#eef0e6;
-  --text-dim:#98a086;
-  --radius:12px;
+  --text:#17271e;
+  --text-dim:#667168;
+  --radius:16px;
+  --forest:#174b35;
+  --ivory:#f8f6ef;
+  --sage:#e7ede1;
+  --gold:#c79419;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html{overflow-anchor:auto;}
@@ -48,22 +52,22 @@ button{font-family:inherit;}
 /* Header */
 header{
   position:sticky;top:0;z-index:20;
-  background:var(--bg);
-  padding:16px 16px 10px;
-  border-bottom:1px solid var(--border);
+  background:linear-gradient(145deg,#174b35,#1d5a40);
+  padding:calc(18px + env(safe-area-inset-top)) 18px 16px;
+  border-bottom:none;
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
   gap:12px;
 }
-header .title{font-size:1.15rem;font-weight:800;letter-spacing:-0.01em;}
-header .title span{color:var(--accent);}
-header .sub{font-size:0.75rem;color:var(--text-dim);margin-top:2px;}
+header .title{font-family:Georgia,"Times New Roman",serif;font-size:1.9rem;font-weight:500;letter-spacing:-0.035em;color:#fff;line-height:1;}
+header .title span{color:#cddbad;}
+header .sub{font-size:0.62rem;color:#edf3e9;margin-top:8px;letter-spacing:.24em;text-transform:uppercase;}
 .header-app{min-width:0;flex:1;padding-top:2px;}
 .header-user{min-width:132px;display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:2px;}
 .account-button{width:24px;height:24px;border-radius:50%;padding:0;display:grid;place-items:center;overflow:hidden;flex:0 0 auto;font-size:.72rem;}
 .account-button img{width:100%;height:100%;object-fit:cover;}
-.header-greeting{max-width:190px;font-size:.72rem;line-height:1.2;color:var(--text);font-weight:600;white-space:normal;}
+.header-greeting{max-width:190px;font-size:.78rem;line-height:1.25;color:#f7f8f3;font-weight:500;white-space:normal;}
 .account-status{display:flex;align-items:center;gap:10px;min-width:0;}
 .account-status img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 auto;}
 .account-identity{min-width:0;flex:1;}
@@ -72,25 +76,26 @@ header .sub{font-size:0.75rem;color:var(--text-dim);margin-top:2px;}
 /* Tabs bottom nav */
 nav.tabbar{
   position:fixed;bottom:0;left:0;right:0;z-index:30;
-  display:flex;background:var(--panel);border-top:1px solid var(--border);
-  padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  display:flex;background:linear-gradient(145deg,#174b35,#1d5a40);border-top:none;
+  padding:7px 4px calc(7px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 22px rgba(23,75,53,.12);
 }
 nav.tabbar button{
-  flex:1;background:none;border:none;color:var(--text-dim);
+  flex:1;background:none;border:none;color:rgba(255,255,255,.68);
   display:flex;flex-direction:column;align-items:center;gap:2px;
   padding:6px 2px;border-radius:10px;font-size:0.65rem;cursor:pointer;
 }
 nav.tabbar button .ic{font-size:1.15rem;}
-nav.tabbar button.active{color:var(--accent);background:var(--accent-dim);}
+nav.tabbar button.active{color:#fff;background:rgba(255,255,255,.13);}
 
-main{padding:14px 14px 20px;max-width:640px;margin:0 auto;}
+main{padding:16px 14px 24px;max-width:640px;margin:0 auto;background:var(--ivory);min-height:calc(100vh - 78px);}
 section.view{display:none;}
 section.view.active{display:block;}
 
 /* Generic cards */
 .card{
   background:var(--panel);border:1px solid var(--border);
-  border-radius:var(--radius);padding:14px;margin-bottom:12px;
+  border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 5px 16px rgba(31,59,42,.06);
 }
 .card h3{font-size:1rem;margin-bottom:4px;}
 .meta{color:var(--text-dim);font-size:0.78rem;}
@@ -642,7 +647,52 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   transition:width 0.25s ease;
 }
 .loader-testo{ font-size:0.78rem; color:var(--text-dim); }
-.consumato-spunta{color:#fff;font-weight:700;}
+.consumato-spunta{color:var(--forest);font-weight:800;}
+
+/* Restyling visuale 2026: guscio editoriale e carosello dimostrativo.
+   Gli asset sono path statici e non sono associati a ID ricetta. */
+.giorno-editoriale{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 2px 14px;}
+.giorno-editoriale h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.75rem,7vw,2.35rem);font-weight:500;line-height:1.05;letter-spacing:-.035em;color:var(--text);}
+.giorno-editoriale .giorno-caption{font-family:Georgia,"Times New Roman",serif;font-style:italic;color:var(--text-dim);font-size:.78rem;margin-top:5px;}
+.giorni-riga{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:7px;box-shadow:0 5px 16px rgba(31,59,42,.05);}
+.giorni{scrollbar-width:none;}
+.giorni::-webkit-scrollbar{display:none;}
+.giorni button{background:transparent;border-color:transparent;color:var(--text-dim);padding:8px 11px;border-radius:14px;}
+.giorni button .giorno-numero{font-size:1rem;}
+.giorni button.active{background:var(--forest);border-color:var(--forest);color:#fff;box-shadow:0 5px 12px rgba(23,75,53,.18);}
+.giorni button.active .giorno-numero{color:#fff;}
+.btn-calendario{background:var(--sage);border-color:transparent;color:var(--forest);}
+.pasto-block{background:var(--panel);border-color:var(--border);border-radius:18px;padding:0 14px 18px;overflow:hidden;box-shadow:0 7px 22px rgba(31,59,42,.07);}
+.pasto-block>.pasto-header,.pasto-block>.pasto-titolo-compatto{margin:0 -14px 10px;padding:12px 16px;background:linear-gradient(90deg,#edf2e8,#f7f8f2);border-bottom:1px solid #e0e5da;color:var(--forest);font-size:1rem;font-weight:800;letter-spacing:.035em;}
+.pasto-riga-griglia{grid-template-columns:58px minmax(0,1fr) 38px;border-bottom-color:#e5e8df;}
+.pasto-riga-piatto{color:var(--text);}
+.pasto-riga-icone{font-size:1.05rem;}
+.pasto-riga-comando button{color:var(--forest);}
+.pasto-visuale-demo{margin:0 0 11px;position:relative;}
+.pasto-visuale-track{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;padding:0 34px 4px 0;}
+.pasto-visuale-track::-webkit-scrollbar{display:none;}
+.pasto-visuale-slide{position:relative;flex:0 0 92%;height:clamp(150px,43vw,235px);border-radius:14px;overflow:hidden;scroll-snap-align:start;background:var(--sage);box-shadow:inset 0 0 0 1px rgba(23,75,53,.08);}
+.pasto-visuale-slide img{display:block;width:100%;height:100%;object-fit:cover;}
+.pasto-visuale-slide.mancante{display:grid;place-items:center;background:linear-gradient(145deg,#edf1e7,#dce7d7);}
+.pasto-visuale-slide.mancante::before{content:'Immagine non disponibile';color:var(--forest);font-size:.76rem;font-weight:700;letter-spacing:.02em;}
+.pasto-visuale-slide::after{content:'';position:absolute;inset:auto 0 0;height:36%;background:linear-gradient(transparent,rgba(12,35,24,.38));pointer-events:none;}
+.pasto-visuale-cue{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.92);color:var(--forest);font-size:1.35rem;box-shadow:0 4px 12px rgba(0,0,0,.15);pointer-events:none;z-index:2;}
+.pasto-visuale-dots{display:flex;justify-content:center;gap:6px;padding-top:4px;}
+.pasto-visuale-dot{width:7px;height:7px;border-radius:50%;background:#c4c9bf;}
+.pasto-visuale-dot.active{background:var(--forest);}
+button.primary{background:var(--forest);color:#fff;}
+button.secondary{background:#f0f3ec;color:var(--forest);border-color:#e0e5da;}
+.pasto-sub-panel{background:#f7f8f3;border-color:#e0e5da;}
+.meta{color:var(--text-dim);}
+input,select,textarea{background:#f2f4ee;border-color:var(--border);color:var(--text);}
+@media(max-width:390px){
+  header .title{font-size:1.65rem;}
+  header .sub{letter-spacing:.16em;}
+  .header-user{min-width:104px;}
+  nav.tabbar button{font-size:.56rem;padding-inline:1px;}
+  nav.tabbar button .ic{font-size:1.05rem;}
+  .pasto-visuale-slide{flex-basis:90%;height:148px;}
+}
 </style>
 </head>
 <body>
@@ -666,8 +716,8 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 
 <header>
   <div class="header-app">
-    <div class="title">Dieta<span>·</span>Planner <span id="headerVersione" style="font-size:0.58rem;font-weight:400;color:var(--text-dim);vertical-align:super;margin-left:4px;"></span></div>
-    <div class="sub">Pranzo e cena, senza sprechi</div>
+    <div class="title">DietaPlanner <span id="headerVersione" style="font-family:inherit;font-size:0.52rem;font-weight:400;color:#dbe6d3;vertical-align:super;margin-left:4px;"></span></div>
+    <div class="sub">Piani sani, giorni migliori</div>
   </div>
   <div class="header-user">
     <button class="account-button" id="btnAccountHeader" aria-label="Account Google" title="Account Google">👤</button>
@@ -683,6 +733,9 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
   <div class="giorni-riga">
     <div class="giorni" id="selettoreGiorni"></div>
     <div class="btn-calendario" id="btnCalendarioSalto">📅</div>
+  </div>
+  <div class="giorno-editoriale">
+    <div><h1 id="titoloGiornoPiano"></h1><div class="giorno-caption">Buone abitudini oggi, grandi risultati domani.</div></div>
   </div>
   <div id="nessunPastoOggi"></div>
 
@@ -4205,6 +4258,8 @@ async function renderGraficiConsumo(){
 }
 
 async function renderPiano(){
+  const titoloGiornoPiano=document.getElementById('titoloGiornoPiano');
+  if(titoloGiornoPiano)titoloGiornoPiano.textContent=labelGiornoEsteso(giornoSelezionato);
   /* Cambio di giorno o rientro nella pagina Pasto: qualunque proposta
      Alternativa/Salvafrigo non confermata va scartata senza salvarla. */
   for(const chiave in bozzePropostaPasto)delete bozzePropostaPasto[chiave];
@@ -4301,6 +4356,7 @@ async function renderPiano(){
   await renderBloccoSemplice('spuntino2');
   await renderBloccoCompleto('cena');
   await renderBloccoSemplice('spuntino3');
+  applicaCaroselliVisualiDemo();
   await renderNutrizioneGiorno();
   await renderIndicatoreIntegrale();
   await renderFrequenzeSettimana();
@@ -4417,6 +4473,39 @@ async function renderIndicatoreFrutta(){
 
 const LABEL_PASTO = {colazione:'Colazione', pranzo:'Pranzo', cena:'Cena', spuntino1:'Spuntino mattina', spuntino2:'Spuntino pomeriggio', spuntino3:'Spuntino sera'};
 const ICONA_PASTO = {colazione:'☀️', pranzo:'🍝', cena:'🌙', spuntino1:'🍎', spuntino2:'🍏', spuntino3:'🍇'};
+
+/* Sorgente dimostrativa esclusivamente visuale. Non contiene ID, nomi ricetta
+   o dati funzionali: il futuro catalogo visuale sostituirà soltanto questi path. */
+const IMMAGINI_VISUALI_DEMO = {
+  colazione:['assets/visual-demo/colazione-overnight-oats.webp','assets/visual-demo/pranzo-spaghetti-vongole.webp','assets/visual-demo/cena-ceci-radicchio.webp'],
+  pranzo:['assets/visual-demo/pranzo-spaghetti-vongole.webp','assets/visual-demo/cena-ceci-radicchio.webp','assets/visual-demo/colazione-overnight-oats.webp'],
+  cena:['assets/visual-demo/cena-ceci-radicchio.webp','assets/visual-demo/pranzo-spaghetti-vongole.webp','assets/visual-demo/colazione-overnight-oats.webp']
+};
+function montaCaroselloVisualeDemo(pasto,contenitore){
+  if(!contenitore||contenitore.querySelector('.pasto-visuale-demo'))return;
+  const testo=contenitore.textContent||'';
+  if(/nessun pasto|pasto concluso/i.test(testo))return;
+  const immagini=IMMAGINI_VISUALI_DEMO[pasto]||[];
+  if(!immagini.length)return;
+  const visuale=document.createElement('div');
+  visuale.className='pasto-visuale-demo';
+  visuale.setAttribute('aria-label','Anteprima fotografica scorrevole');
+  visuale.innerHTML='<div class="pasto-visuale-track">'+immagini.map((src,indice)=>'<div class="pasto-visuale-slide"><img src="'+src+'" alt="" loading="'+(pasto==='colazione'&&indice===0?'eager':'lazy')+'" decoding="async"'+(pasto==='colazione'&&indice===0?' fetchpriority="high"':'')+'></div>').join('')+'</div><span class="pasto-visuale-cue" aria-hidden="true">›</span><div class="pasto-visuale-dots">'+immagini.map((_,indice)=>'<span class="pasto-visuale-dot'+(indice?'':' active')+'"></span>').join('')+'</div>';
+  const intestazione=contenitore.querySelector(':scope > .pasto-header, :scope > .pasto-titolo-compatto');
+  intestazione?intestazione.insertAdjacentElement('afterend',visuale):contenitore.prepend(visuale);
+  const track=visuale.querySelector('.pasto-visuale-track'),dots=[...visuale.querySelectorAll('.pasto-visuale-dot')];
+  visuale.querySelectorAll('img').forEach(img=>img.addEventListener('error',()=>{img.closest('.pasto-visuale-slide')?.classList.add('mancante');img.remove();},{once:true}));
+  track.addEventListener('scroll',()=>{
+    const passo=(track.querySelector('.pasto-visuale-slide')?.offsetWidth||1)+10;
+    const attivo=Math.max(0,Math.min(dots.length-1,Math.round(track.scrollLeft/passo)));
+    dots.forEach((dot,indice)=>dot.classList.toggle('active',indice===attivo));
+  },{passive:true});
+}
+function applicaCaroselliVisualiDemo(){
+  montaCaroselloVisualeDemo('colazione',document.getElementById('blocColazione'));
+  montaCaroselloVisualeDemo('pranzo',document.getElementById('blocPranzo'));
+  montaCaroselloVisualeDemo('cena',document.getElementById('blocCena'));
+}
 
 /* Scalo inventario differito al consumo reale: un pasto "programmato" non tocca la
    dispensa finché non è passato l'orario in cui si mangia davvero — altrimenti,
