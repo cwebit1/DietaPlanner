@@ -25,6 +25,7 @@
 - Dopo il Lotto F, rileggere anche `docs/LOTTO_F_CATALOGO_NUOVO.md`: preservare le classificazioni verificate del catalogo nuovo, le decisioni utente su Riso/Farina 00/burro di arachidi e non confondere i metadati di deperibilita con la logica operativa del Lotto G.
 - Dopo il Lotto G, rileggere anche `docs/LOTTO_G_GENERAZIONE_MANUALE_UI.md`: quantità e residuo appartengono allo snapshot della realizzazione; programmazione e pasto odierno usano priorità di deperibilità diverse; Roll e Salvafrigo devono ricalcolare atomicamente la copertura senza mutare i template.
 - Usare `docs/STATO_LOTTI_E_TEST.md` come unica fonte dello stato di avanzamento e `docs/REQUIREMENTS-MATRIX.md` per il criterio di chiusura dei requisiti.
+- `docs/REGISTRO_MODIFICHE.md` è il log permanente e sequenziale di tutti i rapporti di modifica al repository: prima di intervenire su un'area già toccata in passato, cercare lì il filone pertinente invece di ricostruire la cronologia da `git log`; dopo ogni intervento aggiungere una nuova sezione in fondo (o al filone pertinente), mai riscrivere le precedenti.
 - I documenti marcati `[STORICO]`, `[STORICO 1.0]`, `[STORICO CONSOLIDATO]` o `[SUPERATO]` non sono fonti operative anche se nel testo conservano vecchie formule come "dominante" o "leggere per primo".
 - Implementare esclusivamente quanto richiesto e autorizzato dall'utente.
 - Non modificare dati, valori predefiniti, ricette, ingredienti, quantità, versioni o logiche adiacenti senza un'istruzione esplicita.
