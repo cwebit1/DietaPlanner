@@ -651,3 +651,42 @@ questa fase.
 `docs/REGISTRO_MODIFICHE.md`.
 
 ---
+
+## 2. Separazione delle responsabilità tra restyling e database visuale — 7 settembre 2026
+
+**Decisione di Cwe:** il restyling grafico e l'integrazione tecnica del futuro
+database visuale procedono in sessioni distinte, senza dipendenze funzionali
+durante la fase grafica.
+
+**Sessione grafica:** realizza nuova interfaccia, card fotografiche, swipe,
+indicatori, fallback, responsive e immagini dimostrative tramite percorsi
+statici. Queste immagini restano segnaposto e non sono collegate a ricette per
+nome o ID.
+
+**Sessione tecnica:** dopo la chiusura delle modifiche funzionali progetterà e
+implementerà con Claude lo schema visuale, i collegamenti per ID ricetta e
+`variantId`, il caricamento IndexedDB, la copertura degli ID, la risoluzione dei
+percorsi, il fallback e il caricamento limitato alle viste Ricette, Pasto e
+Menu.
+
+**Contratto d'integrazione:** quando il database visuale sarà pronto,
+sostituirà soltanto la sorgente delle immagini statiche del componente
+grafico. Struttura, swipe e comportamento dell'interfaccia resteranno
+invariati.
+
+**Vincoli confermati:** cataloghi funzionale e visuale separati; catalogo
+visuale limitato a ID, percorso immagine e testo; collegamenti soltanto per ID;
+immagini esterne e mai Base64; assenza di contenuti non bloccante; nessun
+accesso al vecchio `ricette.json`; nessun impatto su avvio o motore.
+
+**Intervento effettuato:** aggiornamento esclusivamente documentale della
+roadmap. Nessuna modifica a codice, schema IndexedDB, UI o cataloghi dati.
+
+**File modificati:** `docs/PIANO_REVISIONE_ROOT_NUOVO_DB.md`,
+`docs/REGISTRO_MODIFICHE.md`.
+
+**Verifiche:** `git diff --check`.
+
+**SHA finale:** da inserire dopo la creazione del commit.
+
+---

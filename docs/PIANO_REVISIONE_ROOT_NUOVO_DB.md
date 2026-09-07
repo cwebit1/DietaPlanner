@@ -98,6 +98,47 @@ delle immagini, comportamento del fallback, controllo di copertura degli ID e
 integrazione progressiva nelle viste Ricette, Pasto e Menu. La produzione
 massiva delle immagini inizierà soltanto dopo la validazione di un campione.
 
+### Separazione operativa tra restyling e integrazione tecnica
+
+Il lavoro è diviso in due sessioni con responsabilità non sovrapposte.
+
+La sessione dedicata al restyling grafico realizza esclusivamente:
+
+- la nuova interfaccia della PWA;
+- le card fotografiche dei pasti;
+- lo swipe orizzontale e gli indicatori di posizione;
+- il fallback grafico;
+- dimensioni, proporzioni e comportamento responsivo;
+- immagini dimostrative caricate mediante percorsi statici diretti.
+
+Durante il restyling, le immagini sono soltanto segnaposto visuali: non sono
+associate alle ricette tramite nome o ID e non costituiscono collegamenti
+funzionali definitivi.
+
+Questa sessione tecnica non modifica il restyling. Dopo la chiusura delle
+correzioni funzionali, dovrà progettare e implementare con Claude:
+
+1. lo schema definitivo del database visuale;
+2. il collegamento tra ricette concrete e contenuti visuali esclusivamente
+   tramite ID;
+3. il collegamento tra `variantId` e fotografie degli ingredienti;
+4. la sincronizzazione o il caricamento tramite IndexedDB;
+5. la verifica della copertura degli ID;
+6. la risoluzione del percorso fotografico corretto per ogni ricetta;
+7. la restituzione del fallback quando fotografia o descrizione mancano;
+8. il caricamento del catalogo soltanto nelle viste Ricette, Pasto e Menu.
+
+Quando il database visuale sarà pronto, sostituirà soltanto la sorgente delle
+immagini statiche prevista dal componente grafico. Struttura, swipe,
+indicatori e comportamento responsivo dell'interfaccia resteranno invariati.
+
+Restano vincolanti tutti i confini architetturali elencati sopra: archivio
+visuale separato da quello funzionale; contenuto limitato a ID, percorso
+immagine e testo descrittivo; collegamenti mai basati sui nomi; immagini
+esterne ottimizzate e mai Base64; nessun rallentamento dell'avvio o del motore;
+nessun accesso al vecchio `ricette.json`; assenza di contenuti visuali sempre
+non bloccante.
+
 ## Regola anti-fallback
 
 Se il nuovo database non copre una combinazione richiesta:
