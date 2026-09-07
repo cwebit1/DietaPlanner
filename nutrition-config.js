@@ -254,38 +254,46 @@
     return out;
   }
 
-  /* Migrazione del formato storico piu' vecchio (precedente all'introduzione
-     di configCarboidratiStati): contava un totale di caselle carboidrato
-     cliccate per chiave con un array "origine" (per indice) 'utente' o
-     'sistema'. Il vecchio pulsante Salva completava sempre automaticamente
-     il totale a CONFIG_CARB_TOTALE_OBBLIGATORIO prima di scrivere, quindi il
-     conteggio grezzo per chiave puo' includere caselle aggiunte dal
-     completamento automatico ("Completa e fissa"/"Casuale"), mai scelte
-     dall'utente.
-     L'array origine e' scritto un elemento per casella (stessa lunghezza del
-     conteggio, vedi origineCaselleCarb/impostaModalitaCarb): quando la
-     lunghezza combacia con il conteggio grezzo, la traccia e' affidabile e
-     si contano solo le caselle davvero di origine 'utente' (il resto,
-     'sistema', equivale ad "assenza di scelta", mai un FIXED). Quando invece
-     manca la traccia per quella chiave, o la sua lunghezza non combacia col
-     conteggio (dato incompleto/inconsistente), non c'e' modo affidabile di
-     isolare le sole caselle utente: si mantiene il comportamento storico
-     prudente, l'intero conteggio resta FIXED se esiste anche una sola prova
-     di scelta manuale, coerente con l'unico altro punto che leggeva questo
-     stesso formato prima dell'introduzione degli stati canonici. Punto
-     canonico unico: sia l'interfaccia (Set) sia il motore devono derivare
-     gli stessi conteggi da questa funzione, mai duplicare la logica
-     altrove. */
+  /* Normalizzatore di compatibilita' del formato storico piu' vecchio
+     (precedente all'introduzione di configCarboidratiStati), eseguito ad
+     ogni lettura delle impostazioni: non scrive nulla, non e' una
+     migrazione persistente, va rieseguito identico ogni volta che questi
+     dati vengono letti. Il vecchio formato contava un totale di caselle
+     carboidrato cliccate per chiave (configCarboidrati) con un array
+     "origine" (configCarboidratiOrigini) 'utente'/'sistema' per indice; il
+     vecchio pulsante Salva completava sempre automaticamente il totale a
+     CONFIG_CARB_TOTALE_OBBLIGATORIO prima di scrivere, quindi il conteggio
+     grezzo per chiave puo' includere caselle aggiunte dal completamento
+     automatico ("Completa e fissa"/"Casuale"), mai scelte dall'utente.
+
+     L'array origine e' affidabile SOLO quando e' un vero array, ha
+     esattamente la stessa lunghezza del conteggio grezzo e ogni elemento e'
+     esattamente 'utente' oppure 'sistema' (nessun altro valore). Solo in
+     questo caso si contano le sole caselle 'utente' come FIXED (zero
+     elementi 'utente' => AUTO, mai un conteggio inventato).
+
+     Quando l'array e' assente, piu' corto, piu' lungo, o contiene un
+     valore diverso da 'utente'/'sistema', il dato e' incompleto o
+     inconsistente e non c'e' modo affidabile di isolare le sole caselle
+     utente: in questo caso un conteggio grezzo positivo resta interamente
+     FIXED (mai perso, mai ridotto a un sottoinsieme dedotto), un conteggio
+     grezzo zero resta AUTO. Questa e' la regola conservativa: con dati
+     incompleti non si deve mai perdere un conteggio storico positivo.
+
+     Punto canonico unico: sia l'interfaccia (Set) sia il motore devono
+     derivare gli stessi conteggi da questa funzione, mai duplicare la
+     logica altrove. */
   function legacyCarbohydrateUserCounts(rawCounts,origins){
     rawCounts=rawCounts||{};origins=origins||{};
     const counts={};
     for(const key of Object.keys(rawCounts)){
       const n=Math.max(0,Math.trunc(Number(rawCounts[key])||0));
-      const source=Array.isArray(origins[key])?origins[key]:null;
-      if(source&&source.length===n){
+      const source=origins[key];
+      const affidabile=Array.isArray(source)&&source.length===n&&source.every(x=>x==='utente'||x==='sistema');
+      if(affidabile){
         const userCount=source.filter(x=>x==='utente').length;
         if(userCount>0) counts[key]=userCount;
-      }else if(n>0&&(!source||source.some(x=>x==='utente'))){
+      }else if(n>0){
         counts[key]=n;
       }
     }

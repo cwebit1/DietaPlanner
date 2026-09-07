@@ -839,10 +839,14 @@ function invalidaConfigRuntime(){ state.runtimeConfigCache=null; }
 function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
   counts=counts||{};origins=origins||{};states=states||{};
   if(Object.keys(states).length)return {states:clone(states),explicitZeroKeys:(explicitZeroKeys||[]).slice()};
-  /* Punto canonico unico (N.legacyCarbohydrateUserCounts): stessa
-     derivazione usata dall'interfaccia Set per isolare, nel formato storico
-     piu' vecchio, le sole caselle scelte davvero dall'utente da quelle
-     aggiunte dal completamento automatico ("Completa e fissa"/"Casuale"). */
+  /* Normalizzazione di compatibilita' in lettura (N.legacyCarbohydrateUserCounts),
+     non una migrazione persistente: nessuna scrittura avviene qui, va
+     rieseguita identica ad ogni caricamento delle impostazioni. Isola, nel
+     formato storico piu' vecchio, le sole caselle scelte davvero
+     dall'utente da quelle aggiunte dal completamento automatico ("Completa
+     e fissa"/"Casuale") quando l'informazione origine e' affidabile; con
+     dati incompleti/inconsistenti mantiene per intero il conteggio storico
+     positivo (vedi commento della funzione condivisa). */
   const userCounts=N.legacyCarbohydrateUserCounts(counts,origins);
   const migrated={};
   for(const key of Object.keys(counts)){

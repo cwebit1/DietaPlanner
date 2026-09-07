@@ -16,8 +16,13 @@
    - carboidrato con tetto PDF (limitato)
    - tabella proteica parziale (tabellaGiornoCategoria)
    - maxProteinSourcesPerDay = 1 e = 2
-   - seconda esecuzione della migrazione identica alla prima (idempotenza)
-   - salvataggio e successivo ricaricamento (round-trip stato canonico)
+   - normalizzazione di compatibilità in lettura del formato legacy dei
+     carboidrati: origini affidabili (lunghezza corretta, soli valori
+     'utente'/'sistema') isolano il conteggio utente; origini assenti,
+     incomplete o con valori sconosciuti non fanno mai perdere un
+     conteggio storico positivo (resta FIXED per intero)
+   - invalidazione della cache e rilettura della configurazione: risultato
+     stabile, nessuna scrittura automatica nello store impostazioni
    - nessuna cancellazione di impostazioni non coinvolte */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -125,20 +130,71 @@ const M=global.DietaPlannerMotorV12;
     assert.equal(resolvedOltre.valid,false,'oltre il tetto PDF deve fallire esplicitamente, mai essere silenziosamente limitato');
   }
 
-  /* ============ 8. Idempotenza: seconda esecuzione della migrazione identica alla prima ============ */
+  /* ============ 8. Due letture consecutive: stessa normalizzazione, nessuna deriva ============ */
   {
     const rawCounts={riso:4,pane:0},origins={riso:['utente','utente','sistema','sistema']},zero=['pane'];
     const first=M.selezioneCarboidratiPersistita(rawCounts,origins,{},zero);
     const second=M.selezioneCarboidratiPersistita(rawCounts,origins,{},zero);
-    assert.deepEqual(first,second,'la stessa migrazione applicata due volte deve dare risultato identico');
+    assert.deepEqual(first,second,'la stessa normalizzazione in lettura applicata due volte deve dare risultato identico');
     const resolvedFirst=N.resolveNutritionConfig({user:{carbohydrates:first}});
     const resolvedSecond=N.resolveNutritionConfig({user:{carbohydrates:second}});
     assert.deepEqual(resolvedFirst.carbohydrates.selection,resolvedSecond.carbohydrates.selection);
   }
 
+  /* ============ Casi richiesti su legacyCarbohydrateUserCounts: affidabilità
+     dell'array origini e regola conservativa sui dati incompleti ============ */
+  {
+    // 1. Conteggio 4, origini complete e affidabili → FIXED 2 (solo le caselle 'utente')
+    assert.deepEqual(N.legacyCarbohydrateUserCounts({riso:4},{riso:['utente','utente','sistema','sistema']}),{riso:2});
+
+    // 2. Conteggio 4, origini assenti → dato inaffidabile, il conteggio storico positivo non si perde: FIXED 4
+    assert.deepEqual(N.legacyCarbohydrateUserCounts({riso:4},{}),{riso:4});
+
+    // 3. Conteggio 4, origini più corte → inaffidabile: FIXED 4
+    assert.deepEqual(N.legacyCarbohydrateUserCounts({riso:4},{riso:['utente']}),{riso:4});
+
+    // 4. Conteggio 4, origini più lunghe → inaffidabile: FIXED 4
+    assert.deepEqual(N.legacyCarbohydrateUserCounts({riso:4},{riso:['utente','utente','sistema','sistema','sistema']}),{riso:4});
+
+    // 5. Conteggio 4, origine con valore sconosciuto → inaffidabile: FIXED 4
+    assert.deepEqual(N.legacyCarbohydrateUserCounts({riso:4},{riso:['utente','utente','sistema','boh']}),{riso:4});
+
+    // 6. Conteggio 4, origini complete tutte 'sistema' → affidabile, zero caselle utente: AUTO (non in FIXED)
+    assert.deepEqual(N.legacyCarbohydrateUserCounts({riso:4},{riso:['sistema','sistema','sistema','sistema']}),{});
+
+    // 7. Conteggio zero con chiave in explicitZeroKeys → EXCLUDED (verificato sul risultato risolto, non sul solo conteggio)
+    {
+      const migrazione=M.selezioneCarboidratiPersistita({riso:0},{},{},['riso']);
+      assert.equal(migrazione.states.riso.mode,'excluded');
+      const resolved=N.resolveNutritionConfig({user:{carbohydrates:migrazione}});
+      assert.equal(resolved.carbohydrates.selection.riso.mode,'excluded');
+    }
+
+    // 8. configCarboidratiStati presente → stato canonico autorevole, mai sovrascritto dal formato legacy
+    {
+      const migrazione=M.selezioneCarboidratiPersistita(
+        {riso:4},{riso:['utente','utente','sistema','sistema']}, // legacy che darebbe FIXED 2 se letto
+        {riso:{mode:'auto',count:0}}, // stato canonico già presente: deve prevalere
+        []
+      );
+      assert.deepEqual(migrazione.states.riso,{mode:'auto',count:0},'configCarboidratiStati presente resta autorevole, il formato legacy non lo sovrascrive');
+    }
+
+    // 9. Due letture consecutive della stessa normalizzazione: configurazione identica,
+    //    nessuna nuova chiave scritta, nessun record cancellato o modificato
+    {
+      const raw={riso:4},origins={riso:['utente','utente','sistema','sistema']};
+      const a=N.legacyCarbohydrateUserCounts(raw,origins);
+      const b=N.legacyCarbohydrateUserCounts(raw,origins);
+      assert.deepEqual(a,b);
+      assert.deepEqual(raw,{riso:4},'l\'input grezzo non viene mutato dalla normalizzazione');
+      assert.deepEqual(origins,{riso:['utente','utente','sistema','sistema']},'l\'array origini non viene mutato dalla normalizzazione');
+    }
+  }
+
   /* ============ 9-13. Scenario end-to-end reale: settimana intera con dati
      storici di carboidrati, tabella proteica parziale, maxProteinSourcesPerDay,
-     salvataggio/ricaricamento, nessuna cancellazione di impostazioni estranee ============ */
+     invalidazione cache/rilettura, nessuna cancellazione di impostazioni estranee ============ */
   async function scenarioSettimana(maxProteinSourcesPerDay){
     resetStores();
     // Impostazioni estranee al compito: devono sopravvivere invariate
@@ -188,11 +244,15 @@ const M=global.DietaPlannerMotorV12;
     const risoUsato=pianoFinale.filter(v=>v.carboidratoPianificato==='riso').length;
     assert.equal(risoUsato,2,'il riso storicamente FIXED a 2 dall\'utente (non 4, la parte "sistema" era solo completamento automatico) deve comparire esattamente 2 volte');
 
-    // salvataggio e successivo ricaricamento: la config risolta ricaricata da zero è identica
+    // invalidazione della cache e rilettura della configurazione: risultato
+    // stabile, nessuna scrittura automatica nello store impostazioni
+    const impostazioniPrima=(await getAll('impostazioni')).length;
     M.invalidaConfigRuntime();
     const ricaricata=await M.caricaConfigurazioneNutrizionaleRisolta();
-    const primaVolta=await M.caricaConfigurazioneNutrizionaleRisolta();
-    assert.deepEqual(ricaricata.carbohydrates.selection,primaVolta.carbohydrates.selection,'ricaricamento stabile, nessuna deriva tra letture');
+    const riletturaSuccessiva=await M.caricaConfigurazioneNutrizionaleRisolta();
+    assert.deepEqual(ricaricata.carbohydrates.selection,riletturaSuccessiva.carbohydrates.selection,'rilettura stabile, nessuna deriva tra letture ripetute');
+    assert.equal((await getAll('impostazioni')).length,impostazioniPrima,'invalidazione+rilettura non scrive alcuna nuova chiave nello store impostazioni');
+    assert.equal(await getOne('impostazioni','configCarboidratiStati'),null,'la normalizzazione in lettura del formato legacy non scrive configCarboidratiStati');
 
     // nessuna cancellazione di impostazioni non coinvolte
     assert.deepEqual((await getOne('impostazioni','nonSpettante')).valore,{marker:'non-toccare'},'impostazione estranea non toccata');
