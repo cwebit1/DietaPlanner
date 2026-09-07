@@ -687,6 +687,6 @@ roadmap. Nessuna modifica a codice, schema IndexedDB, UI o cataloghi dati.
 
 **Verifiche:** `git diff --check`.
 
-**SHA finale:** da inserire dopo la creazione del commit.
+**SHA dell'intervento:** `c6a0dbbfaec6643a803e49cd6feabd1dfa9e8dab`.
 
 ---
