@@ -868,3 +868,21 @@ passaggio al secondo pannello e posizione della freccia invariata.
 **SHA remoto dell'intervento:** `605ee1900af56b4b81e3e83aa08e1a136a8c7451`.
 
 ---
+
+## 6. Ultima regolazione header e lucchetto — 7 settembre 2026
+
+**Correzione richiesta da Cwe:** sottrarre altri 10 px allo spazio attorno al
+titolo dell'header e raddoppiare le dimensioni del lucchetto stilizzato.
+
+**Intervento effettuato:** nel formato mobile l'header passa da 72 a 62 px e il
+padding laterale da 17 a 7 px, azzerando quello verticale. Il marchio conserva
+la dimensione approvata. Il lucchetto SVG passa da circa 16,5 a 34 px, mentre
+il contenitore della riga resta compatto.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`.
+
+**Verifiche:** parsing script inline e `git diff --check`.
+
+**SHA remoto dell'intervento:** `d2ada75daafc39e153c0e632b912a7df615ffb08`.
+
+---
