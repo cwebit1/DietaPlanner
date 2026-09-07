@@ -822,3 +822,25 @@ rotte.
 **SHA remoto dell'intervento:** `bdbdd7c9eb9498dd394cb0acfbad2344634983ea`.
 
 ---
+
+## 4. Compattazione della preview Android — 7 settembre 2026
+
+**Correzione richiesta da Cwe:** rendere l'interfaccia meno gigante e più
+snella, avvicinando la densità verticale al mockup nel quale i tre pasti sono
+visibili nella stessa schermata.
+
+**Intervento effettuato:** riduzione coordinata, sotto i 430 px CSS, di header,
+logo, calendario, titolo data, card, fotografie, testi, ingredienti, pulsanti e
+bottom menu. La caption viene nascosta nel formato più stretto; titolo e saluto
+restano su una sola composizione compatta. Le icone calendario e lucchetto sono
+ora disegnate in CSS e non dipendono dai glifi emoji del dispositivo.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+nessuna variazione a `index.html` o ai file funzionali.
+
+**Verifiche:** `git diff --check`; caricamento GitHub Pages; tre card presenti e
+tutte le immagini valide.
+
+**SHA remoto dell'intervento:** `707e93dd01340fa103918aa0ee8dbc4472de3b74`.
+
+---
