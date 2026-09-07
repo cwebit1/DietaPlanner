@@ -197,7 +197,7 @@ settimana generata, nessun retry casuale.
   fatto passare dal resolver canonico.
 ---
 
-## 4. Commit (in preparazione) — completamento: eliminazione definitiva del sistema ibrido
+## 4. Commit `2ca7c8a` — completamento: eliminazione definitiva del sistema ibrido
 
 **SHA iniziale:** `8563d70` (main).
 
@@ -295,6 +295,6 @@ punto di migrazione e dai test).
   `giorno_N` = pranzo, secondo = cena) resta un'osservazione, non
   un'incompatibilità storica.
 
-**SHA finale:** questo stesso commit (riportato nella risposta a Cwe che lo accompagna).
+**SHA finale:** `2ca7c8aa711d9a5cfbc1dcb69431c7834aafd22e`.
 
 ---
