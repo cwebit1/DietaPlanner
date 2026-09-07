@@ -760,3 +760,36 @@ dati e test del motore.
 **SHA remoto dell'intervento:** `8084ead53bf43e5cbaebfcfc343029d29c826ff8`.
 
 ---
+
+## 2. Ripristino produzione e isolamento della preview — 7 settembre 2026
+
+**Decisione autorizzata da Cwe:** dopo il confronto con la schermata reale su
+Android, ripristinare l'interfaccia precedente come pagina principale e
+spostare il restyling in una pagina separata, così da poterlo sviluppare e
+verificare senza influire sulla PWA in uso.
+
+**Intervento effettuato:** `index.html` è stato ripristinato byte per byte dal
+backup verificato `docs/backups/index-pre-restyling-2026-09-07.html`.
+`manifest.json` è tornato alla versione cromatica precedente. La prima
+integrazione grafica è stata conservata integralmente come
+`restyling-preview.html`; i tre asset WebP dimostrativi restano disponibili
+esclusivamente per questa sperimentazione visuale.
+
+**Verifiche su GitHub Pages:** la pagina principale presenta nuovamente header
+`Dieta·Planner`, sottotitolo `Pranzo e cena, senza sprechi`, colore tema
+`#181c14` e non contiene il titolo editoriale del restyling. La preview
+separata presenta invece header `DietaPlanner`, sottotitolo
+`Piani sani, giorni migliori`, colore tema `#174b35` e il titolo editoriale.
+
+**Separazione confermata:** nessun file del motore, catalogo funzionale, schema
+IndexedDB o regola applicativa è stato modificato. Il lavoro successivo sul
+restyling avverrà in `restyling-preview.html` finché Cwe non ne autorizzerà
+esplicitamente il trasferimento nell'app principale.
+
+**File ripristinati:** `index.html`, `manifest.json`.
+
+**File aggiunto:** `restyling-preview.html`.
+
+**SHA remoto dell'intervento:** `1a9c273f77b774aaa40c97ae200162bfd13c3d83`.
+
+---
