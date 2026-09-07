@@ -840,13 +840,17 @@ function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
   counts=counts||{};origins=origins||{};states=states||{};
   if(Object.keys(states).length)return {states:clone(states),explicitZeroKeys:(explicitZeroKeys||[]).slice()};
   /* Normalizzazione di compatibilita' in lettura (N.legacyCarbohydrateUserCounts),
-     non una migrazione persistente: nessuna scrittura avviene qui, va
-     rieseguita identica ad ogni caricamento delle impostazioni. Isola, nel
+     non una migrazione persistente: nessuna scrittura avviene qui. Isola, nel
      formato storico piu' vecchio, le sole caselle scelte davvero
      dall'utente da quelle aggiunte dal completamento automatico ("Completa
      e fissa"/"Casuale") quando l'informazione origine e' affidabile; con
      dati incompleti/inconsistenti mantiene per intero il conteggio storico
-     positivo (vedi commento della funzione condivisa). */
+     positivo (vedi commento della funzione condivisa). Usata direttamente
+     solo dal punto unico di migrazione (migraStatoCarboidratiCanonicoSeNecessario)
+     e da chi vuole interrogare un record legacy isolato: il caricamento
+     ordinario della configurazione (caricaConfigurazioneNutrizionaleRisolta)
+     non la richiama piu', legge esclusivamente lo stato canonico gia'
+     migrato. */
   const userCounts=N.legacyCarbohydrateUserCounts(counts,origins);
   const migrated={};
   for(const key of Object.keys(counts)){
@@ -857,21 +861,63 @@ function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
   return {states:migrated,explicitZeroKeys:(explicitZeroKeys||[]).slice()};
 }
 
+/* Punto unico di migrazione dei carboidrati storici verso lo stato
+   canonico. Eseguita una sola volta, alla prima inizializzazione in cui
+   configCarboidratiStati non esiste ancora (vedi inizializza): dopo che
+   questo scrive lo stato canonico, nessun altro punto dell'app rilegge i
+   record legacy (configCarboidrati/configCarboidratiOrigini/
+   configCarboidratiExplicitZeroKeys) per decidere AUTO/FIXED/EXCLUDED -
+   restano dati storici inerti, mai piu' una seconda fonte di verita'.
+   Idempotente: se lo stato canonico esiste gia' (anche scritto da un
+   salvataggio Set ordinario, anche {} esplicito), non fa nulla - nessuna
+   rilettura dei legacy, nessuna riscrittura.
+   Copertura completa: usa normalizeCarbohydrateSelection (non
+   selezioneCarboidratiPersistita) perche' deve coprire SEMPRE l'intero
+   elenco canonico dei carboidrati, anche quando i record legacy sono del
+   tutto assenti (database nuovo, nessuna casella mai toccata) - in quel
+   caso scrive uno stato canonico con tutte le voci AUTO, cosi' che il
+   caricamento ordinario non debba mai piu' distinguere "canonico assente"
+   da "canonico con tutto AUTO".
+   Scrittura singola e atomica sull'unica chiave configCarboidratiStati: se
+   put() fallisce l'eccezione risale al chiamante (inizializza), la
+   migrazione non e' dichiarata completata e i record legacy restano
+   intatti per un tentativo successivo - nessuno stato canonico parziale
+   viene mai scritto. */
+async function migraStatoCarboidratiCanonicoSeNecessario(){
+  if(typeof getOne!=='function'||typeof put!=='function') return;
+  const statoEsistente=await getOne('impostazioni','configCarboidratiStati');
+  if(statoEsistente) return;
+  const [cc,co,cz]=await Promise.all([
+    getOne('impostazioni','configCarboidrati'),
+    getOne('impostazioni','configCarboidratiOrigini'),
+    getOne('impostazioni','configCarboidratiExplicitZeroKeys')
+  ]);
+  const counts=N.legacyCarbohydrateUserCounts(cc&&cc.valore||{},co&&co.valore||{});
+  const explicitZeroKeys=cz&&cz.valore||[];
+  const normalizzato=N.normalizeCarbohydrateSelection({counts,explicitZeroKeys,states:{}});
+  const canonico={};
+  for(const chiave of Object.keys(normalizzato)){
+    const st=normalizzato[chiave];
+    canonico[chiave]={mode:st.mode,count:st.mode==='fixed'?st.count:0};
+  }
+  await put('impostazioni',{chiave:'configCarboidratiStati',valore:canonico});
+}
+
 async function caricaConfigurazioneNutrizionaleRisolta(){
   if(typeof getOne!=='function') return N.resolveNutritionConfig({});
   try{
-    const [a,v,c,b,u,cc,co,cs,cz]=await Promise.all([
+    const [a,v,c,b,u,cs]=await Promise.all([
       getOne('impostazioni','allergeniAttivi'),
       getOne('impostazioni','vincoliIngredientiNutrizionista'),
       getOne('impostazioni','configAvanzata'),
       getOne('impostazioni','ingredientiBloccati'),
       getOne('impostazioni','tettiIngredienteSettimanali'),
-      getOne('impostazioni','configCarboidrati'),
-      getOne('impostazioni','configCarboidratiOrigini'),
-      getOne('impostazioni','configCarboidratiStati'),
-      getOne('impostazioni','configCarboidratiExplicitZeroKeys')
+      getOne('impostazioni','configCarboidratiStati')
     ]);
-    const carbohydrates=selezioneCarboidratiPersistita(cc&&cc.valore,co&&co.valore,cs&&cs.valore,cz&&cz.valore);
+    /* Dopo la migrazione (migraStatoCarboidratiCanonicoSeNecessario, eseguita
+       una sola volta in inizializza) lo stato canonico e' l'unica sorgente:
+       nessuna rilettura o reinterpretazione dei record legacy
+       (configCarboidrati/configCarboidratiOrigini/ExplicitZeroKeys) qui. */
     return N.resolveNutritionConfig({
       nutritionist:{
         config:c&&c.valore||{},
@@ -881,7 +927,7 @@ async function caricaConfigurazioneNutrizionaleRisolta(){
       },
       user:{
         ingredientWeeklyCaps:u&&u.valore||{},
-        carbohydrates
+        carbohydrates:{states:cs&&cs.valore||{},explicitZeroKeys:[]}
       }
     });
   }catch(e){ return N.resolveNutritionConfig({}); }
@@ -2543,6 +2589,13 @@ async function inizializza(opts){
   state.ingredientiMap=idb.ingredienti||{};
   state.propostaCicli=new Map();
   await sincronizzaIngredientiIndexedDB();
+  /* Punto unico di migrazione (vedi commento della funzione): deve
+     completare la scrittura dello stato canonico dei carboidrati prima che
+     qualunque lettura successiva (Set, resolver, motore) risolva la
+     configurazione. Se fallisce, l'eccezione risale esplicita al
+     chiamante: nessuno stato parziale, nessuna migrazione dichiarata
+     completata a torto. */
+  await migraStatoCarboidratiCanonicoSeNecessario();
 
   /* Il JSON e' soltanto la sorgente di compilazione. Il catalogo operativo e'
      sempre lo store IndexedDB "ricette": a versione invariata lo si legge
@@ -2603,7 +2656,7 @@ global.DietaPlannerMotorV12={
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
   prioritaVerdureProgrammazionePasti,
-  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,
+  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,migraStatoCarboidratiCanonicoSeNecessario,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,
   invalidaConfigRuntime
 };
 })(typeof window!=='undefined'?window:globalThis);

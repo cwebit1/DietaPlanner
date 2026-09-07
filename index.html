@@ -3179,15 +3179,20 @@ document.getElementById('btnResetColazionePref')?.addEventListener('click', asyn
   renderSetColazione();
 });
 
-/* Carica la configurazione salvata all'avvio */
+/* Carica la configurazione salvata all'avvio: legge esclusivamente lo
+   stato canonico (configCarboidratiStati). La migrazione dal formato
+   storico (configCarboidrati/configCarboidratiOrigini/
+   configCarboidratiExplicitZeroKeys) e' un punto unico eseguito da
+   DietaPlannerMotorV12.inizializza() prima di questa chiamata (vedi
+   avvio app): a questo punto lo stato canonico esiste sempre gia'
+   completo, nessuna reinterpretazione dei record legacy qui. */
 async function caricaConfigCarboidrati(){
-  const [rec,originiRec,statiRec,zeroRec]=await Promise.all([getOne('impostazioni','configCarboidrati'),getOne('impostazioni','configCarboidratiOrigini'),getOne('impostazioni','configCarboidratiStati'),getOne('impostazioni','configCarboidratiExplicitZeroKeys')]);
+  const statiRec=await getOne('impostazioni','configCarboidratiStati');
   inizializzaStatoCaselleCarb();
-  const raw=rec&&rec.valore||{},origini=cloneConfigurazione(originiRec&&originiRec.valore||{}),NCFG=globalThis.DietaPlannerNutritionConfig,counts=NCFG.legacyCarbohydrateUserCounts(raw,origini);
-  const normalized=NCFG.normalizeCarbohydrateSelection({counts,states:statiRec&&statiRec.valore||{},explicitZeroKeys:zeroRec&&zeroRec.valore||[]});
+  const normalized=statiRec&&statiRec.valore||{};
   for(const tipo of CONFIG_CARB_TIPI){
     const key=tipo.chiave,st=normalized[key]||{mode:'auto',count:0};statiCaselleCarb[key]={mode:st.mode,count:st.mode==='fixed'?st.count:0};
-    if(st.mode==='fixed'){statoCaselleCarb[key]=st.count;const old=Array.isArray(origini[key])?origini[key].slice(0,st.count):[];origineCaselleCarb[key]=old.length===st.count?old:Array(st.count).fill('utente');}
+    if(st.mode==='fixed'){statoCaselleCarb[key]=st.count;origineCaselleCarb[key]=Array(st.count).fill('utente');}
     else{statoCaselleCarb[key]=0;origineCaselleCarb[key]=[];if(st.mode==='excluded')zeroEsplicitiCaselleCarb.add(key);}
   }
   renderCaselleCarboidrati();aggiornaStatoConfigCarb();
