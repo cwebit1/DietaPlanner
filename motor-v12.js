@@ -836,31 +836,6 @@ async function configRuntime(forzaRicalcolo){
 }
 function invalidaConfigRuntime(){ state.runtimeConfigCache=null; }
 
-function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
-  counts=counts||{};origins=origins||{};states=states||{};
-  if(Object.keys(states).length)return {states:clone(states),explicitZeroKeys:(explicitZeroKeys||[]).slice()};
-  /* Normalizzazione di compatibilita' in lettura (N.legacyCarbohydrateUserCounts),
-     non una migrazione persistente: nessuna scrittura avviene qui. Isola, nel
-     formato storico piu' vecchio, le sole caselle scelte davvero
-     dall'utente da quelle aggiunte dal completamento automatico ("Completa
-     e fissa"/"Casuale") quando l'informazione origine e' affidabile; con
-     dati incompleti/inconsistenti mantiene per intero il conteggio storico
-     positivo (vedi commento della funzione condivisa). Usata direttamente
-     solo dal punto unico di migrazione (migraStatoCarboidratiCanonicoSeNecessario)
-     e da chi vuole interrogare un record legacy isolato: il caricamento
-     ordinario della configurazione (caricaConfigurazioneNutrizionaleRisolta)
-     non la richiama piu', legge esclusivamente lo stato canonico gia'
-     migrato. */
-  const userCounts=N.legacyCarbohydrateUserCounts(counts,origins);
-  const migrated={};
-  for(const key of Object.keys(counts)){
-    const n=userCounts[key]||0;
-    migrated[key]=n>0?{mode:'fixed',count:n}:{mode:'auto',count:0};
-  }
-  for(const key of explicitZeroKeys||[])migrated[key]={mode:'excluded',count:0};
-  return {states:migrated,explicitZeroKeys:(explicitZeroKeys||[]).slice()};
-}
-
 /* Punto unico di migrazione dei carboidrati storici verso lo stato
    canonico. Eseguita una sola volta, alla prima inizializzazione in cui
    configCarboidratiStati non esiste ancora (vedi inizializza): dopo che
@@ -868,25 +843,90 @@ function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
    record legacy (configCarboidrati/configCarboidratiOrigini/
    configCarboidratiExplicitZeroKeys) per decidere AUTO/FIXED/EXCLUDED -
    restano dati storici inerti, mai piu' una seconda fonte di verita'.
-   Idempotente: se lo stato canonico esiste gia' (anche scritto da un
-   salvataggio Set ordinario, anche {} esplicito), non fa nulla - nessuna
-   rilettura dei legacy, nessuna riscrittura.
-   Copertura completa: usa normalizeCarbohydrateSelection (non
-   selezioneCarboidratiPersistita) perche' deve coprire SEMPRE l'intero
-   elenco canonico dei carboidrati, anche quando i record legacy sono del
-   tutto assenti (database nuovo, nessuna casella mai toccata) - in quel
-   caso scrive uno stato canonico con tutte le voci AUTO, cosi' che il
-   caricamento ordinario non debba mai piu' distinguere "canonico assente"
-   da "canonico con tutto AUTO".
+   Idempotente: se lo stato canonico esiste gia' ed e' strutturalmente
+   valido (vedi validaStatoCarboidratiCanonico), non fa nulla - nessuna
+   rilettura dei legacy, nessuna riscrittura. Se il canonico esiste ma e'
+   parziale (mancano chiavi note, tutte quelle presenti valide), completa
+   soltanto le chiavi mancanti come AUTO e riscrive una sola volta. Se il
+   canonico esiste ma contiene un valore strutturalmente invalido,
+   l'inizializzazione si interrompe con un errore esplicito - mai una
+   correzione silenziosa, mai una rilettura del legacy come fallback.
+   `N.legacyCarbohydrateUserCounts` resta ad uso esclusivo di questa
+   funzione: nessun altro punto dell'app la richiama.
+   Copertura completa: usa normalizeCarbohydrateSelection perche' deve
+   coprire SEMPRE l'intero elenco canonico dei carboidrati, anche quando i
+   record legacy sono del tutto assenti (database nuovo, nessuna casella
+   mai toccata) - in quel caso scrive uno stato canonico con tutte le voci
+   AUTO, cosi' che il caricamento ordinario non debba mai piu' distinguere
+   "canonico assente" da "canonico con tutto AUTO".
    Scrittura singola e atomica sull'unica chiave configCarboidratiStati: se
    put() fallisce l'eccezione risale al chiamante (inizializza), la
    migrazione non e' dichiarata completata e i record legacy restano
    intatti per un tentativo successivo - nessuno stato canonico parziale
    viene mai scritto. */
+function chiaviCanonicheCarboidrati(){
+  return [...N.PDF_BASELINE.carbohydrateUncapped,...Object.keys(N.PDF_BASELINE.carbohydrateWeeklyCaps)];
+}
+
+/* Validazione strutturale dell'unico stato canonico dei carboidrati. Per
+   ogni chiave canonica presente nel record ammette soltanto le tre forme
+   {mode:'auto',count:0} / {mode:'excluded',count:0} / {mode:'fixed',count:N}
+   con N intero positivo - non verifica qui i tetti PDF/applicativi (li
+   applica gia' il resolver quando la configurazione viene risolta per
+   l'uso reale): controlla solo che la FORMA del dato sia interpretabile
+   senza ambiguita'. Proprieta' esterne alle chiavi canoniche non vengono
+   nemmeno esaminate (ignorate per definizione, mai motivo di errore).
+   Ritorna {ok:true, mancanti:[...]} se strutturalmente valido (anche se
+   incompleto), oppure {ok:false, chiave, causa} alla prima voce non
+   valida trovata. */
+function validaStatoCarboidratiCanonico(valore){
+  const mancanti=[];
+  for(const chiave of chiaviCanonicheCarboidrati()){
+    if(!Object.prototype.hasOwnProperty.call(valore,chiave)){mancanti.push(chiave);continue;}
+    const voce=valore[chiave];
+    if(!voce||typeof voce!=='object')return {ok:false,chiave,causa:'il valore non e\' un oggetto {mode,count}'};
+    const mode=voce.mode,count=voce.count;
+    if(mode==='auto'||mode==='excluded'){
+      if(count!==0)return {ok:false,chiave,causa:'mode \''+mode+'\' richiede count 0, trovato '+JSON.stringify(count)};
+      continue;
+    }
+    if(mode==='fixed'){
+      if(typeof count!=='number'||!Number.isFinite(count))return {ok:false,chiave,causa:'FIXED con count non numerico ('+JSON.stringify(count)+')'};
+      if(!Number.isInteger(count))return {ok:false,chiave,causa:'FIXED con count decimale ('+count+')'};
+      if(count<=0)return {ok:false,chiave,causa:'FIXED con count non positivo ('+count+')'};
+      continue;
+    }
+    return {ok:false,chiave,causa:'modalita\' sconosciuta ('+JSON.stringify(mode)+')'};
+  }
+  return {ok:true,mancanti};
+}
+
 async function migraStatoCarboidratiCanonicoSeNecessario(){
   if(typeof getOne!=='function'||typeof put!=='function') return;
-  const statoEsistente=await getOne('impostazioni','configCarboidratiStati');
-  if(statoEsistente) return;
+  const record=await getOne('impostazioni','configCarboidratiStati');
+  if(record){
+    if(!record.valore||typeof record.valore!=='object'){
+      throw new Error('configCarboidratiStati presente ma con valore non valido (atteso un oggetto {chiave:{mode,count}}).');
+    }
+    const validazione=validaStatoCarboidratiCanonico(record.valore);
+    if(!validazione.ok){
+      /* Nessuna correzione silenziosa, nessuna rilettura del legacy come
+         fallback, nessuna sovrascrittura: l'inizializzazione si interrompe
+         con un errore esplicito che indica chiave e causa. */
+      throw new Error('configCarboidratiStati non valido alla chiave "'+validazione.chiave+'": '+validazione.causa+'.');
+    }
+    if(!validazione.mancanti.length) return; // completo e valido: nessuna scrittura
+    /* Presente, valide tutte le voci esistenti, ma mancano alcune chiavi
+       canoniche: non si legge il legacy, si completano solo le chiavi
+       mancanti come AUTO, si scarta qualunque proprieta' estranea al set
+       canonico, un'unica scrittura. */
+    const completato={};
+    for(const chiave of chiaviCanonicheCarboidrati()){
+      completato[chiave]=Object.prototype.hasOwnProperty.call(record.valore,chiave)?record.valore[chiave]:{mode:'auto',count:0};
+    }
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:completato});
+    return;
+  }
   const [cc,co,cz]=await Promise.all([
     getOne('impostazioni','configCarboidrati'),
     getOne('impostazioni','configCarboidratiOrigini'),
@@ -2656,7 +2696,7 @@ global.DietaPlannerMotorV12={
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
   prioritaVerdureProgrammazionePasti,
-  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,selezioneCarboidratiPersistita,migraStatoCarboidratiCanonicoSeNecessario,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,
+  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,migraStatoCarboidratiCanonicoSeNecessario,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,
   invalidaConfigRuntime
 };
 })(typeof window!=='undefined'?window:globalThis);

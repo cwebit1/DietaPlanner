@@ -35,10 +35,23 @@ async function resetPlanning(){
   const materialized=await M.materializzaRealizzazione(snap);
   assert.deepEqual(materialized.ingredienti,snap.ingredientiEffettivi);
 
-  assert.deepEqual(
-    M.selezioneCarboidratiPersistita({riso:0,pasta:2},{pasta:['utente']},{},['riso']),
-    {states:{riso:{mode:'excluded',count:0},pasta:{mode:'fixed',count:2}},explicitZeroKeys:['riso']}
-  );
+  /* La vecchia M.selezioneCarboidratiPersistita e' stata rimossa dall'API
+     (non piu' usata dal percorso ordinario): la stessa garanzia si
+     verifica ora sul punto unico di migrazione reale, con pulizia dello
+     stato canonico prima/dopo per non alterare gli stress test successivi. */
+  await delKey('impostazioni','configCarboidratiStati');
+  await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:0,pasta:2}});
+  await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{pasta:['utente']}});
+  await put('impostazioni',{chiave:'configCarboidratiExplicitZeroKeys',valore:['riso']});
+  await M.migraStatoCarboidratiCanonicoSeNecessario();
+  const statoMigrato=(await getOne('impostazioni','configCarboidratiStati')).valore;
+  assert.deepEqual(statoMigrato.riso,{mode:'excluded',count:0});
+  assert.deepEqual(statoMigrato.pasta,{mode:'fixed',count:2});
+  await delKey('impostazioni','configCarboidratiStati');
+  await delKey('impostazioni','configCarboidrati');
+  await delKey('impostazioni','configCarboidratiOrigini');
+  await delKey('impostazioni','configCarboidratiExplicitZeroKeys');
+  await M.migraStatoCarboidratiCanonicoSeNecessario();
 
   await resetPlanning();
   const first=await M.generaPianoSettimana(0,{forza:true});

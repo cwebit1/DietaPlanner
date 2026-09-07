@@ -24,9 +24,21 @@ const sequence=M.creaSequenzaCarboidrati(resolved,slotRefs14,()=>0.25);assert.eq
 const partialSequence=M.creaSequenzaCarboidrati(resolved,slotRefs14.slice(0,10),()=>0.25,{friselle:1,pane:3});assert.equal(partialSequence.valid,true);assert.equal(partialSequence.keys.filter(k=>k==='friselle').length,1,'un fisso già preservato deve essere sottratto');
 for(const [name,meta] of Object.entries(ingredients)){const groups=Array.isArray(meta.gruppo)?meta.gruppo:[meta.gruppo];if(groups.includes('carboidrati'))assert(M.carbKeyNome(name),`carboidrato senza classificazione v12: ${name}`);}
 for(const recipe of recipes)for(const group of recipe.gruppi||[])if(group.categoria==='C')for(const item of group.ingredienti||[])assert(M.carbKeyNome(item.nome),`ingrediente C non classificato nel template ${recipe.id}: ${item.nome}`);
-assert.deepEqual(M.selezioneCarboidratiPersistita({friselle:2},{friselle:['utente','utente']},{},[]).states.friselle,{mode:'fixed',count:2});
-assert.deepEqual(M.selezioneCarboidratiPersistita({pane:4},{pane:['sistema','sistema','sistema','sistema']},{},[]).states.pane,{mode:'auto',count:0});
-assert.deepEqual(M.selezioneCarboidratiPersistita({piadina:0},{},{},['piadina']).states.piadina,{mode:'excluded',count:0});
+{
+  // La vecchia M.selezioneCarboidratiPersistita e' stata rimossa dall'API
+  // (nessun chiamante nel percorso ordinario): stessa garanzia verificata
+  // qui sulle due funzioni pure che il punto unico di migrazione
+  // (motor-v12.js:migraStatoCarboidratiCanonicoSeNecessario) compone in
+  // sequenza - questo file non usa IndexedDB, quindi il punto di
+  // migrazione stesso (che richiede getOne/put) non e' chiamabile qui.
+  const NCFG=require('../nutrition-config.js');
+  const c1=NCFG.legacyCarbohydrateUserCounts({friselle:2},{friselle:['utente','utente']});
+  assert.deepEqual(NCFG.normalizeCarbohydrateSelection({counts:c1,states:{},explicitZeroKeys:[]}).friselle,{mode:'fixed',count:2});
+  const c2=NCFG.legacyCarbohydrateUserCounts({pane:4},{pane:['sistema','sistema','sistema','sistema']});
+  assert.deepEqual(NCFG.normalizeCarbohydrateSelection({counts:c2,states:{},explicitZeroKeys:[]}).pane,{mode:'auto',count:0});
+  const c3=NCFG.legacyCarbohydrateUserCounts({piadina:0},{});
+  assert.deepEqual(NCFG.normalizeCarbohydrateSelection({counts:c3,states:{},explicitZeroKeys:['piadina']}).piadina,{mode:'excluded',count:0});
+}
 const slots=slotRefs14;
 const veg=N=>E.resolveNutritionConfig({nutritionist:{config:{dietProfile:N}}});
 const vegetarian=M.creaSequenzaProteine(veg('vegetariano'),slots,{},()=>0.2);assert.equal(vegetarian.valid,true);assert(!vegetarian.targets.includes('carne'));assert(!vegetarian.targets.includes('pesce'));

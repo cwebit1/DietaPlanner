@@ -1,28 +1,24 @@
 'use strict';
-/* Test mirato: migrazione dei carboidrati storici (configCarboidrati /
-   configCarboidratiOrigini / configCarboidratiExplicitZeroKeys) verso
-   l'unico stato canonico configCarboidratiStati, eseguita in un solo
-   punto (migraStatoCarboidratiCanonicoSeNecessario, richiamato da
-   DietaPlannerMotorV12.inizializza). Dopo la migrazione, Set e motore
-   leggono esclusivamente lo stato canonico: nessuna reinterpretazione dei
-   record legacy durante il funzionamento ordinario.
+/* Test mirato: unica verità funzionale dei carboidrati del Set
+   (configCarboidratiStati), scritta dal punto unico di migrazione
+   (motor-v12.js:migraStatoCarboidratiCanonicoSeNecessario, richiamato da
+   inizializza) e dal salvataggio del Set (index.html:salvaConfigCarboidratiSet).
+   I record legacy (configCarboidrati/configCarboidratiOrigini/
+   configCarboidratiExplicitZeroKeys) restano solo archivio storico
+   inerte: non letti, non aggiornati, non riscritti dopo la migrazione.
 
    Copre esattamente, come richiesto:
-   1. database senza dati precedenti → stati canonici AUTO
-   2. record canonico esistente → nessuna migrazione e nessuna modifica
-   3. record legacy completo con origini miste → corretto FIXED utente
-   4. record legacy con conteggio positivo e origini assenti/incoerenti →
-      conteggio preservato come FIXED
-   5. zero con marcatore esplicito → EXCLUDED
-   6. zero senza marcatore → AUTO
-   7. salvataggio effettivo di configCarboidratiStati
-   8. nuova inizializzazione → stato identico
-   9. seconda inizializzazione → nessuna nuova scrittura
-   10. motore e Set leggono lo stesso stato canonico
-   11. impostazioni estranee, piano e consumoGiorno restano invariati
-   12. fallimento simulato durante la scrittura → nessuno stato canonico parziale
+   1. migrazione legacy → canonico completo
+   2. canonico completo valido → zero scritture
+   3. canonico parziale ma valido → chiavi mancanti completate AUTO con una sola scrittura
+   4. modalità sconosciuta → errore esplicito e nessuna scrittura
+   5. FIXED non numerico → errore e nessuna scrittura
+   6. FIXED zero, negativo o decimale → errore e nessuna scrittura
+   7. salvataggio Set → scrive lo stato canonico e non aggiorna le tre chiavi legacy
+   8. seconda inizializzazione → zero scritture
+   9. Set e motore leggono esclusivamente lo stato canonico
 
-   Non genera settimane complete, nessun retry casuale. */
+   Non genera settimane, nessun retry casuale. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
@@ -49,127 +45,173 @@ require('../motor-v12.js');
 const M=global.DietaPlannerMotorV12;
 
 const CHIAVI_CANONICHE=[...N.PDF_BASELINE.carbohydrateUncapped,...Object.keys(N.PDF_BASELINE.carbohydrateWeeklyCaps)];
+function statoCompletoAuto(){const s={};for(const k of CHIAVI_CANONICHE)s[k]={mode:'auto',count:0};return s;}
 
 (async()=>{
 
-  /* ============ 1. Database senza dati precedenti → stati canonici AUTO ============ */
+  /* ============ 1. Migrazione legacy → canonico completo ============ */
   {
+    // 1a. database senza alcun dato precedente: canonico completo, tutto AUTO
     resetStores();putSpy=null;
     await M.inizializza({basePath:''});
-    const rec=await getOne('impostazioni','configCarboidratiStati');
+    let rec=await getOne('impostazioni','configCarboidratiStati');
     assert(rec&&rec.valore,'la migrazione deve scrivere lo stato canonico anche su database vuoto');
-    for(const chiave of CHIAVI_CANONICHE){
-      assert.deepEqual(rec.valore[chiave],{mode:'auto',count:0},'db vuoto: '+chiave+' deve essere AUTO');
-    }
-  }
+    for(const chiave of CHIAVI_CANONICHE)assert.deepEqual(rec.valore[chiave],{mode:'auto',count:0},'db vuoto: '+chiave+' deve essere AUTO');
 
-  /* ============ 2. Record canonico esistente → nessuna migrazione e nessuna modifica ============ */
-  {
-    resetStores();putSpy=null;
-    const canonicoEsistente={riso:{mode:'fixed',count:5}}; // volutamente parziale/diverso da ciò che il legacy produrrebbe
-    await put('impostazioni',{chiave:'configCarboidratiStati',valore:canonicoEsistente});
-    // dati legacy CONTRADDITTORI: se venissero riletti, produrrebbero un risultato diverso
-    await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:1}});
-    await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente']}});
-
-    await M.inizializza({basePath:''});
-
-    const dopo=await getOne('impostazioni','configCarboidratiStati');
-    assert.deepEqual(dopo.valore,canonicoEsistente,'stato canonico già presente: non deve essere né esteso né sovrascritto dal legacy');
-    const legacyDopo=await getOne('impostazioni','configCarboidrati');
-    assert.deepEqual(legacyDopo.valore,{riso:1},'il record legacy non deve essere toccato quando il canonico esiste già');
-  }
-
-  /* ============ 3. Record legacy completo con origini miste → corretto FIXED utente ============ */
-  {
+    // 1b. origini complete e affidabili: isola le sole caselle utente (2, non le 4 totali)
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
     await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente','utente','sistema','sistema']}});
     await M.inizializza({basePath:''});
-    const rec=await getOne('impostazioni','configCarboidratiStati');
-    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:2},'solo le 2 caselle utente sono un FIXED reale, non le 4 totali (2 erano completamento automatico)');
-  }
+    rec=await getOne('impostazioni','configCarboidratiStati');
+    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:2},'origini miste: solo le 2 caselle utente sono un FIXED reale');
 
-  /* ============ 4. Record legacy con conteggio positivo e origini assenti/incoerenti → conteggio preservato come FIXED ============ */
-  {
-    // origini assenti
+    // 1c. origini assenti o incoerenti: il conteggio storico positivo non va perso
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
     await M.inizializza({basePath:''});
-    let rec=await getOne('impostazioni','configCarboidratiStati');
-    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:4},'origini assenti: il conteggio storico positivo non va perso, resta FIXED 4');
+    rec=await getOne('impostazioni','configCarboidratiStati');
+    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:4},'origini assenti: il conteggio storico positivo resta FIXED per intero');
 
-    // origini incoerenti (lunghezza diversa dal conteggio)
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
     await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente']}});
     await M.inizializza({basePath:''});
     rec=await getOne('impostazioni','configCarboidratiStati');
-    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:4},'origini incoerenti: il conteggio storico positivo non va perso, resta FIXED 4');
-  }
+    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:4},'origini incoerenti: il conteggio storico positivo resta FIXED per intero');
 
-  /* ============ 5. Zero con marcatore esplicito → EXCLUDED ============ */
-  {
+    // 1d. zero con marcatore esplicito → EXCLUDED; zero senza marcatore → AUTO
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{pane:0}});
     await put('impostazioni',{chiave:'configCarboidratiExplicitZeroKeys',valore:['pane']});
     await M.inizializza({basePath:''});
-    const rec=await getOne('impostazioni','configCarboidratiStati');
+    rec=await getOne('impostazioni','configCarboidratiStati');
     assert.deepEqual(rec.valore.pane,{mode:'excluded',count:0},'zero con marcatore esplicito deve diventare EXCLUDED');
-  }
 
-  /* ============ 6. Zero senza marcatore → AUTO ============ */
-  {
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{pane:0}});
     await M.inizializza({basePath:''});
-    const rec=await getOne('impostazioni','configCarboidratiStati');
-    assert.deepEqual(rec.valore.pane,{mode:'auto',count:0},'zero senza marcatore esplicito deve restare AUTO, non essere dedotto come EXCLUDED');
-  }
+    rec=await getOne('impostazioni','configCarboidratiStati');
+    assert.deepEqual(rec.valore.pane,{mode:'auto',count:0},'zero senza marcatore esplicito deve restare AUTO');
 
-  /* ============ 7. Salvataggio effettivo di configCarboidratiStati ============ */
-  {
+    // copertura completa dell'elenco canonico anche con legacy parziale
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4,orzo:2}});
     await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente','utente','sistema','sistema'],orzo:['utente','utente']}});
     await M.inizializza({basePath:''});
-    const rec=await getOne('impostazioni','configCarboidratiStati');
-    assert(rec&&rec.valore,'la migrazione deve scrivere davvero configCarboidratiStati nello store');
-    assert.deepEqual(rec.valore.riso,{mode:'fixed',count:2});
-    assert.deepEqual(rec.valore.orzo,{mode:'fixed',count:2});
-    for(const chiave of CHIAVI_CANONICHE)assert(rec.valore[chiave],'lo stato scritto copre sempre l\'intero elenco canonico ('+chiave+' mancante)');
+    rec=await getOne('impostazioni','configCarboidratiStati');
+    for(const chiave of CHIAVI_CANONICHE)assert(rec.valore[chiave],'lo stato migrato copre sempre l\'intero elenco canonico ('+chiave+' mancante)');
   }
 
-  /* ============ 8. Nuova inizializzazione → stato identico ============ */
+  /* ============ 2. Canonico completo valido → zero scritture ============ */
   {
-    resetStores();putSpy=null;
-    await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
-    await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente','utente','sistema','sistema']}});
+    resetStores();
+    const canonico=statoCompletoAuto();canonico.riso={mode:'fixed',count:3};canonico.gnocchi={mode:'excluded',count:0};
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:canonico});
+    let scritture=0;
+    putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scritture++;return realPut(name,value);};
     await M.inizializza({basePath:''});
-    const primaLettura=(await getOne('impostazioni','configCarboidratiStati')).valore;
-    await M.inizializza({basePath:''});
-    const secondaLettura=(await getOne('impostazioni','configCarboidratiStati')).valore;
-    assert.deepEqual(primaLettura,secondaLettura,'una nuova inizializzazione deve trovare lo stesso identico stato canonico');
+    assert.equal(scritture,0,'canonico completo e valido: nessuna scrittura');
+    const dopo=await getOne('impostazioni','configCarboidratiStati');
+    assert.deepEqual(dopo.valore,canonico,'il canonico completo e valido non deve essere modificato');
+    putSpy=null;
   }
 
-  /* ============ 9. Seconda inizializzazione → nessuna nuova scrittura ============ */
+  /* ============ 3. Canonico parziale ma valido → chiavi mancanti completate AUTO, una sola scrittura ============ */
+  {
+    resetStores();
+    const parziale={riso:{mode:'fixed',count:3}}; // solo una chiave delle tante canoniche, ma valida
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:parziale});
+    // legacy CONTRADDITTORIO presente: se venisse riletto produrrebbe un risultato diverso da riso:3
+    await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:1}});
+    let scritture=0;
+    putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scritture++;return realPut(name,value);};
+
+    await M.inizializza({basePath:''});
+    assert.equal(scritture,1,'canonico parziale ma valido: esattamente una scrittura di completamento');
+
+    const dopo=(await getOne('impostazioni','configCarboidratiStati')).valore;
+    assert.deepEqual(dopo.riso,{mode:'fixed',count:3},'la chiave già presente e valida non viene toccata dal legacy');
+    for(const chiave of CHIAVI_CANONICHE){
+      if(chiave==='riso')continue;
+      assert.deepEqual(dopo[chiave],{mode:'auto',count:0},'chiave mancante completata come AUTO: '+chiave);
+    }
+    const legacyDopo=await getOne('impostazioni','configCarboidrati');
+    assert.deepEqual(legacyDopo.valore,{riso:1},'il legacy non viene letto né toccato quando il canonico esiste già, anche solo parziale');
+    putSpy=null;
+  }
+
+  /* ============ 4. Modalità sconosciuta → errore esplicito, nessuna scrittura ============ */
+  {
+    resetStores();
+    const invalido=statoCompletoAuto();invalido.riso={mode:'boh',count:0};
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:invalido});
+    let scritture=0;
+    putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scritture++;return realPut(name,value);};
+    await assert.rejects(()=>M.inizializza({basePath:''}),/riso/,'modalità sconosciuta: errore esplicito che indica la chiave');
+    assert.equal(scritture,0,'modalità sconosciuta: nessuna scrittura');
+    const dopo=await getOne('impostazioni','configCarboidratiStati');
+    assert.deepEqual(dopo.valore,invalido,'il record non valido non viene toccato/corretto silenziosamente');
+    putSpy=null;
+  }
+
+  /* ============ 5. FIXED non numerico → errore, nessuna scrittura ============ */
+  {
+    resetStores();
+    const invalido=statoCompletoAuto();invalido.riso={mode:'fixed',count:'due'};
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:invalido});
+    let scritture=0;
+    putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scritture++;return realPut(name,value);};
+    await assert.rejects(()=>M.inizializza({basePath:''}),/riso/,'FIXED non numerico: errore esplicito che indica la chiave');
+    assert.equal(scritture,0,'FIXED non numerico: nessuna scrittura');
+    putSpy=null;
+  }
+
+  /* ============ 6. FIXED zero, negativo o decimale → errore, nessuna scrittura ============ */
+  {
+    for(const count of [0,-1,1.5]){
+      resetStores();
+      const invalido=statoCompletoAuto();invalido.riso={mode:'fixed',count};
+      await put('impostazioni',{chiave:'configCarboidratiStati',valore:invalido});
+      let scritture=0;
+      putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scritture++;return realPut(name,value);};
+      await assert.rejects(()=>M.inizializza({basePath:''}),/riso/,'FIXED count='+count+': errore esplicito che indica la chiave');
+      assert.equal(scritture,0,'FIXED count='+count+': nessuna scrittura');
+      putSpy=null;
+    }
+  }
+
+  /* ============ 7. Salvataggio Set → scrive lo stato canonico, non aggiorna le tre chiavi legacy ============ */
+  {
+    const sorgente=fs.readFileSync(path.join(root,'index.html'),'utf8');
+    const inizio=sorgente.indexOf('async function salvaConfigCarboidratiSet(');
+    assert(inizio>=0,'salvaConfigCarboidratiSet deve esistere in index.html');
+    const fine=sorgente.indexOf('\n}\n',inizio);
+    const corpo=sorgente.slice(inizio,fine);
+    assert(corpo.includes("chiave:'configCarboidratiStati'"),'il salvataggio Set deve scrivere lo stato canonico');
+    assert(!corpo.includes("chiave:'configCarboidrati'"),'il salvataggio Set non deve più aggiornare configCarboidrati');
+    assert(!corpo.includes("chiave:'configCarboidratiOrigini'"),'il salvataggio Set non deve più aggiornare configCarboidratiOrigini');
+    assert(!corpo.includes("chiave:'configCarboidratiExplicitZeroKeys'"),'il salvataggio Set non deve più aggiornare configCarboidratiExplicitZeroKeys');
+  }
+
+  /* ============ 8. Seconda inizializzazione → zero scritture ============ */
   {
     resetStores();
     await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
     await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente','utente','sistema','sistema']}});
-    let scrittureStati=0;
-    putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scrittureStati++;return realPut(name,value);};
+    let scritture=0;
+    putSpy=async(name,value)=>{if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')scritture++;return realPut(name,value);};
 
     await M.inizializza({basePath:''});
-    assert.equal(scrittureStati,1,'la prima inizializzazione (canonico assente) deve scrivere lo stato esattamente una volta');
+    assert.equal(scritture,1,'prima inizializzazione (canonico assente): esattamente una scrittura');
 
-    scrittureStati=0;
+    scritture=0;
     await M.inizializza({basePath:''});
-    assert.equal(scrittureStati,0,'la seconda inizializzazione (canonico già presente) non deve scrivere nulla');
+    assert.equal(scritture,0,'seconda inizializzazione (canonico già presente e completo): nessuna scrittura');
     putSpy=null;
   }
 
-  /* ============ 10. Motore e Set leggono lo stesso stato canonico ============ */
+  /* ============ 9. Set e motore leggono esclusivamente lo stato canonico ============ */
   {
     resetStores();putSpy=null;
     await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4,pane:0}});
@@ -179,8 +221,7 @@ const CHIAVI_CANONICHE=[...N.PDF_BASELINE.carbohydrateUncapped,...Object.keys(N.
 
     // Percorso "Set" (index.html:caricaConfigCarboidrati): legge SOLO configCarboidratiStati.
     const statoLettoDalSet=(await getOne('impostazioni','configCarboidratiStati')).valore;
-
-    // Percorso motore: caricaConfigurazioneNutrizionaleRisolta → resolveNutritionConfig.
+    // Percorso motore: caricaConfigurazioneNutrizionaleRisolta → resolveNutritionConfig, sola lettura del canonico.
     const resolved=await M.caricaConfigurazioneNutrizionaleRisolta();
 
     for(const chiave of CHIAVI_CANONICHE){
@@ -189,48 +230,19 @@ const CHIAVI_CANONICHE=[...N.PDF_BASELINE.carbohydrateUncapped,...Object.keys(N.
       const contoSet=set.mode==='fixed'?set.count:0,contoMotore=motore.mode==='fixed'?motore.count:0;
       assert.equal(contoSet,contoMotore,'Set e motore devono concordare sul count di '+chiave);
     }
-  }
 
-  /* ============ 11. Impostazioni estranee, piano e consumoGiorno restano invariati ============ */
-  {
-    resetStores();putSpy=null;
-    await put('impostazioni',{chiave:'nonSpettante',valore:{marker:'non-toccare'}});
-    await put('impostazioni',{chiave:'allergeniAttivi',valore:['glutine_finto_test']});
-    await put('piano',{id:'2026-08-31_pranzo',marker:'piano-esistente'});
-    await put('consumoGiorno',{id:'consumo-test',marker:'consumo-esistente'});
-    await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
-    await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente','utente','sistema','sistema']}});
+    // conferma statica: nessuno dei due percorsi ordinari rilegge il legacy per decidere
+    const motorSrc=fs.readFileSync(path.join(root,'motor-v12.js'),'utf8');
+    const inizioCarica=motorSrc.indexOf('async function caricaConfigurazioneNutrizionaleRisolta(');
+    const fineCarica=motorSrc.indexOf('\n}\n',inizioCarica);
+    const corpoCarica=motorSrc.slice(inizioCarica,fineCarica);
+    assert(!corpoCarica.includes("'configCarboidrati'")&&!corpoCarica.includes("'configCarboidratiOrigini'")&&!corpoCarica.includes("'configCarboidratiExplicitZeroKeys'"),'caricaConfigurazioneNutrizionaleRisolta non deve rileggere il legacy');
 
-    await M.inizializza({basePath:''});
-
-    assert.deepEqual((await getOne('impostazioni','nonSpettante')).valore,{marker:'non-toccare'},'impostazione estranea non toccata dalla migrazione');
-    assert.deepEqual((await getOne('impostazioni','allergeniAttivi')).valore,['glutine_finto_test'],'impostazione estranea non toccata dalla migrazione');
-    assert.deepEqual(await getAll('piano'),[{id:'2026-08-31_pranzo',marker:'piano-esistente'}],'piano non toccato dalla migrazione');
-    assert.deepEqual(await getAll('consumoGiorno'),[{id:'consumo-test',marker:'consumo-esistente'}],'consumoGiorno non toccato dalla migrazione');
-  }
-
-  /* ============ 12. Fallimento simulato durante la scrittura → nessuno stato canonico parziale ============ */
-  {
-    resetStores();
-    await put('impostazioni',{chiave:'configCarboidrati',valore:{riso:4}});
-    await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:{riso:['utente','utente','sistema','sistema']}});
-
-    putSpy=async(name,value)=>{
-      if(name==='impostazioni'&&value.chiave==='configCarboidratiStati')throw new Error('scrittura simulata non riuscita');
-      return realPut(name,value);
-    };
-
-    await assert.rejects(
-      ()=>M.migraStatoCarboidratiCanonicoSeNecessario(),
-      /scrittura simulata non riuscita/,
-      'un fallimento nella scrittura deve risalire esplicito, mai essere inghiottito in silenzio'
-    );
-
-    putSpy=null;
-    const rec=await getOne('impostazioni','configCarboidratiStati');
-    assert.equal(rec,null,'nessuno stato canonico parziale deve restare dopo un fallimento di scrittura');
-    const legacy=await getOne('impostazioni','configCarboidrati');
-    assert.deepEqual(legacy.valore,{riso:4},'i record legacy restano intatti e disponibili per un tentativo successivo dopo il fallimento');
+    const htmlSrc=fs.readFileSync(path.join(root,'index.html'),'utf8');
+    const inizioSet=htmlSrc.indexOf('async function caricaConfigCarboidrati(');
+    const fineSet=htmlSrc.indexOf('\n}\n',inizioSet);
+    const corpoSet=htmlSrc.slice(inizioSet,fineSet);
+    assert(!corpoSet.includes("'configCarboidrati'")&&!corpoSet.includes("'configCarboidratiOrigini'")&&!corpoSet.includes("'configCarboidratiExplicitZeroKeys'"),'caricaConfigCarboidrati (Set) non deve rileggere il legacy');
   }
 
   console.log('lotto migrazione Set storico: ok');

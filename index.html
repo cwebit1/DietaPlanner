@@ -2640,98 +2640,6 @@ function scegliCotturaStandard(gruppoProteico){
    4. Cottura (dalle COTTURE_STANDARD)
    5. Contorno (dal pool di contorni modulari) */
 
-/* Sceglie un carboidrato per il nuovo sistema modulare.
-   Usa la config utente se disponibile, altrimenti distribuzione
-   pesata tra CARBOIDRATI_ROTAZIONE. I carboidrati limitati
-   (friselle, gnocchi, ecc.) vengono proposti solo se il tetto
-   settimanale non è raggiunto. */
-async function scegliCarboidratoModulare(forzaJolly){
-  // Se "poco tempo", forza un carboidrato jolly (pane/friselle)
-  if(forzaJolly){
-    const jollyPool = ['pane','friselle'].filter(k => CARBOIDRATI_PASTO[k] && CARBOIDRATI_PASTO[k].jolly);
-    if(jollyPool.length){
-      // Rispetta i tetti per i jolly limitati (friselle)
-      const jollyDisponibili = [];
-      for(const k of jollyPool){
-        const carb = CARBOIDRATI_PASTO[k];
-        if(carb.limitato){
-          const usato = await contaCarboidratoSettimana(k);
-          if(usato < (carb.tettoSettimanale || 2)) jollyDisponibili.push(k);
-        } else {
-          jollyDisponibili.push(k);
-        }
-      }
-      if(jollyDisponibili.length) return mescola(jollyDisponibili)[0];
-    }
-    return 'pane'; // fallback sicuro
-  }
-  const config = await getConfigCarboidratiCaselle();
-  if(config){
-    return scegliCarboidratoDaConfig(config);
-  }
-  // Fallback: distribuzione pesata tra CARBOIDRATI_ROTAZIONE
-  const pool = CARBOIDRATI_ROTAZIONE.filter(chiave => {
-    const carb = CARBOIDRATI_PASTO[chiave];
-    if(!carb) return false;
-    if(carb.limitato){
-      return false; // i limitati entrano solo con la config esplicita
-    }
-    return true;
-  });
-  if(!pool.length) return 'riso';
-  return mescola(pool)[0];
-}
-
-/* Sceglie un carboidrato in base alla configurazione a caselle. */
-async function scegliCarboidratoDaConfig(config){
-  const candidati = [];
-  for(const chiave of Object.keys(config)){
-    if(config[chiave] > 0 && CARBOIDRATI_PASTO[chiave]){
-      candidati.push({chiave, peso: config[chiave]});
-    }
-  }
-  if(!candidati.length) return 'riso';
-
-  // Filtra i limitati che hanno raggiunto il tetto
-  const candidatiFiltrati = [];
-  for(const c of candidati){
-    const carb = CARBOIDRATI_PASTO[c.chiave];
-    if(carb.limitato){
-      const usato = await contaCarboidratoSettimana(c.chiave);
-      if(usato >= (carb.tettoSettimanale || 2)) continue;
-    }
-    candidatiFiltrati.push(c);
-  }
-  const pool = candidatiFiltrati.length ? candidatiFiltrati : candidati;
-  if(!pool.length) return 'riso';
-
-  // Scelta pesata
-  const totalePesi = pool.reduce((s, c) => s + c.peso, 0);
-  let random = Math.random() * totalePesi;
-  for(const c of pool){
-    random -= c.peso;
-    if(random <= 0) return c.chiave;
-  }
-  return pool[pool.length - 1].chiave;
-}
-
-/* Conta quante volte un carboidrato specifico è stato usato questa settimana */
-async function contaCarboidratoSettimana(chiaveCarboidrato){
-  const giorni = giorniSettimana();
-  const tuttoIlPiano = await getAll('piano');
-  let conteggio = 0;
-  for(const g of giorni){
-    for(const pasto of ['pranzo','cena']){
-      const voce = tuttoIlPiano.find(v=>v.id===g+'_'+pasto);
-      if(!voce) continue;
-      if(voce.modo==='multi' && voce.primoCereale === chiaveCarboidrato){
-        conteggio++;
-      }
-    }
-  }
-  return conteggio;
-}
-
 /* Legge la configurazione dei tetti alimenti limitati. */
 async function getConfigTettiAlimenti(){
   const rec = await getOne('impostazioni', 'configTettiAlimenti');
@@ -2811,10 +2719,12 @@ async function salvaConfigCarboidratiSet(mostraMessaggio){
   const N=globalThis.DietaPlannerNutritionConfig,input=inputCarboidratiCanonicoSet(),resolved=N.resolveNutritionConfig({user:{carbohydrates:input}});
   if(!resolved.valid){if(mostraMessaggio!==false)await avviso('Configurazione carboidrati non valida: '+resolved.errors.join(' '));return {ok:false,errori:resolved.errors};}
   const erroreClasse=await validaClassiCarboidratiSet();if(erroreClasse){if(mostraMessaggio!==false)await avviso(erroreClasse);return {ok:false,errori:[erroreClasse]};}
-  await put('impostazioni',{chiave:'configCarboidrati',valore:cloneConfigurazione(statoCaselleCarb)});
-  await put('impostazioni',{chiave:'configCarboidratiOrigini',valore:cloneConfigurazione(origineCaselleCarb)});
+  /* Unica verità funzionale scritta: configCarboidratiStati. I vecchi
+     configCarboidrati/configCarboidratiOrigini/configCarboidratiExplicitZeroKeys
+     non vengono più aggiornati dal Set - restano, se presenti da prima
+     della migrazione, soltanto come archivio storico inerte, mai riletto
+     per decidere AUTO/FIXED/EXCLUDED. */
   await put('impostazioni',{chiave:'configCarboidratiStati',valore:cloneConfigurazione(input.states)});
-  await put('impostazioni',{chiave:'configCarboidratiExplicitZeroKeys',valore:[...zeroEsplicitiCaselleCarb]});
   if(mostraMessaggio!==false)await avviso('Tabella carboidrati salvata: '+resolved.carbohydrates.fixedTotal+' fissi, '+resolved.carbohydrates.remainingSlots+' AUTO.');
   return {ok:true,resolved};
 }
@@ -3196,13 +3106,6 @@ async function caricaConfigCarboidrati(){
     else{statoCaselleCarb[key]=0;origineCaselleCarb[key]=[];if(st.mode==='excluded')zeroEsplicitiCaselleCarb.add(key);}
   }
   renderCaselleCarboidrati();aggiornaStatoConfigCarb();
-}
-
-/* Funzione per il motore: ritorna la configurazione carboidrati salvata.
-   Se non esiste, ritorna null (il motore userà il comportamento di default). */
-async function getConfigCarboidratiCaselle(){
-  const rec = await getOne('impostazioni', 'configCarboidrati');
-  return (rec && rec.valore) ? rec.valore : null;
 }
 
 /* =========================================================

@@ -195,11 +195,106 @@ settimana generata, nessun retry casuale.
   `index.html`: codice morto che legge ancora `configCarboidrati` grezzo,
   irraggiungibile da nessun chiamante attivo. Se mai riattivato andrebbe
   fatto passare dal resolver canonico.
-- L'ordine posizionale in `motor-v12.js:targetTabellaPerSlot` (primo
-  elemento dell'array `giorno_N` di `tabellaGiornoCategoria` = pranzo,
-  secondo = cena) non riflette un'assegnazione esplicita pranzo/cena
-  nell'interfaccia Set — comportamento del formato attuale, consistente
-  da sempre, non un'incompatibilità storica: solo osservazione, nessuna
-  modifica.
+---
+
+## 4. Commit (in preparazione) — completamento: eliminazione definitiva del sistema ibrido
+
+**SHA iniziale:** `8563d70` (main).
+
+**Obiettivo dell'incarico:** completare la rimozione del sistema ibrido
+eliminando dal funzionamento corrente le scritture legacy ancora
+effettuate dal Set, i lettori/API legacy morti rimasti esportati, e
+l'accettazione senza validazione di uno stato canonico presente ma
+incompleto o malformato. Al termine, una sola verità funzionale:
+`configCarboidratiStati`.
+
+**Residui trovati (confermati con ricerca globale prima di modificare):**
+- **Residuo A**: `index.html:salvaConfigCarboidratiSet` continuava a
+  scrivere `configCarboidrati`/`configCarboidratiOrigini`/
+  `configCarboidratiExplicitZeroKeys` oltre a `configCarboidratiStati`.
+- **Residuo B**: `getConfigCarboidratiCaselle()` (legge ancora
+  `configCarboidrati` grezzo) e il suo unico chiamante
+  `scegliCarboidratoModulare()`/`scegliCarboidratoDaConfig()` — l'intera
+  catena, senza chiamanti runtime (confermato con `grep` globale),
+  esisteva solo per consumare il formato legacy. `motor-v12.js:selezioneCarboidratiPersistita`
+  restava esportata ma non più richiamata dal punto unico di migrazione
+  (che usa `legacyCarbohydrateUserCounts`+`normalizeCarbohydrateSelection`
+  direttamente) né da alcun percorso ordinario: solo da 3 test diretti.
+- **Residuo C**: la migrazione considerava concluso il lavoro alla sola
+  *esistenza* di `configCarboidratiStati`, senza validarne la forma
+  (mode sconosciuta, FIXED non numerico/zero/negativo/decimale, chiavi
+  canoniche mancanti mai completate).
+
+**Funzioni e scritture eliminate:**
+- `index.html:salvaConfigCarboidratiSet` — rimosse le 3 scritture legacy;
+  scrive esclusivamente `configCarboidratiStati`.
+- `index.html:getConfigCarboidratiCaselle`, `scegliCarboidratoModulare`,
+  `scegliCarboidratoDaConfig`, `contaCarboidratoSettimana` — rimosse per
+  intero (catena morta, senza chiamanti runtime, esisteva solo per
+  consumare il formato legacy). La costante `CARBOIDRATI_ROTAZIONE`,
+  rimasta orfana come effetto collaterale (usata solo da
+  `scegliCarboidratoModulare`), **non rimossa** (non è di per sé un
+  lettore del formato legacy, solo un array di chiavi; annotata qui e
+  non toccata per restare strettamente nel perimetro richiesto).
+- `motor-v12.js:selezioneCarboidratiPersistita` — rimossa per intero (non
+  usata dal punto unico di migrazione né da alcun percorso ordinario) e
+  tolta dall'API esportata. I 3 test che la richiamavano direttamente
+  (`lotto-h-stress-migrations.test.js`, `lotto-c-new-engine-integration.test.js`)
+  sono stati aggiornati per verificare la stessa garanzia sostanziale
+  tramite il punto unico di migrazione reale (il primo) o le funzioni pure
+  `legacyCarbohydrateUserCounts`/`normalizeCarbohydrateSelection` (il
+  secondo, che non usa IndexedDB), senza indebolire il requisito
+  originale.
+
+**Validazione canonica introdotta:** nuove `motor-v12.js:validaStatoCarboidratiCanonico`
+(controllo strutturale puro) e logica aggiornata in
+`migraStatoCarboidratiCanonicoSeNecessario`:
+1. record assente → migrazione legacy (invariata).
+2. record presente, tutte le voci valide, chiavi canoniche mancanti →
+   completa solo le mancanti come AUTO, scarta proprietà estranee,
+   un'unica scrittura; il legacy non viene letto.
+3. record presente con una voce non valida (mode sconosciuta, FIXED non
+   numerico/decimale/zero/negativo, valore non interpretabile) → **eccezione
+   esplicita** che indica chiave e causa; nessuna scrittura, nessuna
+   correzione silenziosa, nessuna rilettura del legacy come fallback.
+4. record presente, completo e valido → nessuna scrittura.
+
+**File modificati:** `motor-v12.js`, `index.html`,
+`tests/lotto-migrazione-set-storico.test.js` (riscritto sui 9 casi
+richiesti), `tests/lotto-h-stress-migrations.test.js`,
+`tests/lotto-c-new-engine-integration.test.js`.
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-migrazione-set-storico.test.js  → ok
+node tests/nutrition-config.test.js               → ok
+node tests/lotto-e-root-user-set.test.js          → ok
+node tests/lotto-h-stress-migrations.test.js      → ok
+node --check nutrition-config.js                  → OK
+node --check motor-v12.js                         → OK
+git diff --check                                  → pulito
+```
+
+**Verifica globale prima del push:** confermato con `grep` ricorsivo che
+(a) nessun percorso runtime legge più i tre record legacy fuori dal corpo
+di `migraStatoCarboidratiCanonicoSeNecessario`; (b) nessun salvataggio
+corrente scrive più su di essi; (c) `configCarboidratiStati` è l'unica
+verità letta sia da `caricaConfigurazioneNutrizionaleRisolta` (motore) sia
+da `caricaConfigCarboidrati` (Set); (d) nessuna API esportata residua per
+reinterpretare il formato storico (`selezioneCarboidratiPersistita`
+rimossa; `legacyCarbohydrateUserCounts` resta esportata ma usata solo dal
+punto di migrazione e dai test).
+
+**Problemi adiacenti annotati, non toccati (fuori perimetro esplicito):**
+- La costante `CARBOIDRATI_ROTAZIONE` in `index.html`, rimasta senza
+  utilizzi dopo la rimozione di `scegliCarboidratoModulare` — non è un
+  lettore del formato legacy carboidrati (solo un array di chiavi), quindi
+  fuori dal perimetro di questo intervento.
+- Ripreso da un rapporto precedente, ancora valido: l'ordine posizionale
+  in `motor-v12.js:targetTabellaPerSlot` (primo elemento dell'array
+  `giorno_N` = pranzo, secondo = cena) resta un'osservazione, non
+  un'incompatibilità storica.
+
+**SHA finale:** questo stesso commit (riportato nella risposta a Cwe che lo accompagna).
 
 ---
