@@ -690,3 +690,73 @@ roadmap. Nessuna modifica a codice, schema IndexedDB, UI o cataloghi dati.
 **SHA dell'intervento:** `c6a0dbbfaec6643a803e49cd6feabd1dfa9e8dab`.
 
 ---
+
+# Filone: Restyling grafico PWA
+
+## 1. Prima integrazione del concept visuale — 7 settembre 2026
+
+**Obiettivo autorizzato da Cwe:** avviare il restyling grafico della PWA sul
+concept approvato, mantenendo separati il lavoro visuale e la futura
+integrazione tecnica del catalogo fotografico.
+
+**Correzione applicata:** il guscio condiviso dell'app usa ora una palette
+avorio, salvia e verde bosco, con header editoriale e barra di navigazione
+inferiore verde coordinata. La vista Pasto mostra la data estesa, una breve
+caption e card più morbide e leggibili. Colazione, pranzo e cena possono
+ricevere un carosello fotografico orizzontale con anteprima della slide
+successiva, indicatore a pallini, scroll snap e fallback neutro in caso di
+errore dell'immagine.
+
+**Separazione funzionale preservata:** le fotografie sono tre asset
+dimostrativi richiamati tramite path statici raccolti esclusivamente in
+`IMMAGINI_VISUALI_DEMO`. Non esiste alcuna associazione per nome o ID e non è
+stato creato alcun database visuale. Il componente non legge né modifica
+motore, cataloghi, nutrizione, inventario, lista spesa o storico; non viene
+mostrato negli slot vuoti o conclusi. La futura sessione tecnica potrà
+sostituire soltanto la sorgente dei path.
+
+**Asset:** tre WebP esterni 960×640, ottimizzati e privi di testo, logo e
+watermark; peso complessivo circa 266 KB. Il primo visuale della colazione è
+caricato con priorità, gli altri in lazy loading.
+
+**Backup richiesto da Cwe:** prima di qualsiasi pubblicazione è stata salvata
+la copia integrale `docs/backups/index-pre-restyling-2026-09-07.html`, verificata
+tramite blob hash identico all'`index.html` del commit di partenza.
+
+**File modificati:** `index.html`, `manifest.json`.
+
+**File aggiunti:**
+- `assets/visual-demo/colazione-overnight-oats.webp`;
+- `assets/visual-demo/pranzo-spaghetti-vongole.webp`;
+- `assets/visual-demo/cena-ceci-radicchio.webp`;
+- `docs/backups/index-pre-restyling-2026-09-07.html`.
+
+**Verifiche eseguite:**
+```
+parsing di tutti gli script inline tramite node:vm.Script → OK
+parsing JSON di manifest.json                         → OK
+esistenza di tutti i path statici dichiarati         → OK
+identify sui tre WebP (960x640)                       → OK
+confronto hash backup / index.html iniziale           → identico
+git diff --check                                      → pulito
+GitHub Pages: header, palette, data e bottom bar       → OK
+generazione e salvataggio locale menu di prova        → OK
+3 caroselli × 3 slide; immagini rotte                 → 0
+overflow orizzontale documento                        → assente
+swipe reale prima→seconda slide e indicatore attivo   → OK
+console pagina                                        → nessun errore app
+```
+
+**Nota di verifica:** il primo tentativo locale non disponeva del binario
+Chromium. Dopo la pubblicazione autorizzata da Cwe la verifica è stata eseguita
+sulla GitHub Pages aggiornata con cache-buster, includendo interazione reale
+con il carosello. Gli unici messaggi di console rilevati appartenevano
+all'estensione di controllo del browser, non alla PWA.
+
+**Non modificati:** `motor-v12.js`, `engine-core.js`, `nutrition-config.js`,
+`db-ricette.json`, `ingredienti-new.json`, schema IndexedDB, regole funzionali,
+dati e test del motore.
+
+**SHA remoto dell'intervento:** `8084ead53bf43e5cbaebfcfc343029d29c826ff8`.
+
+---
