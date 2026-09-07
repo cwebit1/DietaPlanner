@@ -58,6 +58,46 @@ essere progettato insieme: schermate, testi, domande, valori predefiniti,
 salto/ripresa e rapporto tra accesso Google e modalità locale. Questo paragrafo
 registra soltanto l'ambito e non autorizza scelte definitive di UX o backend.
 
+## Fase successiva alla stabilizzazione — catalogo visuale e descrittivo
+
+Questa fase potrà iniziare soltanto dopo la chiusura delle correzioni
+funzionali, delle migrazioni ancora aperte e delle relative verifiche reali.
+Non fa parte del motore nutrizionale e non deve essere usata per correggere o
+completare dati funzionali.
+
+L'obiettivo è affiancare ai cataloghi funzionali un archivio visuale e
+descrittivo separato, collegato tramite gli stessi identificatori stabili:
+
+- ogni ID ricetta concreta può risolvere una fotografia e una ricetta
+  testuale (ingredienti leggibili e passaggi di preparazione);
+- ogni `variantId` ingrediente può risolvere una fotografia dell'ingrediente;
+- lo stesso ID consente all'app di richiedere i dati funzionali, i contenuti
+  visuali oppure entrambi, senza duplicare o fondere le due responsabilità.
+
+Vincoli architetturali:
+
+1. `db-ricette.json` e `ingredienti-new.json` restano le sole sorgenti dei
+   dati usati da motore, nutrizione, frequenze, inventario, spesa e storico.
+2. Il catalogo parallelo contiene soltanto ID, fotografia e contenuto
+   descrittivo; non contiene classi, categorie, C/P/V/S/G, frequenze, limiti,
+   quantità nutrizionali o compatibilità.
+3. I collegamenti avvengono esclusivamente tramite ID, mai tramite nomi.
+4. Le immagini restano file esterni ottimizzati; il catalogo conserva il
+   relativo percorso e non incorpora immagini base64.
+5. L'assenza di un contenuto visuale non blocca generazione o uso della
+   ricetta: il sottosistema funzionale resta autonomo.
+6. Il catalogo visuale viene caricato soltanto dalle viste che lo richiedono e
+   non appesantisce l'inizializzazione o le interrogazioni del motore.
+7. I contenuti prodotti esternamente ricevono soltanto l'ID necessario e le
+   informazioni testuali indispensabili alla foto/ricetta; non possono
+   modificare né restituire dati funzionali.
+
+Prima dell'implementazione dovranno essere definiti e approvati: schema del
+catalogo, strategia di sincronizzazione con IndexedDB, formato e dimensioni
+delle immagini, comportamento del fallback, controllo di copertura degli ID e
+integrazione progressiva nelle viste Ricette, Pasto e Menu. La produzione
+massiva delle immagini inizierà soltanto dopo la validazione di un campione.
+
 ## Regola anti-fallback
 
 Se il nuovo database non copre una combinazione richiesta:

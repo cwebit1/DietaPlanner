@@ -623,3 +623,31 @@ conversione permanente pz→g.
 **SHA finale:** `606e95c9208886e577e5fc385b27bb93781cbeb4`.
 
 ---
+
+# Filone: Roadmap catalogo visuale e descrittivo
+
+## 1. Registrazione della fase post-stabilizzazione — 7 settembre 2026
+
+**Decisione di Cwe:** dopo la chiusura di tutte le correzioni funzionali,
+aggiungere alla roadmap un catalogo parallelo esclusivamente visuale e
+descrittivo, indicizzato con gli stessi ID delle ricette concrete e gli stessi
+`variantId` degli ingredienti.
+
+**Obiettivo:** consentire all'app, dato un ID, di ottenere separatamente i dati
+funzionali oppure fotografia e ricetta testuale, senza appesantire o duplicare
+il database usato dal motore.
+
+**Confine registrato:** il catalogo parallelo non contiene e non modifica
+classi, categorie, C/P/V/S/G, frequenze, limiti, quantità nutrizionali o
+compatibilità. Le immagini restano file esterni; il catalogo conserva soltanto
+il riferimento. L'assenza dei contenuti visuali non blocca il funzionamento
+dell'app.
+
+**Stato:** inserito esclusivamente nella roadmap; nessuna implementazione,
+modifica allo schema IndexedDB o produzione massiva di immagini autorizzata in
+questa fase.
+
+**File modificati:** `docs/PIANO_REVISIONE_ROOT_NUOVO_DB.md`,
+`docs/REGISTRO_MODIFICHE.md`.
+
+---
