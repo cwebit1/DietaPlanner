@@ -500,7 +500,7 @@ a Cwe.
 
 ---
 
-## 3. Commit `(in preparazione)` — contratto unico quantità/unità/grammi per gli ingredienti a pezzi
+## 3. Commit `606e95c` — contratto unico quantità/unità/grammi per gli ingredienti a pezzi
 
 **Obiettivo:** garantire una gestione unica e coerente degli ingredienti
 contati a pezzi (casi rappresentativi: Uova 2 pz = 120 g; Friselle 2 pz =
@@ -620,6 +620,6 @@ quanto già chiuso nella sezione precedente), UI grafica. Nessun
 ingrediente duplicato, nessuna tabella nome→peso introdotta, nessuna
 conversione permanente pz→g.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `606e95c9208886e577e5fc385b27bb93781cbeb4`.
 
 ---
