@@ -793,3 +793,32 @@ esplicitamente il trasferimento nell'app principale.
 **SHA remoto dell'intervento:** `1a9c273f77b774aaa40c97ae200162bfd13c3d83`.
 
 ---
+
+## 3. Ricostruzione grafica autonoma del mockup — 7 settembre 2026
+
+**Obiettivo autorizzato da Cwe:** ricostruire prima l'interfaccia del mockup nel
+modo più fedele possibile, occupandosi esclusivamente della grafica e
+rimandando a una fase successiva qualsiasi collegamento funzionale.
+
+**Intervento effettuato:** `restyling-preview.html` è stato trasformato in una
+pagina dimostrativa autonoma e statica. Sono stati riprodotti header editoriale,
+selettore settimanale, data estesa, card di colazione/pranzo/cena, immagini dei
+piatti in corsia orizzontale con anteprima della scheda successiva,
+indicatori, ingredienti, comandi visuali e bottom menu verde a quattro voci.
+
+**Separazione garantita:** la preview non contiene script applicativi, non legge
+IndexedDB e non importa motore o cataloghi. Le sole immagini utilizzate sono i
+tre WebP dimostrativi già presenti in `assets/visual-demo`. `index.html`,
+`manifest.json`, motore, database e configurazioni funzionali non sono stati
+modificati.
+
+**Verifiche:** `git diff --check` pulito; GitHub Pages carica tre card e sei
+immagini valide da 960 px; confronto commit remoto limitato esclusivamente a
+`restyling-preview.html`; resa visuale verificata nel browser senza immagini
+rotte.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA remoto dell'intervento:** `bdbdd7c9eb9498dd394cb0acfbad2344634983ea`.
+
+---
