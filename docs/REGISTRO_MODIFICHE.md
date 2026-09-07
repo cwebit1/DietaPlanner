@@ -499,3 +499,127 @@ a Cwe.
 **SHA finale:** `060537372f71a0878859e98f40c7319d8f6e35df`.
 
 ---
+
+## 3. Commit `(in preparazione)` — contratto unico quantità/unità/grammi per gli ingredienti a pezzi
+
+**Obiettivo:** garantire una gestione unica e coerente degli ingredienti
+contati a pezzi (casi rappresentativi: Uova 2 pz = 120 g; Friselle 2 pz =
+50 g) lungo l'intera cascata catalogo → ricetta compilata → snapshot →
+visualizzazione → lista spesa → scarico inventario.
+
+**Contratto definitivo dei campi:**
+- `quantita`: valore nell'unità NATIVA dell'ingrediente (pezzi per
+  Uova/Friselle, grammi per gli altri) — mai dedotta dal nome
+  dell'ingrediente, sempre da `meta.unitaPorzione` (metadato canonico).
+- `unita`: `'pz'` se `meta.unitaPorzione==='pezzi'`, altrimenti `'g'`.
+- `grammi`: equivalente interno (`grammiDaQuantita`), usato solo per
+  nutrizione/confronti/aggregazioni pesate — mai mostrato come tale
+  all'utente per un ingrediente a pezzi.
+- `pesoPezzo` (variante): fattore di conversione derivato dal catalogo
+  (`pesoPorzioneGrammi/porzione`), mai una tabella nome→peso hardcoded.
+- `porzioneColazione` (variante): stesso contratto, sempre grammi-
+  equivalenti internamente; la UI riconverte a pezzi solo alla
+  formattazione finale (`formattaQuantita`).
+
+**Percorsi verificati e già corretti (non modificati):**
+- `motor-v12.js:preparaIngredientiDettagliati`/`quantitaConfigurata`:
+  producono già `quantita` nativa, `grammi` equivalente, `unita` da
+  `meta.unitaPorzione` — generico, nessun nome hardcoded (verificato
+  anche per Friselle, vedi sotto).
+- `motor-v12.js:snapshotRealizzazione`: copia `ricetta.ingredienti`
+  senza alcuna trasformazione — quantità/unità/grammi arrivano intatti.
+- `index.html:aggiornaListaSpesaAutomatica` (ramo `motoreNuovo`): usa già
+  `ing.grammi` per gli ingredienti a pezzi, con un commento esplicito che
+  descrive esattamente il contratto richiesto — nessuna correzione
+  necessaria, verificato eseguendo la formula reale estratta dal file.
+
+**Difetti riprodotti e corretti (`index.html`, entrambi confermati
+percorso live per `voce.motoreNuovo`):**
+1. `scalaInventarioPerRicetta()`/`annullaScalaInventarioPerRicetta()`
+   scalavano/restituivano l'inventario con `ing.quantita` grezzo, senza
+   controllare `ing.unita`: per un ingrediente a pezzi questo scalava
+   l'inventario (sempre in grammi) del solo conteggio-pezzi (es. `2`
+   invece di `120 g`/`50 g`). Corretto riusando lo stesso pattern già
+   corretto in `aggiornaListaSpesaAutomatica`. Verificato eseguendo (non
+   reimplementando) la funzione reale estratta da `index.html`: 200 g di
+   Friselle in inventario, scalate di una porzione da 2 pz (50 g) →
+   150 g corrette (non 198 g, non un valore negativo).
+2. `apriModalDettaglioRicetta()` (modal dettaglio ricetta) passava
+   `i.quantita` grezzo a `formattaQuantita()` (che si aspetta sempre
+   grammi): per le Uova questo avrebbe mostrato "0 pz" invece di "2 pz".
+   Corretto con lo stesso pattern.
+
+**Scoperta rilevante (non un difetto, un fatto del catalogo):** nessuna
+ricetta di `db-ricette.json` contiene mai "Friselle" come ingrediente
+(verificato con ricerca esaustiva su tutti i template) — il motore
+sequenziale non può quindi selezionarla realmente in un pasto generato
+oggi (`CARB_KEY_BY_NAME['friselle']` resta un carboidrato "riconosciuto"
+ma orfano nel catalogo ricette). Non essendo autorizzata la modifica
+delle ricette in questo intervento, il meccanismo per Friselle è stato
+verificato compilando un template sintetico in memoria (mai scritto su
+disco) con la stessa identica pipeline (`generaCombinazioni`+
+`compilaRicetta`, quest'ultima resa esportabile per testabilità) usata
+per ogni ricetta reale: risultato `quantita:2, unita:'pz', grammi:50`,
+confermando che il meccanismo è generico e corretto anche per Friselle,
+indipendentemente dalla sua assenza nel catalogo ricette attuale.
+Decisione su un'eventuale aggiunta di Friselle a una ricetta reale
+lasciata a Cwe (fuori perimetro: "non modificare le ricette").
+
+**Residui storici esaminati e non toccati (motivazione):**
+- `index.html:CARBOIDRATI_PASTO.friselle.porzione = 50`: consumato
+  realmente da `nutrizioneCarboidratoModulare` (`fattore=porzione/100`,
+  cioè grammi — interpretazione corretta, non confusa con un conteggio
+  pezzi). Raggiungibile solo se `voce.primoCereale` è valorizzato, campo
+  che il motore attuale non scrive mai con un valore reale (solo `null`,
+  verificato con ricerca globale) — resta un ramo di compatibilità per
+  eventuali vecchi record, mai esercitato dai dati prodotti oggi. Valore
+  corretto, percorso non-morto-ma-non-esercitato: nessuna modifica.
+- `index.html:seedIfEmpty` — voci seed di "Uova" (`formato:60,qta:120,
+  unitaPezzo:true`) e "Friselle" (`formato:250,qta:250`, **senza**
+  `unitaPezzo`): usano una convenzione di campi (`formato`/`qta`)
+  incompatibile con lo schema live attuale (`pesoPezzo`/`unitaPezzo`/
+  `porzioneColazione`), quindi anche se `seedIfEmpty()` venisse mai
+  richiamata (verificato ancora una volta: nessun chiamante nell'app,
+  stesso riscontro delle sezioni precedenti di questo registro) i dati
+  non sarebbero compatibili con la pipeline corrente. Non rimosse in
+  questo intervento: la rimozione toccherebbe l'intero blocco di seed
+  (molti altri ingredienti, non solo Uova/Friselle), un modulo estraneo
+  al contratto pz/g oggetto di questo incarico ("non riscrivere moduli
+  estranei"); resta parte della decisione già aperta su `seedIfEmpty()`
+  nella sezione precedente di questo registro.
+- `index.html:etichettaOpzioneSpuntino` (`formattaQuantita(v,i.quantita)`)
+  e le funzioni di nutrizione del componimento secondo+contorno legacy
+  (`componiSecondoContorno`, `macronutrienteDominanteSync`,
+  `nutrizionePerPersona` per ricette senza `nutrizioneManualeTotale`):
+  nessuna include mai Uova o Friselle (verificato), e per le ricette
+  compilate dal motore nuovo `nutrizionePerPersona` esce comunque prima
+  tramite `ricetta.nutrizioneManualeTotale` (già corretto, calcolato da
+  `calcolaNutrienti` su `.grammi`). Non toccate: fuori perimetro
+  ("non affrontare altri ingredienti") e in gran parte percorsi legacy
+  non esercitati dal motore attuale.
+
+**File modificati:** `index.html` (`scalaInventarioPerRicetta`,
+`annullaScalaInventarioPerRicetta`, `apriModalDettaglioRicetta`),
+`motor-v12.js` (solo `compilaRicetta` esportata per testabilità, nessuna
+logica cambiata), `tests/lotto-g-unita-pz-snapshot.test.js` (nuovo).
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-g-unita-pz-snapshot.test.js         → ok (fallisce senza la correzione: "0" invece di "1" pattern trovato, verificato)
+node tests/lotto-d-contestuali-realizzazione.test.js → ok
+node --check motor-v12.js                             → OK
+git diff --check                                      → pulito
+```
+`index.html`: nessuno strumento dedicato nel repository; script
+modificato estratto e controllato con `node --check` (stesso metodo dei
+filoni precedenti); nessuna suite completa avviata.
+
+**Non modificati:** quantità nutrizionali del catalogo, frequenze,
+carboidrati FIXED/AUTO/EXCLUDED, ricette, verdure, colazione (oltre a
+quanto già chiuso nella sezione precedente), UI grafica. Nessun
+ingrediente duplicato, nessuna tabella nome→peso introdotta, nessuna
+conversione permanente pz→g.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

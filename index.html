@@ -3668,7 +3668,10 @@ async function scalaInventarioPerRicetta(ricetta, porzioniSel){
   const inventario = await getAll('inventario');
   for(const ing of ricetta.ingredienti){
     if(!ing.variantId||ing.nonRichiedeInventario) continue;
-    let restante = (ing.quantita||0) * scala;
+    // Stesso contratto già usato dalla lista della spesa (aggiornaListaSpesaAutomatica):
+    // l'inventario conserva sempre il peso equivalente, mai il conteggio pezzi.
+    const quantitaInventario=ing.unita==='pz'?(Number(ing.grammi)||Number(ing.quantita)||0):(Number(ing.quantita)||0);
+    let restante = quantitaInventario * scala;
     if(restante<=0) continue;
     const voci = inventario.filter(x=>x.variantId===ing.variantId && x.stato==='disponibile').sort((a,b)=>a.quantita-b.quantita);
     for(const voce of voci){
@@ -3690,7 +3693,9 @@ async function annullaScalaInventarioPerRicetta(ricetta, porzioniSel){
   const inventario = await getAll('inventario');
   for(const ing of ricetta.ingredienti){
     if(!ing.variantId) continue;
-    const daRestituire = (ing.quantita||0) * scala;
+    // Stesso contratto di scalaInventarioPerRicetta: sempre il peso equivalente.
+    const quantitaInventario=ing.unita==='pz'?(Number(ing.grammi)||Number(ing.quantita)||0):(Number(ing.quantita)||0);
+    const daRestituire = quantitaInventario * scala;
     if(daRestituire<=0) continue;
     let voce = inventario.find(x=>x.variantId===ing.variantId && x.stato==='disponibile');
     if(voce){
@@ -6113,7 +6118,10 @@ async function apriModalDettaglioRicetta(ricetta, voceOPorzioni, modalitaModific
   const ingredientiHtml = ricetta.ingredienti.map(i=>{
     const variante = i.variantId ? varianti.find(v=>v.id===i.variantId) : null;
     const nome = variante ? variante.nome : (i.nomeLibero||'?');
-    const qtaTesto = formattaQuantita(variante, (i.quantita||0)*scala);
+    // Stesso contratto già usato da lista spesa/inventario: "quantita" è nell'unità
+    // nativa (pezzi per Uova/Friselle), formattaQuantita si aspetta sempre grammi.
+    const grammiPerFormato = i.unita==='pz' ? (Number(i.grammi)||Number(i.quantita)||0) : (Number(i.quantita)||0);
+    const qtaTesto = formattaQuantita(variante, grammiPerFormato*scala);
     return `<li>${nome}: ${qtaTesto}</li>`;
   }).join('');
 
