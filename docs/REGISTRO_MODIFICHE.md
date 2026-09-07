@@ -298,3 +298,98 @@ punto di migrazione e dai test).
 **SHA finale:** `2ca7c8aa711d9a5cfbc1dcb69431c7834aafd22e`.
 
 ---
+
+# Filone: Quantità contestuali nutrizionista → realizzazione del pasto
+
+Riguarda: `resolveNutritionConfig().ingredientConstraints[id].contexts`
+(colazione/pastoPrincipale/spuntino, prodotto dal resolver) e i due punti
+in `motor-v12.js` che determinano la quantità effettiva di un ingrediente
+al momento della realizzazione.
+
+## 1. Commit `bdd9111` — quantità contestuali fino alla realizzazione
+
+**Obiettivo:** garantire che le quantità contestuali del nutrizionista
+(es. Uova 1 pz colazione / 2 pz pasto principale; Ricotta 50 g colazione /
+100 g pasto principale) arrivino fino alla realizzazione effettiva,
+usando esclusivamente `resolveNutritionConfig()` come fonte di verità.
+
+**Flusso reale ricostruito (due percorsi distinti, verificati separatamente):**
+1. **Pasto principale (pranzo/cena)**: le ricette si compilano una sola
+   volta in `motor-v12.js:inizializza` → `compilaRicetta` →
+   `preparaIngredientiDettagliati` → `quantitaConfigurata`, cache
+   persistita in IndexedDB (store `ricette`), invalidata solo da un
+   cambio versione catalogo o dal pulsante "Applica e ricostruisci". Le
+   ricette compilate qui non sono mai usate per la colazione.
+2. **Colazione**: percorso separato. Il selettore colazione (in
+   `index.html`, non toccato) legge `variante.porzioneColazione`, scritto
+   da `motor-v12.js:sincronizzaIngredientiIndexedDB`.
+
+**Difetto riprodotto (entrambi confermati con un test mirato, non ipotizzati):**
+- `quantitaConfigurata(nome,meta)` leggeva **direttamente**
+  `vincoliIngredientiNutrizionista` grezzo (bypassando il resolver),
+  considerava solo la quantità generica (`v.quantita`), non riceveva
+  alcun contesto e non consultava mai `ingredientConstraints[id].contexts`.
+  Test: Uova nel pasto principale risultava `1` (il valore generico
+  scorretto) invece di `2` (il valore contestuale corretto).
+- `sincronizzaIngredientiIndexedDB` calcolava `variante.porzioneColazione`
+  **solo** dal catalogo statico (`ingredienti-new.json:porzione`), senza
+  mai consultare il resolver: nessuna quantità contestuale di colazione
+  arrivava mai alla variante usata dal selettore.
+
+**Correzione applicata (motor-v12.js soltanto, nessuna duplicazione delle
+regole contestuali):**
+- `quantitaConfigurata` ora legge esclusivamente `configRuntime()` (cache
+  di sessione di `resolveNutritionConfig()`), con precedenza
+  `contexts.pastoPrincipale.quantity` → `quantity` generico → porzione di
+  catalogo. Contesto `'pastoPrincipale'` fisso e esplicito (identificatore
+  canonico già usato dal resolver): le ricette compilate da questo punto
+  non sono mai usate per la colazione, quindi non serve altro contesto qui.
+- `sincronizzaIngredientiIndexedDB` calcola `porzioneColazione` con la
+  stessa precedenza (`contexts.colazione.quantity` → porzione di
+  catalogo), tramite una lettura diretta e non cache di
+  `caricaConfigurazioneNutrizionaleRisolta()` (questa funzione gira
+  **prima** della migrazione canonica dei carboidrati nella sequenza di
+  `inizializza`: passare dalla cache di sessione qui la scriverebbe con
+  uno snapshot pre-migrazione, restando stantia per tutta la sessione).
+  L'idoneità alla colazione (quale ingrediente sia selezionabile) resta
+  invariata, decisa solo dal catalogo (`sottoCategoriaColazione`): il
+  contesto nutrizionista non inventa un'idoneità che il catalogo non
+  definisce, cambia solo il valore quando l'ingrediente è già idoneo.
+
+**Scoperta collaterale, annotata e non toccata (fuori perimetro esplicito,
+"Non modificare... catalogo ingredienti"):** "Uova" e "Ricotta" — gli
+esempi obbligatori dell'incarico — non sono attualmente selezionabili in
+colazione nel catalogo operativo: nessuna `sottoCategoriaColazione` di
+primo livello per loro in `ingredienti-new.json`. "Uova" ha un campo
+`ancheColazione` con nota testuale "doppia gestione: stesso ingrediente,
+due contesti con frequenze diverse", ma questo campo non è consumato da
+nessun codice (né prima né dopo questa correzione) — è un dato dormiente.
+Di conseguenza il test verifica la correzione del **meccanismo** per la
+colazione con un ingrediente realmente idoneo nel catalogo attuale
+("Latte parzialmente scremato"), e verifica esplicitamente che Uova/
+Ricotta restano con `porzioneColazione:null` (comportamento corretto e
+invariato, dato che il catalogo non li rende idonei) invece di forzare
+un'idoneità inventata. Sistemare l'idoneità di Uova/Ricotta in colazione
+richiederebbe una modifica al catalogo ingredienti, esplicitamente esclusa
+da questo incarico: segnalato qui per una decisione separata di Cwe.
+
+**File modificati:** `motor-v12.js`,
+`tests/lotto-d-contestuali-realizzazione.test.js` (nuovo).
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-d-contestuali-realizzazione.test.js  → ok (fallisce su 1≠2 senza la correzione, verificato)
+node tests/nutrition-config.test.js                    → ok
+node tests/lotto-d-root-nutritionist-setting.test.js   → ok
+node --check nutrition-config.js                       → OK
+node --check motor-v12.js                               → OK
+git diff --check                                        → pulito
+```
+
+**Non modificati:** `nutrition-config.js` (fonte di verità invariata),
+database ricette, catalogo ingredienti, limiti settimanali, migrazioni
+IndexedDB, UI, logica carboidrati; rappresentazione pz/g non affrontata.
+
+**SHA finale:** `bdd9111fb8f3314ff4791aa276c2c388ac8a43a4`.
+
+---

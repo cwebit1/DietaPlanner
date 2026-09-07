@@ -546,14 +546,30 @@ function grammiDaQuantita(meta,q){
 }
 function quantitaDefault(meta){ return Number(meta&&meta.porzione)||0; }
 
+/* Quantita' effettiva di un ingrediente per la ricetta compilata
+   (pranzo/cena - le ricette compilate qui non sono mai usate per la
+   colazione, che segue un percorso completamente separato tramite
+   variante.porzioneColazione, mai questa funzione: vedi
+   docs/REGISTRO_MODIFICHE.md). Fonte di verita' esclusiva:
+   resolveNutritionConfig() (via configRuntime, che lo calcola una volta e
+   lo tiene in cache di sessione - mai una lettura diretta delle
+   impostazioni grezze qui). Precedenza: quantita' contestuale del pasto
+   principale (ingredientConstraints[id].contexts.pastoPrincipale.quantity,
+   identificatore canonico gia' usato dal resolver) prima del valore
+   generico (ingredientConstraints[id].quantity), che resta un fallback
+   soltanto se il resolver non produce un valore contestuale; se nessuno
+   dei due esiste, fallback finale sulla porzione di catalogo. */
 async function quantitaConfigurata(nome,meta){
-  if(typeof getOne!=='function') return quantitaDefault(meta);
   try{
-    const rec=await getOne('impostazioni','vincoliIngredientiNutrizionista');
-    const cfg=rec&&rec.valore||{};
+    const cfg=await configRuntime();
+    const resolved=cfg&&cfg.resolved;
     const base=state.baseByName.get(String(nome).toLowerCase());
-    const v=base&&cfg[base.id];
-    if(v && v.quantita!==undefined && v.quantita!==null && v.quantita!=='') return Number(v.quantita)||0;
+    const rule=base&&resolved&&resolved.ingredientConstraints&&resolved.ingredientConstraints[base.id];
+    if(rule){
+      const ctx=rule.contexts&&rule.contexts.pastoPrincipale;
+      if(ctx&&ctx.quantity!==null&&ctx.quantity!==undefined) return Number(ctx.quantity)||0;
+      if(rule.quantity!==null&&rule.quantity!==undefined) return Number(rule.quantity)||0;
+    }
   }catch(e){}
   return quantitaDefault(meta);
 }
@@ -709,6 +725,20 @@ async function sincronizzaIngredientiIndexedDB(){
   const [basi,varianti]=await Promise.all([getAll('ingredienti'),getAll('varianti')]);
   const baseByName=new Map((basi||[]).map(x=>[String(x.nome||'').toLowerCase(),x]));
   const varByName=new Map((varianti||[]).map(x=>[String(x.nome||'').toLowerCase(),x]));
+  /* Quantita' contestuale della colazione: stessa fonte di verita' unica
+     usata per il pasto principale (resolveNutritionConfig(), mai una
+     lettura diretta delle impostazioni grezze). Lettura diretta e non
+     tramite configRuntime(): questa funzione viene eseguita PRIMA della
+     migrazione canonica dei carboidrati (vedi inizializza) - passare dalla
+     cache di sessione qui la scriverebbe con uno snapshot pre-migrazione,
+     restando stantia per tutta la sessione anche dopo che la migrazione
+     completa. Il campo variante.porzioneColazione resta lo stesso letto
+     dal selettore colazione (nessuna modifica li'): qui cambia solo il
+     VALORE scritto, con precedenza al contesto 'colazione' del resolver
+     sul valore di catalogo, che resta fallback quando il resolver non ne
+     produce uno. */
+  const resolvedPerSync=await caricaConfigurazioneNutrizionaleRisolta();
+  const resolvedIngredienti=resolvedPerSync&&resolvedPerSync.ingredientConstraints||{};
   for(const [nome,d] of Object.entries(state.ingredientiMap)){
     const key=nome.toLowerCase();
     let b=baseByName.get(key);
@@ -730,6 +760,12 @@ async function sincronizzaIngredientiIndexedDB(){
     let v=varByName.get(key);
     if(!v) v={id:'nrv_'+slug(nome),ingredienteId:b.id,nome};
     const alta=d.deperibilita==='alta',surg=d.conservazione==='surgelato',fresco=d.conservazione==='fresco';
+    const porzioneColazioneCatalogo=d.sottoCategoriaColazione?d.porzione||null:null;
+    const regolaContestuale=resolvedIngredienti[b.id];
+    const quantitaColazioneContestuale=regolaContestuale&&regolaContestuale.contexts&&regolaContestuale.contexts.colazione&&regolaContestuale.contexts.colazione.quantity;
+    const porzioneColazioneEffettiva=porzioneColazioneCatalogo!==null&&quantitaColazioneContestuale!==null&&quantitaColazioneContestuale!==undefined
+      ?Number(quantitaColazioneContestuale)||porzioneColazioneCatalogo
+      :porzioneColazioneCatalogo;
     Object.assign(v,{
       ingredienteId:b.id,nome,
       /* Il selettore della colazione lavora sulle varianti, mentre la fonte
@@ -737,7 +773,7 @@ async function sincronizzaIngredientiIndexedDB(){
          qui ad ogni sincronizzazione, così un'installazione pulita e una già
          esistente ricevono esattamente le stesse opzioni. */
       colazioneGruppo:d.sottoCategoriaColazione||null,
-      porzioneColazione:d.sottoCategoriaColazione?d.porzione||null:null,
+      porzioneColazione:porzioneColazioneEffettiva,
       kcal100:Number(d.kcal)||0,prot100:Number(d.proteine)||0,
       carb100:Number(d.carboidrati)||0,grassi100:Number(d.grassi)||0,
       categoria:surg?'surgelato':(fresco||alta?'fresco':'conf'),
