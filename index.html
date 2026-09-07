@@ -1680,9 +1680,11 @@ async function seedIfEmpty(){
     for(const ric of ricetteConLatteSoia) await delKey('ricette', ric.id);
   }
 
-  // patch: la ricotta e il latte intero non vengono proposti a colazione
-  for(const nomeDaRimuovereColazione of ['ricotta','latte intero']){
-    const varDaRimuovereCol = variantiEsistenti.find(v=>v.nome.toLowerCase()===nomeDaRimuovereColazione);
+  // patch: il latte intero non viene proposto a colazione (decisione
+  // applicativa indipendente, non collegata all'idoneità contestuale
+  // dei carboidrati/pasto principale)
+  {
+    const varDaRimuovereCol = variantiEsistenti.find(v=>v.nome.toLowerCase()==='latte intero');
     if(varDaRimuovereCol && varDaRimuovereCol.colazioneGruppo){
       varDaRimuovereCol.colazioneGruppo = null;
       varDaRimuovereCol.porzioneColazione = null;
@@ -1697,33 +1699,14 @@ async function seedIfEmpty(){
     await put('varianti', varUova);
   }
 
-  // G: patch — tagga gli ingredienti da colazione con il gruppo di appartenenza e la
-  // porzione standard (guida Praderio), cosi la colazione si compone a gruppi liberi
-  // invece di essere una "ricetta" fissa. Idempotente, corregge anche chi ha già i dati.
-  const TAG_COLAZIONE = {
-    'cereali da colazione': {gruppo:'carboidrati', porzione:30},
-    'panino': {gruppo:'carboidrati', porzione:50},
-    'pane integrale': {gruppo:'carboidrati', porzione:50},
-    'fette biscottate': {gruppo:'carboidrati', porzione:30},
-    'biscotti secchi': {gruppo:'carboidrati', porzione:25},
-    'latte parzialmente scremato': {gruppo:'proteine', porzione:200},
-    'yogurt bianco': {gruppo:'proteine', porzione:125},
-    'uova': {gruppo:'proteine', porzione:120},
-    'noci e mandorle': {gruppo:'grassi', porzione:8},
-    'cioccolato fondente': {gruppo:'grassi', porzione:8},
-    'burro': {gruppo:'grassi', porzione:5},
-    'avocado': {gruppo:'grassi', porzione:20},
-    'miele': {gruppo:'carboidrati_semplici', porzione:10},
-    'marmellata': {gruppo:'carboidrati_semplici', porzione:10}
-  };
-  for(const [nomeVar, tag] of Object.entries(TAG_COLAZIONE)){
-    const v = variantiEsistenti.find(x=>x.nome.toLowerCase()===nomeVar);
-    if(v && (v.colazioneGruppo!==tag.gruppo || v.porzioneColazione!==tag.porzione)){
-      v.colazioneGruppo = tag.gruppo;
-      v.porzioneColazione = tag.porzione;
-      await put('varianti', v);
-    }
-  }
+  /* L'idoneità e la porzione di colazione (colazioneGruppo/porzioneColazione)
+     sono decise esclusivamente da motor-v12.js:sincronizzaIngredientiIndexedDB,
+     a partire dal catalogo canonico (ingredienti-new.json:sottoCategoriaColazione
+     o ancheColazione per gli ingredienti a doppio contesto) e dal contesto
+     'colazione' di resolveNutritionConfig(). Nessuna seconda scrittura qui:
+     un tempo esisteva un blocco TAG_COLAZIONE con porzioni hardcoded
+     (incluso "uova: 120g", incompatibile con la quantità contestuale in
+     pezzi) — rimosso, vedi docs/REGISTRO_MODIFICHE.md. */
 
   // B9: patch — farro e orzo perlato sono cereali integrali per natura
   for(const nomeIntegrale of ['farro perlato', 'orzo perlato']){

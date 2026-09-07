@@ -306,7 +306,7 @@ Riguarda: `resolveNutritionConfig().ingredientConstraints[id].contexts`
 in `motor-v12.js` che determinano la quantità effettiva di un ingrediente
 al momento della realizzazione.
 
-## 1. Commit `bdd9111` — quantità contestuali fino alla realizzazione
+## 1. Commit `a32aa55` — quantità contestuali fino alla realizzazione
 
 **Obiettivo:** garantire che le quantità contestuali del nutrizionista
 (es. Uova 1 pz colazione / 2 pz pasto principale; Ricotta 50 g colazione /
@@ -390,6 +390,112 @@ git diff --check                                        → pulito
 database ricette, catalogo ingredienti, limiti settimanali, migrazioni
 IndexedDB, UI, logica carboidrati; rappresentazione pz/g non affrontata.
 
-**SHA finale:** `bdd9111fb8f3314ff4791aa276c2c388ac8a43a4`.
+**SHA finale:** `a32aa554651a47708c30c738cb9fa784caaab28e`.
+
+---
+
+## 2. Commit `6672105` — chiusura del flusso colazione per Uova e Ricotta
+
+**Obiettivo:** eliminare ogni sistema parallelo/hardcoded e chiudere il
+flusso contestuale a colazione per Uova (1 pz) e Ricotta (50 g), un solo
+ingrediente per contesto, tutte le quantità da `resolveNutritionConfig()`.
+
+**Due scritture precedenti individuate (ordine reale ricostruito):**
+1. `motor-v12.js:sincronizzaIngredientiIndexedDB` (fonte autorevole,
+   corretta nella sezione 1 di questo filone per il *valore* contestuale,
+   ma leggeva l'idoneità solo da `sottoCategoriaColazione` di primo
+   livello — mai da `ancheColazione` — quindi Uova/Ricotta restavano non
+   idonee).
+2. `index.html:seedIfEmpty` → blocco `TAG_COLAZIONE` (porzioni hardcoded,
+   incluso `uova: 120g` — incompatibile con la quantità contestuale in
+   pezzi) + patch che escludeva esplicitamente `ricotta` dalla colazione
+   (contraddiceva la regola PDF già presente nel resolver:
+   `docs/BASELINE_NUTRIZIONISTA_PDF_V1.md` conferma "ricotta: 50-60 g" a
+   colazione, nessun documento la esclude — verificato prima di
+   modificare, nessuna decisione realmente incompatibile trovata).
+   **Verificato con ricerca globale: `seedIfEmpty()` non ha alcun
+   chiamante nell'app** — questa seconda scrittura non era in realtà mai
+   eseguita a runtime, ma restava un percorso morto potenzialmente
+   riattivabile ("una seconda architettura", stesso principio già
+   applicato ad altri residui in questo registro).
+
+**Fonte eliminata:** il blocco `TAG_COLAZIONE` e la patch di esclusione
+`ricotta` in `index.html:seedIfEmpty` — rimossi per intero. Mantenuta
+l'esclusione di `latte intero` (decisione applicativa indipendente, non
+collegata a questo flusso). `index.html` non scrive più
+`colazioneGruppo`/`porzioneColazione` se non per quella singola esclusione
+residua: legge soltanto le varianti sincronizzate dal motore.
+
+**Struttura canonica scelta:** `ancheColazione` (metadato già presente per
+Uova in `ingredienti-new.json`) è diventato il formato canonico per gli
+ingredienti a **doppio contesto** (usati sia a colazione sia nel pasto
+principale): un solo ingrediente, mai duplicato in una variante
+"colazione" separata. Aggiunto lo stesso metadato a Ricotta:
+```json
+"ancheColazione": {
+  "sottoCategoriaColazione": "proteine",
+  "porzioneMin": 50,
+  "porzioneMax": 60
+}
+```
+(`ingredienti-new.json`, versione catalogo 21→22 per invalidare la cache
+compilata). Per gli ingredienti a colazione esclusiva resta il campo di
+primo livello `sottoCategoriaColazione`/`porzione` (più semplice, non
+duplicato altrove: nessuna riscrittura dell'intero catalogo, fuori
+perimetro "non riscrivere il sistema generale della colazione"). Nuova
+funzione unica `motor-v12.js:metaColazioneCanonica(d)`: unico punto di
+lettura per l'idoneità e la porzione di fallback, controlla prima
+`ancheColazione` poi il campo di primo livello — mai due formati letti in
+punti diversi.
+
+**Flusso finale fino allo snapshot:**
+- **Idoneità**: `sincronizzaIngredientiIndexedDB` → `metaColazioneCanonica(d)`
+  → `variante.colazioneGruppo`. Nessuna lettura del resolver per decidere
+  *se* un ingrediente è idoneo (resta una proprietà del catalogo).
+- **Quantità colazione**: `resolveNutritionConfig().ingredientConstraints[id].contexts.colazione.quantity`
+  (unità nativa: pezzi per Uova, grammi per Ricotta) con priorità sul
+  fallback di catalogo (`ancheColazione.porzioneMin`); conversione
+  nell'equivalente in grammi per `variante.porzioneColazione` tramite la
+  **stessa** funzione già usata per il pasto principale
+  (`grammiDaQuantita`, mai una seconda conversione pz/g duplicata) — così
+  l'unità visuale resta sempre quella nativa (1 pz, non 60 g) mentre il
+  calcolo nutrizionale interno usa il peso equivalente.
+- **Pasto principale**: invariato dalla sezione 1 di questo filone
+  (`quantitaConfigurata` → `contexts.pastoPrincipale.quantity`).
+- **Snapshot**: `snapshotRealizzazione()` copia direttamente
+  `ricetta.ingredienti` (già con `quantita`/`unita` corretti dalla
+  compilazione) in `ingredientiEffettivi` — nessuna trasformazione
+  aggiuntiva, verificato che Uova resti `2 pz` e Ricotta `100 g`.
+
+**File modificati:** `motor-v12.js`, `ingredienti-new.json` (aggiunto
+`ancheColazione` a Ricotta, versione 21→22), `index.html` (rimossi
+`TAG_COLAZIONE` e la patch di esclusione ricotta),
+`tests/lotto-d-contestuali-realizzazione.test.js` (aggiornato, stessa
+suite, nessun nuovo file).
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-d-contestuali-realizzazione.test.js  → ok (fallisce senza la correzione: colazioneGruppo null invece di 'proteine', verificato)
+node tests/nutrition-config.test.js                    → ok
+node tests/lotto-d-root-nutritionist-setting.test.js   → ok
+node --check nutrition-config.js                       → OK
+node --check motor-v12.js                               → OK
+git diff --check                                        → pulito
+```
+`index.html`: nessuno strumento dedicato nel repository, script
+modificato estratto ed eseguito con `node --check` (stesso metodo già
+usato nei filoni precedenti); nessuna suite completa avviata.
+
+**Non modificati:** frequenze settimanali, carboidrati, verdure,
+migrazioni IndexedDB, ricette, UI grafica; `nutrition-config.js`
+(nessuna regola contestuale duplicata nel motore).
+
+**Problema adiacente annotato, non toccato:** `seedIfEmpty()` in
+`index.html` resta senza alcun chiamante nell'app (dead code più ampio di
+questo intervento, che ha rimosso solo i due blocchi in conflitto diretto
+con la colazione): decisione su un'eventuale rimozione completa lasciata
+a Cwe.
+
+**SHA finale:** `66721058828c6f10a494f731f84318154ab37ad3`.
 
 ---

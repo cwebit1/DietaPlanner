@@ -534,6 +534,35 @@ function costruisciNomeRicetta(ricetta,combinazione){
 }
 
 function metaIngrediente(nome){ return state.ingredientiMap[nome]||null; }
+/* Metadato canonico di idoneita'/porzione-fallback per la colazione. Un
+   solo punto di lettura per l'intero motore (nessun secondo formato letto
+   altrove): per gli ingredienti a doppio contesto (usati sia a colazione
+   sia nel pasto principale, es. Uova/Ricotta) "ancheColazione" e' la
+   struttura canonica; per gli ingredienti a colazione esclusiva resta il
+   campo di primo livello "sottoCategoriaColazione"/"porzione", piu'
+   semplice e non duplicato altrove. Ritorna la quantita' di fallback
+   nell'unita' NATIVA dell'ingrediente (pezzi per Uova, grammi per
+   Ricotta e simili) - la conversione in grammi-equivalenti per
+   porzioneColazione avviene sempre con grammiDaQuantita, mai duplicata
+   qui. */
+function metaColazioneCanonica(d){
+  const ac=d&&d.ancheColazione;
+  if(ac&&ac.sottoCategoriaColazione){
+    return {
+      gruppo:ac.sottoCategoriaColazione,
+      quantitaCatalogo:ac.porzioneMin!=null?ac.porzioneMin:(ac.porzione!=null?ac.porzione:null),
+      unita:ac.unitaPorzione||d.unitaPorzione||null
+    };
+  }
+  if(d&&d.sottoCategoriaColazione){
+    return {
+      gruppo:d.sottoCategoriaColazione,
+      quantitaCatalogo:d.porzione!=null?d.porzione:null,
+      unita:d.unitaPorzione||null
+    };
+  }
+  return null;
+}
 function grammiDaQuantita(meta,q){
   q=Number(q)||0;
   if(!meta) return q;
@@ -732,20 +761,20 @@ async function sincronizzaIngredientiIndexedDB(){
      migrazione canonica dei carboidrati (vedi inizializza) - passare dalla
      cache di sessione qui la scriverebbe con uno snapshot pre-migrazione,
      restando stantia per tutta la sessione anche dopo che la migrazione
-     completa. Il campo variante.porzioneColazione resta lo stesso letto
-     dal selettore colazione (nessuna modifica li'): qui cambia solo il
-     VALORE scritto, con precedenza al contesto 'colazione' del resolver
-     sul valore di catalogo, che resta fallback quando il resolver non ne
-     produce uno. */
+     completa. Il catalogo (metaColazioneCanonica) e' usato ESCLUSIVAMENTE
+     come fallback strutturale (idoneita' + default quando il resolver non
+     produce un valore contestuale), mai come override del valore
+     risolto quando questo esiste. */
   const resolvedPerSync=await caricaConfigurazioneNutrizionaleRisolta();
   const resolvedIngredienti=resolvedPerSync&&resolvedPerSync.ingredientConstraints||{};
   for(const [nome,d] of Object.entries(state.ingredientiMap)){
     const key=nome.toLowerCase();
     let b=baseByName.get(key);
     if(!b) b={id:'nri_'+slug(nome),nome};
+    const metaColazione=metaColazioneCanonica(d);
     Object.assign(b,{
       nome,gruppo:d.gruppo||'altro',sottotipo:d.sottotipo||null,
-      sottoCategoriaColazione:d.sottoCategoriaColazione||null,
+      sottoCategoriaColazione:metaColazione?metaColazione.gruppo:null,
       deperibilita:d.deperibilita||'bassa',conservazione:d.conservazione||null,
       porzione:d.porzione||null,unitaPorzione:d.unitaPorzione||null,
       pesoPorzioneGrammi:d.pesoPorzioneGrammi||null,pesoPezzo:d.pesoPezzo||null,
@@ -760,19 +789,29 @@ async function sincronizzaIngredientiIndexedDB(){
     let v=varByName.get(key);
     if(!v) v={id:'nrv_'+slug(nome),ingredienteId:b.id,nome};
     const alta=d.deperibilita==='alta',surg=d.conservazione==='surgelato',fresco=d.conservazione==='fresco';
-    const porzioneColazioneCatalogo=d.sottoCategoriaColazione?d.porzione||null:null;
+    /* Quantita' colazione NATIVA (pezzi per Uova, grammi per Ricotta e
+       simili): il contesto del resolver prevale sempre sul fallback di
+       catalogo, mai il contrario. La conversione in grammi-equivalenti
+       (per porzioneColazione, sempre in grammi - lo stesso contratto gia'
+       usato da nutrizioneSingoloComponenteColazione) passa sempre da
+       grammiDaQuantita, mai duplicata qui: e' la stessa funzione che
+       converte le quantita' del pasto principale, cosi' pz e g non
+       convivono mai in modo ambiguo sullo stesso campo. */
     const regolaContestuale=resolvedIngredienti[b.id];
     const quantitaColazioneContestuale=regolaContestuale&&regolaContestuale.contexts&&regolaContestuale.contexts.colazione&&regolaContestuale.contexts.colazione.quantity;
-    const porzioneColazioneEffettiva=porzioneColazioneCatalogo!==null&&quantitaColazioneContestuale!==null&&quantitaColazioneContestuale!==undefined
-      ?Number(quantitaColazioneContestuale)||porzioneColazioneCatalogo
-      :porzioneColazioneCatalogo;
+    const quantitaColazioneNativa=quantitaColazioneContestuale!==null&&quantitaColazioneContestuale!==undefined
+      ?Number(quantitaColazioneContestuale)
+      :(metaColazione?metaColazione.quantitaCatalogo:null);
+    const porzioneColazioneEffettiva=metaColazione&&quantitaColazioneNativa!==null&&quantitaColazioneNativa!==undefined
+      ?grammiDaQuantita(d,quantitaColazioneNativa)
+      :null;
     Object.assign(v,{
       ingredienteId:b.id,nome,
       /* Il selettore della colazione lavora sulle varianti, mentre la fonte
          autorevole conserva questi due dati sull'ingrediente. Li materializziamo
          qui ad ogni sincronizzazione, così un'installazione pulita e una già
          esistente ricevono esattamente le stesse opzioni. */
-      colazioneGruppo:d.sottoCategoriaColazione||null,
+      colazioneGruppo:metaColazione?metaColazione.gruppo:null,
       porzioneColazione:porzioneColazioneEffettiva,
       kcal100:Number(d.kcal)||0,prot100:Number(d.proteine)||0,
       carb100:Number(d.carboidrati)||0,grassi100:Number(d.grassi)||0,

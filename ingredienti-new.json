@@ -1,5 +1,5 @@
 {
-  "versione": 21,
+  "versione": 22,
   "ingredienti": {
     "Aglio": {
       "kcal": 149,
@@ -2186,6 +2186,12 @@
       "deperibilita": "alta",
       "sottotipo": "formaggio_fresco",
       "conservazione": "fresco",
+      "ancheColazione": {
+        "sottoCategoriaColazione": "proteine",
+        "nota": "doppia gestione: stesso ingrediente, due contesti con frequenze diverse",
+        "porzioneMin": 50,
+        "porzioneMax": 60
+      },
       "porzione": 100,
       "gradimento": 1,
       "stock": 1,
