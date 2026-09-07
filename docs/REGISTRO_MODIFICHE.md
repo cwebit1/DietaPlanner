@@ -844,3 +844,27 @@ tutte le immagini valide.
 **SHA remoto dell'intervento:** `707e93dd01340fa103918aa0ee8dbc4472de3b74`.
 
 ---
+
+## 5. Caroselli solidali e rifinitura header — 7 settembre 2026
+
+**Correzioni richieste da Cwe:** ridurre lo spazio inutilizzato nell'header,
+ingrandire leggermente il marchio, sostituire il lucchetto, mantenere ferme le
+frecce durante lo swipe e far scorrere insieme fotografia e testo. Aggiungere
+primo, secondo e contorno a pranzo e cena con descrizioni e dosi.
+
+**Intervento effettuato:** l'header mobile è stato compattato; il lucchetto è
+ora un'icona SVG lineare. Ogni pasto contiene un carosello di tre pannelli nei
+quali immagine, tipologia, titolo, ingredienti e dosi scorrono come un'unica
+unità, mentre la freccia resta ancorata alla card. Pranzo e cena presentano le
+tre tipologie richieste. I dati e le immagini restano puramente dimostrativi.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html` e tutti i file funzionali restano invariati.
+
+**Verifiche:** parsing dello script inline; `git diff --check`; tre caroselli da
+tre pannelli, nove lucchetti SVG e immagini valide; click della freccia con
+passaggio al secondo pannello e posizione della freccia invariata.
+
+**SHA remoto dell'intervento:** `605ee1900af56b4b81e3e83aa08e1a136a8c7451`.
+
+---
