@@ -839,11 +839,15 @@ function invalidaConfigRuntime(){ state.runtimeConfigCache=null; }
 function selezioneCarboidratiPersistita(counts,origins,states,explicitZeroKeys){
   counts=counts||{};origins=origins||{};states=states||{};
   if(Object.keys(states).length)return {states:clone(states),explicitZeroKeys:(explicitZeroKeys||[]).slice()};
+  /* Punto canonico unico (N.legacyCarbohydrateUserCounts): stessa
+     derivazione usata dall'interfaccia Set per isolare, nel formato storico
+     piu' vecchio, le sole caselle scelte davvero dall'utente da quelle
+     aggiunte dal completamento automatico ("Completa e fissa"/"Casuale"). */
+  const userCounts=N.legacyCarbohydrateUserCounts(counts,origins);
   const migrated={};
-  for(const [key,value] of Object.entries(counts)){
-    const n=Math.max(0,Math.trunc(Number(value)||0)),source=Array.isArray(origins[key])?origins[key]:null;
-    if(n>0&&(!source||source.some(x=>x==='utente')))migrated[key]={mode:'fixed',count:n};
-    else migrated[key]={mode:'auto',count:0};
+  for(const key of Object.keys(counts)){
+    const n=userCounts[key]||0;
+    migrated[key]=n>0?{mode:'fixed',count:n}:{mode:'auto',count:0};
   }
   for(const key of explicitZeroKeys||[])migrated[key]={mode:'excluded',count:0};
   return {states:migrated,explicitZeroKeys:(explicitZeroKeys||[]).slice()};

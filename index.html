@@ -3183,12 +3183,8 @@ document.getElementById('btnResetColazionePref')?.addEventListener('click', asyn
 async function caricaConfigCarboidrati(){
   const [rec,originiRec,statiRec,zeroRec]=await Promise.all([getOne('impostazioni','configCarboidrati'),getOne('impostazioni','configCarboidratiOrigini'),getOne('impostazioni','configCarboidratiStati'),getOne('impostazioni','configCarboidratiExplicitZeroKeys')]);
   inizializzaStatoCaselleCarb();
-  const raw=rec&&rec.valore||{},origini=cloneConfigurazione(originiRec&&originiRec.valore||{}),hasOrigins=Object.values(origini).some(v=>Array.isArray(v)&&v.length),counts={};
-  for(const tipo of CONFIG_CARB_TIPI){
-    const key=tipo.chiave,n=Math.max(0,Math.trunc(Number(raw[key])||0));
-    if(hasOrigins){const userCount=(origini[key]||[]).filter(x=>x==='utente').length;if(userCount>0)counts[key]=userCount;}else if(n>0)counts[key]=n;
-  }
-  const normalized=globalThis.DietaPlannerNutritionConfig.normalizeCarbohydrateSelection({counts,states:statiRec&&statiRec.valore||{},explicitZeroKeys:zeroRec&&zeroRec.valore||[]});
+  const raw=rec&&rec.valore||{},origini=cloneConfigurazione(originiRec&&originiRec.valore||{}),NCFG=globalThis.DietaPlannerNutritionConfig,counts=NCFG.legacyCarbohydrateUserCounts(raw,origini);
+  const normalized=NCFG.normalizeCarbohydrateSelection({counts,states:statiRec&&statiRec.valore||{},explicitZeroKeys:zeroRec&&zeroRec.valore||[]});
   for(const tipo of CONFIG_CARB_TIPI){
     const key=tipo.chiave,st=normalized[key]||{mode:'auto',count:0};statiCaselleCarb[key]={mode:st.mode,count:st.mode==='fixed'?st.count:0};
     if(st.mode==='fixed'){statoCaselleCarb[key]=st.count;const old=Array.isArray(origini[key])?origini[key].slice(0,st.count):[];origineCaselleCarb[key]=old.length===st.count?old:Array(st.count).fill('utente');}

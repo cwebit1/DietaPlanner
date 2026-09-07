@@ -254,6 +254,44 @@
     return out;
   }
 
+  /* Migrazione del formato storico piu' vecchio (precedente all'introduzione
+     di configCarboidratiStati): contava un totale di caselle carboidrato
+     cliccate per chiave con un array "origine" (per indice) 'utente' o
+     'sistema'. Il vecchio pulsante Salva completava sempre automaticamente
+     il totale a CONFIG_CARB_TOTALE_OBBLIGATORIO prima di scrivere, quindi il
+     conteggio grezzo per chiave puo' includere caselle aggiunte dal
+     completamento automatico ("Completa e fissa"/"Casuale"), mai scelte
+     dall'utente.
+     L'array origine e' scritto un elemento per casella (stessa lunghezza del
+     conteggio, vedi origineCaselleCarb/impostaModalitaCarb): quando la
+     lunghezza combacia con il conteggio grezzo, la traccia e' affidabile e
+     si contano solo le caselle davvero di origine 'utente' (il resto,
+     'sistema', equivale ad "assenza di scelta", mai un FIXED). Quando invece
+     manca la traccia per quella chiave, o la sua lunghezza non combacia col
+     conteggio (dato incompleto/inconsistente), non c'e' modo affidabile di
+     isolare le sole caselle utente: si mantiene il comportamento storico
+     prudente, l'intero conteggio resta FIXED se esiste anche una sola prova
+     di scelta manuale, coerente con l'unico altro punto che leggeva questo
+     stesso formato prima dell'introduzione degli stati canonici. Punto
+     canonico unico: sia l'interfaccia (Set) sia il motore devono derivare
+     gli stessi conteggi da questa funzione, mai duplicare la logica
+     altrove. */
+  function legacyCarbohydrateUserCounts(rawCounts,origins){
+    rawCounts=rawCounts||{};origins=origins||{};
+    const counts={};
+    for(const key of Object.keys(rawCounts)){
+      const n=Math.max(0,Math.trunc(Number(rawCounts[key])||0));
+      const source=Array.isArray(origins[key])?origins[key]:null;
+      if(source&&source.length===n){
+        const userCount=source.filter(x=>x==='utente').length;
+        if(userCount>0) counts[key]=userCount;
+      }else if(n>0&&(!source||source.some(x=>x==='utente'))){
+        counts[key]=n;
+      }
+    }
+    return counts;
+  }
+
   function normalizeCarbohydrateSelection(input){
     input=input||{};
     const counts=input.counts||input.configCarboidrati||{};
@@ -497,6 +535,7 @@
     PDF_CONTEXT_RULES_EXACT:clone(PDF_CONTEXT_RULES_EXACT),
     PDF_CONTEXT_RULES_SUBTYPE:clone(PDF_CONTEXT_RULES_SUBTYPE),
     contextDefaultsForIngredient,
+    legacyCarbohydrateUserCounts,
     normalizeCarbohydrateSelection,
     resolveCarbohydratePlan:function(input){const errors=[];const plan=resolveCarbohydratePlan(input,errors);return Object.assign({valid:errors.length===0,errors},plan);},
     vegetableCoverage,
