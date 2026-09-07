@@ -886,3 +886,22 @@ il contenitore della riga resta compatto.
 **SHA remoto dell'intervento:** `d2ada75daafc39e153c0e632b912a7df615ffb08`.
 
 ---
+
+## 7. Allineamento interno pulsante Dettagli — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** allineare verticalmente icona, testo e freccia
+nel pulsante verde `Dettagli`.
+
+**Intervento effettuato:** il pulsante usa ora una griglia interna a tre colonne
+con centratura verticale comune e una span dedicata al testo, eliminando le
+diverse baseline dei tre elementi.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`.
+
+**Verifiche:** parsing script inline, `git diff --check` e misura geometrica nel
+browser: i tre centri verticali coincidono, scarto rilevato `0 px`, su tutti i
+nove pulsanti generati dai caroselli.
+
+**SHA remoto dell'intervento:** `661846caab59d00dde5a9b54842555e57af0ab5f`.
+
+---
