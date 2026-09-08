@@ -21,25 +21,25 @@
     @media(max-width:430px){.top{height:62px;padding:0 7px}.lock{width:34px;height:34px}.lock svg{width:100%;height:100%}.dish-row{grid-template-columns:minmax(0,1fr) 34px}.actions.has-restore{gap:4px;grid-template-columns:.72fr .82fr 1.25fr}.actions.has-restore .action{font-size:7.5px}.actions.has-restore .action.primary{font-size:8.5px}}
   </style>
 </head>
-<body>
-  <div class="app">
-    <header class="top"><div><div class="brand">DietaPlanner</div><div class="tagline">Piani sani, giorni migliori</div></div><div class="welcome"><span class="leaf">❧</span><span>Ciao Cwe,<br>buon appetito</span></div></header>
+<body data-ui-prototype="dietaplanner-restyling" data-ui-version="1">
+  <div class="app" data-ui-role="app-shell">
+    <header class="top" data-ui-role="app-header"><div><div class="brand" data-bind="app.name">DietaPlanner</div><div class="tagline" data-bind="app.tagline">Piani sani, giorni migliori</div></div><div class="welcome" data-bind="user.greeting"><span class="leaf">❧</span><span>Ciao Cwe,<br>buon appetito</span></div></header>
     <main>
-      <nav class="date-strip" aria-label="Giorni della settimana"><button class="arrow">‹</button><button class="day">Dom 6</button><button class="day active">Lun 7</button><button class="day">Mar 8</button><button class="day">Mer 9</button><button class="day">Gio 10</button><button class="day">Ven 11</button><button class="day">Sab 12</button><button class="arrow">›</button></nav>
-      <div class="heading"><h1>Lunedì 7 Settembre</h1><div class="tools"><button class="calendar">▣</button><button class="copy"><span>▣</span> Copia giorno</button></div></div>
+      <nav class="date-strip" aria-label="Giorni della settimana" data-ui-role="week-selector" data-bind="plan.week"><button class="arrow" data-action="previous-week">‹</button><button class="day">Dom 6</button><button class="day active" data-state="selected">Lun 7</button><button class="day">Mar 8</button><button class="day">Mer 9</button><button class="day">Gio 10</button><button class="day">Ven 11</button><button class="day">Sab 12</button><button class="arrow" data-action="next-week">›</button></nav>
+      <div class="heading" data-ui-role="selected-day-header"><h1 data-bind="plan.selectedDate">Lunedì 7 Settembre</h1><div class="tools"><button class="calendar" data-action="open-calendar">▣</button><button class="copy" data-action="copy-day"><span>▣</span> Copia giorno</button></div></div>
       <div class="caption">“Buone abitudini oggi, grandi risultati domani.”</div>
       <section class="meals">
-        <article class="meal">
+        <article class="meal" data-ui-role="meal-card" data-meal-slot="breakfast">
           <header class="meal-head"><span class="meal-icon sun">☀</span><span class="meal-title">COLAZIONE</span><span class="time">07:00 – 09:00</span><span class="chevron">⌄</span></header>
           <div class="photo-rail"><div class="slide"><img src="assets/visual-demo/colazione-overnight-oats.webp" alt="Overnight oats con frutti di bosco"><button class="slide-next">›</button></div><div class="slide"><img src="assets/visual-demo/pranzo-spaghetti-vongole.webp" alt="Secondo piatto dimostrativo"></div></div><div class="dots"><i class="dot active"></i><i class="dot"></i><i class="dot"></i></div>
           <div class="meal-body"><div class="dish-row"><h2 class="dish">Overnight oats con frutti di bosco</h2><button class="lock">♙</button></div><div class="ingredients"><div class="ingredient"><span class="food-icon">🌾</span><span>Avena<small>60 g</small></span></div><div class="ingredient"><span class="food-icon">🥛</span><span>Yogurt greco<small>150 g</small></span></div><div class="ingredient"><span class="food-icon">🫐</span><span>Frutti di bosco<small>100 g</small></span></div></div><div class="actions"><button class="action"><b>⟳</b>Cambia piatto</button><button class="action primary"><b>☷</b><span class="action-label">Dettagli</span><span class="right">›</span></button></div></div>
         </article>
-        <article class="meal">
+        <article class="meal" data-ui-role="meal-card" data-meal-slot="lunch">
           <header class="meal-head"><span class="meal-icon sun">☀</span><span class="meal-title">PRANZO</span><span class="time">12:30 – 14:30</span><span class="chevron">⌄</span></header>
           <div class="photo-rail"><div class="slide"><img src="assets/visual-demo/pranzo-spaghetti-vongole.webp" alt="Spaghetti integrali alle vongole"><button class="slide-next">›</button></div><div class="slide"><img src="assets/visual-demo/cena-ceci-radicchio.webp" alt="Secondo piatto dimostrativo"></div></div><div class="dots"><i class="dot active"></i><i class="dot"></i><i class="dot"></i></div>
           <div class="meal-body"><div class="dish-row"><h2 class="dish">Spaghetti integrali alle vongole</h2><button class="lock">♙</button></div><div class="ingredients"><div class="ingredient"><span class="food-icon">🌾</span><span>Spaghetti integrali<small>80 g</small></span></div><div class="ingredient"><span class="food-icon">🐚</span><span>Vongole<small>150 g</small></span></div><div class="ingredient"><span class="food-icon">🌿</span><span>Prezzemolo<small>q.b.</small></span></div></div><div class="actions"><button class="action"><b>⟳</b>Cambia piatto</button><button class="action primary"><b>☷</b><span class="action-label">Dettagli</span><span class="right">›</span></button></div></div>
         </article>
-        <article class="meal">
+        <article class="meal" data-ui-role="meal-card" data-meal-slot="dinner">
           <header class="meal-head"><span class="meal-icon">☾</span><span class="meal-title">CENA</span><span class="time">19:30 – 21:30</span><span class="chevron">⌄</span></header>
           <div class="photo-rail"><div class="slide"><img src="assets/visual-demo/cena-ceci-radicchio.webp" alt="Ceci al rosmarino con radicchio"><button class="slide-next">›</button></div><div class="slide"><img src="assets/visual-demo/colazione-overnight-oats.webp" alt="Secondo piatto dimostrativo"></div></div><div class="dots"><i class="dot active"></i><i class="dot"></i><i class="dot"></i></div>
           <div class="meal-body"><div class="dish-row"><h2 class="dish">Ceci al rosmarino con radicchio variegato</h2><button class="lock">♙</button></div><div class="ingredients"><div class="ingredient"><span class="food-icon">🫘</span><span>Ceci<small>150 g</small></span></div><div class="ingredient"><span class="food-icon">🌿</span><span>Rosmarino<small>q.b.</small></span></div><div class="ingredient"><span class="food-icon">🥬</span><span>Radicchio variegato<small>100 g</small></span></div></div><div class="actions"><button class="action"><b>⟳</b>Cambia piatto</button><button class="action primary"><b>☷</b><span class="action-label">Dettagli</span><span class="right">›</span></button></div></div>
@@ -47,7 +47,22 @@
       </section>
     </main>
   </div>
-  <nav class="bottom" aria-label="Navigazione principale"><button class="nav active"><i>🍴</i>Pasto</button><button class="nav"><i>▣</i>Menu</button><button class="nav"><i>🛒</i>Spesa</button><button class="nav"><i>⚙</i>Set</button></nav>
+  <nav class="bottom" aria-label="Navigazione principale" data-ui-role="bottom-navigation"><button class="nav active" data-route="meal" data-state="selected"><i>🍴</i>Pasto</button><button class="nav" data-route="menu"><i>▣</i>Menu</button><button class="nav" data-route="shopping"><i>🛒</i>Spesa</button><button class="nav" data-route="settings"><i>⚙</i>Set</button></nav>
+  <script type="application/json" id="restyling-merge-contract">
+  {
+    "scope": "visual-only",
+    "functionalSources": "external-session",
+    "components": {
+      "week-selector": ["plan.week", "plan.selectedDate"],
+      "meal-card": ["meal.slot", "meal.timeWindow", "meal.original", "meal.alternatives"],
+      "horizontal-carousel": ["dish.imagePath", "dish.kind", "dish.title", "dish.ingredients"],
+      "vertical-rotation": ["meal.original", "meal.alternatives", "meal.current"],
+      "bottom-navigation": ["route.current"]
+    },
+    "actions": ["previous-week", "next-week", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "toggle-lock"],
+    "invariants": ["functional-databases-untouched", "visual-content-linked-by-id-later", "original-meal-retained-for-restore"]
+  }
+  </script>
   <script>
     (()=>{
       const root='assets/visual-demo/';
@@ -80,6 +95,8 @@
         const oldDots=meal.querySelector('.dots');
         const carousel=document.createElement('div');
         carousel.className='visual-carousel';
+        carousel.dataset.uiRole='meal-visual';
+        carousel.dataset.bind='meal.current';
         const track=document.createElement('div');
         track.className='visual-track';
         const rotated=[...data[mealIndex].slice(1),data[mealIndex][0]];
@@ -94,13 +111,19 @@
             const next=entries[(index+1)%entries.length];
             const pane=document.createElement('section');
             pane.className='visual-pane';
+            pane.dataset.uiRole='dish-slide';
+            pane.dataset.dishKind=entry.kind.toLowerCase();
+            pane.dataset.bind='dish.imagePath,dish.title,dish.ingredients';
             pane.innerHTML=`<div class="visual-photo-row"><img class="visual-main" src="${root+entry.img}" alt="${entry.title}"><img class="visual-peek" src="${root+next.img}" alt=""></div><div class="dots">${entries.map((_,dot)=>`<i class="dot${dot===index?' active':''}"></i>`).join('')}</div>`;
             const body=baseBody.cloneNode(true);
             body.querySelector('.dish').innerHTML=`<span class="dish-kind">${entry.kind}</span>${entry.title}`;
             body.querySelector('.ingredients').innerHTML=entry.items.map(item=>`<div class="ingredient"><span class="food-icon">${item[0]}</span><span>${item[1]}<small>${item[2]}</small></span></div>`).join('');
             body.querySelector('.lock').innerHTML=lock;
+            body.querySelector('.lock').dataset.action='toggle-lock';
             const actions=body.querySelector('.actions');
             const change=actions.querySelector('.action:not(.primary)');
+            change.dataset.action='change-meal';
+            actions.querySelector('.primary').dataset.action='open-details';
             if(setIndex>0){
               actions.classList.add('has-restore');
               change.classList.add('change-compact');
@@ -108,6 +131,7 @@
               const restore=document.createElement('button');
               restore.className='action restore';
               restore.type='button';
+              restore.dataset.action='restore-meal';
               restore.textContent='Ripristina';
               actions.querySelector('.primary').before(restore);
             }
@@ -121,6 +145,7 @@
         nextButton.className='carousel-next';
         nextButton.type='button';
         nextButton.setAttribute('aria-label','Piatto successivo');
+        nextButton.dataset.action='next-dish';
         nextButton.textContent='›';
         carousel.append(track,nextButton);
         oldRail.replaceWith(carousel);
