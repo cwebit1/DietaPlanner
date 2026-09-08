@@ -18,6 +18,27 @@ una nuova intestazione di primo livello in fondo al file.
 
 ---
 
+## 11. Rifinitura card pasti — 8 settembre 2026
+
+**Correzioni richieste da Cwe:** portare a 10 px il margine inferiore del
+carosello speciale e rimuovere i chevron di espansione dalle intestazioni dei
+pasti, perché le card non useranno quel controllo.
+
+**Intervento effettuato:** il margine inferiore delle immagini speciali è stato
+impostato a 10 px. I chevron sono stati rimossi da Colazione, Pranzo e Cena e la
+griglia delle intestazioni è stata ricomposta senza la colonna che riservava
+loro spazio.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html`, motore e database restano invariati.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline riuscito;
+assenza dei chevron nel markup verificata.
+
+**File modificato:** `restyling-preview.html`.
+
+---
+
 # Filone: Migrazione Set carboidrati (formato storico → stato canonico)
 
 Riguarda: `configCarboidrati`, `configCarboidratiOrigini`,
@@ -1465,99 +1486,6 @@ git diff --check                                 → pulito
 
 ---
 
-# Filone: Esclusione categoria proteica dal secondo pasto dello stesso giorno
-
-Riguarda: `motor-v12.js:opzioniProteinaPerSlot`/`risolviSettimanaSequenziale`
-- regola di Cwe: «Quando una categoria proteica è stata scelta per un
-pasto, deve essere esclusa dal pool del secondo pasto dello stesso
-giorno» (default 2 fonti proteiche/giorno).
-
-## 1. Commit `63de55b` — rimossa la riapertura del pool e la registrazione di macro incidentali
-
-**Difetto riscontrato (due punti distinti, entrambi in
-`opzioniProteinaPerSlot`/`risolviSettimanaSequenziale`):**
-1. `opzioniProteinaPerSlot`: quando il pool ammesso, dopo aver escluso la
-   categoria già usata nel giorno, risultava vuoto, il codice tornava un
-   errore esplicito **solo se** le categorie ammesse totali erano più di
-   3 (`allowed.length>3`). Con 3 o meno categorie ammesse (es. profilo
-   vegano: solo "legumi" ammesso), il codice **riapriva il pool
-   ignorando l'esclusione** (`pool=allowed.filter(...)` senza il
-   controllo `usateGiorno`), permettendo di riproporre silenziosamente
-   la stessa categoria già scelta per il primo pasto.
-2. `risolviSettimanaSequenziale`: dopo aver scelto la ricetta, il
-   giorno veniva registrato in `proteineGiorno` con
-   `macroProteicheRicette(candidato.ricette)` — **tutte** le macro
-   proteiche incidentalmente presenti nella ricetta (es. una ricetta con
-   sia carne sia formaggio), non solo la categoria `target`
-   effettivamente cercata e scelta per lo slot. Questo poteva sia
-   sovra-escludere (categorie mai scelte come target) sia produrre
-   ambiguità su quale categoria andasse davvero esclusa dal secondo
-   pasto.
-
-**Correzione applicata:**
-1. Rimossa interamente la riapertura del pool: se dopo l'esclusione
-   della categoria già usata (e il rispetto dei massimi settimanali)
-   non resta nulla di ammesso, `opzioniProteinaPerSlot` restituisce
-   sempre un errore esplicito, indipendentemente dal numero di categorie
-   disponibili — mai un fallback che duplichi la categoria.
-2. `risolviSettimanaSequenziale` registra in `proteineGiorno`
-   esclusivamente `target` (la categoria effettivamente scelta per lo
-   slot, già disponibile in variabile locale), mai l'insieme di macro
-   incidentali della ricetta. Una proteina secondaria presente
-   incidentalmente in una ricetta continua a contribuire ai cap/conteggi
-   nutrizionali tramite `accumulaConteggiPasto` (invariato, chiamata
-   subito sotto), ma non influenza più l'esclusione per il secondo
-   pasto del giorno.
-
-**Percorso Casuale/Completa del Set (`engine-core.js:buildProteinGrid`),
-verificato come richiesto:** già corretto, non modificato. Usa vero
-backtracking (`assegna(idx)`, con annullamento esplicito
-`counts[macro]--;stato[slot.day][slot.pasto]=null` al fallimento), mai
-un fallback che riusa la categoria del pasto già assegnato nello stesso
-giorno; se i vincoli sono incompatibili restituisce `errors` non vuoto e
-`cells={}`, mai una griglia formalmente completa ma con un duplicato. Il
-commento della funzione documenta esplicitamente questo stesso principio
-già in vigore prima di questo intervento.
-
-**Casistiche esplicitamente non implementate (come richiesto):**
-nessun controllo aggiunto per impedire all'utente di selezionare due
-volte la stessa categoria a mano nella stessa giornata nel Set — la UI
-ha una sola casella per giorno/categoria, il duplicato manuale non è
-producibile.
-
-**File modificati:** `motor-v12.js` (`opzioniProteinaPerSlot`,
-`risolviSettimanaSequenziale`), `tests/lotto-proteine-giorno-esclusione.test.js`
-(nuovo).
-
-**Test eseguito (controlli consentiti):**
-```
-node tests/lotto-proteine-giorno-esclusione.test.js  → ok (fallisce sul codice precedente: "legumi" ripetuto pranzo/cena con profilo vegano, verificato; passa dopo la correzione)
-node --check motor-v12.js                              → OK
-node --check engine-core.js                             → OK
-git diff --check                                        → pulito
-```
-Il test genera settimane reali con `generaPianoSettimana()` (API
-pubblica) e legge `categoriaTarget` direttamente dallo store `piano`,
-mai una ricostruzione della logica di esclusione. Copre sia il caso
-ordinario (profilo onnivoro, 5 categorie ammesse: nessuna violazione
-attesa né osservata) sia il caso limite deterministico che riproduce il
-difetto (profilo vegano, una sola categoria ammessa, 2 fonti/giorno
-richieste: matematicamente infattibile, deve fallire con errore
-esplicito, mai con un giorno a categoria duplicata). Verificato anche
-che `tests/lotto-j-una-fonte-proteica-giorno.test.js` (scenario
-correlato, 1 fonte/giorno) continua a passare, per igiene, pur non
-essendo nella lista dei controlli consentiti di questo intervento.
-
-**Non modificati:** frequenze settimanali, ricette, ingredienti,
-carboidrati, residuo V/S/G, olio, cataloghi. Nessun risolutore globale
-della settimana, nessun backtracking dei pasti già chiusi, nessuna
-rigenerazione completa della settimana: generazione sequenziale
-invariata, un pasto si chiude prima che il successivo inizi. Nessuna
-funzione interna esportata per i test.
-
-**SHA finale:** `63de55b6425d984c777322f99b46417253eac26a`.
-
----
 ## 3. Bottom bar della preview: set SVG e navigazione a swipe — 8 settembre 2026
 
 **Correzione richiesta da Cwe:** sostituire i glifi eterogenei della bottom bar
@@ -1587,6 +1515,7 @@ gli interventi dell'altra sessione.
 **SHA dell'intervento grafico:** `539bb709f9ecb565ae6269f4fbe31da588ee2d21`.
 
 ---
+
 ## 4. Completamento della bottom bar a sei icone — 8 settembre 2026
 
 **Correzione richiesta da Cwe:** aggiungere alla nuova bottom bar le icone
@@ -1613,6 +1542,7 @@ Node.js riuscito; rilevate correttamente le sei route `meal`, `menu`, `recipes`,
 **SHA dell'intervento grafico:** `7867d9455e73e78584b48546e4337738decd210a`.
 
 ---
+
 ## 5. Tracciamento continuo dello swipe nella bottom bar — 8 settembre 2026
 
 **Difetto segnalato da Cwe:** lo swipe tra le icone veniva risolto soltanto al
@@ -1638,6 +1568,7 @@ con Node.js riuscito.
 **SHA dell'intervento grafico:** `094b636871b6cd6f896bde4c87ad7a557613e70a`.
 
 ---
+
 ## 6. Inversione del verso dello swipe nella bottom bar — 8 settembre 2026
 
 **Difetto segnalato da Cwe:** il movimento della selezione risultava opposto
@@ -1660,6 +1591,7 @@ Node.js riuscito.
 **SHA dell'intervento grafico:** `c2859084aba173d047cfe996044ffc4241c0a9d7`.
 
 ---
+
 ## 7. Modalità piatti speciali e carosello infinito — 8 settembre 2026
 
 **Obiettivo autorizzato da Cwe:** usare la stella accanto al lucchetto per
@@ -1698,6 +1630,7 @@ Node.js riuscito; presenza e formato dei tre asset controllati.
 **SHA dell'intervento grafico:** `05262dfc67f5831211c47c7094be0ef16e527718`.
 
 ---
+
 ## 8. Rifinitura del frame e del loop dei piatti speciali — 8 settembre 2026
 
 **Difetti segnalati da Cwe:** la cornice animata non comprendeva il titolo del
@@ -1726,6 +1659,7 @@ Node.js riuscito.
 **SHA dell'intervento grafico:** `3a9f0e4bc818881a34391f9484391a9d3dc6e351`.
 
 ---
+
 ## 9. Stato persistente e rotazione della stella speciale — 8 settembre 2026
 
 **Obiettivo autorizzato da Cwe:** conservare separatamente il pasto speciale
@@ -1758,6 +1692,7 @@ Node.js riuscito; presenza dei metadata e dell'animazione verificata.
 **SHA dell'intervento grafico:** `4cab93570292b61b207592e1b79ca8a88476d24c`.
 
 ---
+
 ## 10. Margine inferiore del carosello speciale — 8 settembre 2026
 
 **Correzione richiesta da Cwe:** dopo la rimozione dei pallini, evitare che la
