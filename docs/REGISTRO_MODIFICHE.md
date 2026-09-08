@@ -979,3 +979,23 @@ di `Cambia` e `Ripristina` restano invariati.
 **SHA remoto dell'intervento:** `688639ab761adac52bbef1c9613cc3ff36ede806`.
 
 ---
+
+## 11. Rotaia verticale lineare — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** ottenere lo stesso comportamento continuo del
+carosello orizzontale, ruotato sull'asse verticale, senza fading,
+sovrapposizioni o intervalli bianchi.
+
+**Intervento effettuato:** la precedente coppia di animazioni indipendenti è
+stata sostituita da una sola rotaia temporanea contenente i due pasti adiacenti,
+bordo contro bordo. L'intera rotaia trasla esattamente di metà della propria
+altezza, equivalente a un pannello: `Cambia` in un verso e `Ripristina` nel
+verso opposto. Non vengono animate opacità e distanze eccedenti il pannello.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`.
+
+**Verifiche:** parsing dello script inline e `git diff --check`.
+
+**SHA remoto dell'intervento:** `47110f8f6fc77a76f9293ac459c101cb9e70e144`.
+
+---
