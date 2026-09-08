@@ -1742,15 +1742,17 @@ Node.js riuscito.
 
 ---
 
-## 14. Ripristino header e bottom bar del restyling — 8 settembre 2026
+## 14. Cornice fissa del restyling — 8 settembre 2026
 
-**Correzione richiesta da Cwe:** mantenere il nuovo Menù editoriale ma
-ripristinare header e bottom bar approvati prima del confronto con il mockup A.
+**Correzione richiesta da Cwe:** mantenere il nuovo Menù editoriale, il nuovo
+header compatto e la nuova bottom bar, rendendo entrambe le cornici fisse mentre
+scorre esclusivamente il contenuto centrale.
 
-**Intervento effettuato:** ripristinati markup, ordine avatar/saluto, misure e
-spaziature responsive dell'header precedente. Ripristinate anche altezza e
-padding della bottom navigation originale. La nuova composizione del Menù non è
-stata modificata.
+**Intervento effettuato:** annullato il precedente ripristino estetico; sono
+stati mantenuti proporzioni, disposizione e ordine del nuovo header. Header e
+bottom navigation sono fissati rispettivamente al bordo superiore e inferiore,
+con compensazione dello spazio del contenuto su desktop e mobile. La nuova
+composizione del Menù non è stata modificata.
 
 **Separazione confermata:** `index.html`, motore, database e IndexedDB restano
 invariati.
@@ -1760,7 +1762,7 @@ invariati.
 
 **File modificato:** `restyling-preview.html`.
 
-**SHA dell'intervento grafico:** `b6639511f0cbeec5e3516f245b6323fa42e067ec`.
+**SHA dell'intervento grafico:** `8aa2d170a9cc67f09288b105bd9ad506f3462e79`.
 
 ---
 
