@@ -1053,3 +1053,21 @@ sono stati modificati `index.html`, motore, database o IndexedDB.
 **SHA remoto dell'intervento:** `1ae24fdd2ba2afe685b39793958d03c459aa57ec`.
 
 ---
+
+## 15. Blocco gesture, profilo utente e calendario nativo — 8 settembre 2026
+
+**Richieste di Cwe:** portare a 16 px il margine della scheda Dettagli; consentirne la chiusura trascinandola verso il basso quando è già al proprio top; predisporre l'avatar Google e rendere più arioso il saluto con testo esatto “Buon Appetito!”; rendere funzionale lo swipe orizzontale del calendario usando come riferimento la logica già collaudata in `index.html`.
+
+**Intervento effettuato:** la scheda Dettagli usa 16 px uniformi e segue il dito verso il basso solo quando `scrollTop === 0`, chiudendosi oltre la soglia e tornando in posizione negli altri casi. L'header espone `user.googleAvatarUrl`, un segnaposto circolare e due righe separate per il saluto. Il calendario è stato riallineato al modello di produzione: corsia nativa orizzontale di 181 giorni (±90), inerzia touch, selezione per data locale, ricentratura del giorno attivo e frecce settimanali.
+
+**Correzione emersa dai test:** una prima implementazione animava manualmente sette giorni e poteva lasciare traslate le aree cliccabili. È stata rimossa e sostituita con lo scorrimento nativo già usato da `index.html`, evitando due comportamenti da riconciliare nel merge futuro.
+
+**Separazione confermata:** il blocco modifica esclusivamente `restyling-preview.html`; `index.html`, motore, database e IndexedDB non sono stati toccati.
+
+**Verifiche:** parsing JavaScript e contratto JSON; `git diff --check`; GitHub Pages con 181 pulsanti e overflow orizzontale nativo; frecce Lun 7 → Lun 14, selezione Mer 16 e ritorno settimanale a Mer 9; avatar e saluto; margine superiore Dettagli 16 px; apertura/chiusura; porzioni 1 → 2 e dose 60 g → 120 g; quattro icone social con canali ed etichette accessibili.
+
+**SHA del blocco pubblicato:** `6d67c572f56a4d3fab523e1de9543e53825f3893`.
+
+**SHA della correzione finale calendario:** `7fa1ffd3f2d9b0e8cd890b6d4a75f2f13732f644`.
+
+---
