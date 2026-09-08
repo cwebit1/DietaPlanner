@@ -1698,3 +1698,31 @@ Node.js riuscito; presenza e formato dei tre asset controllati.
 **SHA dell'intervento grafico:** `05262dfc67f5831211c47c7094be0ef16e527718`.
 
 ---
+## 8. Rifinitura del frame e del loop dei piatti speciali — 8 settembre 2026
+
+**Difetti segnalati da Cwe:** la cornice animata non comprendeva il titolo del
+pasto; il carosello mostrava un ritorno a capo invece della prosecuzione
+apparente `1 → 2 → 3 → 1`; i pallini non erano desiderati nella modalità
+speciale. Il ridimensionamento richiesto riguardava esclusivamente il bagliore
+rosso, non il pulsante né il testo.
+
+**Correzione applicata:** la cornice multicolore è stata spostata sull'intera
+card, includendo l'intestazione `COLAZIONE`, `PRANZO` o `CENA`. I pallini vengono
+nascosti soltanto durante la visualizzazione degli speciali. Il raccordo tra le
+copie terminali del carosello forza ora un riposizionamento istantaneo,
+disattivando temporaneamente lo `scroll-behavior: smooth`: prima e ultima copia
+sono visivamente identiche e non viene mostrato alcun riavvolgimento. Il
+pulsante `Imposta come pasto` conserva dimensioni e testo approvati; sono stati
+ridotti soltanto spessore, espansione, ombra e pulsazione dell'alone rosso.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html`, motore, database e IndexedDB restano invariati.
+
+**Verifiche:** `git diff --check` pulito e parsing dello script inline con
+Node.js riuscito.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `3a9f0e4bc818881a34391f9484391a9d3dc6e351`.
+
+---
