@@ -1558,3 +1558,32 @@ funzione interna esportata per i test.
 **SHA finale:** `63de55b6425d984c777322f99b46417253eac26a`.
 
 ---
+## 3. Bottom bar della preview: set SVG e navigazione a swipe — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** sostituire i glifi eterogenei della bottom bar
+con icone grandi appartenenti allo stesso linguaggio grafico, monocromatiche e
+leggermente ombreggiate; evidenziare a colore la pagina selezionata e consentire
+il passaggio tra le voci con uno swipe orizzontale.
+
+**Intervento effettuato:** le quattro voci `Pasto`, `Menu`, `Spesa` e `Set`
+utilizzano ora SVG lineari coordinati. Le icone inattive mantengono una tinta
+salvia chiara, mentre quella attiva assume il colore oro, viene leggermente
+sollevata e conserva l'indicatore circolare. La barra riconosce lo swipe
+orizzontale verso sinistra o destra, seleziona rispettivamente la voce seguente
+o precedente e ignora i gesti prevalentemente verticali. Il click diretto sulle
+singole voci resta disponibile.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html`, motore, database e configurazioni funzionali non sono stati
+modificati. La selezione nella preview è dimostrativa e contiene il metadata
+`swipe-bottom-navigation` per il collegamento futuro alle viste reali.
+
+**Verifiche:** `git diff --check` pulito; parsing completo dello script inline
+con Node.js riuscito; confronto col remoto effettuato dopo il riallineamento con
+gli interventi dell'altra sessione.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `539bb709f9ecb565ae6269f4fbe31da588ee2d21`.
+
+---
