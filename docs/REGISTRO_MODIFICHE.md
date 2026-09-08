@@ -1758,3 +1758,23 @@ Node.js riuscito; presenza dei metadata e dell'animazione verificata.
 **SHA dell'intervento grafico:** `4cab93570292b61b207592e1b79ca8a88476d24c`.
 
 ---
+## 10. Margine inferiore del carosello speciale — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** dopo la rimozione dei pallini, evitare che la
+stella arrivi a contatto con la fascia delle immagini speciali.
+
+**Intervento effettuato:** aggiunto un margine inferiore esatto di 8 px alla
+sola fascia immagini quando la card è in modalità speciale. Le card normali,
+le dimensioni della stella e gli altri spazi restano invariati.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html` e tutti i file funzionali restano invariati.
+
+**Verifiche:** `git diff --check` pulito e parsing dello script inline con
+Node.js riuscito.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `e2fbfda8011df5075145bf2911b5d52337ecd337`.
+
+---
