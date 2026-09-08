@@ -27,7 +27,7 @@ Decisione applicativa già consolidata: quando serve un singolo valore iniziale 
 Esempi:
 - Colazione speciale PDF 1-2/settimana -> default applicativo 1, massimo PDF 2.
 - Spuntino granita PDF 2-3/settimana -> default applicativo 2, massimo PDF 3.
-- Olio EVO PDF 2-3 cucchiaini -> default applicativo 2 cucchiaini (~10 g), range PDF fino a 3 cucchiaini (~15 g).
+- Olio EVO PDF 2-3 cucchiaini -> decisione esplicita di Cwe: 10 g **al giorno** (non più "per pasto"), 5 g a pranzo e 5 g a cena. Vedi sezione 2.8.
 
 ## 2. Valori PDF consolidati
 
@@ -138,10 +138,23 @@ Default prudente applicativo già coerente col criterio minimo-del-range:
 - 1/giorno per frutta secca.
 
 ### 2.8 Grassi e condimenti
-- Olio EVO: 2-3 cucchiaini come porzione per cucinare/condire.
-- Conversione applicativa prudente: ~5 g/cucchiaino -> 10-15 g.
-- Default 10 g è compatibile con il limite inferiore.
-- Qualunque commento legacy che dica "2-3 cucchiai al giorno" è errato.
+- **Decisione esplicita di Cwe (prevale sul testo PDF sottostante):** olio
+  EVO 10 g complessivi al **giorno**, ripartiti 5 g a pranzo e 5 g a cena.
+  Una sola fonte quantitativa per pasto principale, mai moltiplicata per
+  il numero di ricette che lo compongono; colazione e spuntini non
+  ricevono questa quota. Implementato in `nutrition-config.js` come
+  `oilGramsPerDay` (default 10, range PDF 10-15 g/die) con
+  `oilGramsPerMainMeal=oilGramsPerDay/2` derivato, mai una seconda
+  impostazione indipendente per pasto.
+- Testo PDF originale (per riferimento storico, non più la regola
+  applicata): "Olio EVO: 2-3 cucchiaini come porzione per cucinare/condire."
+  Conversione applicativa prudente: ~5 g/cucchiaino -> 10-15 g. La lettura
+  precedente ("10-15 g **per pasto**") era la sorgente dell'errore
+  corretto da questa decisione: il PDF non specifica esplicitamente se il
+  riferimento sia giornaliero o per pasto, e la decisione di Cwe lo fissa
+  ora esplicitamente a livello giornaliero.
+- Qualunque commento legacy che dica "2-3 cucchiai al giorno" è errato
+  (l'unità corretta è cucchiaini, non cucchiai).
 - Salsa di soia: circa 1 cucchiaino per porzione; massimo 1 cucchiaio solo se il resto della giornata è povero di sodio.
 
 ### 2.9 Indicazioni soft/personali del PDF
@@ -203,7 +216,7 @@ Questi possono restare se approvati, ma devono essere distinti:
 28. **Mantenere `specialBreakfastMax=1` solo come default prudente**, distinguendolo dal massimo PDF pari a 2; la nutrizionista deve poterlo portare a 2.
 29. **Mantenere i default spuntini 2/1 come default prudente**, ma memorizzare anche il limite superiore PDF 3/2 per non confondere default con hard max.
 30. **Gestire Patatine/Grisbi come famiglia coerente di spuntino** e verificare se il contatore attuale è condiviso in tutti i percorsi.
-31. **Correggere il significato dell'olio**: 2-3 cucchiaini, default 10 g, range fino a circa 15 g; eliminare/commentare riferimenti errati a cucchiai/giorno.
+31. **[FATTO — vedi sezione 2.8]** Il significato dell'olio è ora deciso esplicitamente da Cwe: 10 g/die (non più "per pasto"), 5 g a pranzo e 5 g a cena, `oilGramsPerDay` in `nutrition-config.js`.
 32. **Gestire salsa di soia come condimento ad alto sodio** con porzione specifica; non usarla come condimento generico senza limite.
 33. **Introdurre uno stato soft "da limitare" distinto da `limitato` numerico ed `escluso`** per indicazioni senza frequenza numerica del PDF.
 34. **Modellare l'introduzione graduale dei legumi come fase opzionale/temporanea**, non come regola permanente del motore.

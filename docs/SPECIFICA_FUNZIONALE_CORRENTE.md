@@ -28,6 +28,16 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - L'esclusione clinica prevale; il cap utente può solo restringere.
 - I profili vegetariano e vegano eliminano le macro incompatibili senza
   inventare nuove frequenze.
+- **Olio EVO (decisione esplicita di Cwe, 08/09/2026)**: una sola fonte
+  quantitativa, `oilGramsPerDay` (10 g/die, range PDF 10-15), mai
+  `oilGramsPerMeal` (rimosso). Quota per pasto principale derivata,
+  `oilGramsPerMainMeal = oilGramsPerDay/2` (5 g), mai una seconda
+  impostazione indipendente. Applicata sulle realizzazioni definitive di
+  pranzo/cena (`motor-v12.js:normalizzaRealizzazioniOlio`, stesso punto
+  comune usato dalla normalizzazione verdura), sommando tutte le
+  occorrenze reali di "Olio extravergine oliva" del pasto a un totale
+  fisso, mai una quota per ogni ricetta che lo compone. Colazione e
+  spuntini non ricevono questa quota automaticamente.
 - Il Setting non modifica mai ricette o ingredienti al salvataggio.
 - La dose effettiva dipende da ingrediente e contesto: colazione, pasto
   principale o spuntino.

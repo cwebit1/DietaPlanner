@@ -31,7 +31,7 @@
     specialBreakfastMax:2,
     snackWeeklyMax:{grana_spuntino:3,crackers_spuntino:3,pane_marmellata_spuntino:3,granita_spuntino:3,patatine_grisbi:2},
     snackDailyMax:{frutta_secca_giornaliero:1},
-    oil:{minGramsPerMeal:10,maxGramsPerMeal:15}
+    oil:{minGramsPerDay:10,maxGramsPerDay:15}
   };
 
   const APP_DEFAULTS={
@@ -42,7 +42,7 @@
     snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},
     snackDailyCaps:{frutta_secca_giornaliero:1},
     cooldownDays:{carboidrati:7,verdure:2},
-    oilGramsPerMeal:10,
+    oilGramsPerDay:10,
     deadlines:{pranzo:'15:00',cena:'22:00'},
     carbSlots:14,
     carbCellMax:6,
@@ -482,15 +482,27 @@
       snackDailyCaps[key]=n;
     }
 
-    let oilGramsPerMeal=positive(config.oilGramsPerMeal)||APP_DEFAULTS.oilGramsPerMeal;
-    if(oilGramsPerMeal<PDF_BASELINE.oil.minGramsPerMeal){
-      pushUnique(warnings,'Olio: quantità alzata al minimo PDF '+PDF_BASELINE.oil.minGramsPerMeal+' g.');
-      oilGramsPerMeal=PDF_BASELINE.oil.minGramsPerMeal;
+    /* Decisione esplicita di Cwe (prevale sul testo PDF "2-3 cucchiaini per
+       pasto"): l'olio EVO ha un'unica fonte quantitativa GIORNALIERA, non
+       per pasto - 10 g/die, ripartiti 5 g a pranzo e 5 g a cena. Il campo
+       legacy "oilGramsPerMeal" (mai realmente consumato dalla pipeline
+       nuova) non alimenta questo valore: leggerlo come se fosse già una
+       quota giornaliera raddoppierebbe silenziosamente un vecchio 10 g
+       "per pasto" in 20 g/die, esattamente l'errore da evitare. Solo il
+       nuovo campo canonico "oilGramsPerDay" viene letto. */
+    let oilGramsPerDay=positive(config.oilGramsPerDay)||APP_DEFAULTS.oilGramsPerDay;
+    if(oilGramsPerDay<PDF_BASELINE.oil.minGramsPerDay){
+      pushUnique(warnings,'Olio: quantità giornaliera alzata al minimo PDF '+PDF_BASELINE.oil.minGramsPerDay+' g.');
+      oilGramsPerDay=PDF_BASELINE.oil.minGramsPerDay;
     }
-    if(oilGramsPerMeal>PDF_BASELINE.oil.maxGramsPerMeal){
-      pushUnique(warnings,'Olio: quantità ridotta al massimo PDF '+PDF_BASELINE.oil.maxGramsPerMeal+' g.');
-      oilGramsPerMeal=PDF_BASELINE.oil.maxGramsPerMeal;
+    if(oilGramsPerDay>PDF_BASELINE.oil.maxGramsPerDay){
+      pushUnique(warnings,'Olio: quantità giornaliera ridotta al massimo PDF '+PDF_BASELINE.oil.maxGramsPerDay+' g.');
+      oilGramsPerDay=PDF_BASELINE.oil.maxGramsPerDay;
     }
+    /* Quota per pasto principale derivata, mai una seconda impostazione
+       indipendente: pranzo e cena si dividono in parti uguali il totale
+       giornaliero. Colazione e spuntini non ricevono questa quota. */
+    const oilGramsPerMainMeal=oilGramsPerDay/2;
 
     const userIngredientCaps=user.ingredientWeeklyCaps||user.tettiIngredienteSettimanali||{};
     const clinicalIngredients=nutritionist.ingredientConstraints||input.vincoliIngredientiNutrizionista||{};
@@ -528,7 +540,8 @@
       specialMealsMax:specialMealsMax===null?APP_DEFAULTS.specialMealsMax:specialMealsMax,
       snackWeeklyCaps,
       snackDailyCaps,
-      oilGramsPerMeal,
+      oilGramsPerDay,
+      oilGramsPerMainMeal,
       cooldownDays,
       deadlines,
       safety:{allergens,blockedIngredientIds}

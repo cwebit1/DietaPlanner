@@ -1591,7 +1591,7 @@ function labelGiornoEsteso(iso){
 }
 
 const ALLERGENI_UE=[['glutine','🌾','Glutine'],['crostacei','🦐','Crostacei'],['uova','🥚','Uova'],['pesce','🐟','Pesce'],['arachidi','🥜','Arachidi'],['soia','🌱','Soia'],['latte','🥛','Latte'],['frutta_guscio','🌰','Frutta a guscio'],['sedano','🥬','Sedano'],['senape','🟡','Senape'],['sesamo','⚪','Sesamo'],['solfiti','🍷','Solfiti'],['lupini','🫘','Lupini'],['molluschi','🐚','Molluschi']];
-const CONFIG_AVANZATA_DEFAULT={dietProfile:'onnivoro',proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},maxProteinSourcesPerDay:2,specialBreakfastMax:1,specialMealsMax:2,snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},snackDailyCaps:{frutta_secca_giornaliero:1},cooldownDays:{carboidrati:7,verdure:2},fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerMeal:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
+const CONFIG_AVANZATA_DEFAULT={dietProfile:'onnivoro',proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},maxProteinSourcesPerDay:2,specialBreakfastMax:1,specialMealsMax:2,snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},snackDailyCaps:{frutta_secca_giornaliero:1},cooldownDays:{carboidrati:7,verdure:2},fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerDay:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
 /* Fallback statico per bootstrap/legacy. Dalla v87 i controlli nutrizionista
    usano il resolver canonico nutrition-config.js come sorgente effettiva. */
 function cloneConfigurazione(x){return typeof structuredClone==='function'?structuredClone(x):JSON.parse(JSON.stringify(x));}
@@ -1606,7 +1606,7 @@ function configAvanzataDaRisolta(resolved,sorgente){
   if(r.specialMealsMax!==undefined)out.specialMealsMax=r.specialMealsMax;
   if(r.snackWeeklyCaps)out.snackWeeklyCaps=cloneConfigurazione(r.snackWeeklyCaps);
   if(r.snackDailyCaps)out.snackDailyCaps=cloneConfigurazione(r.snackDailyCaps);
-  if(r.oilGramsPerMeal!==undefined)out.oilGramsPerMeal=r.oilGramsPerMeal;
+  if(r.oilGramsPerDay!==undefined)out.oilGramsPerDay=r.oilGramsPerDay;
   if(r.cooldownDays)out.cooldownDays=cloneConfigurazione(r.cooldownDays);
   if(r.deadlines)out.deadlines=cloneConfigurazione(r.deadlines);
   return out;
@@ -1666,7 +1666,7 @@ async function renderConfigAvanzata(){
   for(const key of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+='<div class="nutri-row single"><span class="nutri-name">'+key.replaceAll('_',' ')+'</span><span class="nutri-unit">max/sett.</span><input type="number" min="0" data-cfg-avanzata="subtypeCaps.'+key+'" value="'+((cfg.subtypeCaps||cfgDefault.subtypeCaps)[key]??'')+'"></div>';
   html+=rigaNumericaConfig('fruit','Frutta',cfg.fruit&&cfg.fruit.min,cfg.fruit&&cfg.fruit.max,'giorno');
   html+=rigaNumericaConfig('fruit.portion','Porzione frutta',cfg.fruit&&cfg.fruit.portionMin,cfg.fruit&&cfg.fruit.portionMax,'g');
-  for(const [path,label,val,unit] of [['specialBreakfastMax','Colazioni speciali',cfg.specialBreakfastMax,'sett.'],['oilGramsPerMeal','Olio per pasto',cfg.oilGramsPerMeal,'g']])html+='<div class="nutri-row single"><span class="nutri-name">'+label+'</span><span class="nutri-unit">'+unit+'</span><input type="number" min="0" data-cfg-avanzata="'+path+'" value="'+(val??'')+'"></div>';
+  for(const [path,label,val,unit] of [['specialBreakfastMax','Colazioni speciali',cfg.specialBreakfastMax,'sett.'],['oilGramsPerDay','Olio EVO al giorno',cfg.oilGramsPerDay,'g']])html+='<div class="nutri-row single"><span class="nutri-name">'+label+'</span><span class="nutri-unit">'+unit+'</span><input type="number" min="0" data-cfg-avanzata="'+path+'" value="'+(val??'')+'"></div>';
   const snackPdf=['grana_spuntino','crackers_spuntino','pane_marmellata_spuntino','granita_spuntino','patatine_grisbi'];
   for(const k of snackPdf){const v=(cfg.snackWeeklyCaps||cfgDefault.snackWeeklyCaps)[k];html+='<div class="nutri-row single"><span class="nutri-name">Spuntino '+k.replaceAll('_',' ')+'</span><span class="nutri-unit">max/sett.</span><input type="number" min="0" data-cfg-avanzata="snackWeeklyCaps.'+k+'" value="'+(v??'')+'"></div>';}
   html+='<div class="nutri-row single"><span class="nutri-name">Frutta secca</span><span class="nutri-unit">max/giorno</span><input type="number" min="0" data-cfg-avanzata="snackDailyCaps.frutta_secca_giornaliero" value="'+((cfg.snackDailyCaps||cfgDefault.snackDailyCaps).frutta_secca_giornaliero??'')+'"></div>';
@@ -1940,28 +1940,6 @@ const PRIMI_SPECIALI_CONFIG = {
   gnocchi:       { label:'Gnocchi',       porzione:200, cadenzaSettimane:2 },
   pasta_ripiena: { label:'Pasta ripiena', porzione:125, cadenzaSettimane:2 }
 };
-
-/* =========================================================
-   ALLOCAZIONE CONDIMENTO PER PASTO
-   -------------------------------------------------------
-   Dal PDF: "Olio extravergine d'oliva: 2-3 cucchiai al giorno"
-   (20-30g totali). Diviso tra pranzo e cena = 10-15g per pasto.
-   Usiamo 10g come valore base per il calcolo nutrizionale
-   dei pasti composti (secondo + contorno).
-   Questa quota NON è un ingrediente della ricetta: è un
-   contributo fisso che il motore aggiunge alla nutrizione
-   del pasto composto, garantendo coerenza col piano PDF.
-   ========================================================= */
-const ALLOCAZIONE_CONDIMENTO_PASTO = {
-  olio_evo: { nome:'Olio extravergine oliva', grammi:10, kcal:88, prot:0, carb:0, grassi:10 }
-  // Sale, pepe, spezie: irrilevanti nutrizionalmente, non entrano nel calcolo.
-  // Aceto/limone: trascurabili, non entrano.
-};
-/* Totale condimento per pasto composto */
-const CONDIMENTO_KCAL = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.kcal;   // 88
-const CONDIMENTO_GRASSI = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grassi; // 10
-const CONDIMENTO_PROT = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.prot;   // 0
-const CONDIMENTO_CARB = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.carb;   // 0
 
 /* =========================================================
    SCHEMA COMPONENTI PER SECONDI E CONTORNI
@@ -2663,18 +2641,18 @@ async function componiSecondoContorno(proteinaId, contornoId, cottura){
       }
     }
   }
-  // Aggiungi allocazione condimento
-  nutrizione.kcal += CONDIMENTO_KCAL;
-  nutrizione.prot += CONDIMENTO_PROT;
-  nutrizione.carb += CONDIMENTO_CARB;
-  nutrizione.grassi += CONDIMENTO_GRASSI;
+  /* L'olio EVO non viene più sommato qui con una quota fissa (era
+     ALLOCAZIONE_CONDIMENTO_PASTO, rimossa): la quota canonica per pasto
+     principale (oilGramsPerMainMeal) è applicata da
+     motor-v12.js:normalizzaRealizzazioniOlio sulle realizzazioni reali,
+     mai su questo percorso legacy (senza chiamanti raggiungibili oggi:
+     voce.secondoId non viene mai scritto con un valore reale dal motore
+     attuale). */
   return {
     nome: nomeComposto,
     proteinaId: proteinaId || null,
     contornoId: contornoId || null,
-    nutrizione,
-    condimentoGrammi: ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi,
-    condimentoKcal: CONDIMENTO_KCAL
+    nutrizione
   };
 }
 /* Helper: trova variante per nome (usato da componiSecondoContorno) */
@@ -7090,19 +7068,15 @@ async function aggiornaListaSpesaAutomatica(scartoSettimane){
           }
         }
       }
-      // Condimento: se il secondo di questo pasto è una base proteica componibile,
-      // aggiungi la quota fissa di olio EVO al fabbisogno — NON è un ingrediente
-      // della ricetta componente, è un contributo fisso dal PDF
-      if(voce.modo==='multi' && voce.secondoId && !(voce.realizzazioni&&voce.realizzazioni.length)){
-        const ricettaSecondoSpesa = await getOne('ricette', voce.secondoId);
-        if(ricettaSecondoSpesa && ricettaSecondoSpesa.componente === COMPONENTE_PROTEINA){
-          const varOlio = varianti.find(v=>v.nome.toLowerCase()==='olio extravergine oliva');
-          if(varOlio){
-            const olioPerPasto = ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi * porzioniSel;
-            fabbisogno[varOlio.id] = (fabbisogno[varOlio.id]||0) + olioPerPasto;
-          }
-        }
-      }
+      /* La quota di olio EVO NON viene più aggiunta qui con un valore fisso
+         (era ALLOCAZIONE_CONDIMENTO_PASTO, rimossa): la quota canonica per
+         pasto principale (oilGramsPerMainMeal) è già inclusa nelle
+         quantità effettive delle realizzazioni reali (applicata da
+         motor-v12.js:normalizzaRealizzazioniOlio) e viene già aggregata dal
+         ramo motoreNuovo sopra, come qualunque altro ingrediente - nessuna
+         seconda somma qui. Questo blocco copriva solo il vecchio percorso
+         "multi" senza realizzazioni, mai raggiungibile dal motore attuale
+         (voce.secondoId non viene mai scritto con un valore reale). */
     }
   }
 

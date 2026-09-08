@@ -17,7 +17,7 @@ const DEFAULTS=Object.freeze({
   carbSlots:N.APP_DEFAULTS.carbSlots,carbCellMax:N.APP_DEFAULTS.carbCellMax,limitedCarbTotalMax:N.APP_DEFAULTS.limitedCarbTotalMax,
   fruit:{min:N.PDF_BASELINE.fruit.dailyMin,max:N.PDF_BASELINE.fruit.dailyMax,portionMin:N.PDF_BASELINE.fruit.portionMinGrams,portionMax:N.PDF_BASELINE.fruit.portionMaxGrams},
   specialBreakfastMax:N.APP_DEFAULTS.specialBreakfastMax,specialMealsMax:N.APP_DEFAULTS.specialMealsMax,
-  cooldownDays:Object.assign({},N.APP_DEFAULTS.cooldownDays),oilGramsPerMeal:N.APP_DEFAULTS.oilGramsPerMeal,
+  cooldownDays:Object.assign({},N.APP_DEFAULTS.cooldownDays),oilGramsPerDay:N.APP_DEFAULTS.oilGramsPerDay,
   deadlines:Object.assign({},N.APP_DEFAULTS.deadlines)
 });
 

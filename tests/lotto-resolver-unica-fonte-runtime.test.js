@@ -26,15 +26,13 @@
    sottotipo resta nei test già dedicati (nutrition-config.test.js e
    gli altri test del motore che la esercitano tramite generazione).
 
-   oilGramsPerMeal: NESSUN consumatore runtime trovato nella pipeline di
-   generazione attuale (vedi docs/REGISTRO_MODIFICHE.md per l'analisi
-   completa) - i soli riferimenti nel codice sono legacy, gated dietro
-   condizioni ("voce.modo==='multi' && !voce.realizzazioni.length") mai
-   prodotte dal motore attuale. Non essendoci un consumatore vivo da
-   esercitare, questo test verifica che il resolver stesso produca il
-   valore corretto (unica cosa dimostrabile oggi) e documenta l'assenza
-   di un secondo, contraddittorio, hardcode in index.html che venga
-   davvero letto da un pasto generato oggi. */
+   oilGramsPerDay/oilGramsPerMainMeal: ha ora un consumatore runtime reale
+   (motor-v12.js:normalizzaRealizzazioniOlio), aggiunto in un intervento
+   successivo insieme alla rimozione del vecchio blocco legacy
+   (ALLOCAZIONE_CONDIMENTO_PASTO) — vedi tests/lotto-olio-evo-quota-pasto.test.js
+   e docs/REGISTRO_MODIFICHE.md per la copertura completa. Qui resta solo
+   la verifica che il resolver produca il valore corretto e che il
+   vecchio blocco non sia stato reintrodotto. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
@@ -127,21 +125,21 @@ function estraiDichiarazione(firma){
     assert.equal(modulo.fruttaGiornaliera.max,3);
   }
 
-  /* ============ 3. oilGramsPerMeal: nessun consumatore runtime nella pipeline attuale (documentato, non un difetto da correggere) ============ */
+  /* ============ 3. oilGramsPerDay/oilGramsPerMainMeal: risolti correttamente; consumatore reale e ALLOCAZIONE_CONDIMENTO_PASTO ora rimossi (vedi docs/REGISTRO_MODIFICHE.md, filone "Olio EVO: quota unica per pasto") ============ */
   {
     const resolvedOlioBase=N.resolveNutritionConfig({nutritionist:{config:{}}});
-    assert.equal(resolvedOlioBase.oilGramsPerMeal,10,'default risolto invariato');
-    const resolvedOlioPersonalizzato=N.resolveNutritionConfig({nutritionist:{config:{oilGramsPerMeal:15}}});
-    assert.equal(resolvedOlioPersonalizzato.oilGramsPerMeal,15,'il resolver riflette correttamente un valore personalizzato entro il range PDF');
+    assert.equal(resolvedOlioBase.oilGramsPerDay,10,'default risolto: 10 g/die');
+    assert.equal(resolvedOlioBase.oilGramsPerMainMeal,5,'quota per pasto principale derivata: 5 g');
+    const resolvedOlioPersonalizzato=N.resolveNutritionConfig({nutritionist:{config:{oilGramsPerDay:15}}});
+    assert.equal(resolvedOlioPersonalizzato.oilGramsPerDay,15,'il resolver riflette correttamente un valore personalizzato entro il range PDF giornaliero');
 
-    // L'unico riferimento hardcoded (ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi)
-    // esiste, ma i suoi due soli consumatori sono testualmente gated dietro
-    // una condizione mai prodotta dal motore attuale (voce.realizzazioni
-    // sempre popolato dal motore nuovo) - controllo aggiuntivo, non prova
-    // principale, per confermare l'assenza di duplicazione realmente attiva.
-    assert(indexSource.includes("ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi"),'riferimento legacy atteso, per la documentazione del punto');
-    const bloccoSpesa=indexSource.slice(indexSource.indexOf('Condimento: se il secondo'),indexSource.indexOf('Condimento: se il secondo')+600);
-    assert(bloccoSpesa.includes("!(voce.realizzazioni&&voce.realizzazioni.length)"),'il consumatore legacy deve restare gated dietro l\'assenza di realizzazioni (mai vero per il motore attuale)');
+    // Il riferimento hardcoded ALLOCAZIONE_CONDIMENTO_PASTO (dead code, gated
+    // dietro una condizione mai prodotta dal motore attuale) è stato rimosso
+    // in un intervento successivo insieme all'introduzione del consumatore
+    // reale (motor-v12.js:normalizzaRealizzazioniOlio): controllo aggiuntivo
+    // per confermare che non sia stato reintrodotto.
+    assert(!indexSource.includes("const ALLOCAZIONE_CONDIMENTO_PASTO"),'il blocco legacy (dichiarazione) non deve essere reintrodotto');
+    assert(!indexSource.includes("ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo"),'i consumatori del blocco legacy non devono essere reintrodotti');
   }
 
   console.log('lotto resolver unica fonte runtime: ok');

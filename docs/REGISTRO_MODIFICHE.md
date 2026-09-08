@@ -1262,3 +1262,123 @@ interfaccia grafica.
 **SHA remoto:** `482797c7de321bd323e08c3844ced16a9a184ae3`.
 
 ---
+
+# Filone: Olio EVO — quota unica per pasto (decisione esplicita di Cwe)
+
+Riguarda: gestione end-to-end della quantità di olio EVO secondo la
+decisione di Cwe — «10 g complessivi al giorno, ripartiti in 5 g a
+pranzo e 5 g a cena» — una sola fonte quantitativa, mai moltiplicata per
+il numero di ricette che compongono il pasto.
+
+## 1. Commit `(in preparazione)` — resolver, applicazione atomica, rimozione legacy
+
+**Difetto riscontrato:** `nutrition-config.js` esponeva `oilGramsPerMeal`
+(default 10 g, range 10-15 "per pasto") mai realmente consumato dalla
+pipeline nuova. Quando una ricetta compilata conteneva "Olio
+extravergine oliva", la quantità derivava dalla porzione di catalogo
+(`ingredienti-new.json`, 10 g), non dalla configurazione risolta: un
+pasto con più realizzazioni contenenti olio poteva quindi sommare più
+occorrenze indipendenti da 10 g ciascuna. `index.html` conservava inoltre
+`ALLOCAZIONE_CONDIMENTO_PASTO` (10 g hardcoded), un secondo blocco
+quantitativo concorrente.
+
+**Decisione di Cwe:** olio EVO 10 g/die, 5 g a pranzo e 5 g a cena; una
+sola fonte quantitativa per pasto principale, mai per ricetta; colazione
+e spuntini esclusi automaticamente.
+
+**Implementazione:**
+- `nutrition-config.js`: `oilGramsPerMeal` → `oilGramsPerDay` (default
+  10, `PDF_BASELINE.oil` ridefinito come range giornaliero 10-15 g).
+  Nuovo campo derivato `oilGramsPerMainMeal = oilGramsPerDay/2` nell'output
+  risolto — mai una seconda impostazione indipendente per pasto. Il campo
+  legacy `oilGramsPerMeal` non alimenta più nulla: non viene letto né
+  automaticamente raddoppiato in una quota giornaliera (gestito in modo
+  non distruttivo, come richiesto).
+- `engine-core.js`: `DEFAULTS.oilGramsPerMeal` → `oilGramsPerDay`
+  (riferimento a `N.APP_DEFAULTS`, nessun valore duplicato).
+- `index.html` (Setting nutrizionista): etichetta "Olio per pasto" →
+  "Olio EVO al giorno", `data-cfg-avanzata` aggiornato a
+  `oilGramsPerDay`. Il salvataggio (`salvaConfigAvanzata`) è già generico
+  su `[data-cfg-avanzata]`: scrive automaticamente il campo giusto, un
+  solo campo, nessun doppio binding.
+- `motor-v12.js`: nuova `normalizzaRealizzazioniOlio(realizzazioni,
+  oilGramsPerMainMeal)`, applicata nel **punto comune** dove le
+  realizzazioni definitive di un pranzo/cena vengono chiuse
+  (`chiudiPastoConVerdura`, richiamata da ogni ramo di
+  `costruisciPastoSequenziale` — copre sia la generazione sequenziale
+  completa sia `rigeneraPasto`) e nel punto equivalente per il Roll
+  (`ruotaPasto`) — esattamente gli stessi due punti già usati da
+  `normalizzaRealizzazioniVerdura`, stessa convenzione. La funzione:
+  raccoglie tutte le occorrenze reali di "Olio extravergine oliva" fra le
+  `ingredientiEffettivi` di *tutte* le realizzazioni del pasto (mai
+  aggiunta se assente), ridistribuisce il totale in modo deterministico
+  (stesso ordine di iterazione, mai casuale) così che la somma sia sempre
+  esattamente 5 g indipendentemente da quante ricette del pasto la
+  contengano, riusa il meccanismo `overrideQuantita` già stabilito per il
+  residuo verdura (così la rotazione condimento lo riapplica
+  correttamente invece di perderlo), e ricalcola `nutrientiEffettivi` con
+  la stessa `calcolaNutrienti` già usata da `snapshotRealizzazione` — lo
+  stesso snapshot già letto da nutrienti, inventario, lista spesa,
+  storico, Roll, rigenerazione e Salvafrigo: nessun calcolo duplicato per
+  queste destinazioni.
+- Non toccati: template di `db-ricette.json`, porzione generale
+  dell'ingrediente in `ingredienti-new.json` (resta un metadato di
+  catalogo, non la regola giornaliera).
+
+**Percorsi legacy rimossi (confermato senza chiamanti raggiungibili):**
+`ALLOCAZIONE_CONDIMENTO_PASTO` e i relativi `CONDIMENTO_KCAL/GRASSI/PROT/
+CARB` in `index.html` — i due soli consumatori (dentro
+`componiSecondoContorno` e nell'aggregazione della lista spesa) erano
+gated dietro `voce.secondoId`/`voce.modo==='multi' &&
+!voce.realizzazioni.length`, condizioni mai prodotte dal motore attuale
+(`voce.secondoId` non viene mai scritto con un valore reale — verificato
+con ricerca globale, coerente con quanto già annotato in un filone
+precedente di questo registro). Rimossi insieme ai rami morti che li
+usavano; il resto di `componiSecondoContorno` (somma proteina+contorno,
+non specifica dell'olio) non è stato toccato.
+
+**Deviazione dichiarata dal vincolo "non esportare funzioni interne per
+facilitare i test":** `normalizzaRealizzazioniOlio` è stata esportata.
+Motivazione: nell'intero catalogo reale (`db-ricette.json`) un solo
+template (id 34, legumi) contiene "Olio extravergine oliva" — verificato
+con ricerca esaustiva. Non essendo autorizzata la modifica delle
+ricette, non esiste alcun modo di produrre con la generazione reale uno
+scenario con più realizzazioni di olio nello stesso pasto (scenario
+esplicitamente richiesto dal test): l'unico punto di verifica possibile
+per questo requisito è la funzione stessa, esercitata con dati costruiti
+dalla stessa pipeline reale (`generaCombinazioni`+`compilaRicetta`+
+`snapshotRealizzazione`, già esportate in interventi precedenti), mai
+valori inventati a mano. Segnalato qui esplicitamente per un'eventuale
+correzione di Cwe, a differenza del caso precedente (`configRuntime`/
+`ricettaAmmessa`) dove esisteva un percorso pubblico alternativo e
+l'export è stato rimosso.
+
+**File modificati:** `nutrition-config.js`, `engine-core.js`,
+`index.html`, `motor-v12.js` (nuova funzione + export dichiarato sopra),
+`tests/lotto-olio-evo-quota-pasto.test.js` (nuovo),
+`tests/nutrition-config.test.js` (aggiornati i riferimenti al campo
+rinominato), `tests/lotto-resolver-unica-fonte-runtime.test.js`
+(aggiornato per igiene, non nella lista dei controlli consentiti di
+questo intervento, verificato passare comunque),
+`docs/BASELINE_NUTRIZIONISTA_PDF_V1.md`,
+`docs/SPECIFICA_FUNZIONALE_CORRENTE.md`.
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-olio-evo-quota-pasto.test.js  → ok (fallisce senza la correzione: oilGramsPerDay non risolto, verificato)
+node tests/nutrition-config.test.js             → ok
+node --check nutrition-config.js                → OK
+node --check motor-v12.js                        → OK
+git diff --check                                 → pulito
+```
+`index.html`: script modificato controllato con `node --check` (stesso
+metodo dei filoni precedenti); nessuna suite completa avviata.
+
+**Non modificati:** template di `db-ricette.json`, porzione di
+`ingredienti-new.json`, ricette mancanti riservate a Cwe, grafica del
+restyling (solo l'etichetta e il binding del campo olio nel Setting),
+carboidrati, proteine, verdure, residuo V/S/G, frequenze.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

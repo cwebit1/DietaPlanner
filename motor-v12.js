@@ -1857,6 +1857,7 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
      nuovo meccanismo di ripetizione. */
   let risultato=await assegnaCondimentiRotazioneGlobale(risultatoPasto(token,ricette,0,null,ctx.vegetablePortions),giorno,bloccateIds);
   risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions,bloccateIds);
+  risultato.realizzazioni=normalizzaRealizzazioniOlio(risultato.realizzazioni,ctx.resolved&&ctx.resolved.oilGramsPerMainMeal);
   risultato.bilancioVerdura=await bilancioVerduraDaRealizzazioni(risultato.realizzazioni,ctx.vegetablePortions);
   if(!risultato.bilancioVerdura.coperturaCompleta)return null;
   return risultato;
@@ -2503,6 +2504,54 @@ async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig
     return snapshotRealizzazione({ricettaId:r.id,recipeModelId:r.recipeModelId,copertura:Array.from(copertura(r).tokens),condimentoVarianteIndex:Number(r.condimentoVarianteIndex)||0},r);
   });
 }
+/* Decisione esplicita di Cwe: l'olio EVO ha una sola fonte quantitativa
+   per pasto principale (oilGramsPerMainMeal, derivato da oilGramsPerDay -
+   vedi nutrition-config.js), mai una per ricetta. Punto comune: applicata
+   qui, sull'array COMPLETO delle realizzazioni gia' definitive di un
+   pranzo/cena (stesso punto e stessa convenzione di
+   normalizzaRealizzazioniVerdura, richiamata dagli stessi chiamanti),
+   MAI durante la compilazione del catalogo (che ignora il pasto in cui
+   una ricetta finira') e MAI sui template di db-ricette.json/sulla
+   porzione di catalogo di ingredienti-new.json.
+   Non aggiunge mai olio a una realizzazione che non lo prevede gia' (la
+   selezione del condimento resta quella scelta a monte): raccoglie solo
+   le occorrenze di "Olio extravergine oliva" gia' presenti fra le
+   ingredientiEffettivi di TUTTE le realizzazioni del pasto e ne
+   ridistribuisce il totale, in modo deterministico (stesso ordine di
+   iterazione dell'array, mai casuale), cosi' che la somma sia sempre
+   esattamente la quota di pasto, indipendentemente da quante ricette del
+   pasto la contengano. Usa lo stesso meccanismo overrideQuantita gia'
+   stabilito per il residuo verdura (vedi ridimensionaVerdureRicetta), cosi'
+   la rotazione condimento (applicaOverrideQuantitaRealizzazione) lo
+   riapplica correttamente invece di perderlo; ricalcola nutrientiEffettivi
+   con la stessa calcolaNutrienti gia' usata da snapshotRealizzazione, cosi'
+   nutrienti/inventario/spesa/storico/Roll/rigenerazione/Salvafrigo leggono
+   tutti lo stesso snapshot, mai un calcolo duplicato. */
+function normalizzaRealizzazioniOlio(realizzazioni,oilGramsPerMainMeal){
+  const quota=Number(oilGramsPerMainMeal)||0;
+  if(quota<=0)return realizzazioni;
+  const occorrenze=[];
+  for(const real of realizzazioni||[]){
+    const ings=real&&real.ingredientiEffettivi;
+    if(!Array.isArray(ings))continue;
+    for(const ing of ings){ if(ing&&ing.nome==='Olio extravergine oliva')occorrenze.push({real,ing}); }
+  }
+  if(!occorrenze.length)return realizzazioni;
+  const n=occorrenze.length;
+  let assegnati=0;
+  occorrenze.forEach((occ,idx)=>{
+    const valore=idx<n-1?Math.round((quota/n)*100)/100:Math.round((quota-assegnati)*100)/100;
+    assegnati+=valore;
+    occ.ing.quantita=valore;
+    occ.ing.grammi=valore;
+    occ.ing.overrideQuantita='olio_evo_quota_pasto';
+  });
+  const coinvolte=new Set(occorrenze.map(o=>o.real));
+  for(const real of realizzazioni||[]){
+    if(coinvolte.has(real))real.nutrientiEffettivi=calcolaNutrienti(real.ingredientiEffettivi);
+  }
+  return realizzazioni;
+}
 async function bilancioVerduraDaRealizzazioni(realizzazioni,portionConfig){
   const ricette=[];
   for(const real of realizzazioni||[]){
@@ -2666,6 +2715,7 @@ async function ruotaPasto(giorno,pasto,tipo,vocePendente){
   let realizzazioni=voce.realizzazioni.map((x,i)=>i===owner.indice?real:x);
   const resolved=await caricaConfigurazioneNutrizionaleRisolta();
   realizzazioni=await normalizzaRealizzazioniVerdura(realizzazioni,giorno,resolved.vegetables);
+  realizzazioni=normalizzaRealizzazioniOlio(realizzazioni,resolved.oilGramsPerMainMeal);
   const requiredVegetableVariantId=await verduraRicorrenteRichiesta(giorno,pasto);
   if(requiredVegetableVariantId){
     let mantieneVincolo=false;
@@ -2755,7 +2805,7 @@ function stato(){ return {pronto:state.pronto,versioneRicette:state.dbRicette&&s
 
 global.DietaPlannerMotorV12={
   inizializza,stato,getRicette,getRicetta,
-  generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,compilaRicetta,
+  generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,compilaRicetta,normalizzaRealizzazioniOlio,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,getInventarioDisponibile,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
   generaPasto,generaPianoSettimana,rigeneraPasto,risolviSlotSingolo,statoRollPasto,ruotaPasto,salvaRoll,materializzaRealizzazione,

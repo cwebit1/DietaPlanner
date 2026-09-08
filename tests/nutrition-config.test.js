@@ -36,7 +36,8 @@ assert.deepEqual(
   assert.equal(r.valid,true);
   assert.deepEqual(r.proteinFrequencies.legumi,{min:2,max:null,target:3,quantita:null});
   assert.equal(r.specialBreakfastMax,1);
-  assert.equal(r.oilGramsPerMeal,10);
+  assert.equal(r.oilGramsPerDay,10);
+  assert.equal(r.oilGramsPerMainMeal,5);
   assert.equal(r.carbohydrates.fixedTotal,0);
   assert.equal(r.carbohydrates.remainingSlots,14);
   assert.equal(r.carbohydrates.autoInsertWeeklyCapped,false);
@@ -134,7 +135,7 @@ assert.deepEqual(
         subtypeCaps:{affettati:7},
         specialBreakfastMax:8,
         snackWeeklyCaps:{granita_spuntino:9},
-        oilGramsPerMeal:40
+        oilGramsPerDay:40
       }
     }
   });
@@ -145,7 +146,8 @@ assert.deepEqual(
   assert.equal(r.subtypeCaps.affettati,1);
   assert.equal(r.specialBreakfastMax,2);
   assert.equal(r.snackWeeklyCaps.granita_spuntino,3);
-  assert.equal(r.oilGramsPerMeal,15);
+  assert.equal(r.oilGramsPerDay,15);
+  assert.equal(r.oilGramsPerMainMeal,7.5);
   assert(r.warnings.length>=5);
 }
 
