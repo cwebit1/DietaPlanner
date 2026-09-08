@@ -1587,3 +1587,29 @@ gli interventi dell'altra sessione.
 **SHA dell'intervento grafico:** `539bb709f9ecb565ae6269f4fbe31da588ee2d21`.
 
 ---
+## 4. Completamento della bottom bar a sei icone — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** aggiungere alla nuova bottom bar le icone
+mancanti e consentire a un singolo swipe di attraversare più di una voce.
+
+**Intervento effettuato:** alle voci già presenti sono state aggiunte `Ricette`
+e `Inventario`, entrambe con SVG lineari coordinati al set approvato. La barra
+usa ora sei colonne mantenendo icone grandi, tinta monocromatica per gli stati
+inattivi, ombra leggera e colore oro per la pagina selezionata. La distanza del
+gesto viene convertita nel numero di voci attraversate: uno swipe breve avanza
+di una posizione, uno più ampio può raggiungerne più di una, entro i limiti
+della barra.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html` e tutti i file funzionali restano invariati. Le nuove route
+dimostrative sono `recipes` e `inventory`.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline con
+Node.js riuscito; rilevate correttamente le sei route `meal`, `menu`, `recipes`,
+`shopping`, `inventory` e `settings`.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `7867d9455e73e78584b48546e4337738decd210a`.
+
+---
