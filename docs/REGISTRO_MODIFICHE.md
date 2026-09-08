@@ -1023,3 +1023,19 @@ sono stati modificati `index.html`, motore, database o IndexedDB.
 **SHA remoto dell'intervento:** `6886a54bbf56636807c9adabfe2ec60d5988bb61`.
 
 ---
+
+## 13. Scheda grafica dettagli ricetta — 8 settembre 2026
+
+**Obiettivo autorizzato da Cwe:** aprire da ogni pulsante `Dettagli` una scheda ricetta quasi a tutto schermo, mantenendo visibile l'app sfocata sullo sfondo; aggiungere controllo porzioni, dati nutrizionali, storico e uno scheletro social firmato DietaPlanner, senza ridurre le animazioni.
+
+**Intervento effettuato:** la preview dispone ora di un dialog con margini, immagine completa del piatto e fascia nera al 60% con titolo allineato a sinistra. La scheda include tempo stimato, ingredienti e dosi, spezie e condimenti, preparazione dimostrativa, riepilogo nutrizionale e statistiche di proposta/consumo. Le porzioni partono da 1; il pulsante meno è disattivato al minimo e i pulsanti più/meno aggiornano le dosi numeriche. La sezione social espone quattro comandi dimostrativi e il marchio DietaPlanner, senza pubblicare o condividere contenuti.
+
+**Riferimenti per il merge:** ogni pannello ricetta e relativo pulsante Dettagli espongono un `data-recipe-id` univoco; il dialog conserva l'ID aperto. Il contratto `restyling-merge-contract` documenta binding e azioni per dettaglio, porzioni e condivisione. I contenuti reali saranno sostituiti in seguito tramite ID e IndexedDB, mai tramite confronto dei nomi.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`; `index.html`, database, motore e schema IndexedDB sono rimasti invariati.
+
+**Verifiche:** parsing JavaScript e JSON, `git diff --check`; prova su GitHub Pages di apertura/chiusura, ID ricetta, porzione iniziale 1, meno disattivato, incremento a 2 con dose 60 g → 120 g e ritorno a 1. Nessun errore applicativo rilevato; i soli messaggi di console appartengono all'estensione di controllo del browser.
+
+**SHA remoto dell'intervento:** `d4f82e55f0e49ac81322c60c8e5ca364ec53fbe4`.
+
+---
