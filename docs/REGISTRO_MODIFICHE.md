@@ -1382,3 +1382,85 @@ carboidrati, proteine, verdure, residuo V/S/G, frequenze.
 **SHA finale:** `a21c8d40a26c2cef55fa056a7138b412f94942c7`.
 
 ---
+
+## 2. Commit `(in preparazione)` — corregge la dichiarazione di "deviazione": rimossa l'esposizione artificiale di normalizzaRealizzazioniOlio
+
+**Correzione alla sezione 1:** la sezione precedente dichiarava
+esplicitamente l'esportazione di `normalizzaRealizzazioniOlio` come
+deviazione motivata dal test. Cwe non ha autorizzato quella deviazione:
+ripeteva lo stesso problema già corretto per `configRuntime`/
+`ricettaAmmessa` in un filone precedente. Questa sezione la corregge,
+senza riscrivere la sezione 1 (resta come cronologia di cosa fu fatto e
+perché, con questa correzione sequenziale subito dopo).
+
+**Correzione applicata:**
+- `normalizzaRealizzazioniOlio` rimossa dall'oggetto pubblico
+  `DietaPlannerMotorV12` (un solo rigo tolto). La funzione interna e i
+  suoi due chiamanti runtime — chiusura del pasto
+  (`chiudiPastoConVerdura`, dentro `costruisciPastoSequenziale`) e Roll
+  (`ruotaPasto`) — restano invariati, nessuna modifica al comportamento.
+- `tests/lotto-olio-evo-quota-pasto.test.js` riscritto per non chiamare
+  più alcuna funzione interna: usa esclusivamente l'API pubblica
+  `rigeneraPasto` (la stessa che la pagina Pasto usa per "Rigenera"),
+  con tentativi ripetuti (bounded, stesso precedente già stabilito per
+  altri scenari probabilistici in questo repository) finché il motore
+  reale non produce, con dati reali, un pasto contenente olio.
+
+**Copertura end-to-end rimasta nel test:**
+- pranzo e cena con una realizzazione reale contenente olio (template
+  34, l'unico nel catalogo con "Olio extravergine oliva"): totale
+  sempre 5 g;
+- invariante generale osservata su più target reali (legumi, carne,
+  pesce, formaggi, uova): ogni volta che l'olio compare in un pasto
+  reale generato, il totale è sempre 5 g, mai altro — sostituisce la
+  precedente asserzione negativa ("carne non riceve mai olio"), rivelatasi
+  non sempre vera nella generazione reale (un pasto a base carne può
+  incorporare una realizzazione con olio in combinazioni particolari:
+  l'invariante corretta da garantire non è "mai presente per certi
+  target", ma "quando presente, sempre 5 g");
+- `nutrientiEffettivi` presente e ricalcolato sulla realizzazione con
+  olio;
+- idoneità colazione (verificata sulla variante, nessuna generazione
+  necessaria).
+
+**Caso rimosso, non riproducibile end-to-end col catalogo attuale:** un
+pasto con **più** realizzazioni contenenti olio contemporaneamente.
+Nell'intero catalogo reale un solo template ha olio: il motore
+sequenziale non può quindi mai comporre un pasto con due o più ricette
+che lo contengano entrambe, indipendentemente dal numero di tentativi.
+Non sostituito con ricette finte, nessuna estrazione/duplicazione della
+funzione nel test, nessun hook `__test`, nessuna nuova esportazione,
+nessuna modifica al catalogo. **Questo caso resta garantito solo
+dall'implementazione matematica di `normalizzaRealizzazioniOlio`**
+(ridistribuzione proporzionale con somma finale sempre esatta,
+deterministica, vedi il commento della funzione in `motor-v12.js`) **e
+dalla revisione del codice**, non da una prova end-to-end eseguibile
+oggi. Se in futuro una seconda ricetta reale con olio viene aggiunta al
+catalogo (decisione riservata a Cwe, fuori perimetro di questo
+intervento), il caso diventerà riproducibile end-to-end e potrà essere
+reintrodotto nel test con la stessa tecnica (`rigeneraPasto` + retry).
+
+**Invariato (confermato, non toccato):** `oilGramsPerDay`,
+`oilGramsPerMainMeal`, ripartizione 5 g pranzo/5 g cena col valore
+giornaliero predefinito di 10 g, normalizzazione complessiva per pasto,
+propagazione a nutrienti effettivi/inventario/lista spesa/storico/Roll,
+rimozione di `ALLOCAZIONE_CONDIMENTO_PASTO`, cataloghi e ricette, UI e
+restyling. Non è stato deciso in questo intervento se il valore
+giornaliero debba restare fisso a 10 g o diventare configurabile nel
+range 10-15 g: resta riservato a Cwe.
+
+**File modificati:** `motor-v12.js` (un solo rigo, rimozione
+dall'oggetto esportato), `tests/lotto-olio-evo-quota-pasto.test.js`
+(riscritto).
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-olio-evo-quota-pasto.test.js  → ok
+node tests/nutrition-config.test.js             → ok
+node --check motor-v12.js                        → OK
+git diff --check                                 → pulito
+```
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

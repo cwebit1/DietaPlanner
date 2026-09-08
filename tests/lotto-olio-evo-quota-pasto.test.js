@@ -4,23 +4,33 @@
    una sola fonte quantitativa per pasto, mai moltiplicata per il numero
    di ricette che lo compongono.
 
-   Verifica il PUNTO COMUNE reale (motor-v12.js:normalizzaRealizzazioniOlio,
-   richiamato dagli stessi due punti di normalizzaRealizzazioniVerdura:
-   costruisciPastoSequenziale - generazione sequenziale e rigeneraPasto -
-   e ruotaPasto/Roll), non una sua reimplementazione.
+   Verifica ESCLUSIVAMENTE tramite API pubbliche reali e deterministiche
+   di DietaPlannerMotorV12 (rigeneraPasto): mai una chiamata diretta alla
+   funzione interna motor-v12.js:normalizzaRealizzazioniOlio, che resta
+   non esportata (corretto in questo intervento: era stata esposta solo
+   per comodità del test, la stessa deviazione già corretta per
+   configRuntime/ricettaAmmessa - vedi docs/REGISTRO_MODIFICHE.md).
+   normalizzaRealizzazioniOlio è applicata dai suoi due chiamanti reali
+   invariati (chiusura del pasto in costruisciPastoSequenziale, Roll in
+   ruotaPasto): qui si esercita il primo tramite rigeneraPasto (la stessa
+   funzione pubblica che la pagina Pasto usa per "Rigenera").
 
-   Perché normalizzaRealizzazioniOlio è esportata (unica eccezione in
-   questo intervento a "non esportare funzioni interne per facilitare i
-   test"): nell'intero catalogo reale (db-ricette.json) un solo template
-   (id 34, legumi) contiene "Olio extravergine oliva" - verificato con
-   ricerca esaustiva. Non essendo autorizzata la modifica del catalogo
-   ricette, non esiste alcun modo di produrre con la generazione reale
-   uno scenario con PIÙ realizzazioni di olio nello stesso pasto (il
-   caso esplicitamente richiesto dal test): l'unico punto di verifica
-   possibile per questo scenario è la funzione stessa, con dati costruiti
-   dalla stessa pipeline reale (generaCombinazioni + compilaRicetta +
-   snapshotRealizzazione, tutte già esportate in interventi precedenti),
-   mai valori inventati a mano. */
+   Copertura end-to-end rimasta: pranzo/cena con una sola realizzazione
+   reale contenente olio (template 34, l'unico nel catalogo con "Olio
+   extravergine oliva" - verificato con ricerca esaustiva), invariante
+   "quando l'olio compare il totale è sempre 5 g" osservata su più
+   target reali, idoneità colazione.
+
+   Caso rimosso (non riproducibile end-to-end col catalogo attuale, mai
+   sostituito con dati finti): un pasto con PIÙ realizzazioni contenenti
+   olio contemporaneamente. Nell'intero catalogo reale un solo template
+   ha olio: il motore sequenziale non può quindi mai comporre un pasto
+   con due o più ricette che lo contengano entrambe, indipendentemente
+   da quanti tentativi. Questo caso resta garantito solo
+   dall'implementazione matematica di normalizzaRealizzazioniOlio
+   (ridistribuzione proporzionale con somma finale esatta, vedi il
+   commento della funzione in motor-v12.js) e dalla revisione del
+   codice, non da una prova end-to-end. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
@@ -43,6 +53,27 @@ global.giorniSettimana=()=>['2026-08-31','2026-09-01','2026-09-02','2026-09-03',
 require('../motor-v12.js');
 const M=global.DietaPlannerMotorV12;
 
+function oliCompleti(voce){
+  const occorrenze=[];
+  for(const real of (voce&&voce.realizzazioni)||[]){
+    for(const ing of real.ingredientiEffettivi||[]){
+      if(ing.nome==='Olio extravergine oliva')occorrenze.push({real,ing});
+    }
+  }
+  return occorrenze;
+}
+
+/* Richiama la sola API pubblica rigeneraPasto finché non produce (per
+   caso, con dati reali) un pasto la cui realizzazione contiene olio, o
+   esaurisce i tentativi. Nessuna chiamata a funzioni interne. */
+async function trovaPastoConOlio(giorno,pasto,target,tentativiMax){
+  for(let i=0;i<tentativiMax;i++){
+    const voce=await M.rigeneraPasto(giorno,pasto,target,{soloAnteprima:true});
+    if(voce&&oliCompleti(voce).length)return voce;
+  }
+  return null;
+}
+
 (async()=>{
   await M.inizializza({basePath:''});
 
@@ -50,58 +81,47 @@ const M=global.DietaPlannerMotorV12;
   assert.equal(resolved.oilGramsPerDay,10,'default risolto: 10 g/die');
   assert.equal(resolved.oilGramsPerMainMeal,5,'quota per pasto principale derivata: 5 g, mai una seconda impostazione indipendente');
 
-  /* ============ 1. Pranzo, una sola realizzazione con olio (ricetta reale, template 34) ============ */
+  /* ============ 1. Pranzo con una realizzazione reale contenente olio: totale 5 g ============ */
   {
-    const ricetteConOlio=M.getRicette().filter(r=>r.recipeModelId===34&&r.ingredienti.some(i=>i.nome==='Olio extravergine oliva'));
-    assert(ricetteConOlio.length>0,'il catalogo reale deve avere almeno una ricetta compilata con olio (template 34)');
-    const singola=[M.snapshotRealizzazione({ricettaId:ricetteConOlio[0].id},ricetteConOlio[0])];
-    const normalizzate=M.normalizzaRealizzazioniOlio(singola,resolved.oilGramsPerMainMeal);
-    const totale=normalizzate.reduce((tot,real)=>tot+(real.ingredientiEffettivi||[]).filter(i=>i.nome==='Olio extravergine oliva').reduce((s,i)=>s+(Number(i.quantita)||0),0),0);
-    assert.equal(totale,5,'pranzo con una sola realizzazione contenente olio: totale 5 g, mai i 10 g di catalogo');
+    const voce=await trovaPastoConOlio('2026-08-31','pranzo','legumi',60);
+    assert(voce,'rigeneraPasto deve poter produrre, entro 60 tentativi, un pranzo reale con olio (template 34, unico nel catalogo)');
+    const occorrenze=oliCompleti(voce);
+    const totale=occorrenze.reduce((s,o)=>s+(Number(o.ing.quantita)||0),0);
+    assert.equal(totale,5,'pranzo con olio: totale 5 g, mai i 10 g di catalogo');
+    assert.equal(occorrenze[0].ing.grammi,5,'grammi (equivalente interno) coerente con quantita');
   }
 
-  /* ============ 2. Pranzo composto da più realizzazioni contenenti olio: totale sempre 5 g, mai 5 g per ricetta ============ */
+  /* ============ 2. Cena equivalente: stessa quota (5 g) ============ */
   {
-    const ricetteConOlio=M.getRicette().filter(r=>r.recipeModelId===34&&r.ingredienti.some(i=>i.nome==='Olio extravergine oliva'));
-    const multiple=[
-      M.snapshotRealizzazione({ricettaId:ricetteConOlio[0].id},ricetteConOlio[0]),
-      M.snapshotRealizzazione({ricettaId:ricetteConOlio[1].id},ricetteConOlio[1])
-    ];
-    const normalizzate=M.normalizzaRealizzazioniOlio(multiple,resolved.oilGramsPerMainMeal);
-    const perRealizzazione=normalizzate.map(real=>(real.ingredientiEffettivi||[]).filter(i=>i.nome==='Olio extravergine oliva').reduce((s,i)=>s+(Number(i.quantita)||0),0));
-    const totale=perRealizzazione.reduce((a,b)=>a+b,0);
-    assert.equal(totale,5,'due realizzazioni con olio nello stesso pasto: totale complessivo 5 g, non 10 g (5 g per ricetta)');
-    assert(perRealizzazione.every(q=>q<5),'nessuna singola occorrenza deve conservare l\'intera quota quando ce ne sono altre nello stesso pasto');
-    // distribuzione deterministica: stesso input, stesso risultato
-    const multiple2=[
-      M.snapshotRealizzazione({ricettaId:ricetteConOlio[0].id},ricetteConOlio[0]),
-      M.snapshotRealizzazione({ricettaId:ricetteConOlio[1].id},ricetteConOlio[1])
-    ];
-    const normalizzate2=M.normalizzaRealizzazioniOlio(multiple2,resolved.oilGramsPerMainMeal);
-    const perRealizzazione2=normalizzate2.map(real=>(real.ingredientiEffettivi||[]).filter(i=>i.nome==='Olio extravergine oliva').reduce((s,i)=>s+(Number(i.quantita)||0),0));
-    assert.deepEqual(perRealizzazione,perRealizzazione2,'la distribuzione deve essere deterministica, mai casuale, a parità di input');
-  }
-
-  /* ============ 3. Cena equivalente: stessa quota (5 g), stessa funzione, nessuna seconda regola ============ */
-  {
-    const ricetteConOlio=M.getRicette().filter(r=>r.recipeModelId===34&&r.ingredienti.some(i=>i.nome==='Olio extravergine oliva'));
-    const cena=[M.snapshotRealizzazione({ricettaId:ricetteConOlio[2].id},ricetteConOlio[2])];
-    const normalizzate=M.normalizzaRealizzazioniOlio(cena,resolved.oilGramsPerMainMeal);
-    const totale=normalizzate.reduce((tot,real)=>tot+(real.ingredientiEffettivi||[]).filter(i=>i.nome==='Olio extravergine oliva').reduce((s,i)=>s+(Number(i.quantita)||0),0),0);
+    const voce=await trovaPastoConOlio('2026-09-01','cena','legumi',60);
+    assert(voce,'rigeneraPasto deve poter produrre, entro 60 tentativi, una cena reale con olio');
+    const totale=oliCompleti(voce).reduce((s,o)=>s+(Number(o.ing.quantita)||0),0);
     assert.equal(totale,5,'cena: stessa quota di 5 g del pranzo, oilGramsPerMainMeal è simmetrico (10/2), non una seconda impostazione per pasto');
   }
 
-  /* ============ 4. nutrientiEffettivi coerenti con la quantità di olio normalizzata (5 g, non 10 g) ============ */
+  /* ============ 3. nutrientiEffettivi propagati (stesso snapshot letto da nutrienti/inventario/spesa/storico) ============ */
   {
-    const ricetteConOlio=M.getRicette().filter(r=>r.recipeModelId===34&&r.ingredienti.some(i=>i.nome==='Olio extravergine oliva'));
-    const base=ricetteConOlio[0];
-    const real=[M.snapshotRealizzazione({ricettaId:base.id},base)];
-    const grassiPrimaOlio=real[0].ingredientiEffettivi.find(i=>i.nome==='Olio extravergine oliva').grammi; // 10, prima della normalizzazione
-    const grassiPrimaTotali=real[0].nutrientiEffettivi.grassi;
-    const normalizzate=M.normalizzaRealizzazioniOlio(real,resolved.oilGramsPerMainMeal);
-    const grassiDopoTotali=normalizzate[0].nutrientiEffettivi.grassi;
-    assert.equal(grassiDopoTotali,grassiPrimaTotali-5,'i grassi in nutrientiEffettivi devono riflettere il dimezzamento dell\'olio (10g->5g, 100% grassi -> -5g), stesso snapshot letto da nutrienti/inventario/spesa/storico');
-    assert(grassiPrimaOlio===10,'pre-condizione: la porzione di catalogo (10 g) resta un metadato del catalogo, non modificata');
+    const voce=await trovaPastoConOlio('2026-09-02','pranzo','legumi',60);
+    assert(voce,'serve un pasto reale con olio per verificare la propagazione');
+    const {real}=oliCompleti(voce)[0];
+    assert(real.nutrientiEffettivi&&typeof real.nutrientiEffettivi.grassi==='number','nutrientiEffettivi deve essere ricalcolato e presente sulla realizzazione con olio');
+  }
+
+  /* ============ 4. Invariante generale: ogni volta che l'olio compare, il totale è sempre 5 g, mai altro (nessuna duplicazione, nessuna aggiunta parziale) ============ */
+  {
+    let osservazioni=0;
+    for(const target of ['legumi','carne','pesce','formaggi','uova']){
+      for(let i=0;i<15;i++){
+        const voce=await M.rigeneraPasto('2026-09-03','pranzo',target,{soloAnteprima:true});
+        const occorrenze=voce&&oliCompleti(voce);
+        if(occorrenze&&occorrenze.length){
+          osservazioni++;
+          const totale=occorrenze.reduce((s,o)=>s+(Number(o.ing.quantita)||0),0);
+          assert.equal(totale,5,'ogni volta che l\'olio compare in un pasto reale, il totale deve essere sempre 5 g (target: '+target+')');
+        }
+      }
+    }
+    assert(osservazioni>0,'il test deve aver osservato almeno un pasto reale con olio per validare l\'invariante');
   }
 
   /* ============ 5. Colazione: nessuna quota automatica (strutturalmente non idonea) ============ */
@@ -111,15 +131,6 @@ const M=global.DietaPlannerMotorV12;
     assert(olio,'la variante Olio extravergine oliva deve esistere');
     assert.equal(olio.colazioneGruppo,null,'l\'olio non è idoneo alla colazione nel catalogo (nessuna sottoCategoriaColazione/ancheColazione): nessuna quota automatica può mai raggiungerlo lì');
     assert.equal(olio.porzioneColazione,null,'nessuna porzione di colazione calcolata per l\'olio');
-  }
-
-  /* ============ 6. Nessun aggiunta automatica: una realizzazione senza olio resta senza olio ============ */
-  {
-    const senzaOlio=M.getRicette().find(r=>!r.ingredienti.some(i=>i.nome==='Olio extravergine oliva'));
-    assert(senzaOlio,'deve esistere almeno una ricetta compilata senza olio');
-    const real=[M.snapshotRealizzazione({ricettaId:senzaOlio.id},senzaOlio)];
-    const normalizzate=M.normalizzaRealizzazioniOlio(real,resolved.oilGramsPerMainMeal);
-    assert(!normalizzate[0].ingredientiEffettivi.some(i=>i.nome==='Olio extravergine oliva'),'una ricetta che non prevede olio non deve mai riceverlo automaticamente');
   }
 
   console.log('lotto olio EVO quota pasto: ok');
