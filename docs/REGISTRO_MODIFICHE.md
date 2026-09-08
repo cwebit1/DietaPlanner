@@ -1156,7 +1156,7 @@ quantita/unita/grammi, UI grafica, `nutrition-config.js`.
 
 ---
 
-## 2. Commit `(in preparazione)` — rimossi due export interni aggiunti solo per il test
+## 2. Commit `c7a6e5b` — rimossi due export interni aggiunti solo per il test
 
 **Difetto riscontrato:** il commit `11190a8` aveva aggiunto all'oggetto
 pubblico `DietaPlannerMotorV12` due funzioni interne, `configRuntime` e
@@ -1207,6 +1207,6 @@ riservata a Cwe, non affrontata), ricette mancanti, `db-ricette.json`,
 `ingredienti-new.json`, comportamento del motore, resolver, cataloghi,
 interfaccia grafica.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `c7a6e5bd542f58bc1aa325899966ac5b7af97563`.
 
 ---
