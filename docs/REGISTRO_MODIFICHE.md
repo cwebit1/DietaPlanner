@@ -999,3 +999,27 @@ verso opposto. Non vengono animate opacità e distanze eccedenti il pannello.
 **SHA remoto dell'intervento:** `47110f8f6fc77a76f9293ac459c101cb9e70e144`.
 
 ---
+
+## 12. Metadati di integrazione della preview — 8 settembre 2026
+
+**Richiesta di Cwe:** lasciare nella struttura grafica indicazioni utili per il
+successivo lavoro di merge con l'app funzionale.
+
+**Intervento effettuato:** aggiunti attributi DOM invisibili `data-ui-role`,
+`data-bind`, `data-action`, `data-route`, `data-state` e
+`data-meal-slot` ai principali componenti statici e generati. Inserito inoltre
+il contratto JSON `restyling-merge-contract`, che elenca componenti, dati
+attesi, azioni e invarianti di separazione.
+
+**Impatto visuale:** nessuno; i metadati non applicano stili e non modificano
+dimensioni, animazioni o contenuti visibili.
+
+**Separazione confermata:** non è stato collegato alcun dato funzionale e non
+sono stati modificati `index.html`, motore, database o IndexedDB.
+
+**Verifiche:** parsing dello script applicativo, parsing del contratto JSON e
+`git diff --check`.
+
+**SHA remoto dell'intervento:** `6886a54bbf56636807c9adabfe2ec60d5988bb61`.
+
+---
