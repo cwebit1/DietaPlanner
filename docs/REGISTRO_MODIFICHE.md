@@ -1248,3 +1248,17 @@ interfaccia grafica.
 **SHA remoto:** `cb29537890d1df523d33e8f170cd83d3ee3b158b`.
 
 ---
+
+## 18. Chiusura grafica della scheda Dettagli — 8 settembre 2026
+
+**Richiesta conclusiva di Cwe:** proseguire il bordo bianco sui lati della fascia sfumata, arrotondare gli angoli superiori della fotografia e trasformare l'elenco ingredienti in una tabella per garantire l'allineamento verticale.
+
+**Intervento effettuato:** bordo bianco laterale continuo tra foto e sfumatura, angoli superiori arrotondati e tabella semantica a quattro colonne: icona, quantità/unità, “di”, ingrediente. La barra percentuale duplicata resta rimossa.
+
+**Separazione confermata:** modificato esclusivamente `restyling-preview.html`; `index.html` e la parte funzionale non sono stati toccati.
+
+**Verifiche:** parsing JavaScript, presenza della struttura tabellare e `git diff --check`.
+
+**SHA remoto:** `482797c7de321bd323e08c3844ced16a9a184ae3`.
+
+---
