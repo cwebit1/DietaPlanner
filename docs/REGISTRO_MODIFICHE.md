@@ -18,6 +18,34 @@ una nuova intestazione di primo livello in fondo al file.
 
 ---
 
+## 12. Prototipo grafico Menù settimanale esteso — 8 settembre 2026
+
+**Obiettivo richiesto da Cwe:** trasformare la pagina Menù nel quadro esteso e
+curato dell'intero piano nutrizionale settimanale.
+
+**Intervento effettuato:** aggiunta al solo prototipo una nuova vista Menù
+navigabile dalla bottom bar. La pagina comprende testata e navigazione della
+settimana, riepilogo del piano, sette giornate complete e sempre aperte,
+Colazione, Pranzo e Cena, distinzione tra primo/secondo/contorno, un lucchetto
+grafico per realizzazione e la barra dei comandi prevista dalla pagina
+originale. Inseriti metadata espliciti per il futuro collegamento ai record
+settimanali prodotti dal motore.
+
+**Separazione confermata:** `index.html`, motore, database e IndexedDB non sono
+stati modificati. I pasti visualizzati sono contenuti dimostrativi del mockup e
+non introducono regole nutrizionali.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline con Node.js
+riuscito; sette giornate renderizzate nel dataset; `index.html` invariato. Il
+controllo automatico tramite browser headless non è stato eseguito perché il
+runtime grafico Chromium non è installato nell'ambiente.
+
+**File modificati:** `restyling-preview.html`, `docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento grafico:** `76db7899c8aa903f870f9781fc66c65d1ab1a166`.
+
+---
+
 ## 11. Rifinitura card pasti — 8 settembre 2026
 
 **Correzioni richieste da Cwe:** portare a 10 px il margine inferiore del
