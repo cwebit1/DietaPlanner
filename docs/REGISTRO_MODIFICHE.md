@@ -1741,3 +1741,30 @@ Node.js riuscito.
 **SHA dell'intervento grafico:** `e2fbfda8011df5075145bf2911b5d52337ecd337`.
 
 ---
+
+## 13. Menù editoriale su riferimento A e nuovo header — 8 settembre 2026
+
+**Obiettivo richiesto da Cwe:** ricostruire il Menù settimanale seguendo come
+riferimento metrico la proposta A approvata e adeguare anche proporzioni e
+disposizione dell'header comune.
+
+**Intervento effettuato:** sostituita la precedente vista dimostrativa con una
+composizione editoriale comprendente testata `Il mio menù`, selettore settimana,
+fascia di equilibrio nutrizionale, giornata corrente fotografica a tre colonne
+e giornate successive compatte. L'header dispone ora logo, foglia, saluto e
+avatar nello stesso ordine del riferimento e usa un'altezza ridotta. Conservati
+i metadata destinati al futuro collegamento con i dati funzionali.
+
+**Separazione confermata:** nessun intervento su `index.html`, motore, database
+o IndexedDB. I contenuti alimentari restano dimostrativi e non costituiscono
+regole funzionali.
+
+**Verifiche:** `git diff --check` pulito; parsing JavaScript riuscito; confronto
+tramite screenshot reale e misurazione DOM di header, testata, riepilogo,
+giornata espansa, giornate compatte e bottom bar.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `e43d7fc1fed3ef93833b556a7fccc41eab35ffb9`.
+
+---
