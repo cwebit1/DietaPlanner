@@ -28,8 +28,8 @@
     .bottom-swipe-indicator{position:absolute;z-index:0;bottom:4px;left:0;width:22px;height:3px;border-radius:4px;background:#e4b640;box-shadow:0 2px 4px rgba(0,0,0,.3);pointer-events:none;will-change:left}.nav{position:relative;z-index:1}
     @media(max-width:430px){.bottom{padding-left:5px;padding-right:5px}.nav{font-size:8px}.nav i{width:28px;height:28px}.nav svg{width:26px;height:26px}}
     .dish-row{grid-template-columns:minmax(0,1fr) 51px 51px}.favorite{width:51px;height:51px;border:0;border-radius:50%;background:#eff2eb;color:#e0a711;display:grid;place-items:center}.favorite svg{width:58%;height:58%;fill:currentColor;stroke:#b98508;stroke-width:1.1;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(126,86,0,.2))}
-    .favorite.active{box-shadow:inset 0 0 0 2px rgba(224,167,17,.42),0 2px 8px rgba(126,86,0,.12)}.action.choose-special{position:relative;isolation:isolate;background:#eff2ec;color:#531715;overflow:visible}.action.choose-special:before{content:"";position:absolute;z-index:-1;inset:-3px;border-radius:16px;background:rgba(204,42,35,.7);box-shadow:0 0 9px rgba(204,42,35,.7);animation:special-alert 1s ease-in-out infinite}.action.choose-special b{color:#a31f1a}@keyframes special-alert{0%,100%{opacity:.3;transform:scale(.985)}50%{opacity:1;transform:scale(1.015)}}
-    @property --special-frame-angle{syntax:'<angle>';initial-value:0deg;inherits:false}.visual-carousel.special-mode{border-radius:0 0 17px 17px}.visual-carousel.special-mode:after{content:"";position:absolute;z-index:8;inset:0;border-radius:inherit;padding:3px;pointer-events:none;background:conic-gradient(from var(--special-frame-angle),#ff3b30,#ffcc00,#35d06f,#34aadc,#ad5cff,#ff3b30);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(255,204,0,.6));animation:special-frame-lights 2.4s linear infinite}@keyframes special-frame-lights{to{--special-frame-angle:360deg}}
+    .favorite.active{box-shadow:inset 0 0 0 2px rgba(224,167,17,.42),0 2px 8px rgba(126,86,0,.12)}.action.choose-special{position:relative;isolation:isolate;background:#eff2ec;color:#531715;overflow:visible}.action.choose-special:before{content:"";position:absolute;z-index:-1;inset:-1px;border-radius:14px;background:rgba(204,42,35,.62);box-shadow:0 0 4px rgba(204,42,35,.58);animation:special-alert 1s ease-in-out infinite}.action.choose-special b{color:#a31f1a}@keyframes special-alert{0%,100%{opacity:.3;transform:scale(.992)}50%{opacity:1;transform:scale(1.005)}}
+    @property --special-frame-angle{syntax:'<angle>';initial-value:0deg;inherits:false}.meal{position:relative}.meal.special-mode:after{content:"";position:absolute;z-index:8;inset:0;border-radius:inherit;padding:3px;pointer-events:none;background:conic-gradient(from var(--special-frame-angle),#ff3b30,#ffcc00,#35d06f,#34aadc,#ad5cff,#ff3b30);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(255,204,0,.6));animation:special-frame-lights 2.4s linear infinite}.meal.special-mode .dots{display:none}@keyframes special-frame-lights{to{--special-frame-angle:360deg}}
     @media(max-width:430px){.dish-row{grid-template-columns:minmax(0,1fr) 34px 34px;gap:3px}.favorite{width:34px;height:34px}.favorite svg{width:68%;height:68%}}
   </style>
 </head>
@@ -196,12 +196,19 @@
         sets.push(specialEntries);
         let currentSet=0;
         let changing=false;
+        const instantTrackScroll=left=>{
+          const previousBehavior=track.style.scrollBehavior;
+          track.style.scrollBehavior='auto';
+          track.scrollLeft=left;
+          track.getBoundingClientRect();
+          track.style.scrollBehavior=previousBehavior;
+        };
         const renderSet=(setIndex)=>{
           currentSet=setIndex;
           track.replaceChildren();
           const entries=sets[setIndex];
           const isSpecialSet=setIndex===specialSetIndex;
-          carousel.classList.toggle('special-mode',isSpecialSet);
+          meal.classList.toggle('special-mode',isSpecialSet);
           const renderedEntries=isSpecialSet?[entries[entries.length-1],...entries,entries[0]]:entries;
           renderedEntries.forEach((entry,renderIndex)=>{
             const index=isSpecialSet?(renderIndex-1+entries.length)%entries.length:renderIndex;
@@ -256,8 +263,8 @@
             pane.appendChild(body);
             track.appendChild(pane);
           });
-          track.scrollLeft=isSpecialSet?track.clientWidth:0;
-          if(isSpecialSet)requestAnimationFrame(()=>{track.scrollLeft=track.clientWidth;});
+          instantTrackScroll(isSpecialSet?track.clientWidth:0);
+          if(isSpecialSet)requestAnimationFrame(()=>instantTrackScroll(track.clientWidth));
         };
         renderSet(0);
         const nextButton=document.createElement('button');
@@ -275,8 +282,8 @@
           if(currentSet!==specialSetIndex||!track.clientWidth)return;
           const physicalIndex=Math.round(track.scrollLeft/track.clientWidth);
           const count=sets[specialSetIndex].length;
-          if(physicalIndex===0)track.scrollTo({left:count*track.clientWidth,behavior:'auto'});
-          else if(physicalIndex===count+1)track.scrollTo({left:track.clientWidth,behavior:'auto'});
+          if(physicalIndex===0)instantTrackScroll(count*track.clientWidth);
+          else if(physicalIndex===count+1)instantTrackScroll(track.clientWidth);
         };
         track.addEventListener('scroll',()=>{
           if(currentSet!==specialSetIndex)return;
@@ -286,7 +293,10 @@
         nextButton.addEventListener('click',()=>{
           const index=Math.round(track.scrollLeft/track.clientWidth);
           if(currentSet===specialSetIndex){
-            track.scrollTo({left:(index+1)*track.clientWidth,behavior:'smooth'});
+            const count=sets[specialSetIndex].length;
+            const normalizedIndex=index>=count+1?1:index;
+            if(normalizedIndex!==index)instantTrackScroll(track.clientWidth);
+            track.scrollTo({left:(normalizedIndex+1)*track.clientWidth,behavior:'smooth'});
             clearTimeout(infiniteScrollTimer);
             infiniteScrollTimer=setTimeout(normalizeSpecialLoop,430);
           }else track.scrollTo({left:((index+1)%sets[currentSet].length)*track.clientWidth,behavior:'smooth'});
