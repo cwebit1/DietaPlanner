@@ -960,3 +960,22 @@ alternativo esce verso l'alto e il pasto programmato rientra dal basso.
 **SHA remoto dell'intervento:** `07d2a2f23761779de145a0c1df952a2c741161fa`.
 
 ---
+
+## 10. Transizione verticale continua senza fading — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** eliminare il breve vuoto bianco tra uscita e
+ingresso dei due pasti e usare un movimento esclusivamente assiale.
+
+**Intervento effettuato:** il pannello uscente e quello entrante vengono
+temporaneamente sovrapposti e animati nello stesso intervallo. Entrambi restano
+completamente opachi: mentre uno lascia la card, l'altro ne occupa
+progressivamente lo spazio, senza fading né fotogrammi vuoti. I versi distinti
+di `Cambia` e `Ripristina` restano invariati.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`.
+
+**Verifiche:** parsing dello script inline e `git diff --check`.
+
+**SHA remoto dell'intervento:** `688639ab761adac52bbef1c9613cc3ff36ede806`.
+
+---
