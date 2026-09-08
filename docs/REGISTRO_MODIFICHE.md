@@ -1768,3 +1768,155 @@ giornata espansa, giornate compatte e bottom bar.
 **SHA dell'intervento grafico:** `e43d7fc1fed3ef93833b556a7fccc41eab35ffb9`.
 
 ---
+
+# Filone: Regola proteica definitiva — pranzo e cena sempre categorie diverse
+
+Riguarda: eliminazione completa della falsa semantica
+`maxProteinSourcesPerDay=1 → pranzo e cena della stessa categoria` da
+`nutrition-config.js`, `engine-core.js`, `motor-v12.js`, `index.html`
+(Set utente e Setting nutrizionista), secondo la regola chiarita
+definitivamente da Cwe.
+
+## 1. Commit `(in preparazione)` — rimozione completa del parametro e validazione ≥2 categorie
+
+**Origine dell'interpretazione errata:** nel vecchio motore, il numero
+"1" indicava semplicemente che l'utente aveva già scelto una delle due
+categorie proteiche per un giorno e il sistema doveva completare
+automaticamente la seconda — non "una sola fonte proteica al giorno". In
+un intervento successivo (documentato più sopra come "Aggiornamento
+04/09/2026 (7)") questa fu reinterpretata come
+`maxProteinSourcesPerDay=1 → pranzo e cena della stessa categoria`,
+introdotta come funzionalità esplicita in `nutrition-config.js`,
+`engine-core.js` e `motor-v12.js`. Quella reinterpretazione era errata.
+
+**Regola definitiva di Cwe:** la settimana ha sempre due pasti
+principali al giorno; pranzo = una categoria proteica, cena = una
+categoria proteica sempre differente. Nessuna configurazione "fonti
+proteiche/giorno". Per la tabella utente, per ogni giorno: 0 categorie
+scelte → il sistema ne sceglie automaticamente due, ammesse e
+differenti; 1 categoria scelta → resta vincolante, la seconda scelta
+automaticamente tra le ammesse e differenti; 2 categorie scelte →
+entrambe vincolanti. Il nutrizionista può escludere categorie o
+limitarne le frequenze, ma dopo profilo ed esclusioni devono restare
+almeno due categorie ammesse, altrimenti la configurazione è
+incompatibile e non va salvata né usata per generare.
+
+**Correzioni applicate:**
+- `nutrition-config.js`: `maxProteinSourcesPerDay` rimosso per intero
+  (da `APP_DEFAULTS`, dalla risoluzione, dall'output `resolved`). Nuova
+  validazione canonica: dopo profilo (`forbiddenProteinMacros`) ed
+  esclusioni esplicite (`proteinFrequencies[k].max===0`), se restano
+  meno di due categorie ammesse, viene aggiunto un errore esplicito e
+  `resolved.valid=false` — punto unico, riusato automaticamente dal
+  salvataggio Setting già esistente (`salvaConfigAvanzata` controlla già
+  `resolved.valid` prima di persistere: nessuna modifica necessaria lì
+  per il punto 4 dell'incarico).
+- `engine-core.js`: `DEFAULTS.maxProteinSourcesPerDay` rimosso.
+  `buildProteinGrid()` riscritta: nessun parametro "fonti/giorno", il
+  numero di categorie già scelte per un giorno si deduce solo dalla
+  tabella di quel giorno (0→completa con 2, 1→completa con 1 diversa,
+  2→conserva entrambe), backtracking vero invariato (mai un fallback che
+  riusa la categoria dell'altro pasto dello stesso giorno). Se le
+  categorie ammesse sono meno di due, restituisce un errore esplicito
+  prima ancora di cercare una soluzione.
+- `motor-v12.js`: rimossi `unaSolaFonteAlGiorno` e il parametro/Map
+  `targetGiorno` (diventato interamente inutile una volta rimossi i suoi
+  soli due usi). `opzioniProteinaPerSlot()` esclude sempre dal pool la
+  categoria target già usata nel primo pasto del giorno
+  (`usateGiorno`), senza eccezioni; nessun ramo residuo che la
+  riproponga intenzionalmente. La registrazione ai fini
+  dell'esclusione giornaliera (`proteineGiorno`) resta limitata alla
+  sola `categoriaTarget` del pasto accettato (fix del filone
+  precedente, non toccato qui) — le proteine secondarie di una ricetta
+  continuano a concorrere ai loro cap/conteggi tramite
+  `accumulaConteggiPasto`, invariato.
+- `index.html`: rimossi `maxProteinSourcesPerDay` da
+  `CONFIG_AVANZATA_DEFAULT` e da `configAvanzataDaRisolta`; rimossa la
+  voce "Fonti proteiche/giorno" dal form Setting nutrizionista (unica
+  modifica alla grafica, esplicitamente autorizzata). Rimossa
+  interamente `maxFontiProteicheGiornaliereSet` e ogni suo uso:
+  `getConfigProteine`, `caricaVincoliProteineSet`,
+  `validaFattibilitaProteineSet` (limite di celle fissabili per giorno
+  sempre 2, duplicato sempre vietato, senza eccezioni), `renderSetTabellaGiorno`
+  (`maxDay` sempre 2), e la chiamata a `buildProteinGrid` nel percorso
+  Casuale/Completa (non passa più il parametro eliminato) — stessa
+  identica funzione richiamata sia dal Set sia utilizzabile per la
+  generazione del Menù, nessuna doppia interpretazione.
+
+**Comportamento con 0, 1 e 2 scelte (verificato con la pipeline reale):**
+- 0 scelte: il sistema sceglie automaticamente due categorie ammesse e
+  differenti (`source:'auto'` su entrambe).
+- 1 scelta: resta vincolante (`source:'user'`), la seconda viene scelta
+  automaticamente tra le ammesse e differenti (`source:'auto'`), mai
+  uguale alla prima.
+- 2 scelte: entrambe restano vincolanti esattamente come indicato
+  (`source:'user'` su entrambe).
+
+**Gestione delle esclusioni:** verificato che, con un profilo che
+esclude alcune categorie (es. vegetariano: esclude carne e pesce), le
+due categorie scelte automaticamente provengano sempre e solo da quelle
+rimaste ammesse, mai da una esclusa. Verificato che una configurazione
+con meno di due categorie disponibili (es. profilo vegano: resta solo
+"legumi") venga rifiutata esplicitamente sia dal resolver
+(`resolved.valid=false`, prima ancora di generare) sia dal generatore
+stesso (`buildProteinGrid` restituisce un errore, mai una griglia con
+pranzo=cena).
+
+**Conseguenza rilevata, non risolta, riservata a Cwe (nessuna decisione
+alimentare presa autonomamente):** il profilo dietetico "vegano" esclude
+carne, pesce, formaggi e uova, lasciando disponibile solo "legumi" — con
+la regola definitiva questo profilo diventa strutturalmente
+incompatibile (`valid:false`), non più utilizzabile per generare un
+piano. Prima di questo intervento funzionava soltanto perché la vecchia
+(errata) semantica "1 fonte/giorno" permetteva pranzo=cena=legumi. Due
+strade possibili, entrambe decisioni di prodotto/nutrizionali non prese
+qui: (a) riclassificare "legumi" in sotto-categorie distinte per dare al
+profilo vegano almeno due categorie proteiche reali; (b) sospendere o
+ridefinire il profilo vegano finché non viene risolto. Segnalato anche
+in `docs/SPECIFICA_FUNZIONALE_CORRENTE.md` e
+`docs/STATO_LOTTI_E_TEST.md`.
+
+**File modificati:** `nutrition-config.js`, `engine-core.js`,
+`motor-v12.js`, `index.html`,
+`tests/lotto-proteine-autocompletamento.test.js` (nuovo),
+`tests/lotto-set-proteine-buildgrid.test.js`,
+`tests/lotto-set-proteine-validazione.test.js`,
+`tests/lotto-resolver-unica-fonte-runtime.test.js`,
+`tests/lotto-set-proteine-menu-reale.test.js`,
+`tests/lotto-proteine-giorno-esclusione.test.js` (aggiornati),
+`tests/lotto-j-una-fonte-proteica-giorno.test.js` (rimosso: testava per
+intero la semantica ora eliminata), `docs/SPECIFICA_FUNZIONALE_CORRENTE.md`,
+`docs/STATO_LOTTI_E_TEST.md`.
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-proteine-autocompletamento.test.js  → ok (fallisce senza la correzione: il profilo vegano risultava valido, verificato; passa dopo)
+node tests/nutrition-config.test.js                    → ok
+node --check nutrition-config.js                       → OK
+node --check engine-core.js                             → OK
+node --check motor-v12.js                                → OK
+git diff --check                                         → pulito
+```
+Verificato anche, per igiene e non nella lista dei controlli consentiti
+di questo intervento: `lotto-set-proteine-buildgrid.test.js`,
+`lotto-set-proteine-validazione.test.js`,
+`lotto-resolver-unica-fonte-runtime.test.js`,
+`lotto-set-proteine-menu-reale.test.js`,
+`lotto-proteine-giorno-esclusione.test.js` — tutti passano.
+
+**Verifica finale prima del push:** nessun ramo runtime residuo che
+renda pranzo e cena uguali — confermato con ricerca globale su
+`maxProteinSourcesPerDay`, `unaSolaFonteAlGiorno`,
+`maxFontiProteicheGiornaliereSet`: tutte le occorrenze rimaste sono
+commenti storici/esplicativi, nessun riferimento funzionale.
+
+**Non modificati:** carboidrati, verdure, residuo V/S/G, olio, ricette,
+ingredienti, grafica del restyling (eccetto la sola rimozione della voce
+"Fonti proteiche/giorno" dal Setting, esplicitamente autorizzata).
+Nessun risolutore globale della settimana, nessun backtracking su pasti
+già chiusi, nessuna rigenerazione completa della settimana: generazione
+sequenziale invariata. Nessuna funzione interna esportata per i test.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

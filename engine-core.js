@@ -13,7 +13,6 @@ const DEFAULTS=Object.freeze({
     legumi:{min:N.PDF_BASELINE.proteinFrequencies.legumi.min,max:N.PDF_BASELINE.proteinFrequencies.legumi.max,target:N.APP_DEFAULTS.proteinTargets.legumi}
   },
   subtypeCaps:Object.assign({},N.PDF_BASELINE.subtypeCaps),
-  maxProteinSourcesPerDay:N.APP_DEFAULTS.maxProteinSourcesPerDay,
   carbSlots:N.APP_DEFAULTS.carbSlots,carbCellMax:N.APP_DEFAULTS.carbCellMax,limitedCarbTotalMax:N.APP_DEFAULTS.limitedCarbTotalMax,
   fruit:{min:N.PDF_BASELINE.fruit.dailyMin,max:N.PDF_BASELINE.fruit.dailyMax,portionMin:N.PDF_BASELINE.fruit.portionMinGrams,portionMax:N.PDF_BASELINE.fruit.portionMaxGrams},
   specialBreakfastMax:N.APP_DEFAULTS.specialBreakfastMax,specialMealsMax:N.APP_DEFAULTS.specialMealsMax,
@@ -90,38 +89,45 @@ function coverageForRecipe(recipe,ingredientMeta){
    x 2 pasti (pranzo/cena), rispettando SEMPRE contemporaneamente: minimi e
    massimi settimanali per categoria, target come preferenza morbida,
    categorie escluse (assenti da cfg.proteinFrequencies o con max=0),
-   celle fissate a mano (userTable) e il numero di fonti proteiche
-   giornaliere (cfg.maxProteinSourcesPerDay, letto dalla configurazione
-   canonica passata dal chiamante - mai un default locale duplicato).
-   Con maxProteinSourcesPerDay===2 (default): pranzo e cena dello stesso
-   giorno devono avere SEMPRE categorie diverse, garantito con vero
-   backtracking (mai un fallback che riusa la categoria precedente
-   quando il pool alternativo e' temporaneamente vuoto - quella era la
-   causa esatta del duplicato ['carne','carne']). Con
-   maxProteinSourcesPerDay===1: una singola categoria vale per entrambi
-   i pasti dello stesso giorno (stessa semantica di
-   opzioniProteinaPerSlot in motor-v12.js) - non dedotto mai dal numero
-   di caselle riempite, letto sempre e solo dalla configurazione.
-   Se i vincoli sono realmente incompatibili tra loro, restituisce
+   celle fissate a mano (userTable).
+   Regola definitiva di Cwe: pranzo e cena dello stesso giorno hanno
+   SEMPRE due categorie diverse - non esiste più un
+   "maxProteinSourcesPerDay" configurabile (concetto eliminato, era una
+   semantica errata: "1" nel vecchio motore indicava solo che l'utente
+   aveva già scelto una delle due categorie e il sistema doveva
+   completare la seconda, MAI "stessa categoria per entrambi i pasti").
+   Il numero di categorie già scelte per un giorno si deduce SOLO dalla
+   tabella di quel giorno:
+   - 0 scelte -> completa con due categorie distinte;
+   - 1 scelta -> quella resta vincolante, la seconda dev'essere diversa;
+   - 2 scelte -> entrambe restano vincolanti (deve già valere che sono
+     diverse: due celle uguali sono un errore di dati a monte, la UI non
+     può produrle - una sola casella per combinazione giorno/categoria).
+   Garantito con vero backtracking (mai un fallback che riusa la
+   categoria dell'altro pasto dello stesso giorno quando il pool
+   alternativo è temporaneamente vuoto - quella era la causa esatta del
+   duplicato ['carne','carne']).
+   Se i vincoli sono realmente incompatibili tra loro (incluso: meno di
+   due categorie ammesse dopo profilo/esclusioni), restituisce
    errors non vuoto e cells={} - mai una griglia formalmente completa
    ma invalida. */
 function buildProteinGrid(days,userTable,config,history,rng){
   const cfg=mergeConfig(config);
-  const maxPerDay=Math.max(1,Math.min(2,Number(cfg.maxProteinSourcesPerDay)||2));
   const categorie=Object.keys(cfg.proteinFrequencies).filter(m=>{
     const f=cfg.proteinFrequencies[m];return f&&f.max!==0;
   });
   const counts={};for(const m of Object.keys(cfg.proteinFrequencies))counts[m]=0;
   const errors=[];
+  if(categorie.length<2){
+    errors.push('Categorie proteiche disponibili insufficienti ('+categorie.length+'): servono almeno due categorie ammesse per completare pranzo e cena con categorie sempre diverse.');
+    return {cells:{},counts,errors};
+  }
   const stato={};
   for(const day of days){
     const scelte=(userTable&&userTable[day]||[]).slice(0,2);
     const pranzo=scelte[0]&&cfg.proteinFrequencies[scelte[0]]?scelte[0]:null;
     const cena=scelte[1]&&cfg.proteinFrequencies[scelte[1]]?scelte[1]:null;
-    if(pranzo&&cena){
-      if(maxPerDay===2&&pranzo===cena)errors.push(`${day}: la stessa categoria (${pranzo}) non puo' comparire due volte con fonti proteiche/giorno=2.`);
-      if(maxPerDay===1&&pranzo!==cena)errors.push(`${day}: con fonti proteiche/giorno=1 pranzo e cena devono coincidere (trovati ${pranzo} e ${cena}).`);
-    }
+    if(pranzo&&cena&&pranzo===cena)errors.push(`${day}: la stessa categoria (${pranzo}) non puo' comparire due volte nello stesso giorno - pranzo e cena devono sempre essere categorie diverse.`);
     stato[day]={pranzo,cena};
     if(pranzo)counts[pranzo]++;
     if(cena)counts[cena]++;
@@ -176,10 +182,7 @@ function buildProteinGrid(days,userTable,config,history,rng){
     let candidati=categorie.filter(m=>{
       const max=cfg.proteinFrequencies[m].max;
       if(max!=null&&counts[m]>=max)return false;
-      if(altro!=null){
-        if(maxPerDay===2&&m===altro)return false;
-        if(maxPerDay===1&&m!==altro)return false;
-      }
+      if(altro!=null&&m===altro)return false; // sempre diversa dall'altro pasto dello stesso giorno
       return true;
     });
     candidati=ordinaCandidati(candidati);
@@ -193,7 +196,7 @@ function buildProteinGrid(days,userTable,config,history,rng){
   };
   const risolto=assegna(0);
   if(!risolto){
-    errors.push('Nessuna combinazione valida trovata per i vincoli attuali (minimi/massimi settimanali, categorie escluse, celle fissate, fonti proteiche/giorno).');
+    errors.push('Nessuna combinazione valida trovata per i vincoli attuali (minimi/massimi settimanali, categorie escluse, celle fissate).');
     return {cells:{},counts,errors};
   }
   const cells={};

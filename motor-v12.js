@@ -904,8 +904,7 @@ async function configRuntime(forzaRicalcolo){
     allergie:resolved.safety.allergens,
     blockedIngredientIds:new Set(resolved.safety.blockedIngredientIds),
     vincoli:resolved.ingredientConstraints,
-    weeklyLimits:resolved.subtypeCaps,
-    maxProteinSourcesPerDay:resolved.maxProteinSourcesPerDay
+    weeklyLimits:resolved.subtypeCaps
   };
   return state.runtimeConfigCache;
 }
@@ -2079,35 +2078,27 @@ function contaTargetTabellaFuturi(tab,slots,daIndice){
   }
   return out;
 }
-function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng,targetGiorno){
+function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng){
   const slot=slots[indice],freq=resolved.proteinFrequencies||{};
   const forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]);
   const allowed=Object.keys(freq).filter(k=>!forbidden.has(k)&&freq[k].max!==0);
-  /* "Fonti proteiche/giorno" (Configurazione nutrizionista) impostato a 1
-     significa: un solo giorno, una sola categoria per entrambi i pasti -
-     non "al massimo due", ma esattamente una. A 2 (default) resta la
-     regola di sempre: mai la stessa categoria due volte nello stesso
-     giorno. Va rispettato sia quando la cella e' fissata a mano in
-     tabella sia quando la sceglie il motore per le celle libere.
-     targetGiorno e' la categoria EFFETTIVAMENTE cercata per il primo
-     pasto del giorno (non tutte le macro incidentalmente presenti nella
-     ricetta scelta, che con una ricetta a doppia proteina - es. carne e
-     formaggio nello stesso piatto - sarebbero ambigue su quale ripetere). */
-  const unaSolaFonteAlGiorno=Number(resolved.maxProteinSourcesPerDay)===1;
+  /* Regola definitiva di Cwe: pranzo e cena dello stesso giorno hanno
+     SEMPRE due categorie proteiche diverse - "maxProteinSourcesPerDay"
+     eliminato (era una semantica errata: "1" nel vecchio motore
+     indicava solo che l'utente aveva gia' scelto una delle due categorie
+     e il sistema doveva completare la seconda, mai "stessa categoria per
+     entrambi i pasti"). Nessun ramo che riproponga intenzionalmente la
+     categoria gia' usata: usateGiorno (la categoria dell'eventuale primo
+     pasto del giorno, gia' accettato) e' sempre esclusa dal pool, sia
+     quando la cella e' fissata a mano in tabella sia quando la sceglie
+     il motore per le celle libere. */
   const fissata=targetTabellaPerSlot(tab,slot);
   if(fissata){
     if(!allowed.includes(fissata))return {errors:['Proteina '+fissata+' non ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
-    if(!unaSolaFonteAlGiorno&&usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
-    if(unaSolaFonteAlGiorno&&targetGiorno&&targetGiorno!==fissata)return {errors:['La tabella proteine assegna '+fissata+' per '+slot.day+', ma la fonte già usata oggi è '+targetGiorno+' e il piano ammette una sola fonte proteica al giorno.'],targets:[]};
+    if(usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
     const max=freq[fissata].max;
     if(max!==null&&max!==undefined&&(Number(counts[fissata])||0)>=Number(max))return {errors:['Proteina '+fissata+' oltre il massimo settimanale.'],targets:[]};
     return {errors:[],targets:[fissata]};
-  }
-  if(unaSolaFonteAlGiorno&&targetGiorno){
-    if(!allowed.includes(targetGiorno))return {errors:['Nessuna classe proteica ammessa per '+slot.day+' '+slot.pasto+' (la fonte gia\' usata oggi non e\' piu\' disponibile).'],targets:[]};
-    const max=freq[targetGiorno].max;
-    if(max!==null&&max!==undefined&&(Number(counts[targetGiorno])||0)>=Number(max))return {errors:['Proteina '+targetGiorno+' oltre il massimo settimanale.'],targets:[]};
-    return {errors:[],targets:[targetGiorno]};
   }
   const prenotate=contaTargetTabellaFuturi(tab,slots,indice+1);
   let pool=allowed.filter(k=>{
@@ -2183,7 +2174,6 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
      traccia, per ciascun giorno gia' passato, quali chiavi carboidrato sono
      state usate: serve al cooldown di un giorno sulle voci AUTO. */
   const carboidratoGiorno=new Map();
-  const targetGiorno=new Map();
   for(let i=0;i<slotRefs.length;i++){
     const slot=slotRefs[i];
     if(!proteineGiorno.has(slot.day))proteineGiorno.set(slot.day,new Set());
@@ -2205,7 +2195,7 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
       if(!slot.targetBloccato)return {ok:false,errori:['Realizzazione proteica bloccata senza categoria riconoscibile per '+slot.day+' '+slot.pasto+'.'],completati:i};
       proteine={errors:[],targets:[slot.targetBloccato]};
     }else{
-      proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng,targetGiorno.get(slot.day));
+      proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng);
     }
     if(proteine.errors.length)return {ok:false,errori:proteine.errors,completati:i};
 
@@ -2231,7 +2221,6 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
 
     const definizione=Object.assign({},slot,{target,carbKey:candidato.carbKeyUsato,requiredVegetableVariantId:ctx.requiredVegetable(slot)});
     scelte.push(candidato);slotDefs.push(definizione);
-    if(!targetGiorno.has(slot.day))targetGiorno.set(slot.day,target);
     ctx.weeklyProteinCounts[target]=(ctx.weeklyProteinCounts[target]||0)+1;
     if(candidato.carbKeyUsato){
       if(residui[candidato.carbKeyUsato]>0)residui[candidato.carbKeyUsato]--;

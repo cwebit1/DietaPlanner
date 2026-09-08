@@ -26,7 +26,9 @@ const M=global.DietaPlannerMotorV12;
 (async()=>{
   await M.inizializza({basePath:''});
   // Fonti proteiche/giorno=2, esplicito (anche se e' gia' il default).
-  await global.put('impostazioni',{chiave:'configAvanzata',valore:{maxProteinSourcesPerDay:2}});
+  // Nessuna configAvanzata esplicita necessaria: pranzo e cena sono
+  // sempre due categorie diverse per definizione (nessun "fonti/giorno"
+  // configurabile).
 
   let settimaneValide=0,violazioniCategoriaTarget=0,violazioniMacroReale=0;
   for(let tentativo=0;tentativo<20&&settimaneValide<10;tentativo++){
@@ -65,7 +67,7 @@ const M=global.DietaPlannerMotorV12;
     }
   }
   assert(settimaneValide>0,'nessuna settimana valida generata con fonti proteiche/giorno=2');
-  assert.equal(violazioniCategoriaTarget,0,'con 2 fonti/giorno, categoriaTarget non deve mai coincidere a pranzo e cena dello stesso giorno');
-  assert.equal(violazioniMacroReale,0,'con 2 fonti/giorno, le macro proteiche REALMENTE presenti nelle realizzazioni non devono mai coincidere a pranzo e cena, anche con ricette combinate');
-  console.log('OK: generazione reale del Menu (motor-v12.js), '+settimaneValide+' settimane, 0 violazioni categoriaTarget, 0 violazioni macro reale con 2 fonti/giorno.');
+  assert.equal(violazioniCategoriaTarget,0,'categoriaTarget non deve mai coincidere a pranzo e cena dello stesso giorno');
+  assert.equal(violazioniMacroReale,0,'le macro proteiche REALMENTE presenti nelle realizzazioni non devono mai coincidere a pranzo e cena, anche con ricette combinate');
+  console.log('OK: generazione reale del Menu (motor-v12.js), '+settimaneValide+' settimane, 0 violazioni categoriaTarget, 0 violazioni macro reale.');
 })().catch(e=>{console.error(e);process.exit(1);});

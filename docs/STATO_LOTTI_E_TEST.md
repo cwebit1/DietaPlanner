@@ -339,6 +339,12 @@ Ultimo commit di questa sezione: `8d2be4e`.
 
 ## Aggiornamento 04/09/2026 (7) — Set → Proteine: duplicati giornalieri
 
+> **SUPERATO l'08/09/2026** (vedi aggiornamento in fondo al file): la
+> semantica "valore 1 → pranzo e cena sempre coincidenti" descritta qui
+> sotto era una falsa interpretazione, eliminata per intero insieme al
+> parametro `maxProteinSourcesPerDay`. Voce conservata solo come
+> cronologia, non più il comportamento reale.
+
 - Corretto: `engine-core.buildProteinGrid()` poteva produrre
   `['carne','carne']` nello stesso giorno (~35-39% delle generazioni
   casuali con i limiti predefiniti, misurato: 3.932/10.000). Causa: un
@@ -401,3 +407,48 @@ Ultimo commit di questa sezione: `8d2be4e`.
   verificata già corretta (tre stati canonici), aggiunto solo testo
   esplicativo che "Casuale 14"/"Completa e fissa" producono FIXED (nessun
   cambio di comportamento).
+
+## Aggiornamento 08/09/2026 — Proteine: eliminata la falsa semantica "1 fonte/giorno"
+
+- Regola definitiva di Cwe: pranzo e cena hanno **sempre** due categorie
+  proteiche diverse, senza eccezioni. Il numero "1" nel vecchio motore
+  indicava solo che l'utente aveva già scelto una delle due categorie e
+  il sistema doveva completare la seconda — mai "stessa categoria per
+  entrambi i pasti", interpretazione introdotta erroneamente
+  nell'aggiornamento del 04/09/2026 (7) e ora eliminata per intero.
+- Rimosso completamente `maxProteinSourcesPerDay` (e i suoi alias
+  `unaSolaFonteAlGiorno` in `motor-v12.js`,
+  `maxFontiProteicheGiornaliereSet` in `index.html`) da
+  `nutrition-config.js`, `engine-core.js`, `motor-v12.js`, `index.html`
+  (inclusa la voce "Fonti proteiche/giorno" nel Setting nutrizionista,
+  rimossa dal form). Nessun parametro sostitutivo: il numero di
+  categorie già scelte si deduce solo dalla tabella del giorno (0 → 2
+  diverse, 1 → completata con una diversa, 2 → entrambe preservate).
+- `engine-core.buildProteinGrid()` riscritta: sempre due categorie
+  distinte, stesso backtracking di prima ma senza il ramo "valore 1".
+  `motor-v12.js:opzioniProteinaPerSlot()`: rimossi `unaSolaFonteAlGiorno`
+  e il parametro/Map `targetGiorno` (diventato interamente inutile), il
+  pool esclude sempre la categoria già usata nel giorno, mai una
+  riapertura silenziosa.
+- Nuova validazione canonica in `nutrition-config.js`: dopo profilo ed
+  esclusioni, se restano meno di due categorie proteiche ammesse,
+  `resolved.valid=false` con un errore esplicito — riusa
+  automaticamente il controllo già esistente in `salvaConfigAvanzata`
+  (`if(!resolved.valid)...return`), nessuna configurazione incompatibile
+  viene salvata.
+- **Conseguenza rilevata, non risolta, riservata a Cwe**: il profilo
+  "vegano" (esclude carne/pesce/formaggi/uova, lascia solo "legumi")
+  diventa strutturalmente incompatibile con la nuova regola — prima
+  funzionava solo perché "1 fonte/giorno" permetteva pranzo=cena=legumi.
+- File modificati: `nutrition-config.js`, `engine-core.js`,
+  `motor-v12.js`, `index.html`. Test: nuovo
+  `lotto-proteine-autocompletamento.test.js` (0/1/2 scelte, esclusioni,
+  meno di due categorie disponibili → rifiuto prima della generazione);
+  aggiornati `lotto-set-proteine-buildgrid.test.js`,
+  `lotto-set-proteine-validazione.test.js`,
+  `lotto-resolver-unica-fonte-runtime.test.js`,
+  `lotto-set-proteine-menu-reale.test.js`,
+  `lotto-proteine-giorno-esclusione.test.js`; rimosso
+  `lotto-j-una-fonte-proteica-giorno.test.js` (testava per intero la
+  semantica ora eliminata). Dettaglio completo in
+  `docs/REGISTRO_MODIFICHE.md`.

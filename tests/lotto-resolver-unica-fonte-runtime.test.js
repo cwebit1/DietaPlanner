@@ -4,7 +4,6 @@
    (mai una reimplementazione), che i consumatori runtime osservano il
    valore RISOLTO e non un numero duplicato in index.html/motor-v12.js/
    engine-core.js, per:
-   - maxProteinSourcesPerDay (consumatore: engine-core.js:buildProteinGrid);
    - specialBreakfastMax (consumatore: index.html:applicaConfigAvanzataRuntime,
      che alimenta il tetto colazioni speciali CAP_COLAZIONE_SPECIALE
      realmente controllato in renderPiano/salvaColazione);
@@ -12,6 +11,13 @@
      reale trovato e corretto in questo intervento — era una costante
      indipendente mai normalizzata dal resolver, usata da un indicatore
      live in renderIndicatoreFrutta).
+
+   maxProteinSourcesPerDay: eliminato per intero in un intervento
+   successivo (regola definitiva di Cwe: pranzo e cena hanno sempre due
+   categorie diverse, mai un "1 fonte/giorno" configurabile) - qui resta
+   solo la verifica che il campo non compaia più nell'output del
+   resolver; la garanzia end-to-end vive in
+   tests/lotto-proteine-autocompletamento.test.js.
 
    Cap settimanale di sottotipo (es. carne_rossa): NON verificato qui.
    L'unico consumatore reale (motor-v12.js:ricettaAmmessa) non è
@@ -75,20 +81,16 @@ function estraiDichiarazione(firma){
 (async()=>{
   await M.inizializza({basePath:''});
 
-  /* ============ 1. maxProteinSourcesPerDay: engine-core.buildProteinGrid osserva il valore risolto ============ */
+  /* ============ 1. maxProteinSourcesPerDay: concetto eliminato per intero (regola definitiva di Cwe) ============
+     Non esiste più alcun valore da risolvere: pranzo e cena hanno sempre
+     due categorie diverse, senza eccezioni configurabili. Verifica solo
+     che il campo non compaia più nell'output del resolver, mai una
+     duplicazione residua. La garanzia "pranzo!==cena sempre" è
+     verificata direttamente nel test dedicato
+     tests/lotto-proteine-autocompletamento.test.js con la pipeline reale. */
   {
-    const giorni=['2026-08-31','2026-09-01','2026-09-02','2026-09-03','2026-09-04','2026-09-05','2026-09-06'];
-    const tabellaUtente={'2026-08-31':['carne','carne']}; // stessa categoria pranzo/cena, solo il primo giorno fissato
-
-    const resolved1=N.resolveNutritionConfig({nutritionist:{config:{maxProteinSourcesPerDay:1}}});
-    assert.equal(resolved1.maxProteinSourcesPerDay,1);
-    const esito1=E.buildProteinGrid(giorni,tabellaUtente,{maxProteinSourcesPerDay:resolved1.maxProteinSourcesPerDay},{},()=>0.5);
-    assert.deepEqual(esito1.errors,[],'con maxProteinSourcesPerDay=1 risolto, pranzo=cena=carne deve essere ammesso');
-
-    const resolved2=N.resolveNutritionConfig({nutritionist:{config:{maxProteinSourcesPerDay:2}}});
-    assert.equal(resolved2.maxProteinSourcesPerDay,2);
-    const esito2=E.buildProteinGrid(giorni,tabellaUtente,{maxProteinSourcesPerDay:resolved2.maxProteinSourcesPerDay},{},()=>0.5);
-    assert(esito2.errors.length>0,'con maxProteinSourcesPerDay=2 risolto, pranzo=cena=carne deve essere rifiutato dallo stesso consumatore, senza cambiare la funzione');
+    const resolved=N.resolveNutritionConfig({});
+    assert.equal(resolved.maxProteinSourcesPerDay,undefined,'il campo eliminato non deve più comparire nell\'output del resolver');
   }
 
   /* ============ 2. specialBreakfastMax: index.html:applicaConfigAvanzataRuntime osserva il valore risolto ============

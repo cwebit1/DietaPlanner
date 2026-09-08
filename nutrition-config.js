@@ -36,7 +36,6 @@
 
   const APP_DEFAULTS={
     proteinTargets:{carne:3,pesce:3,formaggi:3,uova:2,legumi:3},
-    maxProteinSourcesPerDay:2,
     specialBreakfastMax:1,
     specialMealsMax:2,
     snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},
@@ -454,6 +453,23 @@
     const fruit=resolveFruit(config.fruit,warnings,errors);
     const vegetablePortions=resolveVegetablePortions(config.vegetables,warnings);
 
+    /* Regola definitiva di Cwe: la settimana ha sempre due pasti
+       principali al giorno con categorie proteiche DIVERSE (mai un
+       "maxProteinSourcesPerDay", concetto eliminato). Perché questo sia
+       sempre possibile, dopo profilo (esclusioni per dieta
+       vegetariana/vegana) ed esclusioni esplicite del nutrizionista
+       (max:0 su una categoria) devono restare almeno due categorie
+       proteiche ammesse: con una sola, pranzo e cena non potrebbero mai
+       avere categorie differenti. Punto unico di validazione: se
+       insufficienti, la configurazione è dichiarata incompatibile
+       (valid=false) e chi la salva/usa deve fermarsi qui, mai salvare o
+       generare con questa configurazione. */
+    const forbiddenSet=new Set(PROFILE_FORBIDDEN_MACROS[profileName]);
+    const categorieProteicheAmmesse=Object.keys(proteinFrequencies).filter(k=>!forbiddenSet.has(k)&&proteinFrequencies[k].max!==0);
+    if(categorieProteicheAmmesse.length<2){
+      errors.push('Categorie proteiche disponibili insufficienti dopo profilo ed esclusioni ('+categorieProteicheAmmesse.length+'): servono almeno due categorie proteiche ammesse per completare pranzo e cena con categorie sempre diverse.');
+    }
+
     const specialBreakfastRequested=own(config,'specialBreakfastMax')?nonNegative(config.specialBreakfastMax):APP_DEFAULTS.specialBreakfastMax;
     let specialBreakfastMax=specialBreakfastRequested===null?APP_DEFAULTS.specialBreakfastMax:specialBreakfastRequested;
     if(specialBreakfastMax>PDF_BASELINE.specialBreakfastMax){
@@ -515,7 +531,6 @@
     };
     const carbohydrates=resolveCarbohydratePlan(carbInput,errors);
 
-    const maxProteinSourcesPerDay=positive(config.maxProteinSourcesPerDay)||APP_DEFAULTS.maxProteinSourcesPerDay;
     const specialMealsMax=nonNegative(config.specialMealsMax);
     const cooldownDays=Object.assign({},APP_DEFAULTS.cooldownDays,config.cooldownDays||{});
     const deadlines=Object.assign({},APP_DEFAULTS.deadlines,config.deadlines||{});
@@ -535,7 +550,6 @@
       carbohydrates,
       fruit,
       vegetables:vegetablePortions,
-      maxProteinSourcesPerDay,
       specialBreakfastMax,
       specialMealsMax:specialMealsMax===null?APP_DEFAULTS.specialMealsMax:specialMealsMax,
       snackWeeklyCaps,

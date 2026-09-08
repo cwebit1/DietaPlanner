@@ -25,10 +25,9 @@ const M=global.DietaPlannerMotorV12;
 
 (async()=>{
   await M.inizializza({basePath:''});
-  // Nessuna configAvanzata esplicita: maxProteinSourcesPerDay resta il
-  // default (2) - la regola verificata qui è quella ordinaria, non il
-  // caso speciale "1 fonte/giorno" (già coperto da
-  // tests/lotto-j-una-fonte-proteica-giorno.test.js).
+  // Nessuna configAvanzata esplicita: profilo onnivoro predefinito, tutte
+  // e 5 le categorie ammesse - pranzo e cena hanno sempre due categorie
+  // diverse (regola definitiva di Cwe, nessuna eccezione configurabile).
 
   let successi=0,violazioni=0;
   for(let tentativo=0;tentativo<10&&successi<3;tentativo++){
@@ -56,16 +55,17 @@ const M=global.DietaPlannerMotorV12;
     }
   }
   assert(successi>0,'nessuna settimana valida generata in 10 tentativi');
-  assert.equal(violazioni,0,'per ogni giorno generato, categoriaTarget pranzo deve sempre differire da categoriaTarget cena (default 2 fonti/giorno)');
+  assert.equal(violazioni,0,'per ogni giorno generato, categoriaTarget pranzo deve sempre differire da categoriaTarget cena');
 
   /* ============ Caso limite deterministico: allowed.length<=3 (dieta vegana, solo "legumi" ammesso) ============
-     Con maxProteinSourcesPerDay=2 (default) e una sola categoria proteica
-     ammessa, ogni giorno richiede due categorie distinte ma ne esiste
-     una sola disponibile: deve fallire con un errore esplicito, MAI
-     produrre un piano che riapra il pool e ripeta "legumi" due volte
-     nello stesso giorno (era esattamente il difetto: il vecchio codice
-     riapriva il pool ignorando l'esclusione quando le categorie ammesse
-     erano tre o meno). */
+     Pranzo e cena richiedono sempre due categorie distinte (regola
+     definitiva di Cwe, nessuna eccezione configurabile - vedi
+     tests/lotto-proteine-autocompletamento.test.js) ma con il profilo
+     vegano ne esiste una sola disponibile: deve fallire con un errore
+     esplicito, MAI produrre un piano che riapra il pool e ripeta
+     "legumi" due volte nello stesso giorno (era esattamente il difetto:
+     il vecchio codice riapriva il pool ignorando l'esclusione quando le
+     categorie ammesse erano tre o meno). */
   {
     stores.piano.clear();
     await global.put('impostazioni',{chiave:'configAvanzata',valore:{dietProfile:'vegano'}});

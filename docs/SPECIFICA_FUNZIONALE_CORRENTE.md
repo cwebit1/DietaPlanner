@@ -90,22 +90,42 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - Tonno e sgombro conservati e salmone affumicato contribuiscono al pesce
   conservato anche quando non sono la proteina dominante della ricetta.
 - Pasti preservati e consumi reali della settimana concorrono ai contatori.
-- **Tabella Set → Proteine, Casuale/Completa (corretto 04/09/2026).**
-  `maxProteinSourcesPerDay` (letto sempre dalla configurazione
-  nutrizionista effettiva, mai dedotto dal numero di caselle riempite in
-  tabella) governa sia l'anteprima (`engine-core.buildProteinGrid`,
-  usata identicamente da Casuale e Completa) sia il salvataggio
-  (`validaFattibilitaProteineSet`) sia la generazione reale
-  (`motor-v12.js`). Con valore 2 (default): pranzo e cena dello stesso
-  giorno hanno sempre categorie proteiche diverse, garantito con
-  backtracking vero (mai un fallback che riusa la categoria precedente
-  a pool temporaneamente vuoto) — un array come `['carne','carne']` non
-  viene mai prodotto né in anteprima né salvato. Con valore 1: pranzo e
-  cena condividono sempre la stessa categoria; una singola cella
-  fissata a mano vale per entrambi i pasti. Una configurazione
-  realmente incompatibile con i vincoli (minimi/massimi settimanali,
-  categorie escluse, celle fissate, fonti/giorno) produce un errore
-  esplicito, mai un'anteprima o un salvataggio parzialmente invalidi.
+- **Tabella Set → Proteine, Casuale/Completa (regola definitiva di Cwe,
+  08/09/2026 — superata la falsa semantica precedente
+  "`maxProteinSourcesPerDay=1` → pranzo e cena della stessa categoria",
+  eliminata per intero insieme al parametro).** Pranzo e cena hanno
+  **sempre** due categorie proteiche diverse, senza eccezioni
+  configurabili — non esiste più alcun "fonti proteiche/giorno" nel
+  Setting nutrizionista. Per ogni giorno, il numero di categorie già
+  scelte si deduce solo dalla tabella di quel giorno: 0 scelte → il
+  sistema ne sceglie automaticamente due, ammesse e differenti; 1 scelta
+  → resta vincolante, la seconda viene scelta automaticamente tra le
+  ammesse e differenti; 2 scelte → entrambe restano vincolanti. Stessa
+  identica logica in entrambi i percorsi (`engine-core.buildProteinGrid`,
+  usata identicamente da Casuale/Completa nel Set e utilizzabile per la
+  generazione del Menù) e nella generazione reale (`motor-v12.js`,
+  `opzioniProteinaPerSlot`), garantito con backtracking vero (mai un
+  fallback che riusa la categoria precedente a pool temporaneamente
+  vuoto, indipendentemente dal numero di categorie ammesse) — un array
+  come `['carne','carne']` non viene mai prodotto né in anteprima né
+  salvato né generato. Dopo profilo (esclusioni dieta
+  vegetariana/vegana) ed esclusioni esplicite del nutrizionista devono
+  restare almeno due categorie proteiche ammesse: con meno di due, il
+  resolver dichiara la configurazione incompatibile (`valid:false`) e
+  né il Setting né il Set la salvano, né il Menù la usa per generare.
+  Una configurazione realmente incompatibile con gli altri vincoli
+  (minimi/massimi settimanali, categorie escluse, celle fissate)
+  produce comunque un errore esplicito, mai un'anteprima o un
+  salvataggio parzialmente invalidi.
+- **Conseguenza rilevata (non risolta, riservata a Cwe):** il profilo
+  dietetico "vegano" esclude carne, pesce, formaggi e uova, lasciando
+  solo "legumi" — con la regola definitiva (sempre due categorie
+  diverse) diventa strutturalmente incompatibile (`valid:false`), non
+  utilizzabile per generare un piano finché non viene decisa una
+  soluzione (es. suddivisione di "legumi" in sotto-categorie). Il
+  profilo "vegetariano" (3 categorie: formaggi/uova/legumi) resta
+  valido ma con margini stretti sui massimi PDF di formaggi/uova
+  applicati a una settimana intera vuota.
 
 ## 5. Verdure e residuo quantitativo
 
