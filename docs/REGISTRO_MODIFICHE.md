@@ -1224,3 +1224,15 @@ interfaccia grafica.
 **SHA remoto:** `806551131b4d149906ac6868c929d4eea35bb055`.
 
 ---
+
+## 17. Rifinitura ingredienti e scheda Dettagli — 8 settembre 2026
+
+**Richieste di Cwe:** mostrare gli ingredienti nell'ordine icona, quantità/unità, “di”, nome; aggiungere 3 px sopra e ai lati della foto e 3 px laterali alla fascia sfumata; eliminare la barra verde sotto le statistiche perché duplicava il valore “Scelto”.
+
+**Intervento effettuato:** righe ingredienti riorganizzate con spaziatura moderata; micro-cornice da 3 px sull'hero; padding laterale della didascalia aumentato di 3 px; barra percentuale nascosta. Conservati ID, porzioni dinamiche e riferimenti di integrazione.
+
+**Separazione confermata:** modificato esclusivamente `restyling-preview.html`; `index.html` e i file funzionali non sono stati toccati.
+
+**Verifiche:** parsing JavaScript e `git diff --check`.
+
+---
