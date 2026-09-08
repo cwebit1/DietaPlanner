@@ -1039,3 +1039,17 @@ sono stati modificati `index.html`, motore, database o IndexedDB.
 **SHA remoto dell'intervento:** `d4f82e55f0e49ac81322c60c8e5ca364ec53fbe4`.
 
 ---
+
+## 14. Icone nella sezione social — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** sostituire i nomi testuali dei social con le rispettive icone.
+
+**Intervento effettuato:** i quattro comandi dimostrativi mostrano ora icone vettoriali inline per WhatsApp, Facebook, Instagram e copia collegamento. Ogni pulsante conserva `data-channel`, `aria-label` e `title`, così il riferimento funzionale e l'accessibilità non dipendono dal contenuto grafico.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`; i pulsanti restano intenzionalmente inattivi e non è stato toccato `index.html`.
+
+**Verifiche:** parsing JavaScript e JSON, `git diff --check`, presenza di quattro canali social distinti.
+
+**SHA remoto dell'intervento:** `1ae24fdd2ba2afe685b39793958d03c459aa57ec`.
+
+---
