@@ -1236,3 +1236,15 @@ interfaccia grafica.
 **Verifiche:** parsing JavaScript e `git diff --check`.
 
 ---
+
+## 18. Prova bordo bianco nell'hero Dettagli — 8 settembre 2026
+
+**Richiesta di Cwe:** sostituire il padding da 3 px attorno alla fotografia con un bordo bianco degli stessi 3 px sui lati superiore, sinistro e destro.
+
+**Intervento effettuato:** rimosso il padding visivo e applicato il bordo bianco; il lato inferiore resta senza bordo per mantenere continua la sfumatura verde. Modificato soltanto `restyling-preview.html`; `index.html` resta invariato.
+
+**Verifica essenziale:** `git diff --check`.
+
+**SHA remoto:** `cb29537890d1df523d33e8f170cd83d3ee3b158b`.
+
+---
