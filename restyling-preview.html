@@ -25,6 +25,7 @@
     .detail-hero img{padding:0;border:3px solid #fff;border-bottom:0;border-radius:21px 21px 0 0}.detail-hero-caption{padding-left:25px;padding-right:25px;border-left:3px solid #fff;border-right:3px solid #fff}.history-bar{display:none}
     @media(max-width:430px){.detail-hero img{border-radius:15px 15px 0 0}.detail-hero-caption{padding-left:16px;padding-right:16px}}
     .bottom{grid-template-columns:repeat(6,1fr);padding-left:12px;padding-right:12px}
+    .bottom-swipe-indicator{position:absolute;z-index:0;bottom:4px;left:0;width:22px;height:3px;border-radius:4px;background:#e4b640;box-shadow:0 2px 4px rgba(0,0,0,.3);pointer-events:none;will-change:left}.nav{position:relative;z-index:1}
     @media(max-width:430px){.bottom{padding-left:5px;padding-right:5px}.nav{font-size:8px}.nav i{width:28px;height:28px}.nav svg{width:26px;height:26px}}
   </style>
 </head>
@@ -55,6 +56,7 @@
     </main>
   </div>
   <nav class="bottom" aria-label="Navigazione principale" data-ui-role="bottom-navigation">
+    <span class="bottom-swipe-indicator" aria-hidden="true"></span>
     <button class="nav active" data-route="meal" data-state="selected"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3v8M8 3v8M5 7h3M6.5 11v10M15 3v18M15 3c3 1 4 4 4 7v2h-4"/></svg></i>Pasto</button>
     <button class="nav" data-route="menu"><i><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M7 14h2M12 14h2M17 14h.01M7 18h2M12 18h2"/></svg></i>Menu</button>
     <button class="nav" data-route="recipes"><i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A3.5 3.5 0 0 1 7.5 2H11a2 2 0 0 1 2 2v16a2 2 0 0 0-2-2H7.5A3.5 3.5 0 0 0 4 21.5Z"/><path d="M20 5.5A3.5 3.5 0 0 0 16.5 2H13v18a2 2 0 0 1 2-2h1.5a3.5 3.5 0 0 1 3.5 3.5Z"/><path d="M7 7h3M7 11h3M16 7h1M16 11h1"/></svg></i>Ricette</button>
@@ -338,33 +340,65 @@
       document.getElementById('portionMinus').addEventListener('click',()=>{if(portions>1){portions--;renderPortions();}});
       const bottomNavigation=document.querySelector('.bottom');
       const navigationItems=[...bottomNavigation.querySelectorAll('.nav')];
+      const navigationIndicator=bottomNavigation.querySelector('.bottom-swipe-indicator');
       let navigationStartX=0;
       let navigationStartY=0;
-      const selectNavigationItem=index=>{
+      let navigationStartIndex=0;
+      let navigationPosition=0;
+      let navigationDragging=false;
+      let suppressNavigationClickUntil=0;
+      const positionNavigationIndicator=position=>{
+        const first=navigationItems[0];
+        const last=navigationItems[navigationItems.length-1];
+        const firstCenter=first.offsetLeft+first.offsetWidth/2;
+        const lastCenter=last.offsetLeft+last.offsetWidth/2;
+        const step=(lastCenter-firstCenter)/(navigationItems.length-1);
+        navigationIndicator.style.left=`${firstCenter-11+step*position}px`;
+      };
+      const selectNavigationItem=(index,indicatorPosition=index)=>{
         navigationItems.forEach((item,itemIndex)=>{
           const selected=itemIndex===index;
           item.classList.toggle('active',selected);
           if(selected)item.dataset.state='selected';
           else delete item.dataset.state;
         });
+        positionNavigationIndicator(indicatorPosition);
       };
-      navigationItems.forEach((item,index)=>item.addEventListener('click',()=>selectNavigationItem(index)));
+      navigationItems.forEach((item,index)=>item.addEventListener('click',event=>{
+        if(Date.now()<suppressNavigationClickUntil){event.preventDefault();return;}
+        navigationIndicator.style.transition='left 180ms cubic-bezier(.2,.8,.2,1)';
+        selectNavigationItem(index);
+      }));
       bottomNavigation.addEventListener('touchstart',event=>{
         if(event.touches.length!==1)return;
         navigationStartX=event.touches[0].clientX;
         navigationStartY=event.touches[0].clientY;
+        navigationStartIndex=Math.max(0,navigationItems.findIndex(item=>item.classList.contains('active')));
+        navigationPosition=navigationStartIndex;
+        navigationDragging=false;
+        navigationIndicator.style.transition='none';
       },{passive:true});
-      bottomNavigation.addEventListener('touchend',event=>{
-        if(event.changedTouches.length!==1)return;
-        const distanceX=event.changedTouches[0].clientX-navigationStartX;
-        const distanceY=event.changedTouches[0].clientY-navigationStartY;
-        if(Math.abs(distanceX)<42||Math.abs(distanceX)<=Math.abs(distanceY))return;
-        const currentIndex=Math.max(0,navigationItems.findIndex(item=>item.classList.contains('active')));
+      bottomNavigation.addEventListener('touchmove',event=>{
+        if(event.touches.length!==1)return;
+        const distanceX=event.touches[0].clientX-navigationStartX;
+        const distanceY=event.touches[0].clientY-navigationStartY;
+        if(!navigationDragging&&Math.abs(distanceX)<8)return;
+        if(!navigationDragging&&Math.abs(distanceX)<=Math.abs(distanceY))return;
+        navigationDragging=true;
+        event.preventDefault();
         const itemWidth=bottomNavigation.clientWidth/navigationItems.length;
-        const crossedItems=Math.max(1,Math.round(Math.abs(distanceX)/itemWidth));
-        const nextIndex=Math.max(0,Math.min(navigationItems.length-1,currentIndex+(distanceX<0?crossedItems:-crossedItems)));
-        if(nextIndex!==currentIndex)selectNavigationItem(nextIndex);
+        navigationPosition=Math.max(0,Math.min(navigationItems.length-1,navigationStartIndex-distanceX/itemWidth));
+        selectNavigationItem(Math.round(navigationPosition),navigationPosition);
+      },{passive:false});
+      bottomNavigation.addEventListener('touchend',event=>{
+        if(event.changedTouches.length!==1||!navigationDragging)return;
+        navigationDragging=false;
+        suppressNavigationClickUntil=Date.now()+400;
+        navigationIndicator.style.transition='left 150ms cubic-bezier(.2,.8,.2,1)';
+        selectNavigationItem(Math.round(navigationPosition));
       },{passive:true});
+      selectNavigationItem(Math.max(0,navigationItems.findIndex(item=>item.classList.contains('active'))));
+      window.addEventListener('resize',()=>selectNavigationItem(Math.max(0,navigationItems.findIndex(item=>item.classList.contains('active')))));
     })();
   </script>
 </body>
