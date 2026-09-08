@@ -1660,3 +1660,41 @@ Node.js riuscito.
 **SHA dell'intervento grafico:** `c2859084aba173d047cfe996044ffc4241c0a9d7`.
 
 ---
+## 7. Modalità piatti speciali e carosello infinito — 8 settembre 2026
+
+**Obiettivo autorizzato da Cwe:** usare la stella accanto al lucchetto per
+aprire, con roll verticale, una lista orizzontale di piatti speciali; rendere il
+carosello infinito, trasformare `Cambia piatto` in `Imposta come pasto` con un
+richiamo rosso pulsante e aggiungere luci colorate animate al frame. I piatti
+speciali non devono mostrare valori nutrizionali.
+
+**Intervento effettuato:** la stella apre e chiude la modalità speciale con la
+stessa animazione verticale della card. Il catalogo dimostrativo contiene pizza
+alle verdure grigliate, torta salata con verdure e sushi misto. Il carosello usa
+copie di raccordo alle estremità e riallineamento invisibile, così swipe e
+freccia possono continuare in entrambe le direzioni senza un ritorno visibile.
+Il comando di cambio diventa `Imposta come pasto`, con alone rosso pulsante, e
+conferma la proposta attualmente visualizzata. Una cornice con gradiente
+multicolore ruota attorno alla modalità speciale e scompare all'uscita. Nella
+scheda Dettagli di una proposta speciale il blocco `Valori nutrizionali` viene
+nascosto; non è stato inserito alcun testo sostitutivo in attesa della decisione
+di Cwe.
+
+**Asset aggiunti:** tre WebP 960×536 ottimizzati, circa 168 KB complessivi:
+`speciale-pizza-verdure.webp`, `speciale-torta-salata-verdure.webp` e
+`speciale-sushi-misto.webp`.
+
+**Separazione confermata:** la modalità usa esclusivamente contenuti
+dimostrativi nella preview. `index.html`, motore, database e IndexedDB restano
+invariati.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline con
+Node.js riuscito; presenza e formato dei tre asset controllati.
+
+**File modificato:** `restyling-preview.html`.
+
+**File aggiunti:** i tre asset WebP elencati sopra.
+
+**SHA dell'intervento grafico:** `05262dfc67f5831211c47c7094be0ef16e527718`.
+
+---
