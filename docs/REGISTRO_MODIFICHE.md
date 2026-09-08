@@ -1155,3 +1155,58 @@ quantita/unita/grammi, UI grafica, `nutrition-config.js`.
 **SHA finale:** `11190a826a46584b428005972ab90440ceacc2ca`.
 
 ---
+
+## 2. Commit `(in preparazione)` — rimossi due export interni aggiunti solo per il test
+
+**Difetto riscontrato:** il commit `11190a8` aveva aggiunto all'oggetto
+pubblico `DietaPlannerMotorV12` due funzioni interne, `configRuntime` e
+`ricettaAmmessa`, esclusivamente per permettere a
+`tests/lotto-resolver-unica-fonte-runtime.test.js` di verificarne
+direttamente il comportamento — un ampliamento dell'API pubblica del
+motore fatto per comodità del test, non per un bisogno reale di
+consumatori esterni. Verificato con ricerca globale: nessun altro punto
+del codice (né `index.html` né altri test) le usava.
+
+**Correzione:** entrambe le funzioni tolte dall'oggetto esportato in
+`motor-v12.js` (restano funzioni interne del modulo, invariate nel
+comportamento). Nel test, la sola sezione che le richiamava (verifica di
+un cap settimanale di sottotipo, es. `carne_rossa`) è stata **rimossa**,
+non riscritta con un percorso pubblico: non esiste un percorso pubblico
+deterministico per questa verifica isolata — `generaPasto`/
+`generaPianoSettimana` selezionano il candidato con logica randomizzata
+(nessun parametro per forzare un sottotipo specifico), quindi userli
+avrebbe richiesto retry/non-determinismo, non un test affidabile. La
+copertura del cap di sottotipo resta nei test già dedicati
+(`nutrition-config.test.js` e gli altri test del motore che la
+esercitano tramite generazione), come indicato dall'incarico. Nessun
+hook, API `__test` o variabile globale introdotta al loro posto.
+
+**Verificato e confermato invariato:** la correzione di
+`FRUTTA_GIORNALIERA`, la rimozione di `seedIfEmpty()` e delle due
+costanti carboidrati morte (`CARBOIDRATI_ROTAZIONE`,
+`CARBOIDRATI_LIMITATI`) restano come nel commit `11190a8`, non toccate.
+Il commento in `index.html` su `importaListaRicette` che cita
+`seedIfEmpty()` resta invariato: è già nella forma storica consentita
+("stessa logica che *prima viveva* dentro seedIfEmpty()").
+
+**File modificati:** `motor-v12.js` (solo rimozione dei due nomi
+dall'oggetto esportato), `tests/lotto-resolver-unica-fonte-runtime.test.js`
+(rimossa la sola sezione sul cap di sottotipo, aggiornato il commento di
+testa).
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-resolver-unica-fonte-runtime.test.js  → ok
+node tests/nutrition-config.test.js                     → ok
+node --check motor-v12.js                                → OK
+git diff --check                                         → pulito
+```
+
+**Non toccati:** `oilGramsPerMeal` (decisione funzionale separata
+riservata a Cwe, non affrontata), ricette mancanti, `db-ricette.json`,
+`ingredienti-new.json`, comportamento del motore, resolver, cataloghi,
+interfaccia grafica.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

@@ -11,9 +11,20 @@
    - fruit.min/max (stesso consumatore, alimenta FRUTTA_GIORNALIERA: bug
      reale trovato e corretto in questo intervento — era una costante
      indipendente mai normalizzata dal resolver, usata da un indicatore
-     live in renderIndicatoreFrutta);
-   - un cap settimanale di sottotipo (consumatore: motor-v12.js:ricettaAmmessa,
-     via configRuntime()).
+     live in renderIndicatoreFrutta).
+
+   Cap settimanale di sottotipo (es. carne_rossa): NON verificato qui.
+   L'unico consumatore reale (motor-v12.js:ricettaAmmessa) non è
+   un'API pubblica di DietaPlannerMotorV12, e non esiste un percorso
+   pubblico deterministico per esercitarlo isolatamente — generaPasto/
+   generaPianoSettimana selezionano il candidato con logica randomizzata
+   (nessun parametro per forzare un sottotipo specifico), quindi non
+   offrono una prova deterministica senza più tentativi/retry. Esportare
+   ricettaAmmessa/configRuntime solo per questo test avrebbe ampliato
+   l'API pubblica del motore per comodità del test (vedi
+   docs/REGISTRO_MODIFICHE.md): rimosso, la copertura del cap di
+   sottotipo resta nei test già dedicati (nutrition-config.test.js e
+   gli altri test del motore che la esercitano tramite generazione).
 
    oilGramsPerMeal: NESSUN consumatore runtime trovato nella pipeline di
    generazione attuale (vedi docs/REGISTRO_MODIFICHE.md per l'analisi
@@ -116,29 +127,7 @@ function estraiDichiarazione(firma){
     assert.equal(modulo.fruttaGiornaliera.max,3);
   }
 
-  /* ============ 3. Cap settimanale di sottotipo: motor-v12.js:ricettaAmmessa (via configRuntime) osserva il valore risolto ============ */
-  {
-    await put('impostazioni',{chiave:'configAvanzata',valore:{subtypeCaps:{carne_rossa:1}}});
-    M.invalidaConfigRuntime();
-    const cfg=await M.configRuntime();
-    assert.equal(cfg.weeklyLimits.carne_rossa,1,'il resolver deve riflettere il cap di sottotipo configurato');
-
-    const ricettaCarneRossa={ingredienti:[{sottotipo:'carne_rossa',allergeni:[]}]};
-    const ammessaSottoCap=await M.ricettaAmmessa(ricettaCarneRossa,'2026-08-31',{runtimeConfig:cfg,weeklySubtypeCounts:{carne_rossa:0}});
-    assert.equal(ammessaSottoCap,true,'con 0 usi su un cap di 1, la ricetta deve essere ammessa');
-
-    const ammessaAlCap=await M.ricettaAmmessa(ricettaCarneRossa,'2026-08-31',{runtimeConfig:cfg,weeklySubtypeCounts:{carne_rossa:1}});
-    assert.equal(ammessaAlCap,false,'con 1 uso già raggiunto sul cap risolto di 1, la stessa funzione deve rifiutare la ricetta');
-
-    await put('impostazioni',{chiave:'configAvanzata',valore:{subtypeCaps:{carne_rossa:0}}});
-    M.invalidaConfigRuntime();
-    const cfg2=await M.configRuntime();
-    assert.equal(cfg2.weeklyLimits.carne_rossa,0,'il nutrizionista può solo restringere il cap PDF (1), mai ampliarlo: qui lo abbassa a 0');
-    const ammessaConCapAzzerato=await M.ricettaAmmessa(ricettaCarneRossa,'2026-08-31',{runtimeConfig:cfg2,weeklySubtypeCounts:{carne_rossa:0}});
-    assert.equal(ammessaConCapAzzerato,false,'con il cap risolto abbassato a 0, la stessa funzione deve rifiutare la ricetta anche con zero usi già fatti');
-  }
-
-  /* ============ 4. oilGramsPerMeal: nessun consumatore runtime nella pipeline attuale (documentato, non un difetto da correggere) ============ */
+  /* ============ 3. oilGramsPerMeal: nessun consumatore runtime nella pipeline attuale (documentato, non un difetto da correggere) ============ */
   {
     const resolvedOlioBase=N.resolveNutritionConfig({nutritionist:{config:{}}});
     assert.equal(resolvedOlioBase.oilGramsPerMeal,10,'default risolto invariato');
