@@ -130,19 +130,21 @@
           const index=Math.round(track.scrollLeft/track.clientWidth);
           track.scrollTo({left:((index+1)%sets[currentSet].length)*track.clientWidth,behavior:'smooth'});
         });
-        const switchSet=async(setIndex)=>{
+        const switchSet=async(setIndex,direction='down')=>{
           if(changing)return;
           changing=true;
-          await track.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(115%)',opacity:.15}],{duration:260,easing:'cubic-bezier(.55,0,1,.45)',fill:'forwards'}).finished;
+          const exitY=direction==='up'?'-115%':'115%';
+          const enterY=direction==='up'?'115%':'-115%';
+          await track.animate([{transform:'translateY(0)',opacity:1},{transform:`translateY(${exitY})`,opacity:.15}],{duration:260,easing:'cubic-bezier(.55,0,1,.45)',fill:'forwards'}).finished;
           renderSet(setIndex);
-          await track.animate([{transform:'translateY(-115%)',opacity:.15},{transform:'translateY(0)',opacity:1}],{duration:330,easing:'cubic-bezier(0,.65,.3,1)',fill:'forwards'}).finished;
+          await track.animate([{transform:`translateY(${enterY})`,opacity:.15},{transform:'translateY(0)',opacity:1}],{duration:330,easing:'cubic-bezier(0,.65,.3,1)',fill:'forwards'}).finished;
           changing=false;
         };
         carousel.addEventListener('click',event=>{
           const change=event.target.closest('.action:not(.primary):not(.restore)');
           const restore=event.target.closest('.action.restore');
           if(change)switchSet(currentSet===sets.length-1?1:currentSet+1);
-          if(restore)switchSet(0);
+          if(restore)switchSet(0,'up');
         });
       });
     })();
