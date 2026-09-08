@@ -1613,3 +1613,28 @@ Node.js riuscito; rilevate correttamente le sei route `meal`, `menu`, `recipes`,
 **SHA dell'intervento grafico:** `7867d9455e73e78584b48546e4337738decd210a`.
 
 ---
+## 5. Tracciamento continuo dello swipe nella bottom bar — 8 settembre 2026
+
+**Difetto segnalato da Cwe:** lo swipe tra le icone veniva risolto soltanto al
+rilascio e procedeva per scatti, senza mostrare chiaramente la posizione
+raggiunta mentre il dito era ancora sullo schermo.
+
+**Correzione applicata:** aggiunto un indicatore oro che segue linearmente la
+posizione del dito lungo la bottom bar. Durante il trascinamento l'icona attiva
+si aggiorna al superamento del centro di ogni voce; al rilascio l'indicatore si
+assesta con una breve transizione sulla posizione più vicina. Un singolo gesto
+può continuare ad attraversare più voci. I movimenti prevalentemente verticali
+restano riservati allo scorrimento della pagina e il click diretto sulle icone
+continua a funzionare.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html`, motore, database e configurazioni funzionali sono invariati.
+
+**Verifiche:** `git diff --check` pulito e parsing completo dello script inline
+con Node.js riuscito.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `094b636871b6cd6f896bde4c87ad7a557613e70a`.
+
+---
