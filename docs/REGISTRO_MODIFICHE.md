@@ -1777,7 +1777,7 @@ Riguarda: eliminazione completa della falsa semantica
 (Set utente e Setting nutrizionista), secondo la regola chiarita
 definitivamente da Cwe.
 
-## 1. Commit `(in preparazione)` — rimozione completa del parametro e validazione ≥2 categorie
+## 1. Commit `70eeeff` — rimozione completa del parametro e validazione ≥2 categorie
 
 **Origine dell'interpretazione errata:** nel vecchio motore, il numero
 "1" indicava semplicemente che l'utente aveva già scelto una delle due
@@ -1917,6 +1917,6 @@ Nessun risolutore globale della settimana, nessun backtracking su pasti
 già chiusi, nessuna rigenerazione completa della settimana: generazione
 sequenziale invariata. Nessuna funzione interna esportata per i test.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `70eeeffd1df54334e675e337105164d7343c5fd4`.
 
 ---
