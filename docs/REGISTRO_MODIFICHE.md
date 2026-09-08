@@ -943,3 +943,20 @@ comparsa di `Ripristina`; ritorno agli spaghetti originali.
 **SHA remoto dell'intervento:** `583a62fb5f7bf78b00c54235763767c0c3d28d3b`.
 
 ---
+
+## 9. Direzione inversa del ripristino — 8 settembre 2026
+
+**Correzione richiesta da Cwe:** differenziare visivamente il ripristino anche
+quando sono disponibili soltanto due set di pasto.
+
+**Intervento effettuato:** `Cambia` conserva il movimento con uscita verso il
+basso e ingresso dall'alto. `Ripristina` usa il verso opposto: il contenuto
+alternativo esce verso l'alto e il pasto programmato rientra dal basso.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`.
+
+**Verifiche:** parsing dello script inline e `git diff --check`.
+
+**SHA remoto dell'intervento:** `07d2a2f23761779de145a0c1df952a2c741161fa`.
+
+---
