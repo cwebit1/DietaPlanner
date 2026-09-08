@@ -1464,3 +1464,97 @@ git diff --check                                 → pulito
 **SHA finale:** `baaf9bad284b0b2d0fd857aa1e525787452262ac`.
 
 ---
+
+# Filone: Esclusione categoria proteica dal secondo pasto dello stesso giorno
+
+Riguarda: `motor-v12.js:opzioniProteinaPerSlot`/`risolviSettimanaSequenziale`
+- regola di Cwe: «Quando una categoria proteica è stata scelta per un
+pasto, deve essere esclusa dal pool del secondo pasto dello stesso
+giorno» (default 2 fonti proteiche/giorno).
+
+## 1. Commit `(in preparazione)` — rimossa la riapertura del pool e la registrazione di macro incidentali
+
+**Difetto riscontrato (due punti distinti, entrambi in
+`opzioniProteinaPerSlot`/`risolviSettimanaSequenziale`):**
+1. `opzioniProteinaPerSlot`: quando il pool ammesso, dopo aver escluso la
+   categoria già usata nel giorno, risultava vuoto, il codice tornava un
+   errore esplicito **solo se** le categorie ammesse totali erano più di
+   3 (`allowed.length>3`). Con 3 o meno categorie ammesse (es. profilo
+   vegano: solo "legumi" ammesso), il codice **riapriva il pool
+   ignorando l'esclusione** (`pool=allowed.filter(...)` senza il
+   controllo `usateGiorno`), permettendo di riproporre silenziosamente
+   la stessa categoria già scelta per il primo pasto.
+2. `risolviSettimanaSequenziale`: dopo aver scelto la ricetta, il
+   giorno veniva registrato in `proteineGiorno` con
+   `macroProteicheRicette(candidato.ricette)` — **tutte** le macro
+   proteiche incidentalmente presenti nella ricetta (es. una ricetta con
+   sia carne sia formaggio), non solo la categoria `target`
+   effettivamente cercata e scelta per lo slot. Questo poteva sia
+   sovra-escludere (categorie mai scelte come target) sia produrre
+   ambiguità su quale categoria andasse davvero esclusa dal secondo
+   pasto.
+
+**Correzione applicata:**
+1. Rimossa interamente la riapertura del pool: se dopo l'esclusione
+   della categoria già usata (e il rispetto dei massimi settimanali)
+   non resta nulla di ammesso, `opzioniProteinaPerSlot` restituisce
+   sempre un errore esplicito, indipendentemente dal numero di categorie
+   disponibili — mai un fallback che duplichi la categoria.
+2. `risolviSettimanaSequenziale` registra in `proteineGiorno`
+   esclusivamente `target` (la categoria effettivamente scelta per lo
+   slot, già disponibile in variabile locale), mai l'insieme di macro
+   incidentali della ricetta. Una proteina secondaria presente
+   incidentalmente in una ricetta continua a contribuire ai cap/conteggi
+   nutrizionali tramite `accumulaConteggiPasto` (invariato, chiamata
+   subito sotto), ma non influenza più l'esclusione per il secondo
+   pasto del giorno.
+
+**Percorso Casuale/Completa del Set (`engine-core.js:buildProteinGrid`),
+verificato come richiesto:** già corretto, non modificato. Usa vero
+backtracking (`assegna(idx)`, con annullamento esplicito
+`counts[macro]--;stato[slot.day][slot.pasto]=null` al fallimento), mai
+un fallback che riusa la categoria del pasto già assegnato nello stesso
+giorno; se i vincoli sono incompatibili restituisce `errors` non vuoto e
+`cells={}`, mai una griglia formalmente completa ma con un duplicato. Il
+commento della funzione documenta esplicitamente questo stesso principio
+già in vigore prima di questo intervento.
+
+**Casistiche esplicitamente non implementate (come richiesto):**
+nessun controllo aggiunto per impedire all'utente di selezionare due
+volte la stessa categoria a mano nella stessa giornata nel Set — la UI
+ha una sola casella per giorno/categoria, il duplicato manuale non è
+producibile.
+
+**File modificati:** `motor-v12.js` (`opzioniProteinaPerSlot`,
+`risolviSettimanaSequenziale`), `tests/lotto-proteine-giorno-esclusione.test.js`
+(nuovo).
+
+**Test eseguito (controlli consentiti):**
+```
+node tests/lotto-proteine-giorno-esclusione.test.js  → ok (fallisce sul codice precedente: "legumi" ripetuto pranzo/cena con profilo vegano, verificato; passa dopo la correzione)
+node --check motor-v12.js                              → OK
+node --check engine-core.js                             → OK
+git diff --check                                        → pulito
+```
+Il test genera settimane reali con `generaPianoSettimana()` (API
+pubblica) e legge `categoriaTarget` direttamente dallo store `piano`,
+mai una ricostruzione della logica di esclusione. Copre sia il caso
+ordinario (profilo onnivoro, 5 categorie ammesse: nessuna violazione
+attesa né osservata) sia il caso limite deterministico che riproduce il
+difetto (profilo vegano, una sola categoria ammessa, 2 fonti/giorno
+richieste: matematicamente infattibile, deve fallire con errore
+esplicito, mai con un giorno a categoria duplicata). Verificato anche
+che `tests/lotto-j-una-fonte-proteica-giorno.test.js` (scenario
+correlato, 1 fonte/giorno) continua a passare, per igiene, pur non
+essendo nella lista dei controlli consentiti di questo intervento.
+
+**Non modificati:** frequenze settimanali, ricette, ingredienti,
+carboidrati, residuo V/S/G, olio, cataloghi. Nessun risolutore globale
+della settimana, nessun backtracking dei pasti già chiusi, nessuna
+rigenerazione completa della settimana: generazione sequenziale
+invariata, un pasto si chiude prima che il successivo inizi. Nessuna
+funzione interna esportata per i test.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

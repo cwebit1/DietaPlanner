@@ -2115,12 +2115,13 @@ function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng
     const max=freq[k].max;
     return max===null||max===undefined||(Number(counts[k])||0)+1+(Number(prenotate[k])||0)<=Number(max);
   });
-  if(!pool.length&&allowed.length>3)return {errors:['Nessuna classe proteica distinta e ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
-  if(!pool.length)pool=allowed.filter(k=>{
-    const max=freq[k].max;
-    return max===null||max===undefined||(Number(counts[k])||0)+1+(Number(prenotate[k])||0)<=Number(max);
-  });
-  if(!pool.length)return {errors:['Nessuna classe proteica ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
+  /* Nessuna riapertura del pool: se dopo l'esclusione della/e categoria/e
+     gia' usate oggi non resta nulla di ammesso, e' un errore esplicito -
+     mai un fallback che duplichi silenziosamente la categoria gia' scelta
+     (regola di Cwe: una categoria scelta per un pasto e' sempre esclusa
+     dal pool del secondo pasto dello stesso giorno, senza eccezioni legate
+     al numero di categorie disponibili). */
+  if(!pool.length)return {errors:['Nessuna classe proteica distinta e ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
   const sottoMinimo=pool.filter(k=>(Number(counts[k])||0)+(Number(prenotate[k])||0)<(Number(freq[k].min)||0));
   if(sottoMinimo.length)pool=sottoMinimo;
   return {errors:[],targets:mescolaValori(pool,rng)};
@@ -2238,7 +2239,14 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
       if(!carboidratoGiorno.has(slot.day))carboidratoGiorno.set(slot.day,new Set());
       carboidratoGiorno.get(slot.day).add(candidato.carbKeyUsato);
     }
-    macroProteicheRicette(candidato.ricette).forEach(k=>proteineGiorno.get(slot.day).add(k));
+    /* Registra ESCLUSIVAMENTE la categoria target scelta per questo slot
+       (regola di Cwe), mai tutte le macro incidentalmente presenti nella
+       ricetta (macroProteicheRicette, plurale): una proteina secondaria
+       dentro la ricetta continua a contribuire ai cap/conteggi tramite
+       accumulaConteggiPasto subito sotto, ma non deve mai essere confusa
+       con la categoria target ai fini dell'esclusione dal secondo pasto
+       dello stesso giorno. */
+    proteineGiorno.get(slot.day).add(target);
     accumulaConteggiPasto(candidato.ricette,ctx.weeklyIngredientCounts,ctx.weeklySubtypeCounts);
     chiaviStackPasto(candidato).forEach(k=>ctx.weeklyStackKeys.add(k));
     if(typeof ctx.onProgress==='function')ctx.onProgress({completati:i+1,totale:slotRefs.length,giorno:slot.day,pasto:slot.pasto});
