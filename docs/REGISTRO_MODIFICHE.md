@@ -1383,7 +1383,7 @@ carboidrati, proteine, verdure, residuo V/S/G, frequenze.
 
 ---
 
-## 2. Commit `(in preparazione)` — corregge la dichiarazione di "deviazione": rimossa l'esposizione artificiale di normalizzaRealizzazioniOlio
+## 2. Commit `baaf9ba` — corregge la dichiarazione di "deviazione": rimossa l'esposizione artificiale di normalizzaRealizzazioniOlio
 
 **Correzione alla sezione 1:** la sezione precedente dichiarava
 esplicitamente l'esportazione di `normalizzaRealizzazioniOlio` come
@@ -1461,6 +1461,6 @@ node --check motor-v12.js                        → OK
 git diff --check                                 → pulito
 ```
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `baaf9bad284b0b2d0fd857aa1e525787452262ac`.
 
 ---
