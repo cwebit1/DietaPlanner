@@ -905,3 +905,41 @@ nove pulsanti generati dai caroselli.
 **SHA remoto dell'intervento:** `661846caab59d00dde5a9b54842555e57af0ab5f`.
 
 ---
+
+## 8. Prototipo grafico del cambio pasto verticale — 8 settembre 2026
+
+**Obiettivo autorizzato da Cwe:** al comando `Cambia piatto`, far scorrere
+dall'alto verso il basso l'intero pasto, mantenendo solidali fotografie, testi,
+ingredienti e dosi. Dopo il primo cambio, comprimere il comando e mostrare
+`Ripristina` per tornare al pasto programmato.
+
+**Intervento effettuato:** aggiunta alla preview una rotazione verticale
+dimostrativa indipendente per ciascuna card. Il contenuto corrente esce verso il
+basso e la nuova proposta entra dall'alto; lo swipe orizzontale interno resta
+disponibile e la relativa freccia rimane ancorata alla card. Dopo il cambio la
+riga comandi presenta `Cambia`, `Ripristina` e `Dettagli`. Il pranzo alternativo
+usa le tre fotografie fornite da Cwe per farro con pomodorini e zucchine,
+branzino ai ferri e insalata di carote e barbabietole.
+
+**Asset:** i tre originali allegati sono stati mantenuti invariati; nella repo
+sono state aggiunte copie WebP 960×536 ottimizzate, per complessivi circa 191
+KB.
+
+**Separazione confermata:** la rotazione usa esclusivamente dati dimostrativi
+interni alla preview e non interroga motore, database o IndexedDB. `index.html`
+e i file funzionali non sono stati modificati.
+
+**Verifiche:** parsing dello script e `git diff --check`; caricamento delle tre
+nuove immagini; cambio del pranzo verso il set Farro/Branzino/Insalata;
+comparsa di `Ripristina`; ritorno agli spaghetti originali.
+
+**File modificato:** `restyling-preview.html`.
+
+**File aggiunti:**
+- `assets/visual-demo/alternativa-farro-pomodorini-zucchine.webp`;
+- `assets/visual-demo/alternativa-branzino-ferri.webp`;
+- `assets/visual-demo/alternativa-insalata-carote-barbabietole.webp`.
+
+**SHA remoto dell'intervento:** `583a62fb5f7bf78b00c54235763767c0c3d28d3b`.
+
+---
