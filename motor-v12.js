@@ -2755,7 +2755,7 @@ function stato(){ return {pronto:state.pronto,versioneRicette:state.dbRicette&&s
 
 global.DietaPlannerMotorV12={
   inizializza,stato,getRicette,getRicetta,
-  generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,compilaRicetta,
+  generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,compilaRicetta,configRuntime,ricettaAmmessa,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,getInventarioDisponibile,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
   generaPasto,generaPianoSettimana,rigeneraPasto,risolviSlotSingolo,statoRollPasto,ruotaPasto,salvaRoll,materializzaRealizzazione,

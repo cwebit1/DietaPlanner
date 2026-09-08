@@ -1071,3 +1071,87 @@ sono stati modificati `index.html`, motore, database o IndexedDB.
 **SHA della correzione finale calendario:** `7fa1ffd3f2d9b0e8cd890b6d4a75f2f13732f644`.
 
 ---
+# Filone: Unica fonte runtime delle regole nutrizionali (index.html vs resolver)
+
+Riguarda: verifica sistematica di ogni blocco storico in `index.html` che
+potesse costituire una seconda fonte funzionale rispetto a
+`nutrition-config.js:resolveNutritionConfig()`, e rimozione del codice
+dimostrato completamente morto.
+
+## 1. Commit `(in preparazione)` — matrice di verifica, una divergenza reale corretta, due blocchi morti rimossi
+
+**Esclusione esplicita rispettata:** nessun intervento sulla mancanza di
+ricette per Friselle/Piadina/Pasta sfoglia — riservate a Cwe, solo
+annotate qui come richiesto.
+
+**Matrice di verifica (blocco → chiamanti → fonte autorevole → decisione):**
+
+| Blocco | Chiamanti reali | Fonte autorevole | Decisione |
+|---|---|---|---|
+| `CONFIG_AVANZATA_DEFAULT` | seed per il form Setting (`configAvanzataDefaultCanonico`/`EffettivaSalvata`) | sempre ripassato da `risolviConfigNutrizionista`→`N.resolveNutritionConfig` prima di essere usato o salvato | **corretto**, nessuna modifica |
+| `CAP_SPUNTINO_SETTIMANALE`/`GIORNALIERO`, `CAP_COLAZIONE_SPECIALE` | cache di sessione (`applicaConfigAvanzataRuntime`), chiamata sia al boot sia al salvataggio | resolver | **corretto**, nessuna modifica |
+| `FRUTTA_GIORNALIERA` | `renderIndicatoreFrutta` (live, colora l'indicatore frutta del giorno) | **nessuna** — era una `const` indipendente | **divergenza reale, corretta** (vedi sotto) |
+| `CARBOIDRATI_PASTO` | `nutrizioneCarboidratoModulare` (solo per `voce.primoCereale`, mai scritto con valore reale dal motore attuale — verificato con ricerca globale) + `.label` in una UI di editing manuale | n/d, compatibilità storica | **non toccato**, uso delimitato alla compatibilità (punto 9 dell'incarico) |
+| `CARBOIDRATI_ROTAZIONE` | nessuno (verificato) | — | **rimosso**, codice morto |
+| `CARBOIDRATI_LIMITATI` | nessuno (verificato) | — | **rimosso**, codice morto |
+| `seedIfEmpty()` | nessuno (riverificato sull'ultimo commit, come richiesto) | — | **rimosso per intero**, nessuna variabile viva dipendeva dal suo interno (verificato), dati seed incompatibili con lo schema live (`formato`/`qta` invece di `pesoPezzo`/`unitaPezzo`) |
+| `ALLOCAZIONE_CONDIMENTO_PASTO.olio_evo.grammi` (10 g, duplica `oilGramsPerMeal`) | 2 soli riferimenti, entrambi gated dietro `voce.modo==='multi' && !(voce.realizzazioni&&voce.realizzazioni.length)` — condizione mai vera per il motore attuale (che scrive sempre `realizzazioni`) | resolver (ma **nessun consumatore vivo** lo legge affatto) | **non toccato**: nessuna divergenza runtime dimostrata oggi, ma `oilGramsPerMeal` risolto non ha alcun consumatore nella pipeline di generazione attuale — **decisione riservata a Cwe** (vedi sotto) |
+| `subtypeCaps`/`maxProteinSourcesPerDay` in `motor-v12.js`/`engine-core.js` | `ricettaAmmessa`, `buildProteinGrid` | sempre `resolved.*` | **corretto**, nessuna modifica |
+
+**Duplicazione runtime reale trovata e corretta:** `FRUTTA_GIORNALIERA =
+{min:2,max:3}` era una costante indipendente, mai normalizzata dal
+resolver, usata dal vivo in `renderIndicatoreFrutta()` (indicatore "Frutta
+oggi: N / min-max porzioni" con colorazione). Se il nutrizionista modifica
+`fruit.min`/`fruit.max` nel Setting, l'indicatore avrebbe continuato a
+mostrare "2-3" fisso. Corretta con lo stesso pattern già in uso per
+`CAP_SPUNTINO_*`/`CAP_COLAZIONE_SPECIALE`: `let`, valorizzata da
+`applicaConfigAvanzataRuntime()` con `def.fruit`/`eff.fruit` (risolti).
+
+**Codice morto rimosso:**
+- `seedIfEmpty()` (intera funzione, ~470 righe) — dati di seed iniziale
+  ormai incompatibili con lo schema live e senza alcun chiamante.
+- `CARBOIDRATI_ROTAZIONE`, `CARBOIDRATI_LIMITATI` — costanti dichiarate
+  senza mai un lettore.
+
+**Decisione riservata a Cwe (non scelta autonomamente):**
+`oilGramsPerMeal` risolto dal resolver non ha oggi **alcun consumatore
+runtime** nella generazione: l'unico punto che applica una quota fissa di
+olio EVO (`ALLOCAZIONE_CONDIMENTO_PASTO`, 10 g hardcoded) è raggiungibile
+solo da record del vecchio componimento "multi" senza `realizzazioni`,
+mai prodotti dal motore attuale. Non è una divergenza dimostrata (nulla
+osserva oggi il numero sbagliato), ma è un'assenza: il valore che il
+nutrizionista configura nel Setting non influenza alcun pasto generato
+oggi. Due strade possibili, entrambe una decisione alimentare/di prodotto:
+(a) collegare `oilGramsPerMeal` risolto alla nutrizione dei pasti generati
+dal motore nuovo; (b) lasciare l'olio fuori dal calcolo quantitativo come
+scelta consapevole e rimuovere `ALLOCAZIONE_CONDIMENTO_PASTO` come residuo
+morto. Nessuna delle due applicata qui.
+
+**File modificati:** `index.html` (rimozione `seedIfEmpty`,
+`CARBOIDRATI_ROTAZIONE`, `CARBOIDRATI_LIMITATI`; correzione
+`FRUTTA_GIORNALIERA`), `motor-v12.js` (solo export di `configRuntime` e
+`ricettaAmmessa` per testabilità, nessuna logica cambiata),
+`tests/lotto-resolver-unica-fonte-runtime.test.js` (nuovo).
+
+**Test eseguiti (controlli consentiti):**
+```
+node tests/lotto-resolver-unica-fonte-runtime.test.js  → ok (fallisce senza la correzione: FRUTTA_GIORNALIERA non risolta, verificato)
+node tests/nutrition-config.test.js                     → ok
+node tests/lotto-d-contestuali-realizzazione.test.js    → ok
+node tests/lotto-g-unita-pz-snapshot.test.js            → ok
+node --check nutrition-config.js                        → OK
+node --check motor-v12.js                                → OK
+node --check engine-core.js                              → OK
+git diff --check                                         → pulito
+```
+`index.html`: script modificato estratto e controllato con `node --check`
+(stesso metodo dei filoni precedenti); nessuna suite completa avviata.
+
+**Non modificati:** `db-ricette.json`, `ingredienti-new.json`, ricette
+mancanti (Friselle/Piadina/Pasta sfoglia, riservate a Cwe), schema
+carboidrati AUTO/FIXED/EXCLUDED, quantità Uova/Ricotta, contratto
+quantita/unita/grammi, UI grafica, `nutrition-config.js`.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---
