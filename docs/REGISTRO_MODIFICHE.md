@@ -1638,3 +1638,25 @@ con Node.js riuscito.
 **SHA dell'intervento grafico:** `094b636871b6cd6f896bde4c87ad7a557613e70a`.
 
 ---
+## 6. Inversione del verso dello swipe nella bottom bar — 8 settembre 2026
+
+**Difetto segnalato da Cwe:** il movimento della selezione risultava opposto
+alla direzione del dito.
+
+**Correzione applicata:** invertito il calcolo della posizione durante il
+trascinamento. Muovendo il dito verso destra la selezione procede ora verso
+destra; muovendolo verso sinistra procede verso sinistra. Tracciamento continuo,
+selezione dell'icona più vicina al rilascio e distinzione dallo scroll verticale
+restano invariati.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html` e tutti i file funzionali restano invariati.
+
+**Verifiche:** `git diff --check` pulito e parsing dello script inline con
+Node.js riuscito.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `c2859084aba173d047cfe996044ffc4241c0a9d7`.
+
+---
