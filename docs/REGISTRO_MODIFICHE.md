@@ -1472,7 +1472,7 @@ Riguarda: `motor-v12.js:opzioniProteinaPerSlot`/`risolviSettimanaSequenziale`
 pasto, deve essere esclusa dal pool del secondo pasto dello stesso
 giorno» (default 2 fonti proteiche/giorno).
 
-## 1. Commit `(in preparazione)` — rimossa la riapertura del pool e la registrazione di macro incidentali
+## 1. Commit `63de55b` — rimossa la riapertura del pool e la registrazione di macro incidentali
 
 **Difetto riscontrato (due punti distinti, entrambi in
 `opzioniProteinaPerSlot`/`risolviSettimanaSequenziale`):**
@@ -1555,6 +1555,6 @@ rigenerazione completa della settimana: generazione sequenziale
 invariata, un pasto si chiude prima che il successivo inizi. Nessuna
 funzione interna esportata per i test.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `63de55b6425d984c777322f99b46417253eac26a`.
 
 ---
