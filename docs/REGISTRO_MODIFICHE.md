@@ -1270,7 +1270,7 @@ decisione di Cwe — «10 g complessivi al giorno, ripartiti in 5 g a
 pranzo e 5 g a cena» — una sola fonte quantitativa, mai moltiplicata per
 il numero di ricette che compongono il pasto.
 
-## 1. Commit `(in preparazione)` — resolver, applicazione atomica, rimozione legacy
+## 1. Commit `a21c8d4` — resolver, applicazione atomica, rimozione legacy
 
 **Difetto riscontrato:** `nutrition-config.js` esponeva `oilGramsPerMeal`
 (default 10 g, range 10-15 "per pasto") mai realmente consumato dalla
@@ -1379,6 +1379,6 @@ metodo dei filoni precedenti); nessuna suite completa avviata.
 restyling (solo l'etichetta e il binding del campo olio nel Setting),
 carboidrati, proteine, verdure, residuo V/S/G, frequenze.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `a21c8d40a26c2cef55fa056a7138b412f94942c7`.
 
 ---
