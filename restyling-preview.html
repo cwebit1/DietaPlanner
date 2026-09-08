@@ -27,10 +27,11 @@
     .bottom{grid-template-columns:repeat(6,1fr);padding-left:12px;padding-right:12px}
     .bottom-swipe-indicator{position:absolute;z-index:0;bottom:4px;left:0;width:22px;height:3px;border-radius:4px;background:#e4b640;box-shadow:0 2px 4px rgba(0,0,0,.3);pointer-events:none;will-change:left}.nav{position:relative;z-index:1}
     @media(max-width:430px){.bottom{padding-left:5px;padding-right:5px}.nav{font-size:8px}.nav i{width:28px;height:28px}.nav svg{width:26px;height:26px}}
-    .dish-row{grid-template-columns:minmax(0,1fr) 51px 51px}.favorite{width:51px;height:51px;border:0;border-radius:50%;background:#eff2eb;color:#e0a711;display:grid;place-items:center}.favorite svg{width:58%;height:58%;fill:currentColor;stroke:#b98508;stroke-width:1.1;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(126,86,0,.2))}
-    .favorite.active{box-shadow:inset 0 0 0 2px rgba(224,167,17,.42),0 2px 8px rgba(126,86,0,.12)}.action.choose-special{position:relative;isolation:isolate;background:#eff2ec;color:#531715;overflow:visible}.action.choose-special:before{content:"";position:absolute;z-index:-1;inset:-1px;border-radius:14px;background:rgba(204,42,35,.62);box-shadow:0 0 4px rgba(204,42,35,.58);animation:special-alert 1s ease-in-out infinite}.action.choose-special b{color:#a31f1a}@keyframes special-alert{0%,100%{opacity:.3;transform:scale(.992)}50%{opacity:1;transform:scale(1.005)}}
+    .dish-row{grid-template-columns:minmax(0,1fr) 51px 51px}.favorite{width:51px;height:51px;border:0;border-radius:50%;background:#eff2eb;color:#e0a711;display:grid;place-items:center}.favorite svg{width:87%;height:87%;fill:currentColor;stroke:#b98508;stroke-width:1.1;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(126,86,0,.2))}
+    .favorite.active{box-shadow:inset 0 0 0 2px rgba(224,167,17,.42),0 2px 8px rgba(126,86,0,.12)}.favorite.active svg{transform-origin:center;animation:special-star-spin 2.8s linear infinite}@keyframes special-star-spin{to{transform:rotate(360deg)}}.action.choose-special{position:relative;isolation:isolate;background:#eff2ec;color:#531715;overflow:visible}.action.choose-special:before{content:"";position:absolute;z-index:-1;inset:-1px;border-radius:14px;background:rgba(204,42,35,.62);box-shadow:0 0 4px rgba(204,42,35,.58);animation:special-alert 1s ease-in-out infinite}.action.choose-special b{color:#a31f1a}@keyframes special-alert{0%,100%{opacity:.3;transform:scale(.992)}50%{opacity:1;transform:scale(1.005)}}
     @property --special-frame-angle{syntax:'<angle>';initial-value:0deg;inherits:false}.meal{position:relative}.meal.special-mode:after{content:"";position:absolute;z-index:8;inset:0;border-radius:inherit;padding:3px;pointer-events:none;background:conic-gradient(from var(--special-frame-angle),#ff3b30,#ffcc00,#35d06f,#34aadc,#ad5cff,#ff3b30);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(255,204,0,.6));animation:special-frame-lights 2.4s linear infinite}.meal.special-mode .dots{display:none}@keyframes special-frame-lights{to{--special-frame-angle:360deg}}
-    @media(max-width:430px){.dish-row{grid-template-columns:minmax(0,1fr) 34px 34px;gap:3px}.favorite{width:34px;height:34px}.favorite svg{width:68%;height:68%}}
+    .action.special-confirmed{background:#dfeadf;color:#174b35;border:1px solid #b9ceb9}.action.special-confirmed b{color:#174b35}
+    @media(max-width:430px){.dish-row{grid-template-columns:minmax(0,1fr) 34px 34px;gap:3px}.favorite{width:34px;height:34px}.favorite svg{width:102%;height:102%}}
   </style>
 </head>
 <body data-ui-prototype="dietaplanner-restyling" data-ui-version="1">
@@ -93,10 +94,11 @@
       "vertical-rotation": ["meal.original", "meal.alternatives", "meal.current"],
       "recipe-detail": ["dish.id", "dish.imagePath", "dish.title", "dish.ingredients", "dish.instructions", "dish.nutrition", "dish.history", "dish.portions"],
       "recipe-sharing": ["dish.id", "dish.title", "dish.shareUrl", "brand.name"],
+      "special-meal-selector": ["meal.systemDefault", "meal.specialSelection", "meal.specialModeOpen"],
       "bottom-navigation": ["route.current"]
     },
-    "actions": ["previous-week", "next-week", "swipe-week", "select-day", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "close-details", "swipe-close-details", "swipe-bottom-navigation", "increase-portions", "decrease-portions", "share-recipe", "toggle-favorite", "toggle-lock"],
-    "invariants": ["functional-databases-untouched", "visual-content-linked-by-id-later", "original-meal-retained-for-restore"]
+    "actions": ["previous-week", "next-week", "swipe-week", "select-day", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "close-details", "swipe-close-details", "swipe-bottom-navigation", "increase-portions", "decrease-portions", "share-recipe", "toggle-special-mode", "set-special-meal", "toggle-lock"],
+    "invariants": ["functional-databases-untouched", "visual-content-linked-by-id-later", "system-default-meal-retained", "confirmed-special-mode-open-by-default"]
   }
   </script>
   <script>
@@ -196,6 +198,7 @@
         sets.push(specialEntries);
         let currentSet=0;
         let changing=false;
+        let confirmedSpecialId=null;
         const instantTrackScroll=left=>{
           const previousBehavior=track.style.scrollBehavior;
           track.style.scrollBehavior='auto';
@@ -209,6 +212,7 @@
           const entries=sets[setIndex];
           const isSpecialSet=setIndex===specialSetIndex;
           meal.classList.toggle('special-mode',isSpecialSet);
+          meal.dataset.specialModeOpen=String(isSpecialSet);
           const renderedEntries=isSpecialSet?[entries[entries.length-1],...entries,entries[0]]:entries;
           renderedEntries.forEach((entry,renderIndex)=>{
             const index=isSpecialSet?(renderIndex-1+entries.length)%entries.length:renderIndex;
@@ -230,8 +234,10 @@
             const favorite=document.createElement('button');
             favorite.className='favorite';
             favorite.type='button';
-            favorite.dataset.action='toggle-favorite';
-            favorite.setAttribute('aria-label','Aggiungi ai preferiti');
+            favorite.dataset.action='toggle-special-mode';
+            favorite.dataset.bind='meal.systemDefault,meal.specialSelection,meal.specialModeOpen';
+            favorite.dataset.uiRole='special-meal-selector';
+            favorite.setAttribute('aria-label','Apri i piatti speciali');
             favorite.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1 6.2-5.6-3-5.6 3 1-6.2-4.5-4.4 6.3-.9Z"/></svg>';
             if(setIndex===specialSetIndex){
               favorite.classList.add('active');
@@ -246,9 +252,15 @@
             actions.querySelector('.primary').dataset.action='open-details';
             actions.querySelector('.primary').dataset.recipeId=id;
             if(setIndex===specialSetIndex){
-              change.classList.add('choose-special');
-              change.dataset.action='set-special-meal';
-              change.innerHTML='<b>✓</b><span>Imposta come pasto</span>';
+              if(entry.id===confirmedSpecialId){
+                change.classList.add('special-confirmed');
+                change.dataset.action='special-meal-selected';
+                change.innerHTML='<b>★</b><span>Pasto speciale impostato</span>';
+              }else{
+                change.classList.add('choose-special');
+                change.dataset.action='set-special-meal';
+                change.innerHTML='<b>✓</b><span>Imposta come pasto</span>';
+              }
             }else if(setIndex>0){
               actions.classList.add('has-restore');
               change.classList.add('change-compact');
@@ -332,11 +344,24 @@
             return;
           }
           if(change&&currentSet===specialSetIndex){
+            if(change.classList.contains('special-confirmed'))return;
             const physicalIndex=Math.round(track.scrollLeft/track.clientWidth);
             const selectedIndex=(physicalIndex-1+sets[specialSetIndex].length)%sets[specialSetIndex].length;
             const selected=sets[specialSetIndex][selectedIndex]||sets[specialSetIndex][0];
-            sets[0]=[selected,...sets[0].filter(entry=>entry.id!==selected.id)];
-            switchSet(0,'up');
+            confirmedSpecialId=selected.id;
+            sets[specialSetIndex]=[selected,...sets[specialSetIndex].filter(entry=>entry.id!==selected.id)];
+            track.querySelectorAll('.special-confirmed').forEach(button=>{
+              button.classList.remove('special-confirmed');
+              button.classList.add('choose-special');
+              button.dataset.action='set-special-meal';
+              button.innerHTML='<b>✓</b><span>Imposta come pasto</span>';
+            });
+            change.classList.remove('choose-special');
+            change.classList.add('special-confirmed');
+            change.dataset.action='special-meal-selected';
+            change.innerHTML='<b>★</b><span>Pasto speciale impostato</span>';
+            meal.dataset.specialMealId=confirmedSpecialId;
+            meal.dataset.specialModeOpen='true';
           }else if(change)switchSet(currentSet===specialSetIndex-1?1:currentSet+1);
           if(restore)switchSet(0,'up');
         });
