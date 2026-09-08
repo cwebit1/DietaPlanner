@@ -387,7 +387,7 @@
         navigationDragging=true;
         event.preventDefault();
         const itemWidth=bottomNavigation.clientWidth/navigationItems.length;
-        navigationPosition=Math.max(0,Math.min(navigationItems.length-1,navigationStartIndex-distanceX/itemWidth));
+        navigationPosition=Math.max(0,Math.min(navigationItems.length-1,navigationStartIndex+distanceX/itemWidth));
         selectNavigationItem(Math.round(navigationPosition),navigationPosition);
       },{passive:false});
       bottomNavigation.addEventListener('touchend',event=>{
