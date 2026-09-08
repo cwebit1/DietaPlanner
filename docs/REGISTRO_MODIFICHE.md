@@ -1078,7 +1078,7 @@ potesse costituire una seconda fonte funzionale rispetto a
 `nutrition-config.js:resolveNutritionConfig()`, e rimozione del codice
 dimostrato completamente morto.
 
-## 1. Commit `(in preparazione)` — matrice di verifica, una divergenza reale corretta, due blocchi morti rimossi
+## 1. Commit `11190a8` — matrice di verifica, una divergenza reale corretta, due blocchi morti rimossi
 
 **Esclusione esplicita rispettata:** nessun intervento sulla mancanza di
 ricette per Friselle/Piadina/Pasta sfoglia — riservate a Cwe, solo
@@ -1152,6 +1152,6 @@ mancanti (Friselle/Piadina/Pasta sfoglia, riservate a Cwe), schema
 carboidrati AUTO/FIXED/EXCLUDED, quantità Uova/Ricotta, contratto
 quantita/unita/grammi, UI grafica, `nutrition-config.js`.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `11190a826a46584b428005972ab90440ceacc2ca`.
 
 ---
