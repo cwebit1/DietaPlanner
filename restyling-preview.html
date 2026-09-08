@@ -27,6 +27,10 @@
     .bottom{grid-template-columns:repeat(6,1fr);padding-left:12px;padding-right:12px}
     .bottom-swipe-indicator{position:absolute;z-index:0;bottom:4px;left:0;width:22px;height:3px;border-radius:4px;background:#e4b640;box-shadow:0 2px 4px rgba(0,0,0,.3);pointer-events:none;will-change:left}.nav{position:relative;z-index:1}
     @media(max-width:430px){.bottom{padding-left:5px;padding-right:5px}.nav{font-size:8px}.nav i{width:28px;height:28px}.nav svg{width:26px;height:26px}}
+    .dish-row{grid-template-columns:minmax(0,1fr) 51px 51px}.favorite{width:51px;height:51px;border:0;border-radius:50%;background:#eff2eb;color:#e0a711;display:grid;place-items:center}.favorite svg{width:58%;height:58%;fill:currentColor;stroke:#b98508;stroke-width:1.1;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(126,86,0,.2))}
+    .favorite.active{box-shadow:inset 0 0 0 2px rgba(224,167,17,.42),0 2px 8px rgba(126,86,0,.12)}.action.choose-special{position:relative;isolation:isolate;background:#eff2ec;color:#531715;overflow:visible}.action.choose-special:before{content:"";position:absolute;z-index:-1;inset:-3px;border-radius:16px;background:rgba(204,42,35,.7);box-shadow:0 0 9px rgba(204,42,35,.7);animation:special-alert 1s ease-in-out infinite}.action.choose-special b{color:#a31f1a}@keyframes special-alert{0%,100%{opacity:.3;transform:scale(.985)}50%{opacity:1;transform:scale(1.015)}}
+    @property --special-frame-angle{syntax:'<angle>';initial-value:0deg;inherits:false}.visual-carousel.special-mode{border-radius:0 0 17px 17px}.visual-carousel.special-mode:after{content:"";position:absolute;z-index:8;inset:0;border-radius:inherit;padding:3px;pointer-events:none;background:conic-gradient(from var(--special-frame-angle),#ff3b30,#ffcc00,#35d06f,#34aadc,#ad5cff,#ff3b30);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;filter:drop-shadow(0 0 4px rgba(255,204,0,.6));animation:special-frame-lights 2.4s linear infinite}@keyframes special-frame-lights{to{--special-frame-angle:360deg}}
+    @media(max-width:430px){.dish-row{grid-template-columns:minmax(0,1fr) 34px 34px;gap:3px}.favorite{width:34px;height:34px}.favorite svg{width:68%;height:68%}}
   </style>
 </head>
 <body data-ui-prototype="dietaplanner-restyling" data-ui-version="1">
@@ -91,7 +95,7 @@
       "recipe-sharing": ["dish.id", "dish.title", "dish.shareUrl", "brand.name"],
       "bottom-navigation": ["route.current"]
     },
-    "actions": ["previous-week", "next-week", "swipe-week", "select-day", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "close-details", "swipe-close-details", "swipe-bottom-navigation", "increase-portions", "decrease-portions", "share-recipe", "toggle-lock"],
+    "actions": ["previous-week", "next-week", "swipe-week", "select-day", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "close-details", "swipe-close-details", "swipe-bottom-navigation", "increase-portions", "decrease-portions", "share-recipe", "toggle-favorite", "toggle-lock"],
     "invariants": ["functional-databases-untouched", "visual-content-linked-by-id-later", "original-meal-retained-for-restore"]
   }
   </script>
@@ -167,6 +171,11 @@
         {kind:'Secondo',img:'alternativa-branzino-ferri.webp',title:'Branzino ai ferri',items:[['🐟','Branzino','150 g'],['🍋','Limone','q.b.'],['🌿','Erbe aromatiche','q.b.']]},
         {kind:'Contorno',img:'alternativa-insalata-carote-barbabietole.webp',title:'Insalata di carote e barbabietole',items:[['🥕','Carote','100 g'],['🟣','Barbabietole','100 g'],['🫒','Olio EVO','5 g']]}
       ];
+      const specialDishes=[
+        {kind:'Speciale',img:'speciale-pizza-verdure.webp',title:'Pizza alle verdure grigliate',items:[['🍞','Impasto pizza','1 porzione'],['🥒','Verdure grigliate','180 g'],['🍅','Pomodoro','80 g']]},
+        {kind:'Speciale',img:'speciale-torta-salata-verdure.webp',title:'Torta salata con verdure',items:[['🥧','Pasta brisée','1 porzione'],['🥒','Zucchine','100 g'],['🥬','Spinaci','80 g']]},
+        {kind:'Speciale',img:'speciale-sushi-misto.webp',title:'Sushi misto',items:[['🍚','Riso per sushi','100 g'],['🐟','Pesce misto','150 g'],['🥒','Cetriolo','50 g']]}
+      ];
       const recipeRegistry=new Map();
       const recipeId=entry=>'demo-'+entry.title.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
       const lock='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 7.7-1.5"/><circle cx="12" cy="15.5" r="1"/></svg>';
@@ -182,13 +191,20 @@
         track.className='visual-track';
         const rotated=[...data[mealIndex].slice(1),data[mealIndex][0]];
         const sets=mealIndex===1?[data[mealIndex],alternativeLunch,rotated]:[data[mealIndex],rotated];
+        const specialEntries=specialDishes.map((entry,index)=>({...entry,id:`special-${mealIndex}-${index}-${recipeId(entry).replace(/^demo-/,'')}`}));
+        const specialSetIndex=sets.length;
+        sets.push(specialEntries);
         let currentSet=0;
         let changing=false;
         const renderSet=(setIndex)=>{
           currentSet=setIndex;
           track.replaceChildren();
           const entries=sets[setIndex];
-          entries.forEach((entry,index)=>{
+          const isSpecialSet=setIndex===specialSetIndex;
+          carousel.classList.toggle('special-mode',isSpecialSet);
+          const renderedEntries=isSpecialSet?[entries[entries.length-1],...entries,entries[0]]:entries;
+          renderedEntries.forEach((entry,renderIndex)=>{
+            const index=isSpecialSet?(renderIndex-1+entries.length)%entries.length:renderIndex;
             const next=entries[(index+1)%entries.length];
             const pane=document.createElement('section');
             pane.className='visual-pane';
@@ -198,11 +214,23 @@
             pane.dataset.recipeId=id;
             pane.dataset.uiRole='dish-slide';
             pane.dataset.dishKind=entry.kind.toLowerCase();
+            pane.dataset.logicalIndex=index;
             pane.dataset.bind='dish.imagePath,dish.title,dish.ingredients';
             pane.innerHTML=`<div class="visual-photo-row"><img class="visual-main" src="${root+entry.img}" alt="${entry.title}"><img class="visual-peek" src="${root+next.img}" alt=""></div><div class="dots">${entries.map((_,dot)=>`<i class="dot${dot===index?' active':''}"></i>`).join('')}</div>`;
             const body=baseBody.cloneNode(true);
             body.querySelector('.dish').innerHTML=`<span class="dish-kind">${entry.kind}</span>${entry.title}`;
             body.querySelector('.ingredients').innerHTML=entry.items.map(item=>`<div class="ingredient"><span class="food-icon">${item[0]}</span><span>${item[1]}<small>${item[2]}</small></span></div>`).join('');
+            const favorite=document.createElement('button');
+            favorite.className='favorite';
+            favorite.type='button';
+            favorite.dataset.action='toggle-favorite';
+            favorite.setAttribute('aria-label','Aggiungi ai preferiti');
+            favorite.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.3.9-4.5 4.4 1 6.2-5.6-3-5.6 3 1-6.2-4.5-4.4 6.3-.9Z"/></svg>';
+            if(setIndex===specialSetIndex){
+              favorite.classList.add('active');
+              favorite.setAttribute('aria-label','Chiudi i piatti speciali');
+            }
+            body.querySelector('.dish-row').insertBefore(favorite,body.querySelector('.lock'));
             body.querySelector('.lock').innerHTML=lock;
             body.querySelector('.lock').dataset.action='toggle-lock';
             const actions=body.querySelector('.actions');
@@ -210,7 +238,11 @@
             change.dataset.action='change-meal';
             actions.querySelector('.primary').dataset.action='open-details';
             actions.querySelector('.primary').dataset.recipeId=id;
-            if(setIndex>0){
+            if(setIndex===specialSetIndex){
+              change.classList.add('choose-special');
+              change.dataset.action='set-special-meal';
+              change.innerHTML='<b>✓</b><span>Imposta come pasto</span>';
+            }else if(setIndex>0){
               actions.classList.add('has-restore');
               change.classList.add('change-compact');
               change.innerHTML='<b>⟳</b><span>Cambia</span>';
@@ -224,7 +256,8 @@
             pane.appendChild(body);
             track.appendChild(pane);
           });
-          track.scrollLeft=0;
+          track.scrollLeft=isSpecialSet?track.clientWidth:0;
+          if(isSpecialSet)requestAnimationFrame(()=>{track.scrollLeft=track.clientWidth;});
         };
         renderSet(0);
         const nextButton=document.createElement('button');
@@ -237,21 +270,42 @@
         oldRail.replaceWith(carousel);
         oldDots.remove();
         baseBody.remove();
+        let infiniteScrollTimer=0;
+        const normalizeSpecialLoop=()=>{
+          if(currentSet!==specialSetIndex||!track.clientWidth)return;
+          const physicalIndex=Math.round(track.scrollLeft/track.clientWidth);
+          const count=sets[specialSetIndex].length;
+          if(physicalIndex===0)track.scrollTo({left:count*track.clientWidth,behavior:'auto'});
+          else if(physicalIndex===count+1)track.scrollTo({left:track.clientWidth,behavior:'auto'});
+        };
+        track.addEventListener('scroll',()=>{
+          if(currentSet!==specialSetIndex)return;
+          clearTimeout(infiniteScrollTimer);
+          infiniteScrollTimer=setTimeout(normalizeSpecialLoop,90);
+        },{passive:true});
         nextButton.addEventListener('click',()=>{
           const index=Math.round(track.scrollLeft/track.clientWidth);
-          track.scrollTo({left:((index+1)%sets[currentSet].length)*track.clientWidth,behavior:'smooth'});
+          if(currentSet===specialSetIndex){
+            track.scrollTo({left:(index+1)*track.clientWidth,behavior:'smooth'});
+            clearTimeout(infiniteScrollTimer);
+            infiniteScrollTimer=setTimeout(normalizeSpecialLoop,430);
+          }else track.scrollTo({left:((index+1)%sets[currentSet].length)*track.clientWidth,behavior:'smooth'});
         });
         const switchSet=async(setIndex,direction='down')=>{
           if(changing)return;
           changing=true;
+          const outgoingScroll=track.scrollLeft;
           const outgoing=track.cloneNode(true);
           renderSet(setIndex);
+          const incomingScroll=track.scrollLeft;
           const incoming=track.cloneNode(true);
           const rail=document.createElement('div');
           rail.className='vertical-rail';
           if(direction==='up')rail.append(outgoing,incoming);
           else rail.append(incoming,outgoing);
           carousel.insertBefore(rail,nextButton);
+          outgoing.scrollLeft=outgoingScroll;
+          incoming.scrollLeft=incomingScroll;
           track.style.visibility='hidden';
           const frames=direction==='up'?[{transform:'translateY(0)'},{transform:'translateY(-50%)'}]:[{transform:'translateY(-50%)'},{transform:'translateY(0)'}];
           await rail.animate(frames,{duration:380,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).finished;
@@ -260,9 +314,20 @@
           changing=false;
         };
         carousel.addEventListener('click',event=>{
+          const favorite=event.target.closest('.favorite');
           const change=event.target.closest('.action:not(.primary):not(.restore)');
           const restore=event.target.closest('.action.restore');
-          if(change)switchSet(currentSet===sets.length-1?1:currentSet+1);
+          if(favorite){
+            switchSet(currentSet===specialSetIndex?0:specialSetIndex,currentSet===specialSetIndex?'up':'down');
+            return;
+          }
+          if(change&&currentSet===specialSetIndex){
+            const physicalIndex=Math.round(track.scrollLeft/track.clientWidth);
+            const selectedIndex=(physicalIndex-1+sets[specialSetIndex].length)%sets[specialSetIndex].length;
+            const selected=sets[specialSetIndex][selectedIndex]||sets[specialSetIndex][0];
+            sets[0]=[selected,...sets[0].filter(entry=>entry.id!==selected.id)];
+            switchSet(0,'up');
+          }else if(change)switchSet(currentSet===specialSetIndex-1?1:currentSet+1);
           if(restore)switchSet(0,'up');
         });
       });
@@ -290,6 +355,7 @@
         document.getElementById('detailSteps').innerHTML=['Prepara e pesa tutti gli ingredienti.','Cuoci gli ingredienti principali rispettandone consistenza e sapore.','Completa con spezie, erbe e condimento, quindi servi.'].map(step=>`<li>${step}</li>`).join('');
         const nutrients=[['420','kcal'],['28 g','Proteine'],['46 g','Carboidrati'],['14 g','Grassi']];
         document.getElementById('detailNutrition').innerHTML=nutrients.map(n=>`<div class="nutri"><b>${n[0]}</b><small>${n[1]}</small></div>`).join('');
+        document.getElementById('detailNutrition').closest('.detail-section').hidden=entry.kind==='Speciale';
         const proposed=12,consumed=8,changed=2,ratio=Math.round(consumed/proposed*100);
         document.getElementById('detailProposed').textContent=proposed;
         document.getElementById('detailConsumed').textContent=consumed;
