@@ -35,12 +35,17 @@
     /* Header pasti: nessun controllo di espansione, quindi nessuna colonna riservata. */
     .meal-head{grid-template-columns:48px minmax(0,1fr) auto}
     @media(max-width:430px){.meal-head{grid-template-columns:29px minmax(0,1fr) auto}}
+    .app-page{display:none}.app-page.active{display:block}
+    .menu-page{padding-bottom:108px}.menu-week-hero{margin:0 -24px;padding:21px 24px 18px;background:linear-gradient(145deg,#174f39,#0d3f2d);color:#fff}.menu-kicker{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#cfddce}.menu-week-title{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-top:7px}.menu-week-title h1{margin:0;font:42px/1 Georgia,serif}.menu-week-title p{margin:0 0 3px;color:#dbe7de;font-size:13px;text-align:right}.menu-week-nav{height:48px;margin-top:17px;display:grid;grid-template-columns:43px 1fr 43px;align-items:center;border:1px solid rgba(255,255,255,.22);border-radius:15px;background:rgba(255,255,255,.09)}.menu-week-nav button{height:100%;border:0;background:transparent;color:#fff;font-size:29px}.menu-week-range{text-align:center}.menu-week-range strong{display:block;font:17px Georgia,serif}.menu-week-range small{font-size:10px;color:#cfddce}.week-balance{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.balance-item{padding:10px 8px;border-radius:12px;background:rgba(255,255,255,.1);text-align:center}.balance-item b{display:block;font:20px Georgia,serif;color:#fff}.balance-item span{font-size:9px;color:#d5e2d8;text-transform:uppercase;letter-spacing:.06em}
+    .menu-intro{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 2px 12px}.menu-intro h2{margin:0;font:28px Georgia,serif;color:#123e2e}.menu-intro p{margin:3px 0 0;font-size:12px;color:#6b756e}.menu-generate{height:38px;padding:0 15px;border:0;border-radius:20px;background:#e8eee4;color:#164c37;font-size:12px;font-weight:700;white-space:nowrap}.week-plan{display:grid;gap:11px}.week-day{position:relative;border:1px solid #d8e1d6;border-radius:17px;background:var(--paper);box-shadow:0 4px 14px rgba(27,53,38,.07);overflow:hidden}.week-day.today{border-color:#1b6549;box-shadow:0 5px 18px rgba(18,75,53,.15)}.week-day-head{min-height:50px;padding:9px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:linear-gradient(90deg,#edf3e9,#fafbf8)}.week-day.today .week-day-head{background:linear-gradient(100deg,#174f39,#27664e);color:#fff}.day-identity{display:flex;align-items:center;gap:11px}.day-number{width:35px;height:35px;border-radius:11px;display:grid;place-items:center;background:#fff;color:#174b35;font:700 20px Georgia,serif;box-shadow:0 2px 7px rgba(16,61,43,.1)}.day-name strong{display:block;font:21px Georgia,serif}.day-name small{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#718078}.today .day-name small{color:#d4e4d8}.day-status{padding:5px 9px;border-radius:11px;background:#e1eadf;color:#174b35;font-size:9px;font-weight:700;text-transform:uppercase}.today .day-status{background:rgba(255,255,255,.16);color:#fff}.day-meals{padding:3px 12px 8px}.plan-meal{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;padding:9px 0;border-bottom:1px solid #e2e6df}.plan-meal:last-child{border-bottom:0}.plan-meal-label{padding-top:2px;color:#174b35;font-size:10px;font-weight:800;letter-spacing:.08em}.plan-meal-label i{display:block;margin-bottom:3px;font-style:normal;font-size:18px}.plan-dishes{display:grid;gap:5px}.plan-dish{display:grid;grid-template-columns:22px minmax(0,1fr) 28px;align-items:center;gap:7px;min-height:26px}.plan-dish>i{font-style:normal;font-size:17px;text-align:center}.plan-dish-copy{min-width:0}.plan-dish-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.plan-dish-copy small{display:block;margin-top:1px;color:#738078;font-size:8px;text-transform:uppercase;letter-spacing:.06em}.mini-lock{width:27px;height:27px;border:0;border-radius:50%;background:#edf2eb;color:#19513b;display:grid;place-items:center}.mini-lock svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.menu-actions{position:sticky;z-index:10;bottom:75px;margin-top:14px;padding:7px;display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:7px;border-radius:15px;background:rgba(251,250,246,.94);backdrop-filter:blur(8px);box-shadow:0 4px 18px rgba(20,50,34,.15)}.menu-actions button{height:37px;border-radius:10px;border:1px solid #cdd9ce;background:#fff;color:#174b35;font-size:11px;font-weight:700}.menu-actions .save-menu{border-color:#124b35;background:#124b35;color:#fff}.shopping-link{grid-column:1/-1}.menu-merge-note{display:none}
+    @media(max-width:430px){.menu-page{padding-bottom:78px}.menu-week-hero{margin:0 -13px;padding:13px 13px 11px}.menu-kicker{font-size:7px}.menu-week-title{margin-top:4px}.menu-week-title h1{font-size:26px}.menu-week-title p{font-size:8px}.menu-week-nav{height:37px;margin-top:10px;border-radius:11px;grid-template-columns:34px 1fr 34px}.menu-week-nav button{font-size:22px}.menu-week-range strong{font-size:12px}.menu-week-range small{font-size:7px}.week-balance{margin-top:8px;gap:5px}.balance-item{padding:6px 4px;border-radius:8px}.balance-item b{font-size:14px}.balance-item span{font-size:6px}.menu-intro{padding:10px 0 8px}.menu-intro h2{font-size:20px}.menu-intro p{font-size:8px}.menu-generate{height:29px;padding:0 10px;font-size:8px}.week-plan{gap:8px}.week-day{border-radius:12px}.week-day-head{min-height:39px;padding:6px 8px}.day-identity{gap:7px}.day-number{width:28px;height:28px;border-radius:8px;font-size:15px}.day-name strong{font-size:15px}.day-name small{font-size:6px}.day-status{padding:4px 6px;font-size:6px}.day-meals{padding:2px 8px 5px}.plan-meal{grid-template-columns:48px minmax(0,1fr);gap:4px;padding:6px 0}.plan-meal-label{font-size:7px}.plan-meal-label i{font-size:13px;margin-bottom:1px}.plan-dishes{gap:3px}.plan-dish{grid-template-columns:17px minmax(0,1fr) 22px;gap:4px;min-height:21px}.plan-dish>i{font-size:12px}.plan-dish-copy b{font-size:9px}.plan-dish-copy small{font-size:6px}.mini-lock{width:21px;height:21px}.mini-lock svg{width:12px;height:12px}.menu-actions{bottom:67px;margin-top:9px;padding:5px;gap:4px;border-radius:10px}.menu-actions button{height:28px;border-radius:7px;font-size:8px}}
+    .mini-lock.locked{background:#f5e7ad;color:#9b6b00;box-shadow:inset 0 0 0 1px #e7cc67}.plan-dish-copy b{white-space:normal}
   </style>
 </head>
 <body data-ui-prototype="dietaplanner-restyling" data-ui-version="1">
   <div class="app" data-ui-role="app-shell">
     <header class="top" data-ui-role="app-header"><div><div class="brand" data-bind="app.name">DietaPlanner</div><div class="tagline" data-bind="app.tagline">Piani sani, giorni migliori</div></div><div class="welcome"><span class="user-avatar" data-bind="user.googleAvatarUrl" aria-label="Avatar Google dell'utente"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="17" r="9"/><path d="M8 43c1.5-10 7-15 16-15s14.5 5 16 15Z"/></svg></span><span class="welcome-copy" data-bind="user.greeting"><span>Ciao Cwe,</span><span>Buon Appetito!</span></span></div></header>
-    <main>
+    <main id="mealPage" class="app-page active" data-page="meal">
       <nav class="date-strip" aria-label="Calendario scorrevole" data-ui-role="week-selector" data-bind="plan.dayWindow"><button class="arrow" data-action="previous-week" aria-label="Settimana precedente">‹</button><div class="date-days" id="dateDays"></div><button class="arrow" data-action="next-week" aria-label="Settimana successiva">›</button></nav>
       <div class="heading" data-ui-role="selected-day-header"><h1 data-bind="plan.selectedDate">Lunedì 7 Settembre</h1><div class="tools"><button class="calendar" data-action="open-calendar">▣</button><button class="copy" data-action="copy-day"><span>▣</span> Copia giorno</button></div></div>
       <div class="caption">“Buone abitudini oggi, grandi risultati domani.”</div>
@@ -61,6 +66,18 @@
           <div class="meal-body"><div class="dish-row"><h2 class="dish">Ceci al rosmarino con radicchio variegato</h2><button class="lock">♙</button></div><div class="ingredients"><div class="ingredient"><span class="food-icon">🫘</span><span>Ceci<small>150 g</small></span></div><div class="ingredient"><span class="food-icon">🌿</span><span>Rosmarino<small>q.b.</small></span></div><div class="ingredient"><span class="food-icon">🥬</span><span>Radicchio variegato<small>100 g</small></span></div></div><div class="actions"><button class="action"><b>⟳</b>Cambia piatto</button><button class="action primary"><b>☷</b><span class="action-label">Dettagli</span><span class="right">›</span></button></div></div>
         </article>
       </section>
+    </main>
+    <main id="menuPage" class="app-page menu-page" data-page="menu" aria-hidden="true">
+      <section class="menu-week-hero" data-ui-role="weekly-plan-header">
+        <div class="menu-kicker">Il tuo piano nutrizionale</div>
+        <div class="menu-week-title"><h1>Menù</h1><p>Una settimana completa,<br>in perfetto equilibrio.</p></div>
+        <div class="menu-week-nav" data-bind="plan.week"><button type="button" data-action="previous-menu-week" aria-label="Settimana precedente">‹</button><div class="menu-week-range"><strong>7 — 13 Settembre</strong><small>SETTIMANA CORRENTE</small></div><button type="button" data-action="next-menu-week" aria-label="Settimana successiva">›</button></div>
+        <div class="week-balance"><div class="balance-item"><b>21</b><span>Pasti principali</span></div><div class="balance-item"><b>7/7</b><span>Giorni completi</span></div><div class="balance-item"><b>100%</b><span>Piano bilanciato</span></div></div>
+      </section>
+      <div class="menu-intro"><div><h2>La tua settimana</h2><p>Dal lunedì alla domenica, pasto per pasto.</p></div><button class="menu-generate" type="button" data-action="generate-menu">⟳ Rigenera</button></div>
+      <section class="week-plan" id="weekPlan" data-ui-role="weekly-plan" data-bind="plan.days"></section>
+      <div class="menu-actions"><button type="button" data-action="cancel-menu">Annulla</button><button type="button" data-action="reset-menu">Resetta</button><button class="save-menu" type="button" data-action="save-menu">Salva menù</button><button class="shopping-link" type="button" data-action="open-shopping">🛒 Vai alla lista della spesa</button></div>
+      <div class="menu-merge-note" data-ui-role="menu-merge-contract">La vista rappresenta i record settimanali già prodotti dal motore; non genera né riclassifica ricette.</div>
     </main>
   </div>
   <nav class="bottom" aria-label="Navigazione principale" data-ui-role="bottom-navigation">
@@ -98,15 +115,31 @@
       "recipe-detail": ["dish.id", "dish.imagePath", "dish.title", "dish.ingredients", "dish.instructions", "dish.nutrition", "dish.history", "dish.portions"],
       "recipe-sharing": ["dish.id", "dish.title", "dish.shareUrl", "brand.name"],
       "special-meal-selector": ["meal.systemDefault", "meal.specialSelection", "meal.specialModeOpen"],
-      "bottom-navigation": ["route.current"]
+      "bottom-navigation": ["route.current"],
+      "weekly-plan": ["plan.week", "plan.days", "day.meals", "meal.realizations", "realization.locked"]
     },
-    "actions": ["previous-week", "next-week", "swipe-week", "select-day", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "close-details", "swipe-close-details", "swipe-bottom-navigation", "increase-portions", "decrease-portions", "share-recipe", "toggle-special-mode", "set-special-meal", "toggle-lock"],
+    "actions": ["previous-week", "next-week", "swipe-week", "select-day", "open-calendar", "copy-day", "next-dish", "change-meal", "restore-meal", "open-details", "close-details", "swipe-close-details", "swipe-bottom-navigation", "increase-portions", "decrease-portions", "share-recipe", "toggle-special-mode", "set-special-meal", "toggle-lock", "previous-menu-week", "next-menu-week", "generate-menu", "save-menu", "reset-menu", "cancel-menu", "open-shopping"],
     "invariants": ["functional-databases-untouched", "visual-content-linked-by-id-later", "system-default-meal-retained", "confirmed-special-mode-open-by-default"]
   }
   </script>
   <script>
     (()=>{
       const root='assets/visual-demo/';
+      const menuLock='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>';
+      const weeklyMenu=[
+        {day:'Lunedì',date:'7 Settembre',status:'Oggi',today:true,breakfast:'Overnight oats con frutti di bosco',lunch:[['🍝','Spaghetti integrali alle vongole','Primo'],['🐟','Branzino ai ferri','Secondo'],['🥕','Carote e barbabietole','Contorno']],dinner:[['🌾','Farro con pomodorini e zucchine','Primo'],['🫘','Ceci al rosmarino','Secondo'],['🥬','Radicchio variegato','Contorno']]},
+        {day:'Martedì',date:'8 Settembre',status:'Programmato',breakfast:'Yogurt greco, avena e pesca',lunch:[['🍚','Riso integrale alle verdure','Primo'],['🍗','Pollo alle erbe','Secondo'],['🥒','Zucchine grigliate','Contorno']],dinner:[['🍞','Pane integrale','Carboidrato'],['🥚','Frittata agli spinaci','Secondo'],['🥗','Insalata mista','Contorno']]},
+        {day:'Mercoledì',date:'9 Settembre',status:'Programmato',breakfast:'Pane tostato con ricotta e miele',lunch:[['🍝','Pasta con crema di zucchine','Primo'],['🐟','Sogliola al limone','Secondo'],['🥦','Broccoli al vapore','Contorno']],dinner:[['🌾','Cous cous mediterraneo','Primo'],['🫘','Lenticchie speziate','Secondo'],['🥕','Carote al prezzemolo','Contorno']]},
+        {day:'Giovedì',date:'10 Settembre',status:'Programmato',breakfast:'Porridge alla mela e cannella',lunch:[['🍚','Riso basmati alle verdure','Primo'],['🥩','Vitello alla piastra','Secondo'],['🥬','Bietole ripassate','Contorno']],dinner:[['🍞','Frisella al pomodoro','Carboidrato'],['🐟','Orata al forno','Secondo'],['🥗','Finocchi e arance','Contorno']]},
+        {day:'Venerdì',date:'11 Settembre',status:'Programmato',breakfast:'Yogurt greco con pera e noci',lunch:[['🍝','Pasta al pomodoro e basilico','Primo'],['🫘','Fagioli cannellini','Secondo'],['🥒','Melanzane e zucchine','Contorno']],dinner:[['🥔','Patate alle erbe','Carboidrato'],['🍗','Tacchino al limone','Secondo'],['🥬','Spinaci saltati','Contorno']]},
+        {day:'Sabato',date:'12 Settembre',status:'Programmato',breakfast:'Pancake d’avena ai frutti rossi',lunch:[['🌾','Farro mediterraneo','Primo'],['🐟','Salmone alla piastra','Secondo'],['🥗','Pomodorini e cetrioli','Contorno']],dinner:[['🍞','Pane di segale','Carboidrato'],['🥚','Uova strapazzate ai piselli','Secondo'],['🥦','Cavolfiore gratinato','Contorno']]},
+        {day:'Domenica',date:'13 Settembre',status:'Programmato',breakfast:'French toast integrale con frutta',lunch:[['🍝','Lasagnetta alle verdure','Primo'],['🍗','Pollo arrosto al rosmarino','Secondo'],['🥔','Patate e carote al forno','Contorno']],dinner:[['🌾','Orzo con verdure','Primo'],['🫘','Hummus di ceci','Secondo'],['🥗','Insalata croccante','Contorno']]}
+      ];
+      const planDish=entry=>`<div class="plan-dish"><i>${entry[0]}</i><span class="plan-dish-copy"><b>${entry[1]}</b><small>${entry[2]}</small></span><button class="mini-lock" type="button" data-action="toggle-menu-lock" aria-label="Blocca ${entry[1]}">${menuLock}</button></div>`;
+      const renderWeeklyMenu=()=>{
+        document.getElementById('weekPlan').innerHTML=weeklyMenu.map(day=>`<article class="week-day${day.today?' today':''}" data-plan-day="${day.day.toLowerCase()}"><header class="week-day-head"><span class="day-identity"><span class="day-number">${day.date.split(' ')[0]}</span><span class="day-name"><strong>${day.day}</strong><small>${day.date}</small></span></span><span class="day-status">${day.status}</span></header><div class="day-meals"><section class="plan-meal"><div class="plan-meal-label"><i>☀</i>COLAZIONE</div><div class="plan-dishes">${planDish(['🥣',day.breakfast,'Colazione'])}</div></section><section class="plan-meal"><div class="plan-meal-label"><i>◐</i>PRANZO</div><div class="plan-dishes">${day.lunch.map(planDish).join('')}</div></section><section class="plan-meal"><div class="plan-meal-label"><i>☾</i>CENA</div><div class="plan-dishes">${day.dinner.map(planDish).join('')}</div></section></div></article>`).join('');
+      };
+      renderWeeklyMenu();
       const dateStrip=document.querySelector('.date-strip');
       const dateDays=document.getElementById('dateDays');
       const previousWeek=dateStrip.querySelector('[data-action="previous-week"]');
@@ -466,8 +499,19 @@
           if(selected)item.dataset.state='selected';
           else delete item.dataset.state;
         });
+        const route=navigationItems[index]?.dataset.route;
+        const showMenu=route==='menu';
+        document.getElementById('mealPage').classList.toggle('active',!showMenu);
+        document.getElementById('menuPage').classList.toggle('active',showMenu);
+        document.getElementById('menuPage').setAttribute('aria-hidden',String(!showMenu));
         positionNavigationIndicator(indicatorPosition);
       };
+      document.getElementById('weekPlan').addEventListener('click',event=>{
+        const button=event.target.closest('[data-action="toggle-menu-lock"]');
+        if(!button)return;
+        button.classList.toggle('locked');
+        button.setAttribute('aria-pressed',String(button.classList.contains('locked')));
+      });
       navigationItems.forEach((item,index)=>item.addEventListener('click',event=>{
         if(Date.now()<suppressNavigationClickUntil){event.preventDefault();return;}
         navigationIndicator.style.transition='left 180ms cubic-bezier(.2,.8,.2,1)';
