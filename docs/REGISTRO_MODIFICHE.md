@@ -1726,3 +1726,35 @@ Node.js riuscito.
 **SHA dell'intervento grafico:** `3a9f0e4bc818881a34391f9484391a9d3dc6e351`.
 
 ---
+## 9. Stato persistente e rotazione della stella speciale — 8 settembre 2026
+
+**Obiettivo autorizzato da Cwe:** conservare separatamente il pasto speciale
+impostato e quello predefinito dal sistema. Dopo la conferma la modalità
+speciale deve restare aperta mostrando il piatto selezionato; la stella deve
+permettere di tornare al pasto di sistema e deve ruotare quando è attiva. La
+stella interna deve inoltre essere ingrandita del 50% rispetto alla misura
+originale, senza modificare il cerchio.
+
+**Intervento effettuato:** la conferma non chiude più la card e trasforma il
+comando in `Pasto speciale impostato`, interrompendo il richiamo rosso. Il piatto
+speciale selezionato viene conservato separatamente dal set originale; chiudendo
+la modalità con la stella torna visibile il pasto predefinito, mentre una nuova
+apertura riparte dallo speciale confermato. Alla stella sono stati aggiunti i
+binding `meal.systemDefault`, `meal.specialSelection` e
+`meal.specialModeOpen`, l'azione `toggle-special-mode` e gli invarianti per la
+futura persistenza. Durante lo stato attivo ruota soltanto la stella interna,
+con un giro lineare ogni 2,8 secondi; il cerchio rimane fermo. La dimensione
+mobile dell'SVG passa dal 68% al 102% del cerchio, incremento esatto del 50%
+rispetto alla misura originale.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`;
+`index.html`, motore, database e IndexedDB restano invariati.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline con
+Node.js riuscito; presenza dei metadata e dell'animazione verificata.
+
+**File modificato:** `restyling-preview.html`.
+
+**SHA dell'intervento grafico:** `4cab93570292b61b207592e1b79ca8a88476d24c`.
+
+---
