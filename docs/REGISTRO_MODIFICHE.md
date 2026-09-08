@@ -1210,3 +1210,17 @@ interfaccia grafica.
 **SHA finale:** `c7a6e5bd542f58bc1aa325899966ac5b7af97563`.
 
 ---
+
+## 16. Rifinitura hero Dettagli e indicatore Today — 8 settembre 2026
+
+**Correzioni richieste da Cwe:** rendere sempre riconoscibile il giorno corrente nella corsia calendario; eliminare i margini neri laterali della foto nella scheda Dettagli e ridurre l'invasività della didascalia sulle ricette lunghe.
+
+**Intervento effettuato:** il giorno reale riceve un bordo verde bosco sottile indipendente dalla selezione. Nell'hero Dettagli la fotografia passa a piena larghezza con `object-fit: cover` e proporzione 4:3; il titolo entra nel flusso sotto l'immagine con una sovrapposizione limitata. Il rettangolo nero è sostituito da una sfumatura verticale dal trasparente al verde DietaPlanner con opacità circa 0,8.
+
+**Separazione confermata:** modificato soltanto `restyling-preview.html`; `index.html` non è stato toccato. Prima del commit è stato verificato che la preview remota non fosse stata modificata dagli interventi paralleli presenti su `main`.
+
+**Verifiche essenziali:** parsing JavaScript e `git diff --check`.
+
+**SHA remoto:** `806551131b4d149906ac6868c929d4eea35bb055`.
+
+---
