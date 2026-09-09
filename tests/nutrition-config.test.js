@@ -104,13 +104,19 @@ assert.deepEqual(
 }
 
 {
+  /* Vegetariano/vegano: la configurazione proteica si legge da
+     proteinFrequenciesByProfile[profilo] (nuovo campo dedicato), mai da
+     config.proteinFrequencies (che resta lo spazio dell'onnivoro) - i
+     tetti ordinari non vengono più ereditati automaticamente. */
   const input={
     nutritionist:{
       config:{
         dietProfile:'vegetariano',
-        proteinFrequencies:{
-          carne:{min:1,max:2,target:2},
-          legumi:{min:3,max:4,target:4}
+        proteinFrequenciesByProfile:{
+          vegetariano:{
+            carne:{min:1,max:2,target:2},
+            legumi:{min:3,max:4,target:4}
+          }
         }
       }
     }
@@ -123,6 +129,7 @@ assert.deepEqual(
   assert.equal(r.proteinFrequencies.legumi.min,3);
   assert.equal(r.proteinFrequencies.legumi.max,4);
   assert.equal(r.proteinFrequencies.formaggi.min,2,'il profilo non deve inventare frequenze');
+  assert.equal(r.proteinFrequencies.formaggi.max,null,'vegetariano non eredita automaticamente il tetto onnivoro per una categoria non configurata esplicitamente');
 }
 
 {

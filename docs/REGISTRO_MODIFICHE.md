@@ -1792,3 +1792,139 @@ giornata espansa, giornate compatte e bottom bar.
 **SHA dell'intervento grafico:** `e43d7fc1fed3ef93833b556a7fccc41eab35ffb9`.
 
 ---
+
+# Filone: Profili alimentari — limiti onnivori applicati impropriamente a vegetariano/vegano
+
+Riguarda: `nutrition-config.js`, `engine-core.js`, `motor-v12.js`,
+`index.html` (Set utente e Setting nutrizionista) — decisione funzionale
+di Cwe: i limiti proteici ordinari sono definiti per l'onnivoro,
+vegetariano e vegano devono poterli superare/sostituire con una
+configurazione propria, senza ereditare automaticamente i tetti
+dell'onnivoro.
+
+## 1. Commit `(in preparazione)` — configurazione proteica per profilo, diversificazione condizionata alla fattibilità reale
+
+**Problema riscontrato:** la regola "pranzo e cena sempre categorie
+diverse" (introdotta nel filone precedente) era corretta per l'onnivoro
+ma applicata indistintamente a tutti i profili:
+- onnivoro: genera correttamente (invariato).
+- vegetariano: superava la validazione (≥2 categorie: formaggi, uova,
+  legumi) ma non riusciva a completare le 14 slot, perché i massimi
+  settimanali applicati restavano quelli PDF pensati per l'onnivoro.
+- vegano: dichiarato incompatibile perché resta solo "legumi" (1
+  categoria), rendendo "pranzo≠cena" matematicamente impossibile da
+  imporre.
+- Il test vegetariano introdotto nel filone precedente copriva solo 4
+  giorni (8 slot) e non rilevava l'infattibilità della settimana intera.
+
+**Causa matematica:** con la regola "mai la stessa categoria due volte
+nello stesso giorno", ciascuna categoria può contribuire al più una
+volta al giorno (capacità effettiva ≤7/settimana). Per vegetariano coi
+tetti onnivori ereditati (formaggi max3, uova max2, legumi senza tetto
+ma comunque ≤7/giorno-unico): capacità totale = 3+2+7 = 12 < 14 slot
+richiesti — infattibile, indipendentemente da quante ricette esistano.
+Contare solo il numero di categorie ammesse (≥2) non intercetta questo
+tipo di infattibilità.
+
+**Modifica allo schema delle configurazioni:**
+- Nuovo campo dedicato `config.proteinFrequenciesByProfile[profilo]`
+  (profilo = `vegetariano`|`vegano`) nella configurazione nutrizionista,
+  separato da `config.proteinFrequencies` (che resta lo spazio
+  esclusivo dell'onnivoro, invariato). Per vegetariano/vegano, se il
+  nutrizionista non configura nulla, il default è: stesso minimo PDF
+  della categoria superstite, **nessun massimo** (`max:null`) — mai il
+  tetto pensato per il pool di 5 categorie dell'onnivoro.
+- `resolveProteinFrequencies(profileName,...)` (rinominata da
+  `resolveProteinFrequencies(raw,...)`) ora profile-aware: per onnivoro
+  il comportamento è bit-per-bit invariato (stesso clamp al tetto PDF);
+  per vegetariano/vegano nessun clamp automatico al tetto onnivoro.
+  `max:null` non viene mai convertito o interpretato come zero in
+  nessun profilo (verificato con un test dedicato).
+- Nuova `verificaFattibilitaSettimanale()`: controlla la fattibilità
+  reale dei 14 pasti (somma minimi ≤14; capacità = somma di min(max,7)
+  se la diversificazione è richiesta, altrimenti somma di max diretto)
+  — non il solo conteggio delle categorie ammesse. Una configurazione è
+  respinta (`resolved.valid=false`, con messaggio esplicito) solo
+  quando è realmente infattibile.
+- Nuovo campo in output: `resolved.profile.proteinDailyDiversificationRequired`
+  (booleano, `false` solo quando resta una sola categoria funzionale
+  ammessa) — unica sorgente per tutta la catena, nessuna duplicazione:
+  `engine-core.buildProteinGrid()` e `motor-v12.opzioniProteinaPerSlot()`
+  lo leggono entrambi dallo stesso resolver e applicano la regola
+  "categorie diverse" solo quando è `true`.
+
+**Comportamento finale per profilo:**
+- **Onnivoro**: regola 0/1/2 scelte invariata, pranzo≠cena sempre,
+  limiti PDF invariati.
+- **Vegetariano**: stessa regola 0/1/2 scelte e pranzo≠cena (3 categorie
+  ammesse, diversificazione richiesta), ma sui vincoli propri del
+  profilo (default: nessun tetto ereditato) — la settimana intera (14
+  slot) è ora fattibile senza bisogno di configurazione aggiuntiva.
+  `resolver.errors` deve restare vuoto con i soli valori di default.
+- **Vegano**: 1 sola categoria ammessa ("legumi" nell'attuale
+  classificazione) — diversificazione non richiesta,
+  "legumi" vale per entrambi i pasti ogni giorno, nessun errore. La
+  rotazione richiesta da Cwe si ottiene a livello di ricette concrete
+  (varietà/cooldown già gestiti dal motore esistente — verificato: 26
+  ricette distinte su 14 slot in un piano reale), non di
+  macro-categoria: nessuna nuova macro-categoria inventata.
+- **Setting nutrizionista**: le righe di frequenza proteica mostrate e
+  modificabili dipendono dal profilo selezionato nel form
+  (`renderRigheFrequenzeProteiche`, ricostruita al cambio di profilo
+  senza perdere altre modifiche non salvate); categorie escluse dal
+  profilo non compaiono affatto (non solo disabilitate). Il salvataggio
+  continua a passare da `resolved.valid` (controllo già esistente in
+  `salvaConfigAvanzata`, non modificato): una configurazione realmente
+  infattibile non viene salvata, mostra un messaggio chiaro, la
+  configurazione precedente resta intatta.
+- **Set utente**: tabella proteica adattata al profilo — categorie
+  escluse non mostrate, massimo caselle fissabili per giorno = 2 (con
+  diversificazione) o 1 (senza, es. vegano: una sola casella copre
+  entrambi i pasti), stessa identica logica (`buildProteinGrid`) usata
+  da Casuale/Completa e propagata coerentemente.
+
+**Nessuna classificazione funzionale mancante emersa:** la rotazione
+richiesta per il profilo vegano si appoggia interamente al meccanismo
+di varietà/cooldown già esistente a livello di ricetta concreta, senza
+bisogno di introdurre nuove macro-categorie proteiche o riclassificare
+ingredienti/ricette — verificato empiricamente (26 ricette distinte su
+14 slot).
+
+**File modificati:** `nutrition-config.js` (resolver profile-aware,
+nuova validazione di fattibilità), `engine-core.js`
+(`buildProteinGrid` condizionata alla diversificazione),
+`motor-v12.js` (`opzioniProteinaPerSlot` idem), `index.html` (Set:
+`validaFattibilitaProteineSet`, `renderSetTabellaGiorno`,
+`caricaVincoliProteineSet`, `completaTabellaProteine`; Setting:
+`renderRigheFrequenzeProteiche` nuova, `aggiornaCampiProfiloNutrizionista`
+riscritta), `tests/lotto-proteine-autocompletamento.test.js` (esteso:
+settimana vegetariana intera, capacità realmente insufficiente,
+settimana reale nei tre profili via `generaPianoSettimana`),
+`tests/nutrition-config.test.js`, `tests/lotto-set-proteine-buildgrid.test.js`,
+`tests/lotto-set-proteine-validazione.test.js`,
+`tests/lotto-proteine-giorno-esclusione.test.js` (aggiornati per la
+nuova semantica, vegano non è più un caso di errore).
+
+**Test eseguito e risultato:**
+```
+node tests/lotto-proteine-autocompletamento.test.js  → ok (fallisce senza la correzione: formaggi manteneva il tetto onnivoro 3 invece di null, verificato; passa dopo)
+node tests/nutrition-config.test.js                    → ok
+node --check nutrition-config.js                       → OK
+node --check engine-core.js                              → OK
+node --check motor-v12.js                                 → OK
+git diff --check                                          → pulito
+```
+Verificato anche, per igiene (non in una lista di controlli consentiti
+esplicitata in questo incarico): `lotto-set-proteine-buildgrid.test.js`,
+`lotto-set-proteine-validazione.test.js`,
+`lotto-set-proteine-menu-reale.test.js`,
+`lotto-resolver-unica-fonte-runtime.test.js`,
+`lotto-proteine-giorno-esclusione.test.js` — tutti passano.
+
+**Non modificati:** database funzionali, ricette, ingredienti, quantità
+nutrizionali, motore (nessuna riscrittura, solo la lettura condizionata
+di un flag già calcolato dal resolver), grafica del restyling.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

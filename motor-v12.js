@@ -2083,35 +2083,40 @@ function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng
   const forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]);
   const allowed=Object.keys(freq).filter(k=>!forbidden.has(k)&&freq[k].max!==0);
   /* Regola definitiva di Cwe: pranzo e cena dello stesso giorno hanno
-     SEMPRE due categorie proteiche diverse - "maxProteinSourcesPerDay"
-     eliminato (era una semantica errata: "1" nel vecchio motore
-     indicava solo che l'utente aveva gia' scelto una delle due categorie
-     e il sistema doveva completare la seconda, mai "stessa categoria per
-     entrambi i pasti"). Nessun ramo che riproponga intenzionalmente la
-     categoria gia' usata: usateGiorno (la categoria dell'eventuale primo
-     pasto del giorno, gia' accettato) e' sempre esclusa dal pool, sia
-     quando la cella e' fissata a mano in tabella sia quando la sceglie
-     il motore per le celle libere. */
+     categorie proteiche diverse SOLO quando il profilo attivo dispone di
+     almeno due categorie ammesse (proteinDailyDiversificationRequired,
+     dedotto dal resolver - mai un "maxProteinSourcesPerDay" configurabile,
+     concetto eliminato). Con una sola categoria funzionale (es. vegano:
+     solo "legumi") imporre categorie diverse sarebbe matematicamente
+     impossibile: quella singola categoria vale per entrambi i pasti,
+     nessun errore, nessuna esclusione da usateGiorno. Con
+     diversificazione richiesta, nessun ramo che riproponga
+     intenzionalmente la categoria gia' usata: usateGiorno (la categoria
+     dell'eventuale primo pasto del giorno, gia' accettato) e' sempre
+     esclusa dal pool, sia quando la cella e' fissata a mano in tabella
+     sia quando la sceglie il motore per le celle libere. */
+  const diversificazioneRichiesta=resolved.profile&&resolved.profile.proteinDailyDiversificationRequired!==undefined?!!resolved.profile.proteinDailyDiversificationRequired:allowed.length>=2;
   const fissata=targetTabellaPerSlot(tab,slot);
   if(fissata){
     if(!allowed.includes(fissata))return {errors:['Proteina '+fissata+' non ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
-    if(usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
+    if(diversificazioneRichiesta&&usateGiorno.has(fissata))return {errors:['La tabella proteine assegna due volte '+fissata+' nello stesso giorno ('+slot.day+').'],targets:[]};
     const max=freq[fissata].max;
     if(max!==null&&max!==undefined&&(Number(counts[fissata])||0)>=Number(max))return {errors:['Proteina '+fissata+' oltre il massimo settimanale.'],targets:[]};
     return {errors:[],targets:[fissata]};
   }
   const prenotate=contaTargetTabellaFuturi(tab,slots,indice+1);
   let pool=allowed.filter(k=>{
-    if(usateGiorno.has(k))return false;
+    if(diversificazioneRichiesta&&usateGiorno.has(k))return false;
     const max=freq[k].max;
     return max===null||max===undefined||(Number(counts[k])||0)+1+(Number(prenotate[k])||0)<=Number(max);
   });
   /* Nessuna riapertura del pool: se dopo l'esclusione della/e categoria/e
-     gia' usate oggi non resta nulla di ammesso, e' un errore esplicito -
-     mai un fallback che duplichi silenziosamente la categoria gia' scelta
-     (regola di Cwe: una categoria scelta per un pasto e' sempre esclusa
-     dal pool del secondo pasto dello stesso giorno, senza eccezioni legate
-     al numero di categorie disponibili). */
+     gia' usate oggi (quando la diversificazione e' richiesta) non resta
+     nulla di ammesso, e' un errore esplicito - mai un fallback che
+     duplichi silenziosamente la categoria gia' scelta (regola di Cwe:
+     una categoria scelta per un pasto e' sempre esclusa dal pool del
+     secondo pasto dello stesso giorno, senza eccezioni legate al numero
+     di categorie disponibili, quando la diversificazione si applica). */
   if(!pool.length)return {errors:['Nessuna classe proteica distinta e ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
   const sottoMinimo=pool.filter(k=>(Number(counts[k])||0)+(Number(prenotate[k])||0)<(Number(freq[k].min)||0));
   if(sottoMinimo.length)pool=sottoMinimo;

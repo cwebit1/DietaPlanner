@@ -121,19 +121,44 @@ for(let seed=1;seed<=200;seed++){
   assert.deepEqual(r.cells,{},'nessuna anteprima/griglia deve essere prodotta quando i vincoli sono incompatibili');
 }
 
-// --- 9) meno di due categorie ammesse -> errore esplicito, prima ancora di cercare una soluzione ---
+// --- 9) una sola categoria ammessa (es. vegano): valida se la capacità reale basta, mai una regola di diversificazione impossibile ---
 {
-  const cfgInsufficiente={
+  // legumi senza massimo (illimitato): capacità sufficiente, deve
+  // generare correttamente con la stessa categoria per pranzo e cena
+  // (diversificazione non richiesta con una sola categoria funzionale -
+  // decisione definitiva di Cwe, superata la regola precedente che
+  // dichiarava sempre errore con una sola categoria).
+  const cfgUnaCategoria={
     proteinFrequencies:{
       carne:{min:0,max:0,target:0},
       pesce:{min:0,max:0,target:0},
       formaggi:{min:0,max:0,target:0},
       uova:{min:0,max:0,target:0},
       legumi:{min:2,max:null,target:3}
-    }
+    },
+    proteinDailyDiversificationRequired:false
   };
-  const r=E.buildProteinGrid(GIORNI,{},cfgInsufficiente,{},E.seeded(3));
-  assert(r.errors.length>0,'con una sola categoria ammessa (legumi) deve produrre un errore esplicito, mai una griglia con pranzo===cena');
+  const r=E.buildProteinGrid(GIORNI,{},cfgUnaCategoria,{},E.seeded(3));
+  assert.deepEqual(r.errors,[],'una sola categoria con capacità illimitata deve generare senza errori');
+  for(const g of GIORNI){
+    assert.equal(r.cells[g].pranzo.macro,'legumi');
+    assert.equal(r.cells[g].cena.macro,'legumi','con una sola categoria funzionale, pranzo e cena coincidono correttamente, non è un duplicato');
+  }
+}
+// --- 10) una sola categoria ammessa ma con capacità realmente insufficiente -> errore esplicito ---
+{
+  const cfgCapacitaInsufficiente={
+    proteinFrequencies:{
+      carne:{min:0,max:0,target:0},
+      pesce:{min:0,max:0,target:0},
+      formaggi:{min:0,max:0,target:0},
+      uova:{min:0,max:0,target:0},
+      legumi:{min:2,max:5,target:3}
+    },
+    proteinDailyDiversificationRequired:false
+  };
+  const r=E.buildProteinGrid(GIORNI,{},cfgCapacitaInsufficiente,{},E.seeded(3));
+  assert(r.errors.length>0,'un tetto di 5 per l\'unica categoria disponibile non basta per 14 pasti: deve restare un errore esplicito');
   assert.deepEqual(r.cells,{});
 }
 

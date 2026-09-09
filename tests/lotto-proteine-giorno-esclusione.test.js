@@ -57,33 +57,24 @@ const M=global.DietaPlannerMotorV12;
   assert(successi>0,'nessuna settimana valida generata in 10 tentativi');
   assert.equal(violazioni,0,'per ogni giorno generato, categoriaTarget pranzo deve sempre differire da categoriaTarget cena');
 
-  /* ============ Caso limite deterministico: allowed.length<=3 (dieta vegana, solo "legumi" ammesso) ============
-     Pranzo e cena richiedono sempre due categorie distinte (regola
-     definitiva di Cwe, nessuna eccezione configurabile - vedi
-     tests/lotto-proteine-autocompletamento.test.js) ma con il profilo
-     vegano ne esiste una sola disponibile: deve fallire con un errore
-     esplicito, MAI produrre un piano che riapra il pool e ripeta
-     "legumi" due volte nello stesso giorno (era esattamente il difetto:
-     il vecchio codice riapriva il pool ignorando l'esclusione quando le
-     categorie ammesse erano tre o meno). */
+  /* ============ Vegano: una sola categoria ammessa, diversificazione non richiesta ============
+     Superato: prima di questa correzione una sola categoria ammessa
+     (vegano: solo "legumi") era dichiarata incompatibile e la
+     generazione doveva fallire esplicitamente (vedi
+     tests/lotto-proteine-autocompletamento.test.js per la cronologia).
+     Decisione definitiva di Cwe: con una sola categoria funzionale la
+     regola "macro pranzo diversa da macro cena" non si applica (sarebbe
+     impossibile) - "legumi" vale correttamente per entrambi i pasti,
+     ogni giorno, senza errore e senza che sia considerato un duplicato
+     indebito. */
   {
     stores.piano.clear();
     await global.put('impostazioni',{chiave:'configAvanzata',valore:{dietProfile:'vegano'}});
     const esitoVegano=await M.generaPianoSettimana(0,{forza:true});
+    assert.deepEqual(esitoVegano.errori,[],'con una sola categoria ammessa (vegano), la settimana deve generarsi senza errori: la diversificazione non si applica');
     const pianoVegano=await global.getAll('piano');
-    const giorniVegano={};
-    for(const voce of pianoVegano){
-      const giorno=voce.id.slice(0,10);
-      giorniVegano[giorno]=giorniVegano[giorno]||[];
-      giorniVegano[giorno].push(voce);
-    }
-    let duplicatoVegano=false;
-    for(const voci of Object.values(giorniVegano)){
-      const p=voci.find(v=>v.id.endsWith('_pranzo')),c=voci.find(v=>v.id.endsWith('_cena'));
-      if(p&&c&&p.categoriaTarget===c.categoriaTarget)duplicatoVegano=true;
-    }
-    assert(!duplicatoVegano,'con una sola categoria ammessa, il motore non deve MAI produrre un giorno con la stessa categoria ripetuta a pranzo e cena');
-    assert(esitoVegano.errori.length>0,'con una sola categoria ammessa e 2 fonti/giorno richieste (matematicamente infattibile), la generazione deve fallire con un errore esplicito, mai un fallback silenzioso che riapre il pool');
+    assert.equal(pianoVegano.length,14,'vegano deve comunque completare tutti i 14 slot');
+    for(const voce of pianoVegano)assert.equal(voce.categoriaTarget,'legumi','vegano: l\'unica categoria ammessa deve essere usata in ogni slot');
   }
 
   console.log('lotto proteine giorno esclusione: '+successi+' settimane valide, 0 violazioni - ok');

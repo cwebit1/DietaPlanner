@@ -91,13 +91,17 @@ function coverageForRecipe(recipe,ingredientMeta){
    categorie escluse (assenti da cfg.proteinFrequencies o con max=0),
    celle fissate a mano (userTable).
    Regola definitiva di Cwe: pranzo e cena dello stesso giorno hanno
-   SEMPRE due categorie diverse - non esiste più un
-   "maxProteinSourcesPerDay" configurabile (concetto eliminato, era una
-   semantica errata: "1" nel vecchio motore indicava solo che l'utente
-   aveva già scelto una delle due categorie e il sistema doveva
-   completare la seconda, MAI "stessa categoria per entrambi i pasti").
-   Il numero di categorie già scelte per un giorno si deduce SOLO dalla
-   tabella di quel giorno:
+   categorie diverse SOLO quando il profilo attivo dispone di almeno due
+   categorie ammesse (diversificazioneRichiesta, dedotta dal resolver -
+   mai un "maxProteinSourcesPerDay" configurabile, concetto eliminato).
+   Con una sola categoria funzionale (es. vegano: solo "legumi") la
+   regola "macro pranzo diversa da macro cena" è matematicamente
+   impossibile e NON va applicata: quella singola categoria vale per
+   entrambi i pasti, la rotazione richiesta si ottiene a livello di
+   ricette concrete (varietà/cooldown già gestiti dal motore), non di
+   macro-categoria - non simulata qui.
+   Con diversificazione richiesta, il numero di categorie già scelte per
+   un giorno si deduce SOLO dalla tabella di quel giorno:
    - 0 scelte -> completa con due categorie distinte;
    - 1 scelta -> quella resta vincolante, la seconda dev'essere diversa;
    - 2 scelte -> entrambe restano vincolanti (deve già valere che sono
@@ -107,8 +111,8 @@ function coverageForRecipe(recipe,ingredientMeta){
    categoria dell'altro pasto dello stesso giorno quando il pool
    alternativo è temporaneamente vuoto - quella era la causa esatta del
    duplicato ['carne','carne']).
-   Se i vincoli sono realmente incompatibili tra loro (incluso: meno di
-   due categorie ammesse dopo profilo/esclusioni), restituisce
+   Se i vincoli sono realmente incompatibili tra loro (fattibilità reale
+   dei 14 pasti, non solo il conteggio delle categorie), restituisce
    errors non vuoto e cells={} - mai una griglia formalmente completa
    ma invalida. */
 function buildProteinGrid(days,userTable,config,history,rng){
@@ -118,16 +122,17 @@ function buildProteinGrid(days,userTable,config,history,rng){
   });
   const counts={};for(const m of Object.keys(cfg.proteinFrequencies))counts[m]=0;
   const errors=[];
-  if(categorie.length<2){
-    errors.push('Categorie proteiche disponibili insufficienti ('+categorie.length+'): servono almeno due categorie ammesse per completare pranzo e cena con categorie sempre diverse.');
+  if(categorie.length<1){
+    errors.push('Nessuna categoria proteica ammessa: impossibile completare pranzo e cena.');
     return {cells:{},counts,errors};
   }
+  const diversificazioneRichiesta=cfg.proteinDailyDiversificationRequired!==undefined?!!cfg.proteinDailyDiversificationRequired:categorie.length>=2;
   const stato={};
   for(const day of days){
     const scelte=(userTable&&userTable[day]||[]).slice(0,2);
     const pranzo=scelte[0]&&cfg.proteinFrequencies[scelte[0]]?scelte[0]:null;
     const cena=scelte[1]&&cfg.proteinFrequencies[scelte[1]]?scelte[1]:null;
-    if(pranzo&&cena&&pranzo===cena)errors.push(`${day}: la stessa categoria (${pranzo}) non puo' comparire due volte nello stesso giorno - pranzo e cena devono sempre essere categorie diverse.`);
+    if(diversificazioneRichiesta&&pranzo&&cena&&pranzo===cena)errors.push(`${day}: la stessa categoria (${pranzo}) non puo' comparire due volte nello stesso giorno - pranzo e cena devono sempre essere categorie diverse.`);
     stato[day]={pranzo,cena};
     if(pranzo)counts[pranzo]++;
     if(cena)counts[cena]++;
@@ -182,7 +187,7 @@ function buildProteinGrid(days,userTable,config,history,rng){
     let candidati=categorie.filter(m=>{
       const max=cfg.proteinFrequencies[m].max;
       if(max!=null&&counts[m]>=max)return false;
-      if(altro!=null&&m===altro)return false; // sempre diversa dall'altro pasto dello stesso giorno
+      if(diversificazioneRichiesta&&altro!=null&&m===altro)return false; // sempre diversa dall'altro pasto dello stesso giorno, solo se richiesto dal profilo
       return true;
     });
     candidati=ordinaCandidati(candidati);
