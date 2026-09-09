@@ -77,13 +77,12 @@ const corpoSalva=estraiFunzione('salvaSetCompleto');
 assert(corpoSalva.includes('validaFattibilitaProteineSet('),'salvaSetCompleto deve validare la tabella proteine prima di salvarla');
 assert(/if\(!fatt\.ok\)/.test(corpoSalva),'salvaSetCompleto deve rifiutare il salvataggio se la validazione fallisce');
 
-// --- 3) completaTabellaProteine non deve più referenziare il parametro
-//        "fonti/giorno" eliminato; deve invece propagare
-//        proteinDailyDiversificationRequired dal resolver a buildProteinGrid,
-//        stessa identica logica del Set e della generazione del Menù ---
+// --- 3) completaTabellaProteine non deve più passare/leggere alcun
+//        parametro "fonti/giorno" eliminato: buildProteinGrid riceve solo
+//        proteinFrequencies, mai una seconda impostazione giornaliera ---
 const corpoCompleta=estraiFunzione('completaTabellaProteine');
 assert(!/maxProteinSourcesPerDay/.test(corpoCompleta),'completaTabellaProteine non deve più referenziare il parametro eliminato');
-assert(corpoCompleta.includes('buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze,proteinDailyDiversificationRequired:cfg.profile&&cfg.profile.proteinDailyDiversificationRequired},{},Math.random)'),'completaTabellaProteine deve chiamare buildProteinGrid propagando proteinDailyDiversificationRequired dal resolver');
+assert(corpoCompleta.includes('buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze},{},Math.random)'),'completaTabellaProteine deve chiamare buildProteinGrid con solo proteinFrequencies');
 
 // --- 4) una proposta non valida non viene mostrata ne' copiata in bozza:
 //        verificato per contratto che gli errori di buildProteinGrid

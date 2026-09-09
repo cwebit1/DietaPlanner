@@ -115,48 +115,27 @@
   }
   function pushUnique(arr,msg){if(!arr.includes(msg))arr.push(msg);}
 
-  function resolveProteinFrequencies(profileName,rawGlobal,rawByProfile,warnings,errors){
+  function resolveProteinFrequencies(raw,warnings,errors){
     const out={};
-    const onnivoro=profileName==='onnivoro';
-    /* Decisione esplicita di Cwe: i tetti PDF (formaggi max3, uova max2,
-       ecc.) sono pensati per il profilo onnivoro. Vegetariano e vegano
-       dispongono di un pool proteico più ristretto - applicare loro
-       automaticamente gli stessi tetti rende matematicamente impossibile
-       completare i 14 pasti principali (es. vegetariano: formaggi max3 +
-       uova max2 + legumi al più 1/giorno = 12 slot copribili < 14
-       richiesti). Per onnivoro il nutrizionista continua a configurare
-       config.proteinFrequencies (invariato). Per vegetariano/vegano il
-       nutrizionista configura config.proteinFrequenciesByProfile[profilo]
-       (nuovo campo, dedicato) - mai gli stessi tetti onnivori ereditati
-       automaticamente: se non specificato, il default è "nessun massimo"
-       (max:null), mai il tetto PDF pensato per un pool di 5 categorie. */
-    const raw=onnivoro?(rawGlobal||{}):Object.assign({},(rawByProfile&&rawByProfile[profileName])||{});
+    raw=raw||{};
     for(const key of Object.keys(PDF_BASELINE.proteinFrequencies)){
       const pdf=PDF_BASELINE.proteinFrequencies[key],req=raw[key]||{};
       const reqMin=own(req,'min')?finite(req.min):pdf.min;
-      const reqMax=own(req,'max')?(req.max===null?null:finite(req.max)):(onnivoro?pdf.max:null);
+      const reqMax=own(req,'max')?(req.max===null?null:finite(req.max)):pdf.max;
 
       let min=reqMin===null?pdf.min:reqMin;
       let max=reqMax;
 
-      if(min<0){
-        pushUnique(errors,key+': minimo nutrizionista negativo.');
-        min=0;
-      }
-      if(onnivoro&&min<pdf.min){
+      if(min<pdf.min){
         pushUnique(warnings,key+': minimo nutrizionista alzato al minimo PDF '+pdf.min+'.');
         min=pdf.min;
       }
-      if(onnivoro&&pdf.max!==null&&min>pdf.max){
+      if(pdf.max!==null&&min>pdf.max){
         pushUnique(errors,key+': minimo nutrizionista '+min+' supera il massimo PDF '+pdf.max+'.');
         min=pdf.max;
       }
 
-      if(onnivoro&&pdf.max!==null){
-        /* Tetto PDF applicato SOLO per l'onnivoro (unico profilo per cui
-           è definito e vincolante): max:null esplicito del nutrizionista
-           qui non può comunque superare il tetto PDF - mai convertito a
-           zero, semplicemente non può "allargare" oltre il PDF onnivoro. */
+      if(pdf.max!==null){
         if(max===null||max===undefined){
           if(max===null) pushUnique(warnings,key+': massimo null non può allargare il massimo PDF '+pdf.max+'.');
           max=pdf.max;
@@ -168,11 +147,6 @@
         pushUnique(errors,key+': massimo nutrizionista negativo.');
         max=null;
       }
-      /* Vegetariano/vegano: nessun ramo di clamp al tetto PDF onnivoro -
-         max resta esattamente quanto configurato dal nutrizionista per
-         quel profilo, e resta null (nessun massimo) se non specificato.
-         max:null non viene MAI convertito o interpretato come zero, in
-         nessun profilo. */
 
       if(max!==null&&max!==undefined&&max<min){
         pushUnique(errors,key+': minimo effettivo '+min+' supera il massimo effettivo '+max+'.');
@@ -188,33 +162,6 @@
       out[key]={min,max,target,quantita:quantity};
     }
     return out;
-  }
-
-  /* Fattibilità reale dei 14 pasti principali (7 giorni x pranzo/cena),
-     non solo il conteggio delle categorie ammesse. Con diversificazione
-     richiesta (>=2 categorie ammesse: pranzo e cena devono sempre
-     differire), ciascuna categoria può contribuire al più una volta al
-     giorno - la sua capacità effettiva è quindi min(max ?? 7, 7). Senza
-     diversificazione (una sola categoria funzionale, es. vegano oggi:
-     "legumi"), la stessa categoria può coprire entrambi i pasti dello
-     stesso giorno - la capacità effettiva è il suo max (illimitata se
-     null). */
-  function verificaFattibilitaSettimanale(proteinFrequencies,categorieAmmesse,diversificazioneRichiesta){
-    const errors=[];
-    let sommaMin=0,capacita=0;
-    for(const key of categorieAmmesse){
-      const f=proteinFrequencies[key];if(!f)continue;
-      sommaMin+=Number(f.min)||0;
-      const max=f.max===null||f.max===undefined?Infinity:Number(f.max);
-      capacita+=diversificazioneRichiesta?Math.min(max,7):max;
-    }
-    if(sommaMin>14){
-      errors.push('I minimi settimanali delle categorie proteiche ammesse superano i 14 pasti principali disponibili ('+sommaMin+').');
-    }
-    if(capacita<14){
-      errors.push('I massimi settimanali delle categorie proteiche ammesse non permettono di completare i 14 pasti principali (capacità '+capacita+'/14).');
-    }
-    return errors;
   }
 
   function resolveSubtypeCaps(raw,warnings,errors){
@@ -501,35 +448,26 @@
       pushUnique(warnings,'Profilo alimentare sconosciuto: usato onnivoro.');
     }
 
-    const proteinFrequencies=resolveProteinFrequencies(profileName,config.proteinFrequencies,config.proteinFrequenciesByProfile,warnings,errors);
+    const proteinFrequencies=resolveProteinFrequencies(config.proteinFrequencies,warnings,errors);
     const subtypeCaps=resolveSubtypeCaps(config.subtypeCaps,warnings,errors);
     const fruit=resolveFruit(config.fruit,warnings,errors);
     const vegetablePortions=resolveVegetablePortions(config.vegetables,warnings);
 
-    /* Regola definitiva di Cwe: pranzo e cena hanno categorie proteiche
-       DIVERSE solo quando il profilo attivo dispone di almeno due
-       categorie ammesse (mai un "maxProteinSourcesPerDay" configurabile,
-       concetto eliminato). Con una sola categoria funzionale (es. vegano
-       oggi: solo "legumi") la regola "macro pranzo diversa da macro
-       cena" è matematicamente impossibile da imporre e NON va applicata:
-       il profilo resta valido, la rotazione richiesta si ottiene a
-       livello di ricette concrete (varietà/cooldown già gestiti dal
-       motore), non di macro-categoria. Con due o più categorie ammesse
-       (onnivoro, vegetariano, e qualunque configurazione futura) la
-       diversificazione resta sempre obbligatoria. */
+    /* Regola definitiva di Cwe: la settimana ha sempre due pasti
+       principali al giorno con categorie proteiche DIVERSE (mai un
+       "maxProteinSourcesPerDay", concetto eliminato). Perché questo sia
+       sempre possibile, dopo profilo (esclusioni per dieta
+       vegetariana/vegana) ed esclusioni esplicite del nutrizionista
+       (max:0 su una categoria) devono restare almeno due categorie
+       proteiche ammesse: con una sola, pranzo e cena non potrebbero mai
+       avere categorie differenti. Punto unico di validazione: se
+       insufficienti, la configurazione è dichiarata incompatibile
+       (valid=false) e chi la salva/usa deve fermarsi qui, mai salvare o
+       generare con questa configurazione. */
     const forbiddenSet=new Set(PROFILE_FORBIDDEN_MACROS[profileName]);
     const categorieProteicheAmmesse=Object.keys(proteinFrequencies).filter(k=>!forbiddenSet.has(k)&&proteinFrequencies[k].max!==0);
-    const diversificazioneRichiesta=categorieProteicheAmmesse.length>=2;
-    if(categorieProteicheAmmesse.length<1){
-      errors.push('Nessuna categoria proteica disponibile dopo profilo ed esclusioni: impossibile completare pranzo e cena.');
-    }else{
-      /* Fattibilità reale dei 14 pasti principali, non solo il conteggio
-         delle categorie: verifica minimi/massimi effettivi (già al netto
-         dei tetti onnivori NON applicati a vegetariano/vegano) contro la
-         capacità reale della settimana. Una configurazione è respinta
-         solo quando è realmente impossibile, mai solo perché ha poche
-         categorie. */
-      errors.push(...verificaFattibilitaSettimanale(proteinFrequencies,categorieProteicheAmmesse,diversificazioneRichiesta));
+    if(categorieProteicheAmmesse.length<2){
+      errors.push('Categorie proteiche disponibili insufficienti dopo profilo ed esclusioni ('+categorieProteicheAmmesse.length+'): servono almeno due categorie proteiche ammesse per completare pranzo e cena con categorie sempre diverse.');
     }
 
     const specialBreakfastRequested=own(config,'specialBreakfastMax')?nonNegative(config.specialBreakfastMax):APP_DEFAULTS.specialBreakfastMax;
@@ -605,7 +543,7 @@
       valid:errors.length===0,
       errors,
       warnings,
-      profile:{name:profileName,forbiddenProteinMacros:PROFILE_FORBIDDEN_MACROS[profileName].slice(),proteinDailyDiversificationRequired:diversificazioneRichiesta},
+      profile:{name:profileName,forbiddenProteinMacros:PROFILE_FORBIDDEN_MACROS[profileName].slice()},
       proteinFrequencies,
       subtypeCaps,
       ingredientConstraints,

@@ -1649,47 +1649,18 @@ function macroProteicoDaBase(b){return typeof motoreCategoriaDiSottotipo==='func
 function esclusionePianoIngrediente(b,profilo){const macro=macroProteicoDaBase(b);if(profilo==='vegetariano')return macro==='carne'||macro==='pesce';if(profilo==='vegano')return ['carne','pesce','formaggi','uova'].includes(macro)||(b.allergeni||[]).some(a=>['latte','uova','pesce','crostacei','molluschi'].includes(a));return false;}
 function rigaNumericaConfig(path,label,min,max,extra){return `<div class="nutri-row"><span class="nutri-name">${label}</span><span class="nutri-unit">${extra||'sett.'}</span><input type="number" data-cfg-avanzata="${path}.min" value="${min??''}" aria-label="${label} minimo"><input type="number" data-cfg-avanzata="${path}.max" value="${max??''}" aria-label="${label} massimo"></div>`;}
 function unitaQuantitaMacroDaIngredienti(basi,macro){const unita=[...new Set((basi||[]).filter(b=>macroProteicoDaBase(b)===macro).map(unitaRiferimentoIngrediente))];return unita.length===1?unita[0]:unita.join('/')||'g';}
-function rigaFrequenzaProteica(path,label,valori,unita){return `<div class="nutri-row nutri-vincolo" data-cfg-macro-proteina="${label}"><span class="nutri-name">${label}</span><span class="nutri-unit">sett.</span><input type="number" min="0" data-cfg-avanzata="${path}.min" value="${valori.min??''}" aria-label="${label} minimo"><input type="number" min="0" data-cfg-avanzata="${path}.max" value="${valori.max??''}" placeholder="senza max" aria-label="${label} massimo"><label class="nutri-quantity"><input type="number" min="0" step="any" data-cfg-avanzata="${path}.quantita" value="${valori.quantita??''}" aria-label="${label} quantità"><span class="nutri-unit">${unita}</span></label></div>`;}
-/* Decisione esplicita di Cwe: i limiti proteici ordinari (config.proteinFrequencies)
-   sono pensati per l'onnivoro. Vegetariano e vegano hanno un proprio
-   spazio di configurazione dedicato (config.proteinFrequenciesByProfile[profilo]),
-   mai gli stessi campi dell'onnivoro riletti/riscritti sotto un altro
-   nome: la configurazione mostrata e modificata è sempre quella del
-   profilo selezionato nel form, ricostruita qui e non nel resto di
-   renderConfigAvanzata() così può essere ridisegnata da sola al cambio
-   di profilo, senza toccare le altre sezioni del form. */
-function renderRigheFrequenzeProteiche(cfg,basi){
-  const profilo=document.getElementById('configProfiloAlimentare')&&document.getElementById('configProfiloAlimentare').value||'onnivoro';
-  const box=document.getElementById('configRigheFrequenzeProteiche');if(!box)return;
-  const N=globalThis.DietaPlannerNutritionConfig;
-  const resolved=N?N.resolveNutritionConfig({nutritionist:{config:Object.assign({},cfg,{dietProfile:profilo})}}):null;
-  const forbidden=new Set(resolved&&resolved.profile.forbiddenProteinMacros||[]);
-  const basePath=profilo==='onnivoro'?'proteinFrequencies':'proteinFrequenciesByProfile.'+profilo;
-  const sorgente=profilo==='onnivoro'?(cfg.proteinFrequencies||{}):((cfg.proteinFrequenciesByProfile&&cfg.proteinFrequenciesByProfile[profilo])||{});
-  let html='';
-  for(const m of ['carne','pesce','formaggi','uova','legumi']){
-    if(forbidden.has(m))continue; // categoria esclusa dal profilo: non mostrata affatto, non solo disabilitata
-    const risolto=resolved&&resolved.proteinFrequencies[m]||{min:0,max:null,quantita:null};
-    const valori=Object.assign({},risolto,sorgente[m]||{});
-    html+=rigaFrequenzaProteica(basePath+'.'+m,m,valori,unitaQuantitaMacroDaIngredienti(basi,m));
-  }
-  if(profilo!=='onnivoro')html+='<div class="meta" style="margin:4px 0 8px;">Profilo '+profilo+': nessun tetto onnivoro ereditato automaticamente. Campo massimo vuoto = nessun limite settimanale.</div>';
-  box.innerHTML=html;
-}
-async function aggiornaCampiProfiloNutrizionista(){
-  /* Ricostruisce SOLO le righe di frequenza proteica per il profilo ora
-     selezionato, mai l'intero form: le altre sezioni (allergeni, olio,
-     ecc.) restano quelle attualmente in modifica, nessuna modifica non
-     salvata viene persa cambiando profilo. */
-  const [rec,basi]=await Promise.all([getOne('impostazioni','configAvanzata'),getAll('ingredienti')]);
-  const cfg=configAvanzataEffettivaSalvata(rec&&rec.valore||{});
-  renderRigheFrequenzeProteiche(cfg,basi);
+function rigaFrequenzaProteica(path,label,valori,unita){return `<div class="nutri-row nutri-vincolo" data-cfg-macro-proteina="${label}"><span class="nutri-name">${label}</span><span class="nutri-unit">sett.</span><input type="number" min="0" data-cfg-avanzata="${path}.min" value="${valori.min??''}" aria-label="${label} minimo"><input type="number" min="0" data-cfg-avanzata="${path}.max" value="${valori.max??''}" aria-label="${label} massimo"><label class="nutri-quantity"><input type="number" min="0" step="any" data-cfg-avanzata="${path}.quantita" value="${valori.quantita??''}" aria-label="${label} quantità"><span class="nutri-unit">${unita}</span></label></div>`;}
+function aggiornaCampiProfiloNutrizionista(){
+  const profilo=document.getElementById('configProfiloAlimentare')&&document.getElementById('configProfiloAlimentare').value||'onnivoro',N=globalThis.DietaPlannerNutritionConfig;
+  const forbidden=new Set(N?N.resolveNutritionConfig({nutritionist:{config:{dietProfile:profilo}}}).profile.forbiddenProteinMacros:[]);
+  document.querySelectorAll('[data-cfg-macro-proteina]').forEach(row=>{const blocked=forbidden.has(row.dataset.cfgMacroProteina);row.classList.toggle('piano',blocked);row.querySelectorAll('input').forEach(i=>i.disabled=blocked);});
 }
 async function renderConfigAvanzata(){
   const [rec,a,vincoliRec,classiRec,basi]=await Promise.all([getOne('impostazioni','configAvanzata'),getOne('impostazioni','allergeniAttivi'),getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','vincoliClassiCarboidrati'),getAll('ingredienti')]);
   const cfgDefault=configAvanzataDefaultCanonico(),cfg=configAvanzataEffettivaSalvata(rec&&rec.valore||{}),box=document.getElementById('configAvanzataCampi');if(!box)return;
   document.getElementById('configProfiloAlimentare').value=cfg.dietProfile||'onnivoro';
-  let html='<div class="nutri-source-label">PDF / piano nutrizionale</div><div class="nutri-row nutri-vincolo header"><span>Voce</span><span>Freq</span><span>Min</span><span>Max</span><span>Quantità</span></div><div id="configRigheFrequenzeProteiche"></div>';
+  let html='<div class="nutri-source-label">PDF / piano nutrizionale</div><div class="nutri-row nutri-vincolo header"><span>Voce</span><span>Freq</span><span>Min</span><span>Max</span><span>Quantità</span></div>';
+  for(const m of ['carne','pesce','formaggi','uova','legumi']){const f=(cfg.proteinFrequencies||cfgDefault.proteinFrequencies)[m];html+=rigaFrequenzaProteica('proteinFrequencies.'+m,m,f,unitaQuantitaMacroDaIngredienti(basi,m));}
   html+='<div class="nutri-row header"><span>Altri parametri PDF</span><span>Unità</span><span>Min</span><span>Max</span></div>';
   for(const key of ['carne_rossa','affettati','pesce_grande','pesce_conservato'])html+='<div class="nutri-row single"><span class="nutri-name">'+key.replaceAll('_',' ')+'</span><span class="nutri-unit">max/sett.</span><input type="number" min="0" data-cfg-avanzata="subtypeCaps.'+key+'" value="'+((cfg.subtypeCaps||cfgDefault.subtypeCaps)[key]??'')+'"></div>';
   html+=rigaNumericaConfig('fruit','Frutta',cfg.fruit&&cfg.fruit.min,cfg.fruit&&cfg.fruit.max,'giorno');
@@ -1703,7 +1674,7 @@ async function renderConfigAvanzata(){
   for(const k of ['carboidrati','verdure'])html+='<div class="nutri-row single"><span class="nutri-name">Cooldown '+k+'</span><span class="nutri-unit">giorni</span><input type="number" min="0" data-cfg-avanzata="cooldownDays.'+k+'" value="'+((cfg.cooldownDays||cfgDefault.cooldownDays)[k]??'')+'"></div>';
   for(const k of ['pranzo','cena'])html+='<div class="nutri-row single"><span class="nutri-name">Scadenza '+k+'</span><span class="nutri-unit">ora</span><input type="time" data-cfg-avanzata="deadlines.'+k+'" data-cfg-testo="1" value="'+((cfg.deadlines||cfgDefault.deadlines)[k]||'')+'"></div>';
   box.innerHTML=html;
-  renderRigheFrequenzeProteiche(cfg,basi);
+  aggiornaCampiProfiloNutrizionista();
   const active=new Set(a&&a.valore||[]),el=document.getElementById('configAllergeniAttivi');el.innerHTML=ALLERGENI_UE.map(([k,i,l])=>'<button type="button" data-allergene="'+k+'" class="'+(active.has(k)?'active':'')+'" title="'+l+'">'+i+' '+l+'</button>').join('');el.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>b.classList.toggle('active')));
   const classi=classiRec&&classiRec.valore||{},classBox=document.getElementById('configClassiCarboidrati');classBox.innerHTML='<div class="nutri-row header"><span>Classe</span><span>Unità</span><span>Min</span><span>Max</span></div>'+rigaNumericaConfig('vincoliClassiCarboidrati.complessi','Complessi',classi.complessi&&classi.complessi.min,classi.complessi&&classi.complessi.max,'sett.')+rigaNumericaConfig('vincoliClassiCarboidrati.semplici','Semplici',classi.semplici&&classi.semplici.min,classi.semplici&&classi.semplici.max,'sett.');
   vincoliIngredientiNutrizionistaDraft=cloneConfigurazione(vincoliRec&&vincoliRec.valore||{});
@@ -2302,7 +2273,7 @@ async function salvaSetCompleto(mostraMessaggio){
      lasciate vuote restano vuote in tabellaGiornoCategoria - il motore
      le estrarrà di nuovo a caso a ogni generazione futura, mai
      congelate da un singolo Completa/Casuale guardato una volta. */
-  const cfgProt=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft||{},cfgProt.frequenze,!(cfgProt.profile&&cfgProt.profile.proteinDailyDiversificationRequired===false));
+  const cfgProt=await caricaVincoliProteineSet(),fatt=validaFattibilitaProteineSet(tabellaProteineDraft||{},cfgProt.frequenze);
   if(!fatt.ok){const msg='La tabella proteine non è compatibile con i limiti del nutrizionista.';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
   await put('impostazioni',{chiave:'tabellaGiornoCategoria',valore:cloneConfigurazione(tabellaProteineDraft||{})});
   const caps=await salvaLimitiPersonaliSet(false);
@@ -2336,30 +2307,22 @@ let tabellaProteineDraft=null;
 let tabellaProteineAnteprima=null;
 let frequenzeProteineSetCorrenti=null;
 /* Regola definitiva di Cwe: pranzo e cena sono sempre due categorie
-   proteiche diverse SOLO quando il profilo attivo dispone di almeno due
-   categorie ammesse (diversificazioneRichiesta, dal resolver). Con una
-   sola categoria funzionale (es. vegano: solo "legumi") non esiste una
-   "seconda categoria" da fissare: una sola casella per giorno vale per
-   entrambi i pasti, mai una macro-categoria inesistente simulata. */
+   proteiche diverse - non esiste più un "fonti proteiche/giorno"
+   configurabile: il numero di caselle fissabili per giorno è sempre 2. */
 async function caricaVincoliProteineSet(){
   const cfg=await getConfigProteine();frequenzeProteineSetCorrenti=cfg.frequenze;return cfg;
 }
-function validaFattibilitaProteineSet(tabella,frequenze,diversificazioneRichiesta){
-  const freq=frequenze||frequenzeProteineSetCorrenti||{},diversifica=diversificazioneRichiesta!==false,conteggi={};
-  for(const k of Object.keys(freq))conteggi[k]=0;
-  const maxGiorno=diversifica?2:1;
+function validaFattibilitaProteineSet(tabella,frequenze){
+  const freq=frequenze||frequenzeProteineSetCorrenti||{},conteggi={carne:0,pesce:0,formaggi:0,uova:0,legumi:0};
   let occupati=0;
   for(let i=0;i<7;i++){
     const arr=(tabella['giorno_'+i]||[]);
-    if(arr.length>maxGiorno)return {ok:false,reason:'day-max',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
+    if(arr.length>2)return {ok:false,reason:'day-max',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
     /* arr.length da solo non basta: ['carne','carne'] ha lunghezza 2 ma
-       non contiene due fonti diverse - pranzo e cena devono essere
-       categorie distinte SOLO quando la diversificazione è richiesta dal
-       profilo (con una sola categoria disponibile, es. vegano, la stessa
-       categoria vale correttamente per entrambi i pasti). */
-    if(diversifica&&arr.length===2&&arr[0]===arr[1])return {ok:false,reason:'day-duplicate',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
-    const effettivi=diversifica?arr.length:(arr.length?2:0); // senza diversificazione, 1 sola cella copre comunque 2 pasti
-    occupati+=effettivi;for(const cat of arr)if(conteggi[cat]!==undefined)conteggi[cat]+=diversifica?1:2;
+       non contiene due fonti diverse - pranzo e cena devono sempre
+       essere categorie distinte, mai la stessa ripetuta due volte. */
+    if(arr.length===2&&arr[0]===arr[1])return {ok:false,reason:'day-duplicate',giorno:i,conteggi,slotLiberi:0,deficitMinimi:0};
+    occupati+=arr.length;for(const cat of arr)if(conteggi[cat]!==undefined)conteggi[cat]++;
   }
   for(const [cat,n] of Object.entries(conteggi)){const max=freq[cat]&&freq[cat].max;if(max!==null&&max!==undefined&&n>Number(max))return {ok:false,reason:'weekly-max',categoria:cat,conteggi,slotLiberi:14-occupati,deficitMinimi:0};}
   const slotLiberi=14-occupati;let deficitMinimi=0;
@@ -2370,16 +2333,9 @@ async function renderSetTabellaGiorno(){
   const el=document.getElementById('setTabellaGiorno');if(!el)return;
   const [rec,cfg]=await Promise.all([getOne('impostazioni','tabellaGiornoCategoria'),caricaVincoliProteineSet()]);
   if(!tabellaProteineDraft)tabellaProteineDraft=cloneConfigurazione(rec&&rec.valore||{});
-  const diversificazioneRichiesta=!(cfg.profile&&cfg.profile.proteinDailyDiversificationRequired===false);
-  const forbidden=new Set(cfg.profile&&cfg.profile.forbiddenProteinMacros||[]);
-  const tabella=tabellaProteineDraft,anteprima=tabellaProteineAnteprima,freq=cfg.frequenze,maxDay=diversificazioneRichiesta?2:1;
+  const tabella=tabellaProteineDraft,anteprima=tabellaProteineAnteprima,freq=cfg.frequenze,maxDay=2;
   const head=NOMI_GIORNI_SET.map(g=>'<th style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:.68rem;padding:4px 2px;min-width:26px;text-align:center;">'+g+'</th>').join('');
-  /* Mostra soltanto le categorie ammesse dal profilo attivo (regola di
-     Cwe: "l'interfaccia del Set utente deve mostrare soltanto scelte
-     realizzabili nel profilo attivo") - una categoria esclusa da
-     vegetariano/vegano non compare affatto come riga, non solo
-     disabilitata. */
-  const righe=CATEGORIE_PROTEICHE_SET.filter(c=>!forbidden.has(c.chiave)).map(c=>{
+  const righe=CATEGORIE_PROTEICHE_SET.map(c=>{
     const reg=freq[c.chiave]||{min:0,max:0},tetto=reg.max,n=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(c.chiave)).length,rowMax=tetto!==null&&tetto!==undefined&&n>=Number(tetto),range=reg.max===null?'min '+reg.min+' · senza max':reg.min+'–'+reg.max+' / sett.';
     const cells=NOMI_GIORNI_SET.map((_,i)=>{
       const key='giorno_'+i,sel=(tabella[key]||[]).includes(c.chiave);
@@ -2397,7 +2353,7 @@ async function renderSetTabellaGiorno(){
       const tetto=freq[cat]&&freq[cat].max,used=NOMI_GIORNI_SET.filter((_,i)=>(tabella['giorno_'+i]||[]).includes(cat)).length;
       if(tetto!==null&&tetto!==undefined&&used>=Number(tetto)){await avviso('Hai già raggiunto il massimo settimanale definito dal piano per questa categoria.');return;}
       if(arr.length>=maxDay){await avviso('Puoi fissare al massimo '+maxDay+' categorie proteiche per questo giorno.');return;}
-      arr.push(cat);const fatt=validaFattibilitaProteineSet(tabella,freq,diversificazioneRichiesta);if(!fatt.ok){arr.pop();await avviso(fatt.reason==='minimums'?'Questa scelta lascerebbe troppo pochi pasti liberi per completare le frequenze minime del piano.':'Questa scelta supera un vincolo proteico del piano.');return;}
+      arr.push(cat);const fatt=validaFattibilitaProteineSet(tabella,freq);if(!fatt.ok){arr.pop();await avviso(fatt.reason==='minimums'?'Questa scelta lascerebbe troppo pochi pasti liberi per completare le frequenze minime del piano.':'Questa scelta supera un vincolo proteico del piano.');return;}
     }
     tabellaProteineAnteprima=null;
     await renderSetTabellaGiorno();
@@ -2411,14 +2367,11 @@ async function completaTabellaProteine(daZero){
      In nessuno dei due casi si tocca tabellaProteineDraft - è solo
      un'anteprima, mai scritta da sola. */
   const base=daZero?{}:cloneConfigurazione(tabellaProteineDraft||{});
-  /* Pranzo e cena hanno categorie diverse solo quando il profilo attivo
-     lo richiede (regola definitiva di Cwe): buildProteinGrid legge
-     proteinDailyDiversificationRequired dallo stesso resolver, stessa
-     identica logica del Set e della generazione del Menù, mai una
-     doppia interpretazione. Con diversificazione richiesta, garantite
-     sempre distinte con vero backtracking, mai un fallback che riusa la
-     categoria precedente a pool vuoto. */
-  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze,proteinDailyDiversificationRequired:cfg.profile&&cfg.profile.proteinDailyDiversificationRequired},{},Math.random):null;
+  /* Pranzo e cena sono sempre due categorie diverse (regola definitiva di
+     Cwe, nessuna configurazione "fonti/giorno"): buildProteinGrid le
+     garantisce sempre distinte con vero backtracking, mai un fallback
+     che riusa la categoria precedente a pool vuoto. */
+  const griglia=E&&E.buildProteinGrid?E.buildProteinGrid(giorni,base,{proteinFrequencies:cfg.frequenze},{},Math.random):null;
   if(griglia&&griglia.errors&&griglia.errors.length){
     tabellaProteineAnteprima=null;
     await renderSetTabellaGiorno();
@@ -7034,7 +6987,7 @@ document.getElementById('btnSalvaIngrediente').addEventListener('click', async (
 document.getElementById('btnSalvaConfigAvanzata').addEventListener('click',salvaConfigAvanzata);
 document.getElementById('btnApriNutrizionista').addEventListener('click',()=>mostraVista('nutrizionista'));
 document.getElementById('btnTornaImpostazioni').addEventListener('click',()=>mostraVista('impostazioni'));
-document.getElementById('configProfiloAlimentare').addEventListener('change',async()=>{await aggiornaCampiProfiloNutrizionista();await renderVincoliIngredientiNutrizionista();});
+document.getElementById('configProfiloAlimentare').addEventListener('change',async()=>{aggiornaCampiProfiloNutrizionista();await renderVincoliIngredientiNutrizionista();});
 document.getElementById('btnResetConfigAvanzata').addEventListener('click',async()=>{const def=configAvanzataDefaultCanonico();await put('impostazioni',{chiave:'configAvanzata',valore:def});await put('impostazioni',{chiave:'allergeniAttivi',valore:[]});await put('impostazioni',{chiave:'ingredientiBloccati',valore:[]});await put('impostazioni',{chiave:'vincoliIngredientiNutrizionista',valore:{}});await put('impostazioni',{chiave:'vincoliClassiCarboidrati',valore:{}});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();applicaConfigAvanzataRuntime(def);await renderConfigAvanzata();document.getElementById('configAvanzataStato').textContent='Valori del piano ripristinati dalla baseline canonica.';});
 document.getElementById('btnRicostruisciDopoProfilo').addEventListener('click',async()=>{
   /* Il profilo alimentare non cambia mai da solo durante l'uso normale -
