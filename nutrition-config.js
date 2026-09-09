@@ -115,6 +115,29 @@
   }
   function pushUnique(arr,msg){if(!arr.includes(msg))arr.push(msg);}
 
+  /* Decisione esplicita di Cwe: il tetto cumulativo settimanale dei
+     carboidrati limitati è una regola applicativa APP-CWE (non derivata
+     dal PDF), configurabile ad personam dal nutrizionista. Campo
+     canonico limitedCarbTotalMax: intero 0-14, default 3 quando assente
+     (configurazioni storiche prive del campo si risolvono
+     automaticamente con 3, nessuna migrazione). Valori decimali,
+     negativi, non numerici o superiori a 14 rendono l'intera
+     configurazione non valida (mai salvati, mai silenziosamente
+     clampati) - in quel caso questa funzione restituisce comunque il
+     default 3 come valore di fallback nell'oggetto risolto, ma
+     resolved.valid resta false grazie all'errore accodato qui. */
+  function resolveLimitedCarbTotalMax(config,errors){
+    if(!own(config,'limitedCarbTotalMax')||config.limitedCarbTotalMax===null||config.limitedCarbTotalMax===undefined){
+      return APP_DEFAULTS.limitedCarbTotalMax;
+    }
+    const raw=config.limitedCarbTotalMax,n=Number(raw);
+    if(!Number.isFinite(n)||!Number.isInteger(n)||n<0||n>14){
+      pushUnique(errors,'Tetto cumulativo carboidrati limitati non valido ('+JSON.stringify(raw)+'): deve essere un intero tra 0 e 14.');
+      return APP_DEFAULTS.limitedCarbTotalMax;
+    }
+    return n;
+  }
+
   function resolveProteinFrequencies(raw,warnings,errors){
     const out={};
     raw=raw||{};
@@ -337,7 +360,8 @@
     return out;
   }
 
-  function resolveCarbohydratePlan(input,errors){
+  function resolveCarbohydratePlan(input,errors,limitedCarbTotalMax){
+    limitedCarbTotalMax=limitedCarbTotalMax===undefined?APP_DEFAULTS.limitedCarbTotalMax:limitedCarbTotalMax;
     const selection=normalizeCarbohydrateSelection(input);
     const fixedCounts={},excludedKeys=[],autoEligibleKeys=[];
     let fixedTotal=0,limitedFixedTotal=0;
@@ -364,8 +388,8 @@
       if(pdfCap===undefined) autoEligibleKeys.push(key);
     }
 
-    if(limitedFixedTotal>APP_DEFAULTS.limitedCarbTotalMax){
-      pushUnique(errors,'Carboidrati limitati: '+limitedFixedTotal+' occorrenze superano il tetto applicativo totale '+APP_DEFAULTS.limitedCarbTotalMax+'.');
+    if(limitedFixedTotal>limitedCarbTotalMax){
+      pushUnique(errors,'Carboidrati limitati: '+limitedFixedTotal+' occorrenze superano il tetto applicativo totale '+limitedCarbTotalMax+'.');
     }
     if(fixedTotal>APP_DEFAULTS.carbSlots){
       pushUnique(errors,'Carboidrati: '+fixedTotal+' occorrenze fisse superano i '+APP_DEFAULTS.carbSlots+' slot settimanali.');
@@ -529,7 +553,8 @@
       explicitZeroKeys:user.configCarboidratiExplicitZeroKeys||[],
       states:user.configCarboidratiStati||{}
     };
-    const carbohydrates=resolveCarbohydratePlan(carbInput,errors);
+    const limitedCarbTotalMax=resolveLimitedCarbTotalMax(config,errors);
+    const carbohydrates=resolveCarbohydratePlan(carbInput,errors,limitedCarbTotalMax);
 
     const specialMealsMax=nonNegative(config.specialMealsMax);
     const cooldownDays=Object.assign({},APP_DEFAULTS.cooldownDays,config.cooldownDays||{});
@@ -548,6 +573,7 @@
       subtypeCaps,
       ingredientConstraints,
       carbohydrates,
+      limitedCarbTotalMax,
       fruit,
       vegetables:vegetablePortions,
       specialBreakfastMax,

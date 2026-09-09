@@ -1866,3 +1866,119 @@ eliminata.
 **SHA finale:** `46eccab632a521df71dc63768f207593c28623d2`.
 
 ---
+
+# Filone: Tetto cumulativo carboidrati limitati configurabile ad personam
+
+Riguarda: `nutrition-config.js`, `engine-core.js`, `index.html` (Setting
+nutrizionista e Set utente) — decisione definitiva di Cwe: il tetto
+cumulativo settimanale dei carboidrati limitati resta (default 3), ma
+diventa configurabile per il singolo utente dal nutrizionista; è una
+regola applicativa APP-CWE, non derivata dal PDF.
+
+## 1. Commit `(in preparazione)` — campo canonico `limitedCarbTotalMax` risolto lungo tutta la catena
+
+**Stato precedente:** il valore era rigido a 3 ovunque -
+`nutrition-config.js` confrontava le occorrenze FIXED direttamente con
+`APP_DEFAULTS.limitedCarbTotalMax` (mai un valore per-utente);
+`index.html` inizializzava `CONFIG_CARB_TETTO_LIMITATI` una sola volta
+all'avvio dallo stesso default fisso (contatore, disabilitazione celle
+e validazione del Set usavano quindi sempre 3); mancava un campo
+dedicato nel Setting nutrizionista; `engine-core.js` (`buildCarbGrid`)
+non riceveva alcuna configurazione dal chiamante.
+
+**Modifica:**
+- `nutrition-config.js`: nuova `resolveLimitedCarbTotalMax(config,errors)`
+  — legge `nutritionist.config.limitedCarbTotalMax`; usa 3 quando il
+  campo è assente o `null` (configurazioni storiche si risolvono
+  automaticamente con 3, nessuna migrazione); valida che sia un intero
+  0-14, altrimenti accoda un errore esplicito (`resolved.valid=false`)
+  senza mai clampare o salvare il valore non valido. `resolveCarbohydratePlan`
+  ora riceve il valore risolto come parametro e lo usa per la
+  validazione delle occorrenze FIXED (mai più un confronto diretto con
+  `APP_DEFAULTS.limitedCarbTotalMax`, che resta solo il default quando
+  il campo è assente). Nuovo campo `resolved.limitedCarbTotalMax`
+  nell'oggetto finale — unica fonte autorevole.
+- `engine-core.js`: `buildCarbGrid` accetta ora un parametro `config` e
+  lo inoltra a `validateCarbBudget` (che già leggeva correttamente
+  `cfg.limitedCarbTotalMax` tramite `mergeConfig`, ma non lo riceveva
+  mai dal chiamante). Nessun fallback locale diverso da 3, nessuna
+  duplicazione di normalizzazione. **Nota:** `buildCarbGrid`/
+  `validateCarbBudget` risultano privi di chiamanti sia in `index.html`
+  sia in `motor-v12.js` (verificato con ricerca globale) — la
+  correzione resta comunque corretta e a rischio zero, coerente con
+  quanto richiesto.
+- `motor-v12.js`: **nessuna modifica necessaria** — non contiene una
+  propria interpretazione del tetto; consuma già `resolved.carbohydrates`,
+  derivato da `resolveCarbohydratePlan` (corretto al punto sopra),
+  quindi eredita automaticamente il comportamento corretto e il
+  messaggio d'errore con totale richiesto e tetto effettivo (già
+  presente nella stringa di errore del resolver).
+- `index.html` (Set utente): `CONFIG_CARB_TETTO_LIMITATI` trasformata
+  da costante fissa a variabile di sessione (`let`), aggiornata da una
+  nuova `aggiornaTettoCarbLimitatiSet()` — stesso pattern già in uso
+  per le proteine (`caricaVincoliProteineSet`/`frequenzeProteineSetCorrenti`).
+  Richiamata al boot (`caricaConfigCarboidrati`) e alla riapertura della
+  vista Set (`mostraVista('set')`), così contatore, disabilitazione
+  celle e completamento riflettono sempre il valore per-utente.
+  `salvaConfigCarboidratiSet` corretta: prima non passava affatto la
+  configurazione nutrizionista al resolver in fase di validazione
+  pre-salvataggio (usava sempre il default 3 anche con un tetto
+  personale diverso salvato); ora legge `configAvanzata` e valida col
+  tetto realmente risolto. Verificato che il completamento automatico
+  (Casuale/Completa carboidrati) non tocca mai le categorie limitate
+  (solo quelle AUTO senza tetto individuale): nessuna modifica
+  necessaria lì.
+- `index.html` (Setting nutrizionista): un solo campo numerico aggiunto
+  nella sezione "Regole applicative APP-CWE" (già esistente, coerente
+  con la natura APP-CWE della regola) — etichetta "Tetto cumulativo
+  carboidrati limitati", indicazione "Regola APP-CWE · totale
+  settimanale", `min=0 max=14 step=1`, valore dalla configurazione
+  effettivamente salvata/risolta (default grafico 3 solo quando il dato
+  non esiste). Il salvataggio e l'invalidazione della configurazione
+  runtime (`invalidaConfigRuntime()`) erano già generici e coprono
+  automaticamente il nuovo campo, nessuna modifica necessaria lì. Il
+  pulsante di reset del Setting (già esistente) usa
+  `configAvanzataDefaultCanonico()`, che ora risolve correttamente
+  `limitedCarbTotalMax:3` per il ripristino.
+
+**Intervallo e semantica (0-14):** 0 = nessun carboidrato limitato
+programmabile; 1-13 = tetto cumulativo effettivo; 14 = nessun limite
+cumulativo praticamente restrittivo, restando comunque attivi i cap
+individuali PDF delle singole categorie (verificato con un test
+dedicato: un cap PDF individuale non viene mai superato anche con
+tetto cumulativo 14).
+
+**Compatibilità:** nessuna modifica allo schema IndexedDB, il campo
+resta dentro `configAvanzata`; nessuna migrazione distruttiva;
+configurazioni esistenti prive del campo si risolvono automaticamente
+con 3 (verificato).
+
+**File modificati:** `nutrition-config.js`, `engine-core.js`,
+`index.html`, `tests/lotto-tetto-carboidrati-limitati.test.js` (nuovo).
+
+**Verifiche eseguite:**
+```
+node tests/lotto-tetto-carboidrati-limitati.test.js  → ok (fallisce senza la correzione: campo assente non risolve 3, verificato; passa dopo)
+node --check nutrition-config.js                       → OK
+node --check engine-core.js                              → OK
+validazione script index.html (node --check per blocco) → OK
+git diff --check                                          → pulito
+```
+Il test copre: campo assente → 3; valore personale 5 → resolver,
+contratto di sorgente del Set e stessa funzione usata dal motore
+tutti coerenti con 5 (e le stesse occorrenze respinte col default 3,
+a dimostrazione che il tetto applicato è quello personale); valore 0 →
+nessun limitato ammesso; valori non validi (decimale, negativo, >14,
+non numerico) → configurazione non valida con messaggio esplicito,
+`null` esplicito trattato come campo assente (mai come 0 o errore);
+cap individuali delle singole categorie invariati anche con tetto
+cumulativo 14.
+
+**Non modificati:** profili vegetariano/vegano, logica proteica,
+cataloghi, ricette, quantità, cap individuali delle categorie
+carboidrato, restyling grafico (nessuna sezione toccata oltre
+l'aggiunta del singolo campo richiesto).
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

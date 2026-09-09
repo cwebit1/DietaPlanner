@@ -1591,7 +1591,7 @@ function labelGiornoEsteso(iso){
 }
 
 const ALLERGENI_UE=[['glutine','🌾','Glutine'],['crostacei','🦐','Crostacei'],['uova','🥚','Uova'],['pesce','🐟','Pesce'],['arachidi','🥜','Arachidi'],['soia','🌱','Soia'],['latte','🥛','Latte'],['frutta_guscio','🌰','Frutta a guscio'],['sedano','🥬','Sedano'],['senape','🟡','Senape'],['sesamo','⚪','Sesamo'],['solfiti','🍷','Solfiti'],['lupini','🫘','Lupini'],['molluschi','🐚','Molluschi']];
-const CONFIG_AVANZATA_DEFAULT={dietProfile:'onnivoro',proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},specialBreakfastMax:1,specialMealsMax:2,snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},snackDailyCaps:{frutta_secca_giornaliero:1},cooldownDays:{carboidrati:7,verdure:2},fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerDay:10,deadlines:{pranzo:'15:00',cena:'22:00'}};
+const CONFIG_AVANZATA_DEFAULT={dietProfile:'onnivoro',proteinFrequencies:{carne:{min:1,max:3,target:3},pesce:{min:2,max:3,target:3},formaggi:{min:2,max:3,target:3},uova:{min:1,max:2,target:2},legumi:{min:2,max:null,target:3}},subtypeCaps:{carne_rossa:1,affettati:1,pesce_grande:1,pesce_conservato:1},specialBreakfastMax:1,specialMealsMax:2,snackWeeklyCaps:{da_limitare:2,grana_spuntino:2,crackers_spuntino:2,pane_marmellata_spuntino:2,granita_spuntino:2,patatine_grisbi:1},snackDailyCaps:{frutta_secca_giornaliero:1},cooldownDays:{carboidrati:7,verdure:2},fruit:{min:2,max:3,portionMin:150,portionMax:200},oilGramsPerDay:10,limitedCarbTotalMax:3,deadlines:{pranzo:'15:00',cena:'22:00'}};
 /* Fallback statico per bootstrap/legacy. Dalla v87 i controlli nutrizionista
    usano il resolver canonico nutrition-config.js come sorgente effettiva. */
 function cloneConfigurazione(x){return typeof structuredClone==='function'?structuredClone(x):JSON.parse(JSON.stringify(x));}
@@ -1606,6 +1606,7 @@ function configAvanzataDaRisolta(resolved,sorgente){
   if(r.snackWeeklyCaps)out.snackWeeklyCaps=cloneConfigurazione(r.snackWeeklyCaps);
   if(r.snackDailyCaps)out.snackDailyCaps=cloneConfigurazione(r.snackDailyCaps);
   if(r.oilGramsPerDay!==undefined)out.oilGramsPerDay=r.oilGramsPerDay;
+  if(r.limitedCarbTotalMax!==undefined)out.limitedCarbTotalMax=r.limitedCarbTotalMax;
   if(r.cooldownDays)out.cooldownDays=cloneConfigurazione(r.cooldownDays);
   if(r.deadlines)out.deadlines=cloneConfigurazione(r.deadlines);
   return out;
@@ -1671,6 +1672,12 @@ async function renderConfigAvanzata(){
   html+='<div class="nutri-row single"><span class="nutri-name">Frutta secca</span><span class="nutri-unit">max/giorno</span><input type="number" min="0" data-cfg-avanzata="snackDailyCaps.frutta_secca_giornaliero" value="'+((cfg.snackDailyCaps||cfgDefault.snackDailyCaps).frutta_secca_giornaliero??'')+'"></div>';
   html+='<div class="nutri-source-label app">Regole applicative APP-CWE</div>';
   for(const [path,label,val,unit] of [['specialMealsMax','Pasti speciali',cfg.specialMealsMax,'sett.'],['snackWeeklyCaps.da_limitare','Spuntini da limitare',cfg.snackWeeklyCaps&&cfg.snackWeeklyCaps.da_limitare,'max/sett.']])html+='<div class="nutri-row single"><span class="nutri-name">'+label+'</span><span class="nutri-unit">'+unit+'</span><input type="number" min="0" data-cfg-avanzata="'+path+'" value="'+(val??'')+'"></div>';
+  /* Decisione esplicita di Cwe: tetto cumulativo settimanale dei
+     carboidrati limitati, regola APP-CWE (non PDF) configurabile ad
+     personam. Campo canonico limitedCarbTotalMax: intero 0-14, default 3
+     solo quando il dato non esiste in configAvanzataEffettivaSalvata
+     (che è già risolta - mai un secondo default grafico indipendente). */
+  html+='<div class="nutri-row single"><span class="nutri-name">Tetto cumulativo carboidrati limitati</span><span class="nutri-unit">Regola APP-CWE · totale settimanale</span><input type="number" min="0" max="14" step="1" data-cfg-avanzata="limitedCarbTotalMax" value="'+(cfg.limitedCarbTotalMax??3)+'"></div>';
   for(const k of ['carboidrati','verdure'])html+='<div class="nutri-row single"><span class="nutri-name">Cooldown '+k+'</span><span class="nutri-unit">giorni</span><input type="number" min="0" data-cfg-avanzata="cooldownDays.'+k+'" value="'+((cfg.cooldownDays||cfgDefault.cooldownDays)[k]??'')+'"></div>';
   for(const k of ['pranzo','cena'])html+='<div class="nutri-row single"><span class="nutri-name">Scadenza '+k+'</span><span class="nutri-unit">ora</span><input type="time" data-cfg-avanzata="deadlines.'+k+'" data-cfg-testo="1" value="'+((cfg.deadlines||cfgDefault.deadlines)[k]||'')+'"></div>';
   box.innerHTML=html;
@@ -2146,11 +2153,24 @@ const CONFIG_CARB_TIPI_BASE = [
 const NUTRITION_CONFIG_SET=globalThis.DietaPlannerNutritionConfig;
 const CONFIG_CARB_MAX_CASELLE=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.carbCellMax||6;
 const CONFIG_CARB_TOTALE_OBBLIGATORIO=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.carbSlots||14;
-const CONFIG_CARB_TETTO_LIMITATI=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.limitedCarbTotalMax||3;
+let CONFIG_CARB_TETTO_LIMITATI=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.APP_DEFAULTS.limitedCarbTotalMax||3;
 const CONFIG_CARB_TIPI=CONFIG_CARB_TIPI_BASE.map(t=>{
   const cap=NUTRITION_CONFIG_SET&&NUTRITION_CONFIG_SET.PDF_BASELINE.carbohydrateWeeklyCaps[t.chiave];
   return Object.assign({},t,{limitato:cap!==undefined,maxIndividuale:cap!==undefined?Number(cap):CONFIG_CARB_MAX_CASELLE});
 });
+/* Decisione esplicita di Cwe: il tetto cumulativo settimanale dei
+   carboidrati limitati è una regola APP-CWE configurabile ad personam
+   dal nutrizionista (limitedCarbTotalMax, risolto da
+   resolveNutritionConfig() - unica fonte). CONFIG_CARB_TETTO_LIMITATI
+   è quindi una cache di sessione (stesso pattern già in uso per
+   CAP_SPUNTINO_* / frequenzeProteineSetCorrenti), mai una costante fissa:
+   ricaricata qui, non ricalcolata altrove. */
+async function aggiornaTettoCarbLimitatiSet(){
+  const N=globalThis.DietaPlannerNutritionConfig;if(!N)return;
+  const rec=await getOne('impostazioni','configAvanzata');
+  const resolved=N.resolveNutritionConfig({nutritionist:{config:rec&&rec.valore||{}}});
+  CONFIG_CARB_TETTO_LIMITATI=resolved.limitedCarbTotalMax;
+}
 
 /* Stato canonico Set carboidrati: AUTO / EXCLUDED / FIXED.
    configCarboidrati e configCarboidratiOrigini restano scritti per compatibilità legacy. */
@@ -2197,7 +2217,12 @@ async function validaClassiCarboidratiSet(){
   return null;
 }
 async function salvaConfigCarboidratiSet(mostraMessaggio){
-  const N=globalThis.DietaPlannerNutritionConfig,input=inputCarboidratiCanonicoSet(),resolved=N.resolveNutritionConfig({user:{carbohydrates:input}});
+  const N=globalThis.DietaPlannerNutritionConfig,input=inputCarboidratiCanonicoSet();
+  /* La validazione pre-salvataggio deve usare il tetto cumulativo
+     effettivamente risolto per l'utente (limitedCarbTotalMax), non il
+     default APP-CWE: la configurazione nutrizionista va sempre passata
+     al resolver, mai omessa. */
+  const recCfg=await getOne('impostazioni','configAvanzata'),resolved=N.resolveNutritionConfig({nutritionist:{config:recCfg&&recCfg.valore||{}},user:{carbohydrates:input}});
   if(!resolved.valid){if(mostraMessaggio!==false)await avviso('Configurazione carboidrati non valida: '+resolved.errors.join(' '));return {ok:false,errori:resolved.errors};}
   const erroreClasse=await validaClassiCarboidratiSet();if(erroreClasse){if(mostraMessaggio!==false)await avviso(erroreClasse);return {ok:false,errori:[erroreClasse]};}
   /* Unica verità funzionale scritta: configCarboidratiStati. I vecchi
@@ -2579,6 +2604,7 @@ document.getElementById('btnResetColazionePref')?.addEventListener('click', asyn
    completo, nessuna reinterpretazione dei record legacy qui. */
 async function caricaConfigCarboidrati(){
   const statiRec=await getOne('impostazioni','configCarboidratiStati');
+  await aggiornaTettoCarbLimitatiSet();
   inizializzaStatoCaselleCarb();
   const normalized=statiRec&&statiRec.valore||{};
   for(const tipo of CONFIG_CARB_TIPI){
@@ -2910,7 +2936,7 @@ async function mostraVista(nome){
   if(nome==='menu') renderMenuSettimanale();
   if(nome==='ricette') renderRicette();
   if(nome==='inventario') renderInventario();
-  if(nome==='set'){ setDraft={voci:new Map(),modificata:false}; tabellaProteineDraft=null; tabellaProteineAnteprima=null; renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
+  if(nome==='set'){ setDraft={voci:new Map(),modificata:false}; tabellaProteineDraft=null; tabellaProteineAnteprima=null; await aggiornaTettoCarbLimitatiSet(); renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
   if(nome==='impostazioni')renderInfoVersioniRemote();
   if(nome==='nutrizionista')renderConfigAvanzata();
 }

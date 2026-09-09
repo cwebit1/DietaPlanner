@@ -258,9 +258,9 @@ function composeMeal(input,state,rng){
 }
 function automaticDayAllowed(day,today){return String(day)>String(today);}
 
-function buildCarbGrid(days,meals,budget,carbConfig,rng){
+function buildCarbGrid(days,meals,budget,carbConfig,rng,config){
   const slots=[];for(const day of days||[])for(const meal of meals||['pranzo','cena'])slots.push({day,meal});
-  const validation=validateCarbBudget(budget,carbConfig);if(!validation.ok)return {cells:{},errors:validation.errors.slice()};
+  const validation=validateCarbBudget(budget,carbConfig,config);if(!validation.ok)return {cells:{},errors:validation.errors.slice()};
   const keys=[];for(const [key,n] of Object.entries(validation.normalized))for(let i=0;i<n;i++)keys.push(key);
   const shuffled=shuffle(keys,rng),cells={};slots.forEach((slot,i)=>{cells[slot.day]=cells[slot.day]||{};cells[slot.day][slot.meal]={carbKey:shuffled[i],source:'system'};});
   return {cells,errors:[]};
