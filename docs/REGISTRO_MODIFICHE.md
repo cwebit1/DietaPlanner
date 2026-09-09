@@ -1795,7 +1795,7 @@ giornata espansa, giornate compatte e bottom bar.
 
 # Filone: Ritiro dell'implementazione anticipata dei profili vegetariano/vegano
 
-## 1. Commit `(in preparazione)` — annullato il commit `ee58cc8` (e il suo fix `cfd0637`), fuori scope
+## 1. Commit `46eccab` — annullato il commit `ee58cc8` (e il suo fix `cfd0637`), fuori scope
 
 **Motivo:** il commit `ee58cc8` ("Profili alimentari: vegetariano e
 vegano non ereditano più i limiti proteici pensati per l'onnivoro")
@@ -1863,6 +1863,6 @@ Verificato con ricerca globale: nessuna occorrenza residua di
 esistenti dal commit `70eeeff`, nessuna reintroduzione della semantica
 eliminata.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `46eccab632a521df71dc63768f207593c28623d2`.
 
 ---
