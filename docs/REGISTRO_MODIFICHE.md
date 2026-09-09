@@ -1875,7 +1875,7 @@ cumulativo settimanale dei carboidrati limitati resta (default 3), ma
 diventa configurabile per il singolo utente dal nutrizionista; è una
 regola applicativa APP-CWE, non derivata dal PDF.
 
-## 1. Commit `(in preparazione)` — campo canonico `limitedCarbTotalMax` risolto lungo tutta la catena
+## 1. Commit `40cb0ba` — campo canonico `limitedCarbTotalMax` risolto lungo tutta la catena
 
 **Stato precedente:** il valore era rigido a 3 ovunque -
 `nutrition-config.js` confrontava le occorrenze FIXED direttamente con
@@ -1979,6 +1979,6 @@ cataloghi, ricette, quantità, cap individuali delle categorie
 carboidrato, restyling grafico (nessuna sezione toccata oltre
 l'aggiunta del singolo campo richiesto).
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `40cb0ba11c6667be5bc6e4dcc3f5907c73cc05b8`.
 
 ---
