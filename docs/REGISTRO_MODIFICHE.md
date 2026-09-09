@@ -1802,7 +1802,7 @@ vegetariano e vegano devono poterli superare/sostituire con una
 configurazione propria, senza ereditare automaticamente i tetti
 dell'onnivoro.
 
-## 1. Commit `(in preparazione)` — configurazione proteica per profilo, diversificazione condizionata alla fattibilità reale
+## 1. Commit `ee58cc8` — configurazione proteica per profilo, diversificazione condizionata alla fattibilità reale
 
 **Problema riscontrato:** la regola "pranzo e cena sempre categorie
 diverse" (introdotta nel filone precedente) era corretta per l'onnivoro
@@ -1925,6 +1925,6 @@ esplicitata in questo incarico): `lotto-set-proteine-buildgrid.test.js`,
 nutrizionali, motore (nessuna riscrittura, solo la lettura condizionata
 di un flag già calcolato dal resolver), grafica del restyling.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `ee58cc8cf9b0c3090b923799314f891c8f07ff09`.
 
 ---
