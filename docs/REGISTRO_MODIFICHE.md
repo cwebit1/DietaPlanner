@@ -2211,7 +2211,7 @@ git diff --check                                        → pulito
 
 ---
 
-## 3. Commit `(in preparazione)` — correzione: setPocoTempo esaustivo per livello, non solo per ordine della proteina
+## 3. Commit `31be47a` — correzione: setPocoTempo esaustivo per livello, non solo per ordine della proteina
 
 **SHA iniziale di questa correzione:** `fb3fa7d55131dc3decf66ee4677a91ca401f678d`.
 
@@ -2252,6 +2252,6 @@ Nessuna regressione emersa fuori da questi file.
 
 **Non modificati:** `index.html`, resolver nutrizionale, cataloghi, IndexedDB, frequenze, quantità, algebra V/S/G, rotazione proteica, profili vegetariano/vegano, restyling grafico.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `31be47a8067d987f24a80a2c7f13ed6867231eb4`.
 
 ---
