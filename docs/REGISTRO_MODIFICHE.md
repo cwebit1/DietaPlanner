@@ -1793,465 +1793,60 @@ giornata espansa, giornate compatte e bottom bar.
 
 ---
 
-# Filone: Ritiro dell'implementazione anticipata dei profili vegetariano/vegano
+## 15. Menù verticale essenziale con blocco per ricetta — 9 settembre 2026
 
-## 1. Commit `46eccab` — annullato il commit `ee58cc8` (e il suo fix `cfd0637`), fuori scope
+**Obiettivo richiesto da Cwe:** sostituire nel prototipo la vista Menù
+fotografica e poco leggibile con un calendario verticale continuo. Ridurre il
+rilievo degli elementi marginali, mettere giorno e data sulla stessa riga,
+riutilizzare le icone già presenti e prevedere un lucchetto autonomo per ogni
+ricetta che compone il pasto.
 
-**Motivo:** il commit `ee58cc8` ("Profili alimentari: vegetariano e
-vegano non ereditano più i limiti proteici pensati per l'onnivoro")
-implementava logiche definitive per i profili vegetariano e vegano
-(`proteinFrequenciesByProfile`, `proteinDailyDiversificationRequired`,
-la relativa gestione nel Setting nutrizionista e nel Set utente, e i
-test che rendevano operative le settimane vegetariana e vegana) senza
-autorizzazione esplicita di Cwe per quello scope. L'ultima precisazione
-di Cwe chiarisce che lo sviluppo in corso riguarda **esclusivamente il
-profilo onnivoro**: vegetariano e vegano saranno sviluppati
-successivamente con logiche e impostazioni definite insieme al
-nutrizionista.
+**Intervento effettuato:** eliminati dal Menù immagini, riepilogo nutrizionale,
+card fotografiche, tag e testi descrittivi. Tutte le giornate sono ora aperte e
+consecutive; ogni intestazione contiene giorno e data sulla stessa riga. Ogni
+pasto usa una colonna icona senza sfondo circolare, una colonna centrale con
+titolo discreto e nomi ricetta dominanti, e una colonna destra con un lucchetto
+per ciascuna realizzazione. Il renderer dimostrativo gestisce pasti composti da
+una, due o tre ricette senza creare celle vuote. Per il pranzo è stato
+riutilizzato lo stesso SVG posate della bottom navigation; sole, luna e
+lucchetto conservano i simboli già presenti nel restyling.
 
-**Azione:** annullate esclusivamente le modifiche introdotte dai
-commit `ee58cc8` e `cfd0637` (revert pulito, nessun conflitto: nessun
-commit intermedio tra `70eeeff` ed `ee58cc8` toccava gli stessi file
-sorgente). Non toccati i commit grafici precedenti e successivi. Non
-annullato il commit `70eeeff`, che resta integralmente valido.
+**Separazione confermata:** modificato soltanto il prototipo grafico e il suo
+registro. `index.html`, motore, database e IndexedDB restano invariati.
 
-**Rimosso:** `proteinFrequenciesByProfile`, `proteinDailyDiversificationRequired`,
-`verificaFattibilitaSettimanale`, la gestione dedicata
-vegetariano/vegano in `nutrition-config.js`/`engine-core.js`/`motor-v12.js`,
-le modifiche al Setting nutrizionista (`renderRigheFrequenzeProteiche`)
-e al Set utente relative ai profili, i test introdotti o riscritti per
-rendere operative le settimane vegetariana e vegana, il capitolo "Filone:
-Profili alimentari — limiti onnivori applicati impropriamente a
-vegetariano/vegano" precedentemente aggiunto a questo registro.
+**Verifiche:** `git diff --check` pulito; parsing di tutti gli script inline
+riuscito; `index.html` invariato. Il tentativo di screenshot locale non è stato
+completato perché il runtime Playwright è presente ma non dispone del binario
+Chromium.
 
-**Resta integralmente valido (commit `70eeeff`, non toccato da questo
-ritiro):**
-- 0 scelte utente → completa automaticamente con 2 categorie differenti;
-- 1 scelta → conserva quella scelta e completa con una categoria differente;
-- 2 scelte → conserva entrambe;
-- pranzo e cena hanno sempre categorie proteiche differenti;
-- nessuna semantica `maxProteinSourcesPerDay`.
+**File modificati:** `restyling-preview.html`,
+`docs/REGISTRO_MODIFICHE.md`.
 
-Nessuna reinterpretazione o correzione di vegetariano/vegano eseguita
-in questo intervento: i due profili tornano al comportamento del
-commit `70eeeff` (dichiarati incompatibili quando restano meno di due
-categorie ammesse), senza alcuna nuova segnalazione dell'incompatibilità
-- saranno sviluppati in un intervento successivo con logiche e
-impostazioni definite insieme al nutrizionista.
-
-**File modificati (tutti riportati esattamente allo stato precedente a
-`ee58cc8`):** `nutrition-config.js`, `engine-core.js`, `motor-v12.js`,
-`index.html`, `tests/lotto-proteine-autocompletamento.test.js`,
-`tests/lotto-proteine-giorno-esclusione.test.js`,
-`tests/lotto-set-proteine-buildgrid.test.js`,
-`tests/lotto-set-proteine-validazione.test.js`,
-`tests/nutrition-config.test.js`, `docs/REGISTRO_MODIFICHE.md` (rimosso
-il capitolo aggiunto da `ee58cc8`).
-
-**Verifiche eseguite:**
-```
-node tests/lotto-proteine-autocompletamento.test.js  → ok (torna al contenuto e al comportamento del commit 70eeeff)
-node --check nutrition-config.js                       → OK
-node --check engine-core.js                             → OK
-node --check motor-v12.js                                → OK
-git diff --check                                          → pulito
-```
-Verificato con ricerca globale: nessuna occorrenza residua di
-`proteinFrequenciesByProfile`, `proteinDailyDiversificationRequired`,
-`verificaFattibilitaSettimanale`, `renderRigheFrequenzeProteiche`.
-`maxProteinSourcesPerDay` presente solo nei commenti storici già
-esistenti dal commit `70eeeff`, nessuna reintroduzione della semantica
-eliminata.
-
-**SHA finale:** `46eccab632a521df71dc63768f207593c28623d2`.
+**SHA dell'intervento grafico:** `435903aedb040cfcff6cacfda72fc80ab91341ca`.
 
 ---
 
-# Filone: Tetto cumulativo carboidrati limitati configurabile ad personam
+## 16. Uniformazione icone pasti nel Menù verticale — 9 settembre 2026
 
-Riguarda: `nutrition-config.js`, `engine-core.js`, `index.html` (Setting
-nutrizionista e Set utente) — decisione definitiva di Cwe: il tetto
-cumulativo settimanale dei carboidrati limitati resta (default 3), ma
-diventa configurabile per il singolo utente dal nutrizionista; è una
-regola applicativa APP-CWE, non derivata dal PDF.
+**Correzione richiesta da Cwe:** sostituire le icone disomogenee presenti nella
+colonna sinistra del nuovo calendario verticale.
 
-## 1. Commit `40cb0ba` — campo canonico `limitedCarbTotalMax` risolto lungo tutta la catena
+**Intervento effettuato:** rimossi i caratteri Unicode usati per sole e luna e
+sostituite tutte e tre le icone dei pasti con SVG coordinati a tratto sottile.
+Colazione usa un sole vettoriale, Pranzo riusa il disegno delle posate già
+presente nella bottom navigation e Cena usa una luna crescente vettoriale.
+Dimensioni, spessore, terminali e colore seguono ora un unico linguaggio; non è
+stato aggiunto alcuno sfondo circolare.
 
-**Stato precedente:** il valore era rigido a 3 ovunque -
-`nutrition-config.js` confrontava le occorrenze FIXED direttamente con
-`APP_DEFAULTS.limitedCarbTotalMax` (mai un valore per-utente);
-`index.html` inizializzava `CONFIG_CARB_TETTO_LIMITATI` una sola volta
-all'avvio dallo stesso default fisso (contatore, disabilitazione celle
-e validazione del Set usavano quindi sempre 3); mancava un campo
-dedicato nel Setting nutrizionista; `engine-core.js` (`buildCarbGrid`)
-non riceveva alcuna configurazione dal chiamante.
+**Separazione confermata:** nessuna modifica a `index.html`, motore, database o
+IndexedDB.
 
-**Modifica:**
-- `nutrition-config.js`: nuova `resolveLimitedCarbTotalMax(config,errors)`
-  — legge `nutritionist.config.limitedCarbTotalMax`; usa 3 quando il
-  campo è assente o `null` (configurazioni storiche si risolvono
-  automaticamente con 3, nessuna migrazione); valida che sia un intero
-  0-14, altrimenti accoda un errore esplicito (`resolved.valid=false`)
-  senza mai clampare o salvare il valore non valido. `resolveCarbohydratePlan`
-  ora riceve il valore risolto come parametro e lo usa per la
-  validazione delle occorrenze FIXED (mai più un confronto diretto con
-  `APP_DEFAULTS.limitedCarbTotalMax`, che resta solo il default quando
-  il campo è assente). Nuovo campo `resolved.limitedCarbTotalMax`
-  nell'oggetto finale — unica fonte autorevole.
-- `engine-core.js`: `buildCarbGrid` accetta ora un parametro `config` e
-  lo inoltra a `validateCarbBudget` (che già leggeva correttamente
-  `cfg.limitedCarbTotalMax` tramite `mergeConfig`, ma non lo riceveva
-  mai dal chiamante). Nessun fallback locale diverso da 3, nessuna
-  duplicazione di normalizzazione. **Nota:** `buildCarbGrid`/
-  `validateCarbBudget` risultano privi di chiamanti sia in `index.html`
-  sia in `motor-v12.js` (verificato con ricerca globale) — la
-  correzione resta comunque corretta e a rischio zero, coerente con
-  quanto richiesto.
-- `motor-v12.js`: **nessuna modifica necessaria** — non contiene una
-  propria interpretazione del tetto; consuma già `resolved.carbohydrates`,
-  derivato da `resolveCarbohydratePlan` (corretto al punto sopra),
-  quindi eredita automaticamente il comportamento corretto e il
-  messaggio d'errore con totale richiesto e tetto effettivo (già
-  presente nella stringa di errore del resolver).
-- `index.html` (Set utente): `CONFIG_CARB_TETTO_LIMITATI` trasformata
-  da costante fissa a variabile di sessione (`let`), aggiornata da una
-  nuova `aggiornaTettoCarbLimitatiSet()` — stesso pattern già in uso
-  per le proteine (`caricaVincoliProteineSet`/`frequenzeProteineSetCorrenti`).
-  Richiamata al boot (`caricaConfigCarboidrati`) e alla riapertura della
-  vista Set (`mostraVista('set')`), così contatore, disabilitazione
-  celle e completamento riflettono sempre il valore per-utente.
-  `salvaConfigCarboidratiSet` corretta: prima non passava affatto la
-  configurazione nutrizionista al resolver in fase di validazione
-  pre-salvataggio (usava sempre il default 3 anche con un tetto
-  personale diverso salvato); ora legge `configAvanzata` e valida col
-  tetto realmente risolto. Verificato che il completamento automatico
-  (Casuale/Completa carboidrati) non tocca mai le categorie limitate
-  (solo quelle AUTO senza tetto individuale): nessuna modifica
-  necessaria lì.
-- `index.html` (Setting nutrizionista): un solo campo numerico aggiunto
-  nella sezione "Regole applicative APP-CWE" (già esistente, coerente
-  con la natura APP-CWE della regola) — etichetta "Tetto cumulativo
-  carboidrati limitati", indicazione "Regola APP-CWE · totale
-  settimanale", `min=0 max=14 step=1`, valore dalla configurazione
-  effettivamente salvata/risolta (default grafico 3 solo quando il dato
-  non esiste). Il salvataggio e l'invalidazione della configurazione
-  runtime (`invalidaConfigRuntime()`) erano già generici e coprono
-  automaticamente il nuovo campo, nessuna modifica necessaria lì. Il
-  pulsante di reset del Setting (già esistente) usa
-  `configAvanzataDefaultCanonico()`, che ora risolve correttamente
-  `limitedCarbTotalMax:3` per il ripristino.
+**Verifiche:** parsing JavaScript riuscito; `git diff --check` pulito;
+`index.html` invariato.
 
-**Intervallo e semantica (0-14):** 0 = nessun carboidrato limitato
-programmabile; 1-13 = tetto cumulativo effettivo; 14 = nessun limite
-cumulativo praticamente restrittivo, restando comunque attivi i cap
-individuali PDF delle singole categorie (verificato con un test
-dedicato: un cap PDF individuale non viene mai superato anche con
-tetto cumulativo 14).
+**File modificati:** `restyling-preview.html`,
+`docs/REGISTRO_MODIFICHE.md`.
 
-**Compatibilità:** nessuna modifica allo schema IndexedDB, il campo
-resta dentro `configAvanzata`; nessuna migrazione distruttiva;
-configurazioni esistenti prive del campo si risolvono automaticamente
-con 3 (verificato).
-
-**File modificati:** `nutrition-config.js`, `engine-core.js`,
-`index.html`, `tests/lotto-tetto-carboidrati-limitati.test.js` (nuovo).
-
-**Verifiche eseguite:**
-```
-node tests/lotto-tetto-carboidrati-limitati.test.js  → ok (fallisce senza la correzione: campo assente non risolve 3, verificato; passa dopo)
-node --check nutrition-config.js                       → OK
-node --check engine-core.js                              → OK
-validazione script index.html (node --check per blocco) → OK
-git diff --check                                          → pulito
-```
-Il test copre: campo assente → 3; valore personale 5 → resolver,
-contratto di sorgente del Set e stessa funzione usata dal motore
-tutti coerenti con 5 (e le stesse occorrenze respinte col default 3,
-a dimostrazione che il tetto applicato è quello personale); valore 0 →
-nessun limitato ammesso; valori non validi (decimale, negativo, >14,
-non numerico) → configurazione non valida con messaggio esplicito,
-`null` esplicito trattato come campo assente (mai come 0 o errore);
-cap individuali delle singole categorie invariati anche con tetto
-cumulativo 14.
-
-**Non modificati:** profili vegetariano/vegano, logica proteica,
-cataloghi, ricette, quantità, cap individuali delle categorie
-carboidrato, restyling grafico (nessuna sezione toccata oltre
-l'aggiunta del singolo campo richiesto).
-
-**SHA finale:** `40cb0ba11c6667be5bc6e4dcc3f5907c73cc05b8`.
-
----
-
-# Filone: Collegamento reale al motore delle 5 preferenze del Set utente
-
-Riguarda: `motor-v12.js`, `index.html` — collega realmente alla generazione
-corrente cinque preferenze già scritte in IndexedDB ma finora ignorate
-dal motore: `setProteineLimitate`, `setPocoTempo`, `cerealiNonGraditi`,
-`setVerdurePreferite`, `setVerdureDisattivate`.
-
-**SHA iniziale:** `045f175d627ff15e6898c358c0698b3034a2f3a5`.
-
-## 1. Commit `cd8599c` — caricamento centralizzato e collegamento ai punti reali di scelta
-
-**Problema riscontrato:** l'interfaccia scriveva correttamente le 5
-configurazioni in `impostazioni`, ma `caricaConfigurazioneNutrizionaleRisolta()`,
-`configRuntime()`, `poolAmmesso()`, la costruzione settimanale e
-`rigeneraPasto()` non le leggevano mai. Alcune funzioni presenti in
-`index.html` (`proponiRicettaAutomatica()`, `filtraContorniPerVerdureAttive()`,
-`scegliComponentiSecondo()`, `filtraContorniPerPool()`) davano
-l'impressione di applicarle, ma appartengono a un percorso precedente:
-operano su un campo (`ricetta.componente`) che il motore attuale non
-scrive mai su nessuna ricetta compilata — verificato con ricerca
-esaustiva, zero chiamanti reali raggiungibili dalla generazione
-corrente. `filtraContorniPerVerdureAttive()` contiene inoltre il
-fallback esplicitamente vietato (`return filtrati.length?filtrati:contorni`,
-riapre il pool non filtrato) — non attivo su alcun percorso vivo, ma
-segnalato come richiesto.
-
-**Architettura implementata:** un solo punto di caricamento,
-`caricaPreferenzeUtenteSet()` (nuova, in `motor-v12.js`) — un'unica
-lettura di tutte e 5 le chiavi IndexedDB per operazione, mai dentro i
-cicli dei candidati. Risolve `setVerdurePreferite` (nomi storici,
-formato persistente invariato) verso i relativi `variantId` una sola
-volta, tenendo solo le varianti che sono realmente verdura. Agganciata
-a `configRuntime()` come proprietà separata `userPreferences`, stessa
-cache di sessione già in uso per allergie/vincoli/tetti — nessuna
-seconda configurazione nutrizionale, nessuna duplicazione tra
-`index.html` e `motor-v12.js`. Invalidazione: aggiunta una chiamata a
-`invalidaConfigRuntime()` in tutti e 5 i punti di scrittura del Set in
-`index.html` (6 scritture totali: `setProteineLimitate` 1,
-`setPocoTempo` 1, `setVerdurePreferite` 2, `setVerdureDisattivate` 1,
-`cerealiNonGraditi` 1), perché la modifica diventi effettiva subito,
-senza attendere un riavvio.
-
-**Comportamento implementato per ciascuna chiave:**
-
-1. **`setVerdureDisattivate` (esclusione hard).** Filtro aggiunto in
-   `ricettaAmmessa()` — l'unico chokepoint universale del motore,
-   usato da `poolAmmesso()` (settimana, rigenerazione) e già usato da
-   `alternativeRollV/C/P` (Roll): un `variantId` disattivato in una
-   ricetta esclude sempre la ricetta, nessun fallback, nessuna
-   riapertura del pool. Coperto automaticamente: generazione
-   settimanale, rigenerazione, `rigeneraPasto` (Alternativa/cambio
-   piatto/Salvafrigo passano tutti da qui), Roll. Se il filtro rende
-   impossibile un pasto, l'errore esplicito già esistente
-   ("Nessuna composizione valida...") si propaga senza alcuna modifica
-   aggiuntiva: nessun percorso genera un piano parziale.
-2. **`setProteineLimitate` (preferenza negativa, al più una
-   categoria).** `opzioniProteinaPerSlot()` riordina l'array `targets`
-   restituito (non sgradite prima, sgradita per ultima — un pool
-   ordinato, nessun peso numerico); il chiamante prova già ogni target
-   in ordine fino al primo che chiude una composizione valida. La
-   cella fissata a mano in tabella resta invariata, mai annullata dalla
-   preferenza.
-3. **`cerealiNonGraditi` (preferenza negativa, per `ingredienteId`).**
-   `cercaCarboSeparato()`: per i soli candidati AUTO (mai FIXED)
-   riordina sia le chiavi carboidrato (`autoCandidati`, quando *tutti*
-   i candidati di una chiave contengono un cereale non gradito) sia le
-   ricette all'interno di una chiave già scelta. Collegamento sempre
-   tramite `ingredienteId`, mai per nome. **Limite noto e non risolto**:
-   il percorso "PX+C già combinato" (proteina che incorpora già un
-   carboidrato AUTO, dentro `costruisciPastoSequenziale`) non applica
-   questa preferenza — resta scoperto per la sola combinazione già
-   fusa in un'unica ricetta P+C, un caso strutturalmente meno comune
-   del carboidrato separato. Segnalato qui invece di essere corretto
-   senza autorizzazione, per restare nella correzione minima.
-4. **`setVerdurePreferite` (preferenza positiva).** Nomi risolti in
-   `variantId` una sola volta (vedi sopra). `ordinaVerdureProgrammazione()`
-   (usata da `completaResiduoVerduraRicette()`, a sua volta usata da
-   `chiudiPastoConVerdura()` e da `normalizzaRealizzazioniVerdura()`,
-   sia nella costruzione sequenziale sia nel Roll) applica la
-   preferenza *dopo* aver ordinato per deperibilità/programmazione
-   (invariata): tra soluzioni complete e valide, quelle con una
-   verdura favorita vengono provate prima; se nessuna la contiene,
-   l'ordine esistente resta l'unico criterio. Mai un obbligo, mai una
-   modifica alla formula/quantità V/S/G.
-5. **`setPocoTempo` — condizione di arresto, non implementata.** La
-   preferenza viene caricata da `caricaPreferenzeUtenteSet()` per
-   trasparenza (visibile in `userPreferences.pocoTempo`), ma non
-   altera alcun ordine di scelta. Verificato con ricerca esaustiva dei
-   campi disponibili in `db-ricette.json` (`categoria, classe,
-   composizioni, condimentiCompatibili, cotture, dose, gruppi,
-   ingredienti, mostraNomi, roll, stack, stackScope, testo1, testo2`)
-   e `ingredienti-new.json` (`allergeni, ancheColazione, bloccoManuale,
-   carboidrati, conservazione, cooldownGiorni, deperibilita,
-   fonteNutrizionale, formato, formatoRiordino, gradimento, grassi,
-   gruppo, kcal, nonRichiedeInventario, notaPorzione,
-   pesoPorzioneGrammi, porzione, proteine, quantificabile,
-   sottoCategoriaColazione, sottotipo, stock, unitaPorzione`): **nessun
-   campo strutturato distingue preparazioni fredde/rapide/compatibili
-   pane-friselle**, solo nomi liberi di cottura testuali ("al forno",
-   "in insalata", "sode", ecc.). L'incarico vieta esplicitamente di
-   dedurre la rapidità dal nome della ricetta o della cottura, e vieta
-   di inventare nuovi campi nel catalogo: condizione di arresto
-   applicata, nessuna implementazione, nessuna scelta autonoma di una
-   soluzione alternativa.
-
-**Funzioni legacy lasciate presenti, non usate per la correzione (zero
-chiamanti reali dimostrato, nessuna pulizia effettuata per restare
-nella correzione minima):** `proponiRicettaAutomatica()`,
-`filtraContorniPerVerdureAttive()` (con il fallback vietato, ma su un
-percorso morto), `scegliComponentiSecondo()`, `filtraContorniPerPool()`
-— tutte in `index.html`.
-
-**Funzioni modificate:** `motor-v12.js` — nuova `caricaPreferenzeUtenteSet()`;
-`configRuntime()` (nuova proprietà `userPreferences`); `ricettaAmmessa()`;
-`opzioniProteinaPerSlot()`; `cercaCarboSeparato()`; `ordinaVerdureProgrammazione()`;
-`completaResiduoVerduraRicette()`; `normalizzaRealizzazioniVerdura()`;
-`ruotaPasto()` (propagazione preferenze al Roll). `index.html` — 6
-scritture del Set (invalidazione runtime aggiunta).
-
-**Test eseguiti ed esito:** `tests/lotto-set-preferenze-runtime.test.js`
-(nuovo, unico file integrato richiesto) — 8 scenari con la pipeline
-reale (`generaPianoSettimana`/`rigeneraPasto`) e casualità controllata
-(tentativi limitati, mai migliaia di generazioni): tutti verdi,
-verificato fallire sul codice precedente e passare dopo la correzione.
-Lo scenario 6 ("poco tempo") verifica solo che impostare la preferenza
-non alteri/blocchi la generazione, coerente con la condizione di
-arresto — non è una prova che la preferenza "funzioni", perché non è
-implementata.
-```
-node tests/lotto-set-preferenze-runtime.test.js  → ok
-node tests/lotto-g-weekly-generation.test.js      → ok (vedi nota sotto)
-node tests/lotto-e-root-user-set.test.js          → ok
-node --check motor-v12.js                          → OK
-validazione script index.html                      → OK
-git diff --check                                    → pulito
-```
-**Nota su `lotto-e-root-user-set.test.js`**: è in parte un test
-*statico* (verifica per sottostringa la presenza di determinati
-pattern nel sorgente di `index.html`/`motor-v12.js`), in parte un test
-funzionale reale sul resolver dei carboidrati — dichiarato qui come
-richiesto, non presentato come prova funzionale completa.
-
-**Nota su `lotto-g-weekly-generation.test.js`**: durante la verifica
-finale è emersa una flakiness nello scenario limite "verdura ricorrente
-obbligatoria per tutti e 7 i giorni di pranzo" (un vincolo già di per
-sé al limite della fattibilità). Con un confronto interlacciato a
-campione (20 esecuzioni per versione, codice corrente vs commit
-`045f175` prima di questo intervento) il tasso di successo è stato
-16/20 con questo intervento contro 18/20 senza — una differenza che
-rientra nel rumore statistico atteso per un campione di questa
-dimensione (il generatore non usa un seed fisso). Non è stata isolata
-alcuna causa deterministica riconducibile alle modifiche di questo
-intervento nonostante un'analisi mirata (bisection su
-`ordinaVerdureProgrammazione`, che in assenza di `setVerdurePreferite`
-configurato esegue un ritorno anticipato senza alcuna differenza di
-comportamento). Il test passa in modo affidabile nella maggioranza
-delle esecuzioni in entrambe le versioni.
-
-**Non modificati:** tabelle carboidrati/proteine (logica già corretta
-nei filoni precedenti, non riaperta), `db-ricette.json`,
-`ingredienti-new.json`, schema IndexedDB, profili vegetariano/vegano,
-`verduraRicorrente`/`verduraRicorrentePasti`/`colazionePreferita`/
-`colazionePreferitaGiorni`/`colazioneIngredientiEsclusi`/
-`tettiIngredienteSettimanali`/salvataggio atomico del Set/protezione
-uscita con modifiche non salvate (tutti verificati invariati e
-funzionanti, vedi scenario 7 del test).
-
-**SHA finale:** `cd8599c358a553c72f45ff4c01f14566f3f1f7b2`.
-
----
-
-## 2. Commit `41d2897` — correzione: Patate, cereali non graditi su P+C, propagazione completa verdure preferite, semantica definitiva poco tempo, errore verdura ricorrente/non disponibile
-
-**SHA iniziale di questo intervento correttivo:** `076378ad183ae632f6af8abf6a29fa1c3b8027b7`.
-
-**Difetti rimasti nel commit `cd8599c` (diagnosi ricevuta, confermata):**
-1. `setPocoTempo` veniva letto da `caricaPreferenzeUtenteSet()` ma intenzionalmente ignorato — nessun effetto sulla generazione.
-2. `cerealiNonGraditi` veniva applicato solo al percorso "carboidrato separato" (`cercaCarboSeparato`), mai alle ricette concrete già combinate P+C.
-3. `setVerdurePreferite` influenzava solo il residuo vegetale finale (`completaResiduoVerduraRicette`), non le fasi P/G, C/S o le ricette P+C+V combinate.
-4. `Patate` veniva trattata come verdura sia in `index.html` (`renderSetVerdure`, con l'eccezione esplicita `v.nome.toLowerCase()==='patate'`) sia in `motor-v12.js` (`caricaPreferenzeUtenteSet`, stessa eccezione), nonostante catalogo (`gruppo:'carboidrati'`), baseline e specifica la classifichino come carboidrato — un vecchio `variantId` Patate in `setVerdureDisattivate` poteva quindi bloccare accidentalmente il carboidrato FIXED Patate.
-
-I test del commit `cd8599c` erano inoltre in parte probabilistici (confronto tra medie di generazioni casuali) e non dimostravano la precedenza dichiarata in modo deterministico.
-
-**Blocco 1 — Correzione Patate:**
-- `index.html:renderSetVerdure()` — rimossa l'eccezione `||v.nome.toLowerCase()==='patate'`: la lista mostra esclusivamente varianti con `base.gruppo==='verdura'`.
-- `index.html:renderSetPreferenzeMenu()` — nuovo insieme `nomiVerdureReali` (da `varianti`+`ingredienti`, `base.gruppo==='verdura'`), usato per filtrare sia le verdure stagionali sia quelle in inventario prima di proporle come preferite: Patate (e ogni altro carboidrato) non può più entrare in `setVerdurePreferite`.
-- `motor-v12.js:caricaPreferenzeUtenteSet()` — nuova mappa `baseById`; sia `setVerdurePreferite` sia `setVerdureDisattivate` validano ora identicamente `base.gruppo==='verdura'`, nessuna eccezione per nome. Un vecchio `variantId` Patate già salvato in `setVerdureDisattivate` viene semplicemente ignorato dal runtime (nessuna migrazione, nessuna cancellazione del dato utente): disattivare una verdura non può più bloccare accidentalmente il carboidrato Patate FIXED.
-- `renderSetVerduraRicorrente()` non toccata (già corretta, usava solo `base.gruppo==='verdura'`).
-
-**Blocco 2 — `cerealiNonGraditi` completato su P+C:**
-- Nuovo helper generico `stablePartition(arr,predicate)` (due `filter`, mai un `sort` su chiave booleana, mai un punteggio).
-- `motor-v12.js:costruisciPastoSequenziale()` — nel percorso P+C.AUTO (proteina già combinata con un carboidrato AUTO-ammesso), i candidati vengono partizionati: prima quelli il cui carboidrato incorporato non appartiene a `cerealiNonGraditiIds`, poi gli altri — mai eliminati. Il percorso P+C.user (FIXED) resta interamente fuori da questa partizione, invariato: una richiesta FIXED resta sempre superiore alla preferenza negativa. Collegamento sempre tramite `ingredienteId`, mai per nome. Ordine strutturale invariato: P+C.user → P libero + C.user → P+C.AUTO/P libero + C.AUTO (verificato da `tests/lotto-carboidrati-priorita-pxcuser.test.js`, 100/100 generazioni).
-
-**Blocco 3 — `setVerdurePreferite` propagato a tutte le fasi:**
-- Nuovo helper centralizzato `ordinaPerVerdurePreferite(pool,preferredVariantIds)` — riceve un pool già filtrato e valido, sposta in testa (partizione stabile, mai un'eliminazione) i candidati che contengono almeno un `variantId` preferito tra i loro ingredienti, qualunque sia il ruolo (P/G, C/S, V); accetta anche candidati-pasto composti da più ricette.
-- Applicato a: pool proteico generale in `costruisciPastoSequenziale()` (copre sia P+C.user sia ogni "P con G o V", sempre dopo la priorità inventario di Salvafrigo quando presente — `applicaPrioritaInventario` restituisce già un solo livello alla volta, quindi riordinare dopo resta sempre "tra candidati dello stesso livello"); ricette P+C.AUTO (rifinisce, dopo la partizione dominante per cereali non graditi); ricette carboidrato separate in `cercaCarboSeparato()` (sia FIXED sia AUTO); `ordinaVerdureProgrammazione()` (ora delega all'helper — copre sia il residuo V di `completaResiduoVerduraRicette()` sia le ricomposizioni automatiche dopo Roll, già agganciate nel commit precedente).
-- Verdura ricorrente e vincoli hard restano sempre dominanti: la preferenza opera solo tra candidati già validati da `chiudiPastoConVerdura` (che verifica `ctx.requiredVegetableVariantId` indipendentemente dall'ordine di tentativo) — nessuna modifica a questa validazione.
-
-**Blocco 4 — `setPocoTempo` implementato (semantica applicativa, non temporale):**
-- Nuovo helper puro `ordinaCarboidratiPerPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo)` — se `pocoTempoAttivo` è falso restituisce l'ordine invariato; se vero produce quattro livelli (FIXED rapidi pane/friselle, altri FIXED, AUTO rapido solo "pane", altri AUTO), ordine relativo preesistente conservato in ciascun livello. Friselle non è mai introdotta come AUTO (ha un tetto PDF, può comparire solo se già in `residuiFissi`).
-- `ctx.pasto` propagato da tutti i chiamanti vivi di `costruisciPastoSequenziale()`: `risolviSettimanaSequenziale()` (tramite `ctxPasto`), `rigeneraPasto()`, `risolviSlotSingolo()`; per transitività anche `completaPastoConBloccate()` (lucchetti, non modificata direttamente — riceve `ctx.pasto` già valorizzato dal chiamante e delega a `costruisciPastoSequenziale()` per i ruoli non bloccati, comportamento preesistente). Nessuna lettura IndexedDB introdotta nei cicli: il valore arriva già risolto da `ctx.runtimeConfig.userPreferences`.
-- Testo UI in `index.html` sostituito: non promette più "preparazioni fredde" (nessun metadato di catalogo lo giustifica).
-
-**Blocco 5 — Errore esplicito per verdura ricorrente disattivata:**
-- `motor-v12.js:generaPianoSettimana()` — prima di generare, se `verduraRicorrente` è selezionata per almeno uno slot (`verduraRicorrentePasti` non vuoto) e la stessa variante è tra le vere verdure disattivate (già validate `base.gruppo==='verdura'`, Patate esclusa), restituisce `{generati:[],errori:['La verdura ricorrente selezionata risulta non disponibile. Riattivala oppure modifica la programmazione ricorrente.']}` senza generare nulla — nessuna riabilitazione, nessuna scrittura parziale (verificato: zero record in `piano`).
-
-**Test sostitutivo (unico file modificato, nessun altro creato):** `tests/lotto-set-preferenze-runtime.test.js` riscritto integralmente, eliminate tutte le verifiche probabilistiche ("compare almeno una volta entro N generazioni", confronto fra medie, verifica del solo massimo nutrizionale, test che considerava corretto `setPocoTempo` perché non alterava nulla). 13 scenari deterministici, fixture minime + helper puri esportati (`stablePartition`, `ordinaPerVerdurePreferite`, `ordinaCarboidratiPerPocoTempo`, `caricaPreferenzeUtenteSet`) per gli ordinamenti; pipeline reale solo per filtro hard, errore esplicito e assenza di scritture (scenari 2, 3, 4, 8, 12, 13 — questi ultimi tre con soglie di conteggio deterministiche, mai medie). Verificato: il file fallisce sul codice del commit `cd8599c`/`076378a` (funzione `caricaPreferenzeUtenteSet` non ancora esportata, blocchi non implementati) e passa dopo questa correzione.
-
-**Esito reale dei test eseguiti:**
-```
-node --check motor-v12.js                              → OK
-node tests/lotto-set-preferenze-runtime.test.js         → ok (13/13 scenari, stabile su esecuzioni ripetute)
-node tests/lotto-g-weekly-generation.test.js            → esito variabile, vedi nota sotto
-node tests/lotto-carboidrati-priorita-pxcuser.test.js   → ok (100/100 generazioni, priorità P+C.user intatta)
-node tests/lotto-e-root-user-set.test.js                → ok
-git diff --check                                        → pulito
-```
-
-**Nota su `lotto-g-weekly-generation.test.js` (registrata come richiesto, senza attribuire automaticamente il fallimento al rumore):** in una delle esecuzioni di verifica finale il test è fallito sullo stesso scenario limite già documentato nella sezione precedente di questo registro ("verdura ricorrente obbligatoria per tutti e 7 i giorni di pranzo"). Non è stato semplicemente ripetuto fino al successo: è stato eseguito un confronto controllato e interlacciato (15 esecuzioni per versione) tra il codice corrente di questo intervento e il commit di partenza `076378a` (prima di questa correzione) — esito: 13/15 (87%) con questo intervento contro 11/15 (73%) con la versione precedente. Il codice corrente non mostra quindi un peggioramento della fattibilità rispetto alla baseline; la differenza osservata rientra nel rumore statistico atteso per un campione di questa dimensione (il generatore non usa un seed fisso). Nessun ordinamento introdotto in questo intervento risulta quindi aver alterato la fattibilità di questo scenario.
-
-**File modificati (solo quelli ammessi):** `motor-v12.js`, `index.html`, `tests/lotto-set-preferenze-runtime.test.js`, `docs/REGISTRO_MODIFICHE.md`.
-
-**Non modificati (invarianti rispettati):** resolver nutrizionale, frequenze/quantità, tabella carboidrati, tabella proteine, algebra V/S/G, rotazione proteica giornaliera, verdura ricorrente (logica di `verduraRicorrenteRichiesta`/`chiudiPastoConVerdura` invariata), lucchetti (`completaPastoConBloccate` non modificata direttamente), snapshot delle realizzazioni, inventario e spesa, `db-ricette.json`, `ingredienti-new.json`, schema IndexedDB, profili vegetariano/vegano, restyling grafico. `ricettaAmmessa()` non toccata (il filtro hard verdure disattivate era già corretto nel commit `cd8599c`).
-
-**SHA finale:** `41d28974290c5c4c27edc31ef7a0c537662b6396`.
-
----
-
-## 3. Commit `31be47a` — correzione: setPocoTempo esaustivo per livello, non solo per ordine della proteina
-
-**SHA iniziale di questa correzione:** `fb3fa7d55131dc3decf66ee4677a91ca401f678d`.
-
-**Difetto concreto riscontrato (nel commit `41d2897`):** `ordinaCarboidratiPerPocoTempo()` riordinava correttamente le chiavi carboidrato nei 4 livelli, ma `costruisciPastoSequenziale()` continuava a scorrere le ricette PRIMA per ordine della proteina (`ordinaPerStackPoiCaso`, casuale) e solo poi verificava se il carboidrato incorporato/associato apparteneva a un livello prioritario — mai un'esaustione reale del livello corrente su tutte le proteine prima di passare al successivo. Conseguenze concrete: (a) una ricetta P+C con un carboidrato non rapido poteva essere scelta prima di una composizione completa con pane, se la sua proteina usciva prima nell'ordine casuale; (b) tra due ricette P+C FIXED, quella non rapida poteva precedere quella rapida; (c) in `completaPastoConBloccate()`, il ramo "proteina bloccata, carboidrato libero" derivava `fissiRimasti`/`autoCandidati` da `carbCandidati` **senza** applicare affatto `ordinaCarboidratiPerPocoTempo`; (d) i test 9–11 esistenti verificavano solo l'helper puro, mai che la pipeline reale scegliesse davvero il carboidrato prioritario.
-
-**Correzione applicata:**
-- Nuovo helper centralizzato `livelliCarboidratiPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo)` — restituisce i 4 livelli come **gruppi separati** (non un solo array appiattito), così i chiamanti possono esaurire un livello su tutte le proteine prima di passare al successivo. `ordinaCarboidratiPerPocoTempo()` (usata da `cercaCarboSeparato`, che già itera le chiavi come ciclo esterno) ora delega a questo stesso helper — nessuna logica duplicata, comportamento esterno verificato invariato (test 9–11 ancora verdi).
-- `costruisciPastoSequenziale()` ristrutturata: sia il ciclo P+C.user (FIXED) sia il ciclo P+C.AUTO/carboidrato separato ora iterano **per livello, poi per proteina dentro ciascun livello** — non più il contrario. Per ciascun livello, `cercaCarboSeparato` riceve un `autoCandidati` già ristretto alle sole chiavi di quel livello. Quando `pocoTempoAttivo` è falso, i livelli "rapidi" sono vuoti: un solo passaggio sui livelli "altri" (tutti i FIXED, poi tutti gli AUTO), comportamento identico a prima per costruzione dell'helper.
-- `completaPastoConBloccate()`, ramo "proteina bloccata, carboidrato libero": `carbCandidati` viene ora riordinato con lo stesso helper e lo stesso `ctx.pasto` prima di derivare `fissiRimasti`/`autoCandidati` — stessa priorità di `costruisciPastoSequenziale`.
-- Corretto il commento presso `caricaPreferenzeUtenteSet()` che affermava ancora "setPocoTempo... NON utilizzato per ordinare le composizioni": ora descrive il comportamento reale.
-
-**Percorsi reali coperti (verificato con la pipeline reale, `rigeneraPasto`/`generaPianoSettimana`):**
-- generazione settimanale e rigenerazione (`rigeneraPasto`/Alternativa/Cambia piatto: stessa funzione);
-- carboidrato separato (dominante nel catalogo attuale) e ricetta P+C già combinata (stesso ciclo a livelli, stessa restrizione);
-- proteina bloccata dalla Programmazione (`completaPastoConBloccate`);
-- fallback al livello successivo quando pane/friselle non chiude il pasto;
-- nessuna alterazione della cena quando la preferenza è impostata solo a pranzo;
-- lucchetti, carboidrato già bloccato, esclusioni hard, verdura ricorrente, copertura V/S/G e priorità Salvafrigo: nessuna modifica, tutti verificati superiori e invariati (`lotto-carboidrati-priorita-pxcuser.test.js`: 100/100 generazioni, priorità P+C.user intatta).
-
-**Limite reale di catalogo, riscontrato e non modificato (come richiesto: documentato, non corretto):** il catalogo compilato contiene solo **5 ricette P+C già combinate** in totale (`nr_8_0/1/2/3` con farro/orzo/pasta, `nr_32_0` con pane), a fronte di **85 ricette proteina-sola** per lo stesso token — il percorso "carboidrato separato" (già corretto, dominante per costruzione statistica) rende nella pratica impossibile costruire, con dati di catalogo reali e non modificati, uno scenario che isoli **esclusivamente** il sotto-percorso P+C-combinato dal sotto-percorso separato già funzionante (le due uniche ricette P+C-combinate con proteina "Prosciutto crudo" condividono l'identico ingrediente proteico con l'unica ricetta proteina-sola equivalente: bloccare l'una per isolare l'altra le esclude entrambe). La correzione del codice per il ramo P+C-combinato è comunque applicata identicamente (stesso ciclo a livelli, stessa restrizione per `chiaviLivelloSet`, verificabile per lettura diretta in `costruisciPastoSequenziale()`) e i test 14–19 dimostrano che l'esito osservabile complessivo (carboidrato rapido vince quando possibile, fallback corretto altrimenti) resta corretto end-to-end attraverso entrambi i sotto-percorsi, senza distinguerli. **Non è stato modificato alcun catalogo per aggirare questo limite**, come richiesto.
-
-**"Friselle" nei test:** il catalogo compilato non contiene alcuna ricetta con `friselle` (limite di catalogo già noto e riservato a Cwe in filoni precedenti, non toccato qui). Dove il compito chiede esplicitamente "friselle FIXED vince su un altro FIXED non rapido" (test 16), si dimostra con **pane FIXED** al suo posto: il codice tratta le due chiavi in `CHIAVI_CARBO_RAPIDE` in modo identico, senza alcuna distinzione — la prova resta equivalente per il meccanismo verificato (partizione FIXED rapidi/altri), pur non usando letteralmente friselle.
-
-**Test deterministici (unico file modificato, nessun altro creato):** aggiunti gli scenari 14–19 a `tests/lotto-set-preferenze-runtime.test.js` (i precedenti 1–13 restano invariati, tutti ancora verdi) — tutti con la pipeline reale, un'unica chiamata per l'asserzione principale (mai loop "fino a N tentativi" come prova, mai confronti statistici tra medie): 14) pane AUTO vince su un pasto altrimenti composto con carboidrati non rapidi, in un'unica chiamata; 15) senza la preferenza, varietà reale osservata (controprova che 14 non sia un caso); 16) pane FIXED vince su un altro FIXED non rapido, con controprova che senza la preferenza entrambi restano scelte possibili; 17) con proteina bloccata da un lucchetto, la priorità pane/friselle resta identica, il lucchetto non viene mai toccato; 18) per una categoria dove pane non chiude mai il pasto (formaggi), il fallback al livello successivo è verificato su più chiamate indipendenti, mai forzato; 19) poco tempo solo a pranzo non altera la varietà osservata a cena. Verificato: il file fallisce sul codice del commit `41d2897` (limitatamente agli scenari 14–19: gli scenari 1–13 passano anche sul codice precedente, poiché non toccati da questa correzione) e passa dopo questa correzione.
-
-**File modificati (solo quelli ammessi):** `motor-v12.js`, `tests/lotto-set-preferenze-runtime.test.js`, `docs/REGISTRO_MODIFICHE.md`.
-
-**Test eseguiti (una sola volta, come richiesto) ed esito:**
-```
-node --check motor-v12.js                              → OK
-node tests/lotto-set-preferenze-runtime.test.js         → ok (19/19 scenari)
-node tests/lotto-g-weekly-generation.test.js            → ok
-node tests/lotto-carboidrati-priorita-pxcuser.test.js   → ok (100/100 generazioni)
-node tests/lotto-e-root-user-set.test.js                → ok
-git diff --check                                        → pulito
-```
-Nessuna regressione emersa fuori da questi file.
-
-**Non modificati:** `index.html`, resolver nutrizionale, cataloghi, IndexedDB, frequenze, quantità, algebra V/S/G, rotazione proteica, profili vegetariano/vegano, restyling grafico.
-
-**SHA finale:** `31be47a8067d987f24a80a2c7f13ed6867231eb4`.
+**SHA dell'intervento grafico:** `5e5e0e4566f4626674f2d51f6ce1fd54313f2549`.
 
 ---
