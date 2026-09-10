@@ -1992,7 +1992,7 @@ dal motore: `setProteineLimitate`, `setPocoTempo`, `cerealiNonGraditi`,
 
 **SHA iniziale:** `045f175d627ff15e6898c358c0698b3034a2f3a5`.
 
-## 1. Commit `(in preparazione)` — caricamento centralizzato e collegamento ai punti reali di scelta
+## 1. Commit `cd8599c` — caricamento centralizzato e collegamento ai punti reali di scelta
 
 **Problema riscontrato:** l'interfaccia scriveva correttamente le 5
 configurazioni in `impostazioni`, ma `caricaConfigurazioneNutrizionaleRisolta()`,
@@ -2150,6 +2150,6 @@ nei filoni precedenti, non riaperta), `db-ricette.json`,
 uscita con modifiche non salvate (tutti verificati invariati e
 funzionanti, vedi scenario 7 del test).
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `cd8599c358a553c72f45ff4c01f14566f3f1f7b2`.
 
 ---
