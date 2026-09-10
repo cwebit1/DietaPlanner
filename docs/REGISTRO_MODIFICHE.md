@@ -2154,7 +2154,7 @@ funzionanti, vedi scenario 7 del test).
 
 ---
 
-## 2. Commit `(in preparazione)` — correzione: Patate, cereali non graditi su P+C, propagazione completa verdure preferite, semantica definitiva poco tempo, errore verdura ricorrente/non disponibile
+## 2. Commit `41d2897` — correzione: Patate, cereali non graditi su P+C, propagazione completa verdure preferite, semantica definitiva poco tempo, errore verdura ricorrente/non disponibile
 
 **SHA iniziale di questo intervento correttivo:** `076378ad183ae632f6af8abf6a29fa1c3b8027b7`.
 
@@ -2207,6 +2207,6 @@ git diff --check                                        → pulito
 
 **Non modificati (invarianti rispettati):** resolver nutrizionale, frequenze/quantità, tabella carboidrati, tabella proteine, algebra V/S/G, rotazione proteica giornaliera, verdura ricorrente (logica di `verduraRicorrenteRichiesta`/`chiudiPastoConVerdura` invariata), lucchetti (`completaPastoConBloccate` non modificata direttamente), snapshot delle realizzazioni, inventario e spesa, `db-ricette.json`, `ingredienti-new.json`, schema IndexedDB, profili vegetariano/vegano, restyling grafico. `ricettaAmmessa()` non toccata (il filtro hard verdure disattivate era già corretto nel commit `cd8599c`).
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `41d28974290c5c4c27edc31ef7a0c537662b6396`.
 
 ---
