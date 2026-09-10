@@ -1982,3 +1982,174 @@ l'aggiunta del singolo campo richiesto).
 **SHA finale:** `40cb0ba11c6667be5bc6e4dcc3f5907c73cc05b8`.
 
 ---
+
+# Filone: Collegamento reale al motore delle 5 preferenze del Set utente
+
+Riguarda: `motor-v12.js`, `index.html` — collega realmente alla generazione
+corrente cinque preferenze già scritte in IndexedDB ma finora ignorate
+dal motore: `setProteineLimitate`, `setPocoTempo`, `cerealiNonGraditi`,
+`setVerdurePreferite`, `setVerdureDisattivate`.
+
+**SHA iniziale:** `045f175d627ff15e6898c358c0698b3034a2f3a5`.
+
+## 1. Commit `(in preparazione)` — caricamento centralizzato e collegamento ai punti reali di scelta
+
+**Problema riscontrato:** l'interfaccia scriveva correttamente le 5
+configurazioni in `impostazioni`, ma `caricaConfigurazioneNutrizionaleRisolta()`,
+`configRuntime()`, `poolAmmesso()`, la costruzione settimanale e
+`rigeneraPasto()` non le leggevano mai. Alcune funzioni presenti in
+`index.html` (`proponiRicettaAutomatica()`, `filtraContorniPerVerdureAttive()`,
+`scegliComponentiSecondo()`, `filtraContorniPerPool()`) davano
+l'impressione di applicarle, ma appartengono a un percorso precedente:
+operano su un campo (`ricetta.componente`) che il motore attuale non
+scrive mai su nessuna ricetta compilata — verificato con ricerca
+esaustiva, zero chiamanti reali raggiungibili dalla generazione
+corrente. `filtraContorniPerVerdureAttive()` contiene inoltre il
+fallback esplicitamente vietato (`return filtrati.length?filtrati:contorni`,
+riapre il pool non filtrato) — non attivo su alcun percorso vivo, ma
+segnalato come richiesto.
+
+**Architettura implementata:** un solo punto di caricamento,
+`caricaPreferenzeUtenteSet()` (nuova, in `motor-v12.js`) — un'unica
+lettura di tutte e 5 le chiavi IndexedDB per operazione, mai dentro i
+cicli dei candidati. Risolve `setVerdurePreferite` (nomi storici,
+formato persistente invariato) verso i relativi `variantId` una sola
+volta, tenendo solo le varianti che sono realmente verdura. Agganciata
+a `configRuntime()` come proprietà separata `userPreferences`, stessa
+cache di sessione già in uso per allergie/vincoli/tetti — nessuna
+seconda configurazione nutrizionale, nessuna duplicazione tra
+`index.html` e `motor-v12.js`. Invalidazione: aggiunta una chiamata a
+`invalidaConfigRuntime()` in tutti e 5 i punti di scrittura del Set in
+`index.html` (6 scritture totali: `setProteineLimitate` 1,
+`setPocoTempo` 1, `setVerdurePreferite` 2, `setVerdureDisattivate` 1,
+`cerealiNonGraditi` 1), perché la modifica diventi effettiva subito,
+senza attendere un riavvio.
+
+**Comportamento implementato per ciascuna chiave:**
+
+1. **`setVerdureDisattivate` (esclusione hard).** Filtro aggiunto in
+   `ricettaAmmessa()` — l'unico chokepoint universale del motore,
+   usato da `poolAmmesso()` (settimana, rigenerazione) e già usato da
+   `alternativeRollV/C/P` (Roll): un `variantId` disattivato in una
+   ricetta esclude sempre la ricetta, nessun fallback, nessuna
+   riapertura del pool. Coperto automaticamente: generazione
+   settimanale, rigenerazione, `rigeneraPasto` (Alternativa/cambio
+   piatto/Salvafrigo passano tutti da qui), Roll. Se il filtro rende
+   impossibile un pasto, l'errore esplicito già esistente
+   ("Nessuna composizione valida...") si propaga senza alcuna modifica
+   aggiuntiva: nessun percorso genera un piano parziale.
+2. **`setProteineLimitate` (preferenza negativa, al più una
+   categoria).** `opzioniProteinaPerSlot()` riordina l'array `targets`
+   restituito (non sgradite prima, sgradita per ultima — un pool
+   ordinato, nessun peso numerico); il chiamante prova già ogni target
+   in ordine fino al primo che chiude una composizione valida. La
+   cella fissata a mano in tabella resta invariata, mai annullata dalla
+   preferenza.
+3. **`cerealiNonGraditi` (preferenza negativa, per `ingredienteId`).**
+   `cercaCarboSeparato()`: per i soli candidati AUTO (mai FIXED)
+   riordina sia le chiavi carboidrato (`autoCandidati`, quando *tutti*
+   i candidati di una chiave contengono un cereale non gradito) sia le
+   ricette all'interno di una chiave già scelta. Collegamento sempre
+   tramite `ingredienteId`, mai per nome. **Limite noto e non risolto**:
+   il percorso "PX+C già combinato" (proteina che incorpora già un
+   carboidrato AUTO, dentro `costruisciPastoSequenziale`) non applica
+   questa preferenza — resta scoperto per la sola combinazione già
+   fusa in un'unica ricetta P+C, un caso strutturalmente meno comune
+   del carboidrato separato. Segnalato qui invece di essere corretto
+   senza autorizzazione, per restare nella correzione minima.
+4. **`setVerdurePreferite` (preferenza positiva).** Nomi risolti in
+   `variantId` una sola volta (vedi sopra). `ordinaVerdureProgrammazione()`
+   (usata da `completaResiduoVerduraRicette()`, a sua volta usata da
+   `chiudiPastoConVerdura()` e da `normalizzaRealizzazioniVerdura()`,
+   sia nella costruzione sequenziale sia nel Roll) applica la
+   preferenza *dopo* aver ordinato per deperibilità/programmazione
+   (invariata): tra soluzioni complete e valide, quelle con una
+   verdura favorita vengono provate prima; se nessuna la contiene,
+   l'ordine esistente resta l'unico criterio. Mai un obbligo, mai una
+   modifica alla formula/quantità V/S/G.
+5. **`setPocoTempo` — condizione di arresto, non implementata.** La
+   preferenza viene caricata da `caricaPreferenzeUtenteSet()` per
+   trasparenza (visibile in `userPreferences.pocoTempo`), ma non
+   altera alcun ordine di scelta. Verificato con ricerca esaustiva dei
+   campi disponibili in `db-ricette.json` (`categoria, classe,
+   composizioni, condimentiCompatibili, cotture, dose, gruppi,
+   ingredienti, mostraNomi, roll, stack, stackScope, testo1, testo2`)
+   e `ingredienti-new.json` (`allergeni, ancheColazione, bloccoManuale,
+   carboidrati, conservazione, cooldownGiorni, deperibilita,
+   fonteNutrizionale, formato, formatoRiordino, gradimento, grassi,
+   gruppo, kcal, nonRichiedeInventario, notaPorzione,
+   pesoPorzioneGrammi, porzione, proteine, quantificabile,
+   sottoCategoriaColazione, sottotipo, stock, unitaPorzione`): **nessun
+   campo strutturato distingue preparazioni fredde/rapide/compatibili
+   pane-friselle**, solo nomi liberi di cottura testuali ("al forno",
+   "in insalata", "sode", ecc.). L'incarico vieta esplicitamente di
+   dedurre la rapidità dal nome della ricetta o della cottura, e vieta
+   di inventare nuovi campi nel catalogo: condizione di arresto
+   applicata, nessuna implementazione, nessuna scelta autonoma di una
+   soluzione alternativa.
+
+**Funzioni legacy lasciate presenti, non usate per la correzione (zero
+chiamanti reali dimostrato, nessuna pulizia effettuata per restare
+nella correzione minima):** `proponiRicettaAutomatica()`,
+`filtraContorniPerVerdureAttive()` (con il fallback vietato, ma su un
+percorso morto), `scegliComponentiSecondo()`, `filtraContorniPerPool()`
+— tutte in `index.html`.
+
+**Funzioni modificate:** `motor-v12.js` — nuova `caricaPreferenzeUtenteSet()`;
+`configRuntime()` (nuova proprietà `userPreferences`); `ricettaAmmessa()`;
+`opzioniProteinaPerSlot()`; `cercaCarboSeparato()`; `ordinaVerdureProgrammazione()`;
+`completaResiduoVerduraRicette()`; `normalizzaRealizzazioniVerdura()`;
+`ruotaPasto()` (propagazione preferenze al Roll). `index.html` — 6
+scritture del Set (invalidazione runtime aggiunta).
+
+**Test eseguiti ed esito:** `tests/lotto-set-preferenze-runtime.test.js`
+(nuovo, unico file integrato richiesto) — 8 scenari con la pipeline
+reale (`generaPianoSettimana`/`rigeneraPasto`) e casualità controllata
+(tentativi limitati, mai migliaia di generazioni): tutti verdi,
+verificato fallire sul codice precedente e passare dopo la correzione.
+Lo scenario 6 ("poco tempo") verifica solo che impostare la preferenza
+non alteri/blocchi la generazione, coerente con la condizione di
+arresto — non è una prova che la preferenza "funzioni", perché non è
+implementata.
+```
+node tests/lotto-set-preferenze-runtime.test.js  → ok
+node tests/lotto-g-weekly-generation.test.js      → ok (vedi nota sotto)
+node tests/lotto-e-root-user-set.test.js          → ok
+node --check motor-v12.js                          → OK
+validazione script index.html                      → OK
+git diff --check                                    → pulito
+```
+**Nota su `lotto-e-root-user-set.test.js`**: è in parte un test
+*statico* (verifica per sottostringa la presenza di determinati
+pattern nel sorgente di `index.html`/`motor-v12.js`), in parte un test
+funzionale reale sul resolver dei carboidrati — dichiarato qui come
+richiesto, non presentato come prova funzionale completa.
+
+**Nota su `lotto-g-weekly-generation.test.js`**: durante la verifica
+finale è emersa una flakiness nello scenario limite "verdura ricorrente
+obbligatoria per tutti e 7 i giorni di pranzo" (un vincolo già di per
+sé al limite della fattibilità). Con un confronto interlacciato a
+campione (20 esecuzioni per versione, codice corrente vs commit
+`045f175` prima di questo intervento) il tasso di successo è stato
+16/20 con questo intervento contro 18/20 senza — una differenza che
+rientra nel rumore statistico atteso per un campione di questa
+dimensione (il generatore non usa un seed fisso). Non è stata isolata
+alcuna causa deterministica riconducibile alle modifiche di questo
+intervento nonostante un'analisi mirata (bisection su
+`ordinaVerdureProgrammazione`, che in assenza di `setVerdurePreferite`
+configurato esegue un ritorno anticipato senza alcuna differenza di
+comportamento). Il test passa in modo affidabile nella maggioranza
+delle esecuzioni in entrambe le versioni.
+
+**Non modificati:** tabelle carboidrati/proteine (logica già corretta
+nei filoni precedenti, non riaperta), `db-ricette.json`,
+`ingredienti-new.json`, schema IndexedDB, profili vegetariano/vegano,
+`verduraRicorrente`/`verduraRicorrentePasti`/`colazionePreferita`/
+`colazionePreferitaGiorni`/`colazioneIngredientiEsclusi`/
+`tettiIngredienteSettimanali`/salvataggio atomico del Set/protezione
+uscita con modifiche non salvate (tutti verificati invariati e
+funzionanti, vedi scenario 7 del test).
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

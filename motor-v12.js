@@ -890,6 +890,55 @@ async function registraUtilizzo(r,data){
   await salvaTracking();
 }
 
+/* Caricamento centralizzato delle 5 preferenze del Set utente non ancora
+   collegate al motore (setProteineLimitate, setPocoTempo, cerealiNonGraditi,
+   setVerdurePreferite, setVerdureDisattivate). Un'unica lettura IndexedDB
+   per operazione (mai dentro i cicli dei candidati): il risultato viene
+   agganciato a configRuntime() (vedi sotto), stesso pattern di cache di
+   sessione già usato per allergie/vincoli/weeklyLimits, invalidato dagli
+   stessi punti di salvataggio del Set (vedi index.html).
+   setProteineLimitate: preferenza negativa, al più una categoria - mai
+   un'esclusione (non viene mai zero-ato un max, resta un semplice ordine
+   di preferenza applicato a valle).
+   setPocoTempo: caricato per completezza/trasparenza del Set, ma NON
+   utilizzato per ordinare le composizioni - vedi nota in
+   docs/REGISTRO_MODIFICHE.md: il catalogo non possiede un metadato
+   strutturato che distingua preparazioni fredde/rapide/pane-friselle, e
+   dedurlo dal nome della ricetta o della cottura è esplicitamente vietato.
+   cerealiNonGraditi: ID BASE ingrediente (mai nomi), preferenza negativa.
+   setVerdurePreferite: formato storico a nomi variante (invariato in
+   questo intervento); risolto qui, una sola volta, verso i relativi
+   variantId - solo le varianti che sono realmente verdura (stesso
+   criterio già usato dal Set per popolare la lista), mai un obbligo.
+   setVerdureDisattivate: variantId, esclusione hard dalla proposta
+   automatica - nessun fallback che la riabiliti. */
+async function caricaPreferenzeUtenteSet(){
+  const vuoto={proteinaMenoGradita:null,pocoTempo:{pranzo:false,cena:false},cerealiNonGraditiIds:new Set(),verdurePreferiteVariantIds:new Set(),verdureDisattivateVariantIds:new Set()};
+  if(typeof getOne!=='function')return vuoto;
+  const [lim,tempo,cereali,vPref,vOff]=await Promise.all([
+    getOne('impostazioni','setProteineLimitate'),
+    getOne('impostazioni','setPocoTempo'),
+    getOne('impostazioni','cerealiNonGraditi'),
+    getOne('impostazioni','setVerdurePreferite'),
+    getOne('impostazioni','setVerdureDisattivate')
+  ]);
+  const proteinaMenoGradita=(lim&&Array.isArray(lim.valore)&&lim.valore.length)?lim.valore[0]:null;
+  const pocoTempo=Object.assign({pranzo:false,cena:false},tempo&&tempo.valore||{});
+  const cerealiNonGraditiIds=new Set(cereali&&Array.isArray(cereali.valore)?cereali.valore:[]);
+  const verdureDisattivateVariantIds=new Set(vOff&&Array.isArray(vOff.valore)?vOff.valore:[]);
+  const verdurePreferiteVariantIds=new Set();
+  const nomiPreferiti=vPref&&Array.isArray(vPref.valore)?vPref.valore:[];
+  if(nomiPreferiti.length&&state.variantByName){
+    for(const nome of nomiPreferiti){
+      const v=state.variantByName.get(String(nome).toLowerCase());
+      if(!v)continue;
+      const base=[...state.baseByName.values()].find(b=>b.id===v.ingredienteId);
+      if(base&&(base.gruppo==='verdura'||v.nome.toLowerCase()==='patate'))verdurePreferiteVariantIds.add(v.id);
+    }
+  }
+  return {proteinaMenoGradita,pocoTempo,cerealiNonGraditiIds,verdurePreferiteVariantIds,verdureDisattivateVariantIds};
+}
+
 async function configRuntime(forzaRicalcolo){
   /* Il profilo alimentare (allergie, esclusioni, vegano/ecc.) non cambia
      durante l'uso normale dell'app: lo si calcola una volta e lo si tiene
@@ -904,11 +953,13 @@ async function configRuntime(forzaRicalcolo){
     allergie:resolved.safety.allergens,
     blockedIngredientIds:new Set(resolved.safety.blockedIngredientIds),
     vincoli:resolved.ingredientConstraints,
-    weeklyLimits:resolved.subtypeCaps
+    weeklyLimits:resolved.subtypeCaps,
+    userPreferences:await caricaPreferenzeUtenteSet()
   };
   return state.runtimeConfigCache;
 }
 function invalidaConfigRuntime(){ state.runtimeConfigCache=null; }
+
 
 /* Punto unico di migrazione dei carboidrati storici verso lo stato
    canonico. Eseguita una sola volta, alla prima inizializzazione in cui
@@ -1051,8 +1102,14 @@ async function ricettaAmmessa(r,data,opts){
   opts=opts||{};
   const cfg=opts.runtimeConfig||await configRuntime();
   if(!cfg.resolved.valid) return false;
+  const verdureDisattivate=cfg.userPreferences&&cfg.userPreferences.verdureDisattivateVariantIds;
   for(const i of r.ingredienti||[]){
     if(i.allergeni&&i.allergeni.some(a=>cfg.allergie.includes(a))) return false;
+    /* Esclusione hard (Set utente, "Disponibilità verdure"): un variantId
+       dichiarato non disponibile non può mai comparire in una ricetta
+       proposta automaticamente, nessuna eccezione o fallback che riapra
+       il pool - la disponibilità in inventario non prevale su questo. */
+    if(i.variantId&&verdureDisattivate&&verdureDisattivate.has(i.variantId)) return false;
     const base=i.ingredienteId && [...state.baseByName.values()].find(b=>b.id===i.ingredienteId);
     if(base&&base.bloccoManuale) return false;
     if(base&&cfg.blockedIngredientIds.has(base.id)) return false;
@@ -1498,8 +1555,17 @@ function punteggioVerduraProgrammazione(r,data,variantiPrioritarie){
   const preferito=indice<=2?0:(indice<=4?1:2);
   return -Math.abs(livello-preferito)*10-livello;
 }
-function ordinaVerdureProgrammazione(pool,data,variantiPrioritarie){
-  return (pool||[]).slice().sort((a,b)=>punteggioVerduraProgrammazione(b,data,variantiPrioritarie)-punteggioVerduraProgrammazione(a,data,variantiPrioritarie));
+function ordinaVerdureProgrammazione(pool,data,variantiPrioritarie,verdurePreferiteVariantIds){
+  const ordinati=(pool||[]).slice().sort((a,b)=>punteggioVerduraProgrammazione(b,data,variantiPrioritarie)-punteggioVerduraProgrammazione(a,data,variantiPrioritarie));
+  /* Preferenza positiva (setVerdurePreferite, Set utente): tra più
+     soluzioni complete e valide, prova prima quelle che contengono una
+     verdura favorita - mai un obbligo, se nessuna la contiene l'ordine
+     esistente (deperibilità/programmazione, invariato) resta l'unico
+     criterio. Un pool riordinato, non un peso che si somma agli altri. */
+  if(!verdurePreferiteVariantIds||!verdurePreferiteVariantIds.size)return ordinati;
+  const contienePreferita=r=>(r.ingredienti||[]).some(i=>i.variantId&&verdurePreferiteVariantIds.has(i.variantId));
+  const preferite=ordinati.filter(contienePreferita),altre=ordinati.filter(r=>!contienePreferita(r));
+  return preferite.concat(altre);
 }
 function prioritaVerdureProgrammazionePasti(candidati,data,variantiPrioritarie){
   if(!(candidati||[]).length)return candidati||[];
@@ -1516,7 +1582,7 @@ function prioritaVerdureProgrammazionePasti(candidati,data,variantiPrioritarie){
   const max=candidati.map(score).reduce((a,b)=>Math.max(a,b),-Infinity);
   return candidati.filter(c=>score(c)===max);
 }
-function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie,bloccateIds){
+function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie,bloccateIds,verdurePreferiteVariantIds){
   bloccateIds=bloccateIds||new Set();
   let out=(ricette||[]).slice();
   const totale=coperturaVerduraRicette(out,portionConfig);
@@ -1573,12 +1639,12 @@ function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiP
     const copertoDaAltre=N.vegetableCoverage(righeCoperturaVerdura(out,dedicata.id),portionConfig);
     const frazioneMancante=Math.max(0,1-copertoDaAltre.coveredFraction);
     if(frazioneMancante<=0)return out;
-    const supplementare=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie)[0]||null;
+    const supplementare=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie,verdurePreferiteVariantIds)[0]||null;
     if(!supplementare)return out;
     return out.concat(ridimensionaVerdureRicetta(supplementare,frazioneMancante,portionConfig));
   }
   if(!dedicata){
-    dedicata=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie)[0]||null;
+    dedicata=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie,verdurePreferiteVariantIds)[0]||null;
     if(dedicata)out.push(dedicata);
   }
   if(!dedicata)return out;
@@ -1839,7 +1905,7 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
      altrimenti modificate. Vuoto/assente per ogni chiamante che non
      conosce blocchi: comportamento identico a prima. */
   const bloccateIds=ctx.realizzazioniBloccateIds||new Set();
-  const ricette=completaResiduoVerduraRicette(base,pool,giorno,ctx.vegetablePortions,ctx.variantiPrioritarie,bloccateIds);
+  const ricette=completaResiduoVerduraRicette(base,pool,giorno,ctx.vegetablePortions,ctx.variantiPrioritarie,bloccateIds,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.verdurePreferiteVariantIds);
   if(!pastoCompletoPerToken(ricette,token,ctx.vegetablePortions))return null;
   if(ctx.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===ctx.requiredVegetableVariantId)))return null;
   if(ctx.forbiddenProteinMacros&&[...macroProteicheRicette(ricette)].some(k=>ctx.forbiddenProteinMacros.has(k)))return null;
@@ -1855,7 +1921,7 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
      proteina/carboidrato candidato nello stesso ciclo, senza alcun
      nuovo meccanismo di ripetizione. */
   let risultato=await assegnaCondimentiRotazioneGlobale(risultatoPasto(token,ricette,0,null,ctx.vegetablePortions),giorno,bloccateIds);
-  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions,bloccateIds);
+  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions,bloccateIds,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.verdurePreferiteVariantIds);
   risultato.realizzazioni=normalizzaRealizzazioniOlio(risultato.realizzazioni,ctx.resolved&&ctx.resolved.oilGramsPerMainMeal);
   risultato.bilancioVerdura=await bilancioVerduraDaRealizzazioni(risultato.realizzazioni,ctx.vegetablePortions);
   if(!risultato.bilancioVerdura.coperturaCompleta)return null;
@@ -1889,9 +1955,23 @@ function carboidratoCombinatoAmmesso(chiave,ctx){
    e' bloccata). Ritorna l'esito gia' completo di carbKeyUsato/avviso, o
    null se nessuna combinazione chiude il pasto. */
 async function cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,token,giorno,pool,ctx,base0){
+  const cerealiNonGraditi=ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.cerealiNonGraditiIds;
+  const contieneCerealeNonGradito=r=>!!(cerealiNonGraditi&&cerealiNonGraditi.size&&(r.ingredienti||[]).some(i=>i.ingredienteId&&cerealiNonGraditi.has(i.ingredienteId)));
   const tenta=async(chiave,eraAuto)=>{
     let carboScelte=ordinaPerStackPoiCaso(pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave)),ctx.weeklyStackKeys);
     if(ctx.livelliInventario)carboScelte=applicaPrioritaInventario(carboScelte,ctx.livelliInventario);
+    /* Preferenza negativa (cerealiNonGraditi, Set utente): riguarda solo i
+       candidati AUTO, mai un carboidrato FIXED - "non cambiare un
+       carboidrato FIXED solo perché il suo ingrediente compare tra i
+       cereali non graditi" (fissiRimasti/eraAuto===false, invariato).
+       Tra i candidati AUTO validi, prova prima quelli senza un cereale
+       non gradito; un cereale non gradito resta comunque utilizzabile
+       quando è l'unica alternativa - mai un peso numerico, solo un pool
+       riordinato, coerente con il collegamento tramite ingredienteId. */
+    if(eraAuto&&cerealiNonGraditi&&cerealiNonGraditi.size){
+      const graditi=carboScelte.filter(r=>!contieneCerealeNonGradito(r)),nonGraditi=carboScelte.filter(contieneCerealeNonGradito);
+      carboScelte=graditi.concat(nonGraditi);
+    }
     for(const carboScelto of carboScelte){
       const esito=await chiudiPastoConVerdura([proteina,carboScelto,...base0],token,giorno,pool,ctx);
       if(esito){
@@ -1901,12 +1981,28 @@ async function cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,token,gior
     }
     return null;
   };
+  const chiaveContieneSoloNonGraditi=chiave=>{
+    if(!cerealiNonGraditi||!cerealiNonGraditi.size)return false;
+    const candidati=pool.filter(r=>copertura(r).C&&!copertura(r).P&&carbKeysRicetta(r).includes(chiave));
+    return candidati.length>0&&candidati.every(contieneCerealeNonGradito);
+  };
   for(const chiave of fissiRimasti){
     if(!composizioneSeparataConsentita(proteina,chiave))continue;
     const esito=await tenta(chiave,false);
     if(esito)return esito;
   }
-  for(const chiave of autoCandidati){
+  /* Stessa preferenza negativa, applicata anche alla scelta della chiave
+     carboidrato (non solo alla ricetta dentro una chiave già fissata):
+     una chiave AUTO i cui unici candidati contengono tutti un cereale non
+     gradito viene provata per ultima, mai esclusa - una chiave con
+     ingredienti misti (es. "pasta" copre più cereali diversi) non viene
+     mai penalizzata per intero. */
+  let autoOrdinati=autoCandidati;
+  if(cerealiNonGraditi&&cerealiNonGraditi.size){
+    const preferite=autoCandidati.filter(k=>!chiaveContieneSoloNonGraditi(k)),ultime=autoCandidati.filter(chiaveContieneSoloNonGraditi);
+    autoOrdinati=preferite.concat(ultime);
+  }
+  for(const chiave of autoOrdinati){
     if(!composizioneSeparataConsentita(proteina,chiave))continue;
     const esito=await tenta(chiave,true);
     if(esito)return esito;
@@ -2078,7 +2174,7 @@ function contaTargetTabellaFuturi(tab,slots,daIndice){
   }
   return out;
 }
-function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng){
+function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng,proteinaMenoGradita){
   const slot=slots[indice],freq=resolved.proteinFrequencies||{};
   const forbidden=new Set(resolved.profile&&resolved.profile.forbiddenProteinMacros||[]);
   const allowed=Object.keys(freq).filter(k=>!forbidden.has(k)&&freq[k].max!==0);
@@ -2115,6 +2211,19 @@ function opzioniProteinaPerSlot(resolved,tab,slots,indice,counts,usateGiorno,rng
   if(!pool.length)return {errors:['Nessuna classe proteica distinta e ammessa per '+slot.day+' '+slot.pasto+'.'],targets:[]};
   const sottoMinimo=pool.filter(k=>(Number(counts[k])||0)+(Number(prenotate[k])||0)<(Number(freq[k].min)||0));
   if(sottoMinimo.length)pool=sottoMinimo;
+  /* Preferenza negativa del Set utente (setProteineLimitate, al più una
+     categoria): tra più categorie ugualmente valide, provare prima quelle
+     non indicate come meno gradite - mai un peso numerico, un pool
+     ordinato (non sgradite prima, sgradita per ultima). Non si applica
+     mai alla cella fissata dall'utente (branch sopra, invariato): una
+     scelta esplicita dell'utente non viene mai annullata da questa
+     preferenza. Il chiamante prova già ogni target in ordine fino al
+     primo che chiude una composizione valida, quindi la sola
+     ridistribuzione dell'ordine basta a realizzare la regola. */
+  if(proteinaMenoGradita&&pool.includes(proteinaMenoGradita)&&pool.length>1){
+    const nonSgradite=pool.filter(k=>k!==proteinaMenoGradita),sgradite=pool.filter(k=>k===proteinaMenoGradita);
+    return {errors:[],targets:mescolaValori(nonSgradite,rng).concat(mescolaValori(sgradite,rng))};
+  }
   return {errors:[],targets:mescolaValori(pool,rng)};
 }
 function residuiCarboidratiFissi(resolved,seedCounts){
@@ -2195,7 +2304,7 @@ async function risolviSettimanaSequenziale(slotRefs,ctx){
       if(!slot.targetBloccato)return {ok:false,errori:['Realizzazione proteica bloccata senza categoria riconoscibile per '+slot.day+' '+slot.pasto+'.'],completati:i};
       proteine={errors:[],targets:[slot.targetBloccato]};
     }else{
-      proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng);
+      proteine=opzioniProteinaPerSlot(ctx.resolved,ctx.tabella,slotRefs,i,ctx.weeklyProteinCounts,proteineGiorno.get(slot.day),ctx.rng,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.proteinaMenoGradita);
     }
     if(proteine.errors.length)return {ok:false,errori:proteine.errors,completati:i};
 
@@ -2490,10 +2599,10 @@ async function materializzaRealizzazione(realizzazione){
   return ricetta;
 }
 
-async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig,bloccateIds){
+async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig,bloccateIds,verdurePreferiteVariantIds){
   const materializzate=[];
   for(const real of realizzazioni||[]){const r=await materializzaRealizzazione(real);if(r)materializzate.push(r);}
-  const pool=await poolAmmesso(giorno,{}),complete=completaResiduoVerduraRicette(materializzate,pool,giorno,portionConfig,undefined,bloccateIds);
+  const pool=await poolAmmesso(giorno,{}),complete=completaResiduoVerduraRicette(materializzate,pool,giorno,portionConfig,undefined,bloccateIds,verdurePreferiteVariantIds);
   const usati=new Set();
   return complete.map(r=>{
     const indice=(realizzazioni||[]).findIndex((real,i)=>!usati.has(i)&&real.ricettaId===r.id);
@@ -2711,7 +2820,8 @@ async function ruotaPasto(giorno,pasto,tipo,vocePendente){
 
   let realizzazioni=voce.realizzazioni.map((x,i)=>i===owner.indice?real:x);
   const resolved=await caricaConfigurazioneNutrizionaleRisolta();
-  realizzazioni=await normalizzaRealizzazioniVerdura(realizzazioni,giorno,resolved.vegetables);
+  const prefUtente=(await configRuntime()).userPreferences;
+  realizzazioni=await normalizzaRealizzazioniVerdura(realizzazioni,giorno,resolved.vegetables,undefined,prefUtente&&prefUtente.verdurePreferiteVariantIds);
   realizzazioni=normalizzaRealizzazioniOlio(realizzazioni,resolved.oilGramsPerMainMeal);
   const requiredVegetableVariantId=await verduraRicorrenteRichiesta(giorno,pasto);
   if(requiredVegetableVariantId){

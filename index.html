@@ -2445,6 +2445,7 @@ async function renderSetPreferenzeMenu(){
     elLim.querySelectorAll('[data-set-prot-lim]').forEach(b=>b.addEventListener('click',async()=>{
       const k=b.dataset.setProtLim,nuova=(esclusa===k)?[]:[k];
       await put('impostazioni',{chiave:'setProteineLimitate',valore:nuova});
+      if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();
       await renderMantieniSwipe(renderSetPreferenzeMenu);
     }));
   }
@@ -2453,7 +2454,7 @@ async function renderSetPreferenzeMenu(){
   const elTempo=document.getElementById('setTempoMenu');
   if(elTempo){
     elTempo.innerHTML=`<button data-set-tempo="pranzo" class="${tempo.pranzo?'active':''}">Poco tempo a pranzo</button><button data-set-tempo="cena" class="${tempo.cena?'active':''}">Poco tempo a cena</button><button data-set-tempo="nessuno" class="${(!tempo.pranzo&&!tempo.cena)?'active':''}">Ho tempo</button>`;
-    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{const k=b.dataset.setTempo;if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;}else tempo[k]=!tempo[k];await put('impostazioni',{chiave:'setPocoTempo',valore:tempo});await renderMantieniSwipe(renderSetPreferenzeMenu);}));
+    elTempo.querySelectorAll('[data-set-tempo]').forEach(b=>b.addEventListener('click',async()=>{const k=b.dataset.setTempo;if(k==='nessuno'){tempo.pranzo=false;tempo.cena=false;}else tempo[k]=!tempo[k];await put('impostazioni',{chiave:'setPocoTempo',valore:tempo});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();await renderMantieniSwipe(renderSetPreferenzeMenu);}));
   }
   const recV=await getOne('impostazioni','setVerdurePreferite'),pref=new Set(recV&&recV.valore?recV.valore:[]);
   const stag=verdureDiStagione(new Date());
@@ -2465,8 +2466,8 @@ async function renderSetPreferenzeMenu(){
   const elV=document.getElementById('setVerdurePreferiteLista');
   if(elV){
     const stagOrd=listaPref.sort((a,b)=>a.localeCompare(b,'it'));elV.innerHTML=stagOrd.map(v=>`<button data-set-verd-pref="${v}" class="${pref.has(v)?'active':''}">${v}</button>`).join('')+`<button data-set-verd-pref-reset="1" class="${pref.size===0?'active':''}">Nessuna preferenza</button>`;
-    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{const v=b.dataset.setVerdPref;pref.has(v)?pref.delete(v):pref.add(v);await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]});await renderMantieniSwipe(renderSetPreferenzeMenu);}));
-    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]});await renderMantieniSwipe(renderSetPreferenzeMenu);});
+    elV.querySelectorAll('[data-set-verd-pref]').forEach(b=>b.addEventListener('click',async()=>{const v=b.dataset.setVerdPref;pref.has(v)?pref.delete(v):pref.add(v);await put('impostazioni',{chiave:'setVerdurePreferite',valore:[...pref]});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();await renderMantieniSwipe(renderSetPreferenzeMenu);}));
+    elV.querySelector('[data-set-verd-pref-reset]')?.addEventListener('click',async()=>{await put('impostazioni',{chiave:'setVerdurePreferite',valore:[]});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();await renderMantieniSwipe(renderSetPreferenzeMenu);});
   }
   const nota=document.getElementById('setVerdurePreferiteNota');if(nota){const alte=[...pref].filter(n=>ingredientiJsonMap[n]?.deperibilita==='alta'&&!blockedNames.has(n));nota.textContent=alte.length?'💡 Molto deperibili: '+alte.join(', ')+'; il motore può limitarle a fine settimana.':'';}
 }
@@ -2497,7 +2498,7 @@ async function renderSetVerdure(){
       const ric=await getOne('impostazioni','verduraRicorrente');if(ric&&ric.valore===vid){await avviso('Questa verdura è programmata come ricorrente. Togli prima la programmazione ricorrente oppure scegli un’altra verdura.');return;}
       const current=[...lista].filter(id=>{const v=verdure.find(x=>x.id===id);return v&&!isClinical(v);}).length;if(current>=maxEsclusioni){await avviso('Puoi escludere al massimo 7 verdure. Riattivane una prima di escluderne un’altra.');return;}lista.add(vid);
     }
-    await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[...lista]});await renderMantieniSwipe(renderSetVerdure);
+    await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[...lista]});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();await renderMantieniSwipe(renderSetVerdure);
   }));
 }
 
@@ -3012,7 +3013,7 @@ async function renderSetCerealiGradimento(){
   const [basi,rec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','cerealiNonGraditi'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]),box=document.getElementById('setCerealiGradimento');if(!box)return;
   const cereals=basi.filter(b=>b.gruppo==='carboidrati').sort((a,b)=>a.nome.localeCompare(b.nome,'it')),off=new Set(rec&&rec.valore||[]),allowed=cereals.filter(b=>!ingredienteEsclusoClinicamenteNelSet(b,resolved)),allowedIds=new Set(allowed.map(b=>b.id));
   box.innerHTML=cereals.map(b=>{const clinical=ingredienteEsclusoClinicamenteNelSet(b,resolved);return `<button type="button" data-cereale-gradimento="${b.id}" class="${clinical?'inactive-red piano':(off.has(b.id)?'active':'')}" ${clinical?'disabled title="Escluso dal piano nutrizionista"':''}>${b.nome}${clinical?' · piano':''}</button>`;}).join('');
-  box.querySelectorAll('[data-cereale-gradimento]:not([disabled])').forEach(btn=>btn.addEventListener('click',async()=>{const id=btn.dataset.cerealeGradimento;if(off.has(id))off.delete(id);else{const offAllowed=[...off].filter(x=>allowedIds.has(x));if(offAllowed.length>=Math.max(0,allowed.length-1)){await avviso('Deve restare almeno un cereale consentito dal piano disponibile.');return;}off.add(id);}await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[...off]});renderSetCerealiGradimento();}));
+  box.querySelectorAll('[data-cereale-gradimento]:not([disabled])').forEach(btn=>btn.addEventListener('click',async()=>{const id=btn.dataset.cerealeGradimento;if(off.has(id))off.delete(id);else{const offAllowed=[...off].filter(x=>allowedIds.has(x));if(offAllowed.length>=Math.max(0,allowed.length-1)){await avviso('Deve restare almeno un cereale consentito dal piano disponibile.');return;}off.add(id);}await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[...off]});if(window.DietaPlannerMotorV12&&typeof window.DietaPlannerMotorV12.invalidaConfigRuntime==='function')window.DietaPlannerMotorV12.invalidaConfigRuntime();renderSetCerealiGradimento();}));
 }
 
 document.querySelectorAll('[data-close]').forEach(btn=>{
