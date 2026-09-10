@@ -2210,3 +2210,48 @@ git diff --check                                        → pulito
 **SHA finale:** `41d28974290c5c4c27edc31ef7a0c537662b6396`.
 
 ---
+
+## 3. Commit `(in preparazione)` — correzione: setPocoTempo esaustivo per livello, non solo per ordine della proteina
+
+**SHA iniziale di questa correzione:** `fb3fa7d55131dc3decf66ee4677a91ca401f678d`.
+
+**Difetto concreto riscontrato (nel commit `41d2897`):** `ordinaCarboidratiPerPocoTempo()` riordinava correttamente le chiavi carboidrato nei 4 livelli, ma `costruisciPastoSequenziale()` continuava a scorrere le ricette PRIMA per ordine della proteina (`ordinaPerStackPoiCaso`, casuale) e solo poi verificava se il carboidrato incorporato/associato apparteneva a un livello prioritario — mai un'esaustione reale del livello corrente su tutte le proteine prima di passare al successivo. Conseguenze concrete: (a) una ricetta P+C con un carboidrato non rapido poteva essere scelta prima di una composizione completa con pane, se la sua proteina usciva prima nell'ordine casuale; (b) tra due ricette P+C FIXED, quella non rapida poteva precedere quella rapida; (c) in `completaPastoConBloccate()`, il ramo "proteina bloccata, carboidrato libero" derivava `fissiRimasti`/`autoCandidati` da `carbCandidati` **senza** applicare affatto `ordinaCarboidratiPerPocoTempo`; (d) i test 9–11 esistenti verificavano solo l'helper puro, mai che la pipeline reale scegliesse davvero il carboidrato prioritario.
+
+**Correzione applicata:**
+- Nuovo helper centralizzato `livelliCarboidratiPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo)` — restituisce i 4 livelli come **gruppi separati** (non un solo array appiattito), così i chiamanti possono esaurire un livello su tutte le proteine prima di passare al successivo. `ordinaCarboidratiPerPocoTempo()` (usata da `cercaCarboSeparato`, che già itera le chiavi come ciclo esterno) ora delega a questo stesso helper — nessuna logica duplicata, comportamento esterno verificato invariato (test 9–11 ancora verdi).
+- `costruisciPastoSequenziale()` ristrutturata: sia il ciclo P+C.user (FIXED) sia il ciclo P+C.AUTO/carboidrato separato ora iterano **per livello, poi per proteina dentro ciascun livello** — non più il contrario. Per ciascun livello, `cercaCarboSeparato` riceve un `autoCandidati` già ristretto alle sole chiavi di quel livello. Quando `pocoTempoAttivo` è falso, i livelli "rapidi" sono vuoti: un solo passaggio sui livelli "altri" (tutti i FIXED, poi tutti gli AUTO), comportamento identico a prima per costruzione dell'helper.
+- `completaPastoConBloccate()`, ramo "proteina bloccata, carboidrato libero": `carbCandidati` viene ora riordinato con lo stesso helper e lo stesso `ctx.pasto` prima di derivare `fissiRimasti`/`autoCandidati` — stessa priorità di `costruisciPastoSequenziale`.
+- Corretto il commento presso `caricaPreferenzeUtenteSet()` che affermava ancora "setPocoTempo... NON utilizzato per ordinare le composizioni": ora descrive il comportamento reale.
+
+**Percorsi reali coperti (verificato con la pipeline reale, `rigeneraPasto`/`generaPianoSettimana`):**
+- generazione settimanale e rigenerazione (`rigeneraPasto`/Alternativa/Cambia piatto: stessa funzione);
+- carboidrato separato (dominante nel catalogo attuale) e ricetta P+C già combinata (stesso ciclo a livelli, stessa restrizione);
+- proteina bloccata dalla Programmazione (`completaPastoConBloccate`);
+- fallback al livello successivo quando pane/friselle non chiude il pasto;
+- nessuna alterazione della cena quando la preferenza è impostata solo a pranzo;
+- lucchetti, carboidrato già bloccato, esclusioni hard, verdura ricorrente, copertura V/S/G e priorità Salvafrigo: nessuna modifica, tutti verificati superiori e invariati (`lotto-carboidrati-priorita-pxcuser.test.js`: 100/100 generazioni, priorità P+C.user intatta).
+
+**Limite reale di catalogo, riscontrato e non modificato (come richiesto: documentato, non corretto):** il catalogo compilato contiene solo **5 ricette P+C già combinate** in totale (`nr_8_0/1/2/3` con farro/orzo/pasta, `nr_32_0` con pane), a fronte di **85 ricette proteina-sola** per lo stesso token — il percorso "carboidrato separato" (già corretto, dominante per costruzione statistica) rende nella pratica impossibile costruire, con dati di catalogo reali e non modificati, uno scenario che isoli **esclusivamente** il sotto-percorso P+C-combinato dal sotto-percorso separato già funzionante (le due uniche ricette P+C-combinate con proteina "Prosciutto crudo" condividono l'identico ingrediente proteico con l'unica ricetta proteina-sola equivalente: bloccare l'una per isolare l'altra le esclude entrambe). La correzione del codice per il ramo P+C-combinato è comunque applicata identicamente (stesso ciclo a livelli, stessa restrizione per `chiaviLivelloSet`, verificabile per lettura diretta in `costruisciPastoSequenziale()`) e i test 14–19 dimostrano che l'esito osservabile complessivo (carboidrato rapido vince quando possibile, fallback corretto altrimenti) resta corretto end-to-end attraverso entrambi i sotto-percorsi, senza distinguerli. **Non è stato modificato alcun catalogo per aggirare questo limite**, come richiesto.
+
+**"Friselle" nei test:** il catalogo compilato non contiene alcuna ricetta con `friselle` (limite di catalogo già noto e riservato a Cwe in filoni precedenti, non toccato qui). Dove il compito chiede esplicitamente "friselle FIXED vince su un altro FIXED non rapido" (test 16), si dimostra con **pane FIXED** al suo posto: il codice tratta le due chiavi in `CHIAVI_CARBO_RAPIDE` in modo identico, senza alcuna distinzione — la prova resta equivalente per il meccanismo verificato (partizione FIXED rapidi/altri), pur non usando letteralmente friselle.
+
+**Test deterministici (unico file modificato, nessun altro creato):** aggiunti gli scenari 14–19 a `tests/lotto-set-preferenze-runtime.test.js` (i precedenti 1–13 restano invariati, tutti ancora verdi) — tutti con la pipeline reale, un'unica chiamata per l'asserzione principale (mai loop "fino a N tentativi" come prova, mai confronti statistici tra medie): 14) pane AUTO vince su un pasto altrimenti composto con carboidrati non rapidi, in un'unica chiamata; 15) senza la preferenza, varietà reale osservata (controprova che 14 non sia un caso); 16) pane FIXED vince su un altro FIXED non rapido, con controprova che senza la preferenza entrambi restano scelte possibili; 17) con proteina bloccata da un lucchetto, la priorità pane/friselle resta identica, il lucchetto non viene mai toccato; 18) per una categoria dove pane non chiude mai il pasto (formaggi), il fallback al livello successivo è verificato su più chiamate indipendenti, mai forzato; 19) poco tempo solo a pranzo non altera la varietà osservata a cena. Verificato: il file fallisce sul codice del commit `41d2897` (limitatamente agli scenari 14–19: gli scenari 1–13 passano anche sul codice precedente, poiché non toccati da questa correzione) e passa dopo questa correzione.
+
+**File modificati (solo quelli ammessi):** `motor-v12.js`, `tests/lotto-set-preferenze-runtime.test.js`, `docs/REGISTRO_MODIFICHE.md`.
+
+**Test eseguiti (una sola volta, come richiesto) ed esito:**
+```
+node --check motor-v12.js                              → OK
+node tests/lotto-set-preferenze-runtime.test.js         → ok (19/19 scenari)
+node tests/lotto-g-weekly-generation.test.js            → ok
+node tests/lotto-carboidrati-priorita-pxcuser.test.js   → ok (100/100 generazioni)
+node tests/lotto-e-root-user-set.test.js                → ok
+git diff --check                                        → pulito
+```
+Nessuna regressione emersa fuori da questi file.
+
+**Non modificati:** `index.html`, resolver nutrizionale, cataloghi, IndexedDB, frequenze, quantità, algebra V/S/G, rotazione proteica, profili vegetariano/vegano, restyling grafico.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---

@@ -216,5 +216,111 @@ const R_A=(id,varianti)=>({id,ingredienti:varianti.map(([variantId,ingredienteId
     console.log('OK 13: verdura ricorrente e vincoli hard prevalgono su ogni preferenza soft.');
   }
 
+  /* ============ Correzione: costruisciPastoSequenziale()/completaPastoConBloccate() ora esauriscono per LIVELLO
+     (non solo per ordine della proteina) - dimostrato con la pipeline reale (rigeneraPasto), mai con retry
+     "fino a N tentativi" e mai con confronti statistici: la struttura a livelli garantisce un esito
+     deterministico ad ogni singola chiamata, indipendentemente dall'ordine casuale delle proteine
+     all'interno di un livello (il livello rapido è comunque sempre esaurito per intero prima del successivo).
+     Nota sul catalogo: "friselle" non ha alcuna ricetta compilata (limite di catalogo già noto e riservato a
+     Cwe, non modificabile qui) - dove il compito chiede esplicitamente "friselle FIXED", si dimostra con
+     "pane FIXED" al suo posto: il codice tratta le due chiavi in modo identico (stesso CHIAVI_CARBO_RAPIDE,
+     nessuna distinzione), quindi la prova resta equivalente e completa per il meccanismo verificato. ============ */
+
+  /* ============ 14. Poco tempo attivo: pane AUTO vince su una P+C con un carboidrato non rapido (pipeline reale) ============ */
+  {
+    resetStores();
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:true,cena:false}});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    const r=await M.rigeneraPasto('2026-08-31','pranzo','carne',{soloAnteprima:true});
+    assert(r,'una composizione valida deve esistere per "carne" a pranzo');
+    assert.equal(r.carboidratoPianificato,'pane','con poco tempo attivo, il carboidrato AUTO rapido (pane) deve vincere su una P+C con un carboidrato non rapido, in un\'unica chiamata deterministica');
+    console.log('OK 14: pane AUTO vince deterministicamente su carboidrati P+C non rapidi quando poco tempo è attivo.');
+  }
+
+  /* ============ 15. Poco tempo non attivo: resta valido l'ordine ordinario (varietà reale, mai forzato su pane) ============ */
+  {
+    resetStores();
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:false,cena:false}});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    const osservati=new Set();
+    for(let i=0;i<10;i++){
+      const r=await M.rigeneraPasto('2026-08-31','pranzo','carne',{soloAnteprima:true});
+      if(r)osservati.add(r.carboidratoPianificato);
+    }
+    assert(osservati.size>1,'senza la preferenza, l\'ordine ordinario deve restare quello reale (varietà osservata), mai forzato su un solo carboidrato');
+    console.log('OK 15: senza poco tempo, ordine ordinario invariato (varietà reale osservata: '+[...osservati].join(', ')+').');
+  }
+
+  /* ============ 16. Pane FIXED vince su un altro FIXED non rapido, entrambi capaci di chiudere il pasto (pipeline reale; sostituisce "friselle", assente dal catalogo compilato - vedi nota sopra) ============ */
+  {
+    resetStores();
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:{pane:{mode:'fixed',count:2},gnocchi:{mode:'fixed',count:2}}});
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:true,cena:false}});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    const r=await M.rigeneraPasto('2026-08-31','pranzo','carne',{soloAnteprima:true});
+    assert(r);
+    assert.equal(r.carboidratoPianificato,'pane','tra due FIXED entrambi ancora da collocare, quello rapido (pane) deve vincere su quello non rapido (gnocchi)');
+    // controprova deterministica: senza poco tempo la stessa coppia FIXED produce entrambi gli esiti nel tempo (nessun forzamento artificiale)
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:false,cena:false}});
+    M.invalidaConfigRuntime();
+    const osservatiSenzaPref=new Set();
+    for(let i=0;i<10;i++){const r2=await M.rigeneraPasto('2026-08-31','pranzo','carne',{soloAnteprima:true});if(r2)osservatiSenzaPref.add(r2.carboidratoPianificato);}
+    assert(osservatiSenzaPref.has('pane')&&osservatiSenzaPref.has('gnocchi'),'senza poco tempo entrambi i FIXED devono restare scelte possibili, a dimostrazione che l\'esito di prima non era un caso ma la priorità applicata');
+    console.log('OK 16: FIXED rapido (pane) vince su FIXED non rapido (gnocchi) solo quando poco tempo è attivo.');
+  }
+
+  /* ============ 17. Con proteina bloccata (lucchetto), pane/friselle conserva la stessa priorità (pipeline reale, completaPastoConBloccate) ============ */
+  {
+    resetStores();
+    await M.inizializza({basePath:''});
+    const proteinaBloccata=M.getRicetta('nr_3_0');
+    assert(proteinaBloccata&&!M.copertura(proteinaBloccata).C,'serve una ricetta proteica reale senza carboidrato incorporato');
+    const realBloccata=M.snapshotRealizzazione({ricettaId:proteinaBloccata.id,bloccata:true},proteinaBloccata);
+    // una seconda realizzazione NON bloccata evita che il conteggio "tutte le realizzazioni bloccate" congeli il pasto com'è: viene comunque sovrascritta dalla nuova generazione, la proteina bloccata resta invariata (garanzia esistente, non toccata da questo intervento).
+    const placeholder=M.snapshotRealizzazione({ricettaId:proteinaBloccata.id},proteinaBloccata);
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:{pane:{mode:'fixed',count:2},gnocchi:{mode:'fixed',count:2}}});
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:true,cena:false}});
+    await put('piano',{id:'2026-08-31_pranzo',modo:'multi',motoreNuovo:true,categoriaTarget:'carne',realizzazioni:[realBloccata,placeholder],porzioni:1});
+    M.invalidaConfigRuntime();
+    const esito=await M.generaPianoSettimana(0,{forza:true});
+    assert.deepEqual(esito.errori,[]);
+    const voce=await getOne('piano','2026-08-31_pranzo');
+    assert.equal(voce.carboidratoPianificato,'pane','con la proteina bloccata, il carboidrato rapido FIXED deve comunque vincere su uno non rapido');
+    assert(voce.realizzazioni.some(r=>r.ricettaId===proteinaBloccata.id&&r.bloccata===true),'la realizzazione bloccata (lucchetto) deve restare esattamente quella, mai ripescata o sostituita');
+    console.log('OK 17: con proteina bloccata dalla Programmazione, pane/friselle conserva la stessa priorità.');
+  }
+
+  /* ============ 18. Se pane/friselle non chiude il pasto, si passa correttamente al livello successivo (pipeline reale) ============ */
+  {
+    resetStores();
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:true,cena:false}});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    let almenoUnFallback=false;
+    for(let i=0;i<8;i++){
+      const r=await M.rigeneraPasto('2026-08-31','pranzo','formaggi',{soloAnteprima:true});
+      if(!r)continue;
+      assert.notEqual(r.carboidratoPianificato,'pane','per "formaggi" pane non chiude mai un pasto completo: non deve mai comparire come esito');
+      almenoUnFallback=true;
+    }
+    assert(almenoUnFallback,'serve almeno un esito valido per dimostrare il fallback al livello successivo');
+    console.log('OK 18: quando pane/friselle non chiude il pasto, il motore passa correttamente al livello successivo, senza mai forzare o fallire.');
+  }
+
+  /* ============ 19. Poco tempo configurato solo a pranzo non altera la cena (pipeline reale) ============ */
+  {
+    resetStores();
+    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:true,cena:false}});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    const rPranzo=await M.rigeneraPasto('2026-08-31','pranzo','carne',{soloAnteprima:true});
+    assert.equal(rPranzo&&rPranzo.carboidratoPianificato,'pane','a pranzo la preferenza deve restare attiva');
+    const osservatiCena=new Set();
+    for(let i=0;i<10;i++){
+      const r=await M.rigeneraPasto('2026-08-31','cena','carne',{soloAnteprima:true});
+      if(r)osservatiCena.add(r.carboidratoPianificato);
+    }
+    assert(osservatiCena.size>1,'a cena (dove poco tempo non è attivo) deve restare la varietà ordinaria, mai forzata su pane');
+    console.log('OK 19: poco tempo impostato solo a pranzo non altera la cena (varietà osservata a cena: '+[...osservatiCena].join(', ')+').');
+  }
+
   console.log('lotto set preferenze runtime: ok');
 })().catch(error=>{console.error(error);process.exit(1);});

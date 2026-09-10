@@ -900,11 +900,15 @@ async function registraUtilizzo(r,data){
    setProteineLimitate: preferenza negativa, al più una categoria - mai
    un'esclusione (non viene mai zero-ato un max, resta un semplice ordine
    di preferenza applicato a valle).
-   setPocoTempo: caricato per completezza/trasparenza del Set, ma NON
-   utilizzato per ordinare le composizioni - vedi nota in
-   docs/REGISTRO_MODIFICHE.md: il catalogo non possiede un metadato
-   strutturato che distingua preparazioni fredde/rapide/pane-friselle, e
-   dedurlo dal nome della ricetta o della cottura è esplicitamente vietato.
+   setPocoTempo: applicato in costruisciPastoSequenziale()/
+   completaPastoConBloccate() tramite livelliCarboidratiPocoTempo() -
+   semantica applicativa, non un tempo dedotto dal catalogo: per il
+   pasto indicato, prova prima una composizione completa con il
+   carboidrato "jolly" pane o friselle (FIXED se già fissato
+   dall'utente, altrimenti solo pane come AUTO - friselle non è mai
+   introdotta come AUTO), poi gli altri carboidrati ammessi. Nessun
+   metadato di catalogo su tempi/temperature di preparazione: mai
+   dedotto dal nome della ricetta o della cottura.
    cerealiNonGraditi: ID BASE ingrediente (mai nomi), preferenza negativa.
    setVerdurePreferite: formato storico a nomi variante (invariato in
    questo intervento); risolto qui, una sola volta, verso i relativi
@@ -950,29 +954,44 @@ function ordinaPerVerdurePreferite(pool,preferredVariantIds){
    composizione completa con pane o friselle, mantenendo invariati
    proteina richiesta, vincoli nutrizionali e verdura completa". */
 const CHIAVI_CARBO_RAPIDE=['pane','friselle'];
-/* Helper puro: mai un tempo dedotto dal nome/cottura, mai un secondo
-   default locale. Se pocoTempoAttivo è falso, l'ordine ricevuto non
-   viene toccato. Se è vero, produce quattro livelli, ciascuno con
-   l'ordine relativo preesistente conservato al suo interno:
-   1) FIXED rapidi ancora da collocare (pane/friselle);
-   2) altri FIXED ancora da collocare;
-   3) AUTO rapido ammesso (solo "pane": friselle non è mai introdotta
-      come AUTO, ha un tetto PDF e può essere usata solo se l'utente
-      l'ha fissata esplicitamente - invariato, questa funzione non
-      aggiunge mai una chiave che carbCandidati non conteneva già);
-   4) altri AUTO ammessi.
-   Nessun FIXED viene mai spostato dopo un AUTO: i primi due livelli
-   restano sempre prima degli ultimi due. */
-function ordinaCarboidratiPerPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo){
-  const chiavi=carbCandidati||[];
-  if(!pocoTempoAttivo)return chiavi;
-  const residui=residuiFissi||{};
+/* Helper centralizzato, riutilizzabile: divide le chiavi carboidrato nei
+   quattro livelli di priorità di setPocoTempo, come 4 gruppi SEPARATI
+   (non un unico array appiattito) - cosi' i chiamanti che devono
+   esaurire un livello prima di passare al successivo (costruisciPastoSequenziale,
+   completaPastoConBloccate) possono iterare livello per livello, non solo
+   per ordine della proteina. L'ordine relativo preesistente si conserva
+   in ciascun gruppo. Se pocoTempoAttivo è falso, i due gruppi "rapidi"
+   restano vuoti e i due gruppi "altri" contengono rispettivamente TUTTI
+   i FIXED e TUTTI gli AUTO, nello stesso identico ordine di sempre - un
+   chiamante che itera fissiRapidi+fissiAltri poi autoRapido+autoAltri
+   ottiene quindi esattamente il comportamento preesistente quando la
+   preferenza non è attiva. Friselle può comparire solo tra i FIXED (ha
+   un tetto PDF, mai introdotta come AUTO: questa funzione non aggiunge
+   mai una chiave che carbCandidati non conteneva già). */
+function livelliCarboidratiPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo){
+  const chiavi=carbCandidati||[],residui=residuiFissi||{};
   const fissiRimasti=chiavi.filter(k=>Object.prototype.hasOwnProperty.call(residui,k)&&residui[k]>0);
   const autoCandidati=chiavi.filter(k=>!fissiRimasti.includes(k));
-  const fissiRapidi=fissiRimasti.filter(k=>CHIAVI_CARBO_RAPIDE.includes(k));
-  const fissiAltri=fissiRimasti.filter(k=>!CHIAVI_CARBO_RAPIDE.includes(k));
-  const autoRapido=autoCandidati.filter(k=>k==='pane');
-  const autoAltri=autoCandidati.filter(k=>k!=='pane');
+  if(!pocoTempoAttivo)return {fissiRapidi:[],fissiAltri:fissiRimasti,autoRapido:[],autoAltri:autoCandidati};
+  return {
+    fissiRapidi:fissiRimasti.filter(k=>CHIAVI_CARBO_RAPIDE.includes(k)),
+    fissiAltri:fissiRimasti.filter(k=>!CHIAVI_CARBO_RAPIDE.includes(k)),
+    autoRapido:autoCandidati.filter(k=>k==='pane'),
+    autoAltri:autoCandidati.filter(k=>k!=='pane')
+  };
+}
+/* Helper puro: mai un tempo dedotto dal nome/cottura, mai un secondo
+   default locale. Se pocoTempoAttivo è falso, l'ordine ricevuto non
+   viene toccato. Se è vero, produce l'array appiattito dei quattro
+   livelli di livelliCarboidratiPocoTempo() (stessa fonte, mai una
+   seconda logica): 1) FIXED rapidi ancora da collocare (pane/friselle);
+   2) altri FIXED ancora da collocare; 3) AUTO rapido ammesso (solo
+   "pane"); 4) altri AUTO ammessi. Usato per i chiamanti che necessitano
+   di un unico ordine di tentativo (es. cercaCarboSeparato, che itera già
+   le chiavi come ciclo esterno). Nessun FIXED viene mai spostato dopo un
+   AUTO: i primi due livelli restano sempre prima degli ultimi due. */
+function ordinaCarboidratiPerPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo){
+  const {fissiRapidi,fissiAltri,autoRapido,autoAltri}=livelliCarboidratiPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo);
   return fissiRapidi.concat(fissiAltri,autoRapido,autoAltri);
 }
 
@@ -2148,11 +2167,23 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
      carboidrato generico. */
   const fissiRimasti=carbCandidati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
   const autoCandidati=carbCandidati.filter(k=>!fissiRimasti.includes(k));
+  /* setPocoTempo, livelli separati (non solo l'array appiattito usato
+     sopra per cercaCarboSeparato): qui servono per esaurire ogni livello
+     su TUTTE le proteine prima di passare al successivo, non solo per
+     ordine di proteina - il difetto corretto in questo intervento: una
+     ricetta P+C con un carboidrato non rapido non deve mai precedere,
+     nello stesso livello FIXED o AUTO, una ricetta P+C rapida successiva
+     nell'ordine delle proteine. Quando pocoTempoAttivo e' falso, i
+     gruppi "rapidi" sono vuoti: un solo passaggio su fissiAltri/autoAltri,
+     comportamento identico a prima. */
+  const livelli=livelliCarboidratiPocoTempo(carbCandidati,ctx.residuiCarboidrati,pocoTempoAttivo);
 
-  if(fissiRimasti.length){
+  for(const chiaviLivelloFixed of [livelli.fissiRapidi,livelli.fissiAltri]){
+    if(!chiaviLivelloFixed.length)continue;
+    const chiaviSet=new Set(chiaviLivelloFixed);
     for(const proteina of proteine){
       if(!copertura(proteina).C)continue;
-      const chiave=carbKeysRicetta(proteina).find(k=>fissiRimasti.includes(k));
+      const chiave=carbKeysRicetta(proteina).find(k=>chiaviSet.has(k));
       if(!chiave)continue;
       const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
       if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
@@ -2181,16 +2212,30 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   const bucketCerealiOk=proteine.filter(r=>!pcAutoContieneCerealeNonGradito(r));
   const bucketCerealiNoOk=proteine.filter(pcAutoContieneCerealeNonGradito);
   const proteineOrdinatePC=ordinaPerVerdurePreferite(bucketCerealiOk,verdurePreferitePC).concat(ordinaPerVerdurePreferite(bucketCerealiNoOk,verdurePreferitePC));
-  for(const proteina of proteineOrdinatePC){
-    if(copertura(proteina).C){
-      const chiave=carbKeysRicetta(proteina).find(k=>autoCandidati.includes(k)&&carboidratoCombinatoAmmesso(k,ctx));
-      if(!chiave)continue;
-      const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
-      if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
-      continue; // una PX gia' combinata non cerca anche un secondo C separato
+  /* Stesso principio di esaurimento per livello applicato al percorso
+     AUTO/combinato: per ciascun livello (rapido, poi altri) si prova
+     prima ogni PX gia' combinata il cui carboidrato incorporato
+     appartiene a quel livello, poi - per le proteine libere - un
+     carboidrato separato ristretto alle sole chiavi di quel livello
+     (cercaCarboSeparato riceve un autoCandidati gia' ristretto: la sua
+     stessa logica interna, invariata, resta l'unica fonte di verita' per
+     l'ordinamento fra ricette a parita' di chiave). fissiRimasti resta
+     passato per intero, come sempre: un tentativo P+C.user che questa
+     specifica proteina non aveva gia' soddisfatto sopra. */
+  for(const chiaviLivelloAuto of [livelli.autoRapido,livelli.autoAltri]){
+    if(!chiaviLivelloAuto.length)continue;
+    const chiaviLivelloSet=new Set(chiaviLivelloAuto);
+    for(const proteina of proteineOrdinatePC){
+      if(copertura(proteina).C){
+        const chiave=carbKeysRicetta(proteina).find(k=>chiaviLivelloSet.has(k)&&carboidratoCombinatoAmmesso(k,ctx));
+        if(!chiave)continue;
+        const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
+        if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
+        continue; // una PX gia' combinata non cerca anche un secondo C separato
+      }
+      const esito=await cercaCarboSeparato(proteina,fissiRimasti,chiaviLivelloAuto,token,giorno,pool,ctx,extra);
+      if(esito)return esito;
     }
-    const esito=await cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,token,giorno,pool,ctx,extra);
-    if(esito)return esito;
   }
   /* Nessuna combinazione PX+C+V valida per questo slot: un pasto
      ordinario deve sempre contenere un carboidrato, mai chiuso con la
@@ -2243,9 +2288,18 @@ async function completaPastoConBloccate(token,giorno,carbCandidati,pool,ctx,bloc
     /* Proteina bloccata, carboidrato libero: stessa priorita' di
        costruisciPastoSequenziale (C.user prima di C.auto, mai
        mescolati), ma la proteina resta quella gia' bloccata - mai
-       ripescata dal pool. */
-    const fissiRimasti=carbCandidati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
-    const autoCandidati=carbCandidati.filter(k=>!fissiRimasti.includes(k));
+       ripescata dal pool. setPocoTempo si applica anche qui (era il
+       difetto 3 segnalato: fissiRimasti/autoCandidati venivano ricavati
+       senza applicare la priorita' Poco tempo): carbCandidati viene
+       riordinato con lo stesso helper e lo stesso ctx.pasto usati da
+       costruisciPastoSequenziale, cosi' cercaCarboSeparato (che itera
+       gia' le chiavi come ciclo esterno, invariato) esamina prima i
+       livelli rapidi. */
+    const prefPocoTempoBloccata=ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.pocoTempo;
+    const pocoTempoAttivoBloccata=!!(prefPocoTempoBloccata&&ctx.pasto&&prefPocoTempoBloccata[ctx.pasto]);
+    const carbCandidatiOrdinati=ordinaCarboidratiPerPocoTempo(carbCandidati,ctx.residuiCarboidrati,pocoTempoAttivoBloccata);
+    const fissiRimasti=carbCandidatiOrdinati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
+    const autoCandidati=carbCandidatiOrdinati.filter(k=>!fissiRimasti.includes(k));
     const esitoSeparato=await cercaCarboSeparato(proteinaBloccata,fissiRimasti,autoCandidati,token,giorno,pool,ctxConBlocco,bloccate.filter(r=>r!==proteinaBloccata));
     if(esitoSeparato)return marcaRealizzazioniBloccate(esitoSeparato,bloccateIds);
     /* Nessun carboidrato (ne' C.user ne' C.auto) chiude il pasto con
