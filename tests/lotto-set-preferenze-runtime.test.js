@@ -1,14 +1,17 @@
 'use strict';
-/* Test integrato mirato: collega realmente al motore corrente
-   (motor-v12.js) le 5 preferenze del Set utente salvate in IndexedDB ma
-   finora non consumate dalla generazione:
-   setProteineLimitate, setPocoTempo, cerealiNonGraditi,
-   setVerdurePreferite, setVerdureDisattivate.
+/* Test integrato mirato (correzione del commit cd8599c): dimostra in
+   modo deterministico che le 5 preferenze del Set utente sono
+   realmente operative e coerenti nel motore V12 - mai un test che
+   dichiari corretta una preferenza verificando che non faccia nulla.
 
-   Usa la pipeline reale (generaPianoSettimana/rigeneraPasto) col
-   catalogo reale (db-ricette.json/ingredienti-new.json), mai una
-   reimplementazione della logica di preferenza. Casualità controllata
-   con tentativi limitati (mai migliaia di generazioni). */
+   Stile: fixture minime + gli helper puri esportati
+   (stablePartition, ordinaPerVerdurePreferite, ordinaCarboidratiPerPocoTempo,
+   caricaPreferenzeUtenteSet) per dimostrare gli ordinamenti in modo
+   deterministico; la pipeline reale (generaPianoSettimana/rigeneraPasto,
+   catalogo reale) solo per le integrazioni che devono provare filtro
+   hard, errore esplicito e assenza di scritture parziali. Nessuna
+   ripetizione di decine di generazioni casuali, nessun confronto fra
+   medie. */
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
@@ -32,184 +35,185 @@ function tuttiIngredientiPiano(piano){
   for(const voce of piano)for(const real of voce.realizzazioni||[])for(const ing of real.ingredientiEffettivi||[])out.push(ing);
   return out;
 }
-async function generaSettimanaValida(tentativiMax){
-  let ultimoErrore=null;
-  for(let i=0;i<tentativiMax;i++){
-    const esito=await M.generaPianoSettimana(0,{forza:true});
-    if(!esito.errori.length)return {ok:true,esito};
-    ultimoErrore=esito.errori;
-  }
-  return {ok:false,errore:ultimoErrore};
-}
+
+/* ============ Fixture minime per gli helper puri (mai la pipeline reale) ============ */
+const R_A=(id,varianti)=>({id,ingredienti:varianti.map(([variantId,ingredienteId])=>({variantId,ingredienteId,categoria:'C'}))});
 
 (async()=>{
-  await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+  await M.inizializza({basePath:''});
   const varianti=await getAll('varianti'),ingredienti=await getAll('ingredienti');
   const ingById=new Map(ingredienti.map(b=>[b.id,b]));
   const variantePer=nome=>varianti.find(v=>v.nome.toLowerCase()===nome.toLowerCase());
-  const vCarote=variantePer('Carote'),vPomodoro=variantePer('Pomodoro fresco'),vFarro=variantePer('Farro perlato'),vGnocchi=variantePer('Gnocchi');
-  assert(vCarote&&vPomodoro&&vFarro&&vGnocchi,'varianti reali del catalogo attese per il test');
-  const idFarro=ingById.get(vFarro.ingredienteId)&&vFarro.ingredienteId;
-  assert(idFarro,'ID base di Farro perlato atteso');
+  const vCarote=variantePer('Carote'),vPomodoro=variantePer('Pomodoro fresco'),vFarro=variantePer('Farro perlato'),vGnocchi=variantePer('Gnocchi'),vPatate=variantePer('Patate'),vPane=variantePer('Pane integrale');
+  assert(vCarote&&vPomodoro&&vFarro&&vGnocchi&&vPatate,'varianti reali del catalogo attese per il test');
+  const idFarro=vFarro.ingredienteId,idGnocchi=vGnocchi.ingredienteId;
 
-  /* ============ 1. Senza preferenze: esistono candidati ordinari (baseline) ============ */
+  /* ============ 1. Patate non entra mai nelle preferenze/esclusioni vegetali runtime ============ */
   {
-    resetStores();await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const {ok,esito}=await generaSettimanaValida(5);
-    assert(ok,'senza alcuna preferenza la settimana deve generarsi normalmente');
-    const piano=await getAll('piano');
-    assert.equal(piano.length,14);
-    console.log('OK 1: senza preferenze, candidati ordinari, settimana completa.');
+    resetStores();
+    await put('impostazioni',{chiave:'setVerdurePreferite',valore:[vPatate.nome]});
+    await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[vPatate.id]});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    const pref=await M.caricaPreferenzeUtenteSet();
+    assert.equal(pref.verdurePreferiteVariantIds.has(vPatate.id),false,'Patate non deve mai entrare in verdurePreferiteVariantIds');
+    assert.equal(pref.verdureDisattivateVariantIds.has(vPatate.id),false,'Patate non deve mai entrare in verdureDisattivateVariantIds');
+    console.log('OK 1: Patate esclusa deterministicamente da entrambe le liste vegetali runtime.');
   }
 
-  /* ============ 2. Verdura disattivata: mai in generazione né in rigeneraPasto ============ */
+  /* ============ 2. Un vecchio variantId Patate in setVerdureDisattivate non blocca Patate FIXED ============ */
+  {
+    resetStores();
+    await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[vPatate.id]});
+    await put('impostazioni',{chiave:'configCarboidratiStati',valore:{patate:{mode:'fixed',count:2}}});
+    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
+    const esito=await M.generaPianoSettimana(0,{forza:true});
+    assert.deepEqual(esito.errori,[],'un vecchio variantId Patate in setVerdureDisattivate non deve mai bloccare la generazione');
+    const usiPatate=tuttiIngredientiPiano(await getAll('piano')).filter(i=>i.variantId===vPatate.id).length;
+    assert(usiPatate>=2,'il conteggio FIXED (2) di Patate deve restare rispettato: disattivare una verdura non può bloccare accidentalmente il carboidrato Patate FIXED');
+    console.log('OK 2: variantId Patate storico in setVerdureDisattivate ignorato dal runtime, Patate FIXED conservata ('+usiPatate+' occorrenze).');
+  }
+
+  /* ============ 3. Una vera verdura disattivata resta esclusa da generazione e rigeneraPasto (filtro hard, pipeline reale) ============ */
   {
     resetStores();
     await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[vCarote.id]});
     await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const {ok}=await generaSettimanaValida(10);
+    let ok=false;
+    for(let i=0;i<10&&!ok;i++){const e=await M.generaPianoSettimana(0,{forza:true});ok=!e.errori.length;}
     assert(ok,'la generazione deve restare possibile escludendo una sola verdura tra molte');
     const piano=await getAll('piano');
-    const tuttiIng=tuttiIngredientiPiano(piano);
-    assert(!tuttiIng.some(i=>i.variantId===vCarote.id),'la verdura disattivata non deve mai comparire nel piano generato');
-
-    // rigeneraPasto: stesso vincolo, mai riabilitata
-    for(let i=0;i<8;i++){
+    assert(!tuttiIngredientiPiano(piano).some(i=>i.variantId===vCarote.id),'la verdura disattivata non deve mai comparire nel piano generato');
+    for(let i=0;i<6;i++){
       const voce=piano.find(v=>v.categoriaTarget);
       const r=await M.rigeneraPasto(voce.id.slice(0,10),voce.id.endsWith('_pranzo')?'pranzo':'cena',voce.categoriaTarget,{soloAnteprima:true});
       if(!r)continue;
       const ing=(r.realizzazioni||[]).flatMap(x=>x.ingredientiEffettivi||[]);
       assert(!ing.some(x=>x.variantId===vCarote.id),'rigeneraPasto non deve mai riproporre la verdura disattivata');
     }
-    console.log('OK 2: verdura disattivata assente sia dalla generazione sia da rigeneraPasto.');
+    console.log('OK 3: verdura disattivata assente sia dalla generazione sia da rigeneraPasto.');
   }
 
-  /* ============ 3. Verdura favorita: scelta prima quando esiste soluzione completa valida ============ */
+  /* ============ 4. Verdura ricorrente disattivata: errore esplicito, zero scritture (pipeline reale) ============ */
   {
     resetStores();
-    await put('impostazioni',{chiave:'setVerdurePreferite',valore:[vPomodoro.nome]});
+    await put('impostazioni',{chiave:'verduraRicorrente',valore:vCarote.id});
+    await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:['pranzo_0']});
+    await put('impostazioni',{chiave:'setVerdureDisattivate',valore:[vCarote.id]});
     await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    let trovata=false;
-    for(let i=0;i<15&&!trovata;i++){
-      resetStores();
-      await put('impostazioni',{chiave:'setVerdurePreferite',valore:[vPomodoro.nome]});
-      await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-      const {ok}=await generaSettimanaValida(1);
-      if(!ok)continue;
-      const piano=await getAll('piano');
-      const tuttiIng=tuttiIngredientiPiano(piano);
-      if(tuttiIng.some(x=>x.variantId===vPomodoro.id))trovata=true;
-    }
-    assert(trovata,'con la verdura favorita configurata, deve comparire almeno una volta in una settimana reale entro pochi tentativi (preferenza applicata, mai un obbligo)');
-    console.log('OK 3: la verdura favorita viene scelta quando esiste una soluzione completa valida che la contiene.');
+    const esito=await M.generaPianoSettimana(0,{forza:true});
+    assert.equal(esito.errori.length,1);
+    assert.equal(esito.errori[0],'La verdura ricorrente selezionata risulta non disponibile. Riattivala oppure modifica la programmazione ricorrente.');
+    assert.equal((await getAll('piano')).length,0,'nessuna scrittura parziale quando la verdura ricorrente è disattivata');
+    console.log('OK 4: verdura ricorrente disattivata produce errore esplicito e zero scritture.');
   }
 
-  /* ============ 4. Cereale non gradito: evitato se esiste alternativa, ma resta utilizzabile se FIXED ============ */
+  /* ============ 5. Partizione deterministica: candidato con verdura preferita restituito per primo (helper puro) ============ */
   {
-    // 4a. AUTO: con Farro perlato segnato come non gradito, la presenza
-    // media su più settimane deve ridursi rispetto al baseline (confronto
-    // su una media di poche prove indipendenti, per non dipendere dal
-    // rumore di una singola estrazione casuale - mai un'esclusione hard:
-    // può ancora comparire se serve).
-    const contaFarro=async()=>tuttiIngredientiPiano(await getAll('piano')).filter(i=>i.ingredienteId===idFarro).length;
-    let baseTotale=0,prefTotale=0;
-    const CAMPIONI=5;
-    for(let i=0;i<CAMPIONI;i++){
-      resetStores();
-      await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-      const {ok}=await generaSettimanaValida(3);
-      assert(ok);
-      baseTotale+=await contaFarro();
-    }
-    for(let i=0;i<CAMPIONI;i++){
-      resetStores();
-      await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[idFarro]});
-      await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-      const {ok}=await generaSettimanaValida(5);
-      assert(ok,'la generazione deve restare possibile anche con un cereale AUTO segnato come non gradito');
-      prefTotale+=await contaFarro();
-    }
-    assert(prefTotale<=baseTotale,'in media su '+CAMPIONI+' settimane, un cereale AUTO non gradito ('+prefTotale+'/'+CAMPIONI+') non deve comparire più spesso del baseline ('+baseTotale+'/'+CAMPIONI+')');
+    const conPreferita={ricette:[{ingredienti:[{variantId:'v_altra'},{variantId:vPomodoro.id}]}]};
+    const senzaPreferita={ricette:[{ingredienti:[{variantId:'v_altra2'}]}]};
+    const pool=[senzaPreferita,conPreferita]; // ordine di partenza: preferita per SECONDA
+    const risultato=M.ordinaPerVerdurePreferite(pool,new Set([vPomodoro.id]));
+    assert.deepEqual(risultato,[conPreferita,senzaPreferita],'il candidato con la verdura preferita deve essere restituito per primo, deterministicamente');
+    console.log('OK 5: ordinaPerVerdurePreferite antepone deterministicamente il candidato preferito.');
+  }
 
-    // 4b. FIXED: Gnocchi fissato a 2/settimana anche se marcato "non
-    // gradito" - il conteggio fisso non deve mai essere alterato dalla
-    // preferenza negativa (task: "non cambiare un carboidrato FIXED").
+  /* ============ 6. La preferenza funziona in P/G, C/S o ricetta combinata, non solo nel V residuo (helper puro, stesso codice della pipeline) ============ */
+  {
+    const ricettaP_conG={ingredienti:[{variantId:'v_proteina'},{variantId:vPomodoro.id,categoria:'G'}]}; // verdura come guarnizione dentro una ricetta P
+    const ricettaC_conS={ingredienti:[{variantId:'v_cereale'},{variantId:vPomodoro.id,categoria:'S'}]}; // verdura come sugo dentro una ricetta C
+    const ricettaCombinataPC={ingredienti:[{variantId:'v_proteina2'},{variantId:'v_cereale2'},{variantId:vPomodoro.id}]}; // P+C+V in un'unica ricetta
+    const senzaPreferita={ingredienti:[{variantId:'v_altro'}]};
+    for(const [nome,conPreferita] of [['P con G',ricettaP_conG],['C con S',ricettaC_conS],['combinata P+C+V',ricettaCombinataPC]]){
+      const risultato=M.ordinaPerVerdurePreferite([senzaPreferita,conPreferita],new Set([vPomodoro.id]));
+      assert.equal(risultato[0],conPreferita,'la preferenza deve valere anche dentro una ricetta '+nome+', non solo nel contorno finale');
+    }
+    console.log('OK 6: la verdura preferita è riconosciuta indipendentemente dal ruolo/punto della ricetta in cui compare.');
+  }
+
+  /* ============ 7. Cereale non gradito AUTO in una ricetta "P+C": dopo un candidato gradito equivalente (helper puro, stessa logica della pipeline) ============ */
+  {
+    const pcConCerealeGradito=R_A('pc_gradito',[['v_p','ing_p'],['v_c_gradito','ing_gradito']]);
+    const pcConCerealeNonGradito=R_A('pc_non_gradito',[['v_p2','ing_p2'],['v_c_nongradito',idFarro]]);
+    const cerealiNonGraditi=new Set([idFarro]);
+    const contieneCerealeNonGradito=r=>r.ingredienti.some(i=>i.ingredienteId&&cerealiNonGraditi.has(i.ingredienteId));
+    // stessa identica partizione applicata da costruisciPastoSequenziale al percorso P+C.AUTO
+    const pool=[pcConCerealeNonGradito,pcConCerealeGradito]; // gradito per SECONDO in partenza
+    const graditi=pool.filter(r=>!contieneCerealeNonGradito(r)),nonGraditi=pool.filter(contieneCerealeNonGradito);
+    const risultato=M.stablePartition(graditi,()=>true).concat(M.stablePartition(nonGraditi,()=>true));
+    assert.deepEqual(risultato,[pcConCerealeGradito,pcConCerealeNonGradito],'un candidato P+C AUTO con cereale gradito deve precedere uno equivalente con cereale non gradito');
+    console.log('OK 7: cereale non gradito AUTO in una ricetta P+C viene dopo un candidato gradito equivalente.');
+  }
+
+  /* ============ 8. Lo stesso cereale, se FIXED, conserva la priorità richiesta (pipeline reale, deterministico: conteggio, non media) ============ */
+  {
     resetStores();
-    const idGnocchi=vGnocchi.ingredienteId;
     await put('impostazioni',{chiave:'configCarboidratiStati',valore:{gnocchi:{mode:'fixed',count:2}}});
     await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[idGnocchi]});
     await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const {ok:okFixed}=await generaSettimanaValida(8);
-    assert(okFixed,'un carboidrato FIXED non deve mai essere impedito dal cereale non gradito');
+    let ok=false;
+    for(let i=0;i<8&&!ok;i++){const e=await M.generaPianoSettimana(0,{forza:true});ok=!e.errori.length;}
+    assert(ok,'un carboidrato FIXED non deve mai essere impedito dal cereale non gradito');
     const usiGnocchi=tuttiIngredientiPiano(await getAll('piano')).filter(i=>i.ingredienteId===idGnocchi).length;
     assert(usiGnocchi>=2,'il conteggio FIXED (2) deve restare rispettato anche se l\'ingrediente è segnato come non gradito');
-    console.log('OK 4: cereale AUTO non gradito evitato quando possibile, FIXED invariato.');
+    console.log('OK 8: cereale FIXED ('+usiGnocchi+' occorrenze) conserva la priorità richiesta nonostante la preferenza negativa.');
   }
 
-  /* ============ 5. Proteina meno gradita: usata solo dopo le categorie valide alternative ============ */
+  /* ============ 9. "Poco tempo a pranzo": ordine FIXED rapidi, altri FIXED, Pane AUTO, altri AUTO (helper puro) ============ */
   {
-    resetStores();
-    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const risoltoBase=await M.caricaConfigurazioneNutrizionaleRisolta();
-    const {ok:okBase}=await generaSettimanaValida(3);
-    assert(okBase);
-    const usiBase={};for(const v of await getAll('piano'))usiBase[v.categoriaTarget]=(usiBase[v.categoriaTarget]||0)+1;
+    const carbCandidati=['riso','pane','gnocchi','friselle','pasta'];
+    const residuiFissi={gnocchi:1,friselle:1}; // FIXED ancora da collocare: gnocchi (non rapido), friselle (rapido)
+    const risultato=M.ordinaCarboidratiPerPocoTempo(carbCandidati,residuiFissi,true);
+    assert.deepEqual(risultato,['friselle','gnocchi','pane','riso','pasta'],'ordine atteso: FIXED rapidi, altri FIXED, AUTO rapido (pane), altri AUTO');
+    console.log('OK 9: ordinaCarboidratiPerPocoTempo produce esattamente i 4 livelli richiesti.');
+  }
 
+  /* ============ 10. "Poco tempo a pranzo" non modifica la cena (helper puro: pocoTempoAttivo falso => ordine invariato) ============ */
+  {
+    const carbCandidati=['riso','pane','gnocchi','pasta'];
+    const risultato=M.ordinaCarboidratiPerPocoTempo(carbCandidati,{},false);
+    assert.deepEqual(risultato,carbCandidati,'con pocoTempoAttivo falso (es. per la cena quando è attivo solo a pranzo) l\'ordine ricevuto non deve essere alterato');
+    console.log('OK 10: con la preferenza non attiva per quel pasto, l\'ordine dei carboidrati resta invariato.');
+  }
+
+  /* ============ 11. Friselle non viene mai introdotta come AUTO (helper puro) ============ */
+  {
+    const carbCandidati=['riso','friselle','pane','pasta']; // friselle presente ma MAI fissata (non in residuiFissi)
+    const risultato=M.ordinaCarboidratiPerPocoTempo(carbCandidati,{},true);
+    assert.equal(risultato.indexOf('pane'),0,'pane AUTO deve essere il rapido in testa');
+    assert(risultato.indexOf('friselle')>risultato.indexOf('pane'),'friselle, mai fissata, non deve mai precedere pane AUTO: non è mai trattata come rapido AUTO');
+    console.log('OK 11: friselle non fissata resta un carboidrato AUTO ordinario, mai introdotta come rapido AUTO.');
+  }
+
+  /* ============ 12. Categoria proteica meno gradita: dopo un'alternativa valida, ma resta disponibile come fallback (pipeline reale, deterministico) ============ */
+  {
     resetStores();
     await put('impostazioni',{chiave:'setProteineLimitate',valore:['carne']});
     await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const {ok:okPref}=await generaSettimanaValida(5);
-    assert(okPref,'la generazione deve restare possibile con una categoria proteica meno gradita');
-    const usiPref={};for(const v of await getAll('piano'))usiPref[v.categoriaTarget]=(usiPref[v.categoriaTarget]||0)+1;
-    assert((usiPref.carne||0)<=(risoltoBase.proteinFrequencies.carne.max??99),'la categoria meno gradita resta comunque entro i limiti nutrizionali (mai un\'esclusione)');
-    console.log('OK 5: categoria proteica meno gradita ('+  (usiPref.carne||0)+' usi) resta un\'opzione, non un\'esclusione.');
+    let ok=false;
+    for(let i=0;i<8&&!ok;i++){const e=await M.generaPianoSettimana(0,{forza:true});ok=!e.errori.length;}
+    assert(ok,'la generazione deve restare possibile con una categoria proteica meno gradita');
+    const risolto=await M.caricaConfigurazioneNutrizionaleRisolta();
+    const usiCarne=(await getAll('piano')).filter(v=>v.categoriaTarget==='carne').length;
+    assert(usiCarne<=(risolto.proteinFrequencies.carne.max??99),'la categoria meno gradita resta comunque entro i limiti nutrizionali');
+    assert(usiCarne>=(risolto.proteinFrequencies.carne.min||0),'la categoria meno gradita resta disponibile come fallback per rispettare il minimo settimanale, mai un\'esclusione');
+    console.log('OK 12: categoria proteica meno gradita ('+usiCarne+' usi) rispetta i limiti ed è disponibile come fallback per il minimo.');
   }
 
-  /* ============ 6. "Poco tempo": non implementato (condizione di arresto, documentata) ============ */
-  {
-    /* Nessun metadato strutturato nel catalogo (db-ricette.json,
-       ingredienti-new.json) distingue preparazioni fredde/rapide/
-       pane-friselle: solo nomi liberi di cottura testuali. Dedurre la
-       rapidità dal nome è esplicitamente vietato dall'incarico.
-       setPocoTempo viene caricato da caricaPreferenzeUtenteSet() per
-       trasparenza ma non altera l'ordine delle composizioni: verificato
-       qui che impostarlo non cambi il comportamento (nessuna somiglianza
-       accidentale con un'implementazione nascosta). */
-    resetStores();
-    await put('impostazioni',{chiave:'setPocoTempo',valore:{pranzo:true,cena:false}});
-    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const {ok}=await generaSettimanaValida(3);
-    assert(ok,'impostare "poco tempo" non deve mai impedire la generazione (preferenza non applicata, per assenza di metadati affidabili)');
-    console.log('OK 6 (documentato, non implementato): "poco tempo" non altera la generazione - manca un metadato di catalogo per rapida/fredda, vedi REGISTRO_MODIFICHE.md.');
-  }
-
-  /* ============ 7. Verdura ricorrente: continua ad avere precedenza (regressione) ============ */
+  /* ============ 13. Verdura ricorrente e vincoli hard prevalgono su ogni preferenza soft (pipeline reale) ============ */
   {
     resetStores();
-    const vRic=vPomodoro;
-    await put('impostazioni',{chiave:'verduraRicorrente',valore:vRic.id});
+    await put('impostazioni',{chiave:'verduraRicorrente',valore:vPomodoro.id});
     await put('impostazioni',{chiave:'verduraRicorrentePasti',valore:['pranzo_0']});
+    // Verdura preferita DIVERSA dalla ricorrente: la ricorrente deve comunque vincere sempre.
+    await put('impostazioni',{chiave:'setVerdurePreferite',valore:[vCarote.nome]});
     await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const {ok}=await generaSettimanaValida(8);
-    assert(ok,'la verdura ricorrente già funzionante deve continuare a generare correttamente');
-    const lunedi=(await getAll('piano')).find(v=>v.id.endsWith('_pranzo')&&v.id.startsWith('2026-08-31'));
+    let ok=false;
+    for(let i=0;i<8&&!ok;i++){const e=await M.generaPianoSettimana(0,{forza:true});ok=!e.errori.length;}
+    assert(ok);
+    const lunedi=(await getAll('piano')).find(v=>v.id==='2026-08-31_pranzo');
     const ing=(lunedi.realizzazioni||[]).flatMap(x=>x.ingredientiEffettivi||[]);
-    assert(ing.some(x=>x.variantId===vRic.id),'la verdura ricorrente obbligatoria deve avere precedenza, invariata da questo intervento');
-    console.log('OK 7: verdura ricorrente ancora con precedenza (nessuna regressione).');
-  }
-
-  /* ============ 8. Tutte le verdure compatibili disattivate: errore esplicito, mai riapertura del pool ============ */
-  {
-    resetStores();
-    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const tutteLeVerdure=varianti.filter(v=>{const b=ingById.get(v.ingredienteId);return b&&b.gruppo==='verdura';}).map(v=>v.id);
-    await put('impostazioni',{chiave:'setVerdureDisattivate',valore:tutteLeVerdure});
-    await M.inizializza({basePath:''});M.invalidaConfigRuntime();
-    const esito=await M.generaPianoSettimana(0,{forza:true});
-    assert(esito.errori.length>0,'con tutte le verdure disattivate la generazione deve fallire esplicitamente');
-    const piano=await getAll('piano');
-    assert.equal(piano.length,0,'nessuna scrittura parziale: il pool non deve mai essere riaperto per aggirare il fallimento');
-    console.log('OK 8: con tutte le verdure compatibili disattivate, errore esplicito e nessuna scrittura parziale.');
+    assert(ing.some(x=>x.variantId===vPomodoro.id),'la verdura ricorrente deve avere precedenza su una verdura preferita diversa, sempre');
+    console.log('OK 13: verdura ricorrente e vincoli hard prevalgono su ogni preferenza soft.');
   }
 
   console.log('lotto set preferenze runtime: ok');

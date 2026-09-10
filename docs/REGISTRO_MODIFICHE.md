@@ -2153,3 +2153,60 @@ funzionanti, vedi scenario 7 del test).
 **SHA finale:** `cd8599c358a553c72f45ff4c01f14566f3f1f7b2`.
 
 ---
+
+## 2. Commit `(in preparazione)` — correzione: Patate, cereali non graditi su P+C, propagazione completa verdure preferite, semantica definitiva poco tempo, errore verdura ricorrente/non disponibile
+
+**SHA iniziale di questo intervento correttivo:** `076378ad183ae632f6af8abf6a29fa1c3b8027b7`.
+
+**Difetti rimasti nel commit `cd8599c` (diagnosi ricevuta, confermata):**
+1. `setPocoTempo` veniva letto da `caricaPreferenzeUtenteSet()` ma intenzionalmente ignorato — nessun effetto sulla generazione.
+2. `cerealiNonGraditi` veniva applicato solo al percorso "carboidrato separato" (`cercaCarboSeparato`), mai alle ricette concrete già combinate P+C.
+3. `setVerdurePreferite` influenzava solo il residuo vegetale finale (`completaResiduoVerduraRicette`), non le fasi P/G, C/S o le ricette P+C+V combinate.
+4. `Patate` veniva trattata come verdura sia in `index.html` (`renderSetVerdure`, con l'eccezione esplicita `v.nome.toLowerCase()==='patate'`) sia in `motor-v12.js` (`caricaPreferenzeUtenteSet`, stessa eccezione), nonostante catalogo (`gruppo:'carboidrati'`), baseline e specifica la classifichino come carboidrato — un vecchio `variantId` Patate in `setVerdureDisattivate` poteva quindi bloccare accidentalmente il carboidrato FIXED Patate.
+
+I test del commit `cd8599c` erano inoltre in parte probabilistici (confronto tra medie di generazioni casuali) e non dimostravano la precedenza dichiarata in modo deterministico.
+
+**Blocco 1 — Correzione Patate:**
+- `index.html:renderSetVerdure()` — rimossa l'eccezione `||v.nome.toLowerCase()==='patate'`: la lista mostra esclusivamente varianti con `base.gruppo==='verdura'`.
+- `index.html:renderSetPreferenzeMenu()` — nuovo insieme `nomiVerdureReali` (da `varianti`+`ingredienti`, `base.gruppo==='verdura'`), usato per filtrare sia le verdure stagionali sia quelle in inventario prima di proporle come preferite: Patate (e ogni altro carboidrato) non può più entrare in `setVerdurePreferite`.
+- `motor-v12.js:caricaPreferenzeUtenteSet()` — nuova mappa `baseById`; sia `setVerdurePreferite` sia `setVerdureDisattivate` validano ora identicamente `base.gruppo==='verdura'`, nessuna eccezione per nome. Un vecchio `variantId` Patate già salvato in `setVerdureDisattivate` viene semplicemente ignorato dal runtime (nessuna migrazione, nessuna cancellazione del dato utente): disattivare una verdura non può più bloccare accidentalmente il carboidrato Patate FIXED.
+- `renderSetVerduraRicorrente()` non toccata (già corretta, usava solo `base.gruppo==='verdura'`).
+
+**Blocco 2 — `cerealiNonGraditi` completato su P+C:**
+- Nuovo helper generico `stablePartition(arr,predicate)` (due `filter`, mai un `sort` su chiave booleana, mai un punteggio).
+- `motor-v12.js:costruisciPastoSequenziale()` — nel percorso P+C.AUTO (proteina già combinata con un carboidrato AUTO-ammesso), i candidati vengono partizionati: prima quelli il cui carboidrato incorporato non appartiene a `cerealiNonGraditiIds`, poi gli altri — mai eliminati. Il percorso P+C.user (FIXED) resta interamente fuori da questa partizione, invariato: una richiesta FIXED resta sempre superiore alla preferenza negativa. Collegamento sempre tramite `ingredienteId`, mai per nome. Ordine strutturale invariato: P+C.user → P libero + C.user → P+C.AUTO/P libero + C.AUTO (verificato da `tests/lotto-carboidrati-priorita-pxcuser.test.js`, 100/100 generazioni).
+
+**Blocco 3 — `setVerdurePreferite` propagato a tutte le fasi:**
+- Nuovo helper centralizzato `ordinaPerVerdurePreferite(pool,preferredVariantIds)` — riceve un pool già filtrato e valido, sposta in testa (partizione stabile, mai un'eliminazione) i candidati che contengono almeno un `variantId` preferito tra i loro ingredienti, qualunque sia il ruolo (P/G, C/S, V); accetta anche candidati-pasto composti da più ricette.
+- Applicato a: pool proteico generale in `costruisciPastoSequenziale()` (copre sia P+C.user sia ogni "P con G o V", sempre dopo la priorità inventario di Salvafrigo quando presente — `applicaPrioritaInventario` restituisce già un solo livello alla volta, quindi riordinare dopo resta sempre "tra candidati dello stesso livello"); ricette P+C.AUTO (rifinisce, dopo la partizione dominante per cereali non graditi); ricette carboidrato separate in `cercaCarboSeparato()` (sia FIXED sia AUTO); `ordinaVerdureProgrammazione()` (ora delega all'helper — copre sia il residuo V di `completaResiduoVerduraRicette()` sia le ricomposizioni automatiche dopo Roll, già agganciate nel commit precedente).
+- Verdura ricorrente e vincoli hard restano sempre dominanti: la preferenza opera solo tra candidati già validati da `chiudiPastoConVerdura` (che verifica `ctx.requiredVegetableVariantId` indipendentemente dall'ordine di tentativo) — nessuna modifica a questa validazione.
+
+**Blocco 4 — `setPocoTempo` implementato (semantica applicativa, non temporale):**
+- Nuovo helper puro `ordinaCarboidratiPerPocoTempo(carbCandidati,residuiFissi,pocoTempoAttivo)` — se `pocoTempoAttivo` è falso restituisce l'ordine invariato; se vero produce quattro livelli (FIXED rapidi pane/friselle, altri FIXED, AUTO rapido solo "pane", altri AUTO), ordine relativo preesistente conservato in ciascun livello. Friselle non è mai introdotta come AUTO (ha un tetto PDF, può comparire solo se già in `residuiFissi`).
+- `ctx.pasto` propagato da tutti i chiamanti vivi di `costruisciPastoSequenziale()`: `risolviSettimanaSequenziale()` (tramite `ctxPasto`), `rigeneraPasto()`, `risolviSlotSingolo()`; per transitività anche `completaPastoConBloccate()` (lucchetti, non modificata direttamente — riceve `ctx.pasto` già valorizzato dal chiamante e delega a `costruisciPastoSequenziale()` per i ruoli non bloccati, comportamento preesistente). Nessuna lettura IndexedDB introdotta nei cicli: il valore arriva già risolto da `ctx.runtimeConfig.userPreferences`.
+- Testo UI in `index.html` sostituito: non promette più "preparazioni fredde" (nessun metadato di catalogo lo giustifica).
+
+**Blocco 5 — Errore esplicito per verdura ricorrente disattivata:**
+- `motor-v12.js:generaPianoSettimana()` — prima di generare, se `verduraRicorrente` è selezionata per almeno uno slot (`verduraRicorrentePasti` non vuoto) e la stessa variante è tra le vere verdure disattivate (già validate `base.gruppo==='verdura'`, Patate esclusa), restituisce `{generati:[],errori:['La verdura ricorrente selezionata risulta non disponibile. Riattivala oppure modifica la programmazione ricorrente.']}` senza generare nulla — nessuna riabilitazione, nessuna scrittura parziale (verificato: zero record in `piano`).
+
+**Test sostitutivo (unico file modificato, nessun altro creato):** `tests/lotto-set-preferenze-runtime.test.js` riscritto integralmente, eliminate tutte le verifiche probabilistiche ("compare almeno una volta entro N generazioni", confronto fra medie, verifica del solo massimo nutrizionale, test che considerava corretto `setPocoTempo` perché non alterava nulla). 13 scenari deterministici, fixture minime + helper puri esportati (`stablePartition`, `ordinaPerVerdurePreferite`, `ordinaCarboidratiPerPocoTempo`, `caricaPreferenzeUtenteSet`) per gli ordinamenti; pipeline reale solo per filtro hard, errore esplicito e assenza di scritture (scenari 2, 3, 4, 8, 12, 13 — questi ultimi tre con soglie di conteggio deterministiche, mai medie). Verificato: il file fallisce sul codice del commit `cd8599c`/`076378a` (funzione `caricaPreferenzeUtenteSet` non ancora esportata, blocchi non implementati) e passa dopo questa correzione.
+
+**Esito reale dei test eseguiti:**
+```
+node --check motor-v12.js                              → OK
+node tests/lotto-set-preferenze-runtime.test.js         → ok (13/13 scenari, stabile su esecuzioni ripetute)
+node tests/lotto-g-weekly-generation.test.js            → esito variabile, vedi nota sotto
+node tests/lotto-carboidrati-priorita-pxcuser.test.js   → ok (100/100 generazioni, priorità P+C.user intatta)
+node tests/lotto-e-root-user-set.test.js                → ok
+git diff --check                                        → pulito
+```
+
+**Nota su `lotto-g-weekly-generation.test.js` (registrata come richiesto, senza attribuire automaticamente il fallimento al rumore):** in una delle esecuzioni di verifica finale il test è fallito sullo stesso scenario limite già documentato nella sezione precedente di questo registro ("verdura ricorrente obbligatoria per tutti e 7 i giorni di pranzo"). Non è stato semplicemente ripetuto fino al successo: è stato eseguito un confronto controllato e interlacciato (15 esecuzioni per versione) tra il codice corrente di questo intervento e il commit di partenza `076378a` (prima di questa correzione) — esito: 13/15 (87%) con questo intervento contro 11/15 (73%) con la versione precedente. Il codice corrente non mostra quindi un peggioramento della fattibilità rispetto alla baseline; la differenza osservata rientra nel rumore statistico atteso per un campione di questa dimensione (il generatore non usa un seed fisso). Nessun ordinamento introdotto in questo intervento risulta quindi aver alterato la fattibilità di questo scenario.
+
+**File modificati (solo quelli ammessi):** `motor-v12.js`, `index.html`, `tests/lotto-set-preferenze-runtime.test.js`, `docs/REGISTRO_MODIFICHE.md`.
+
+**Non modificati (invarianti rispettati):** resolver nutrizionale, frequenze/quantità, tabella carboidrati, tabella proteine, algebra V/S/G, rotazione proteica giornaliera, verdura ricorrente (logica di `verduraRicorrenteRichiesta`/`chiudiPastoConVerdura` invariata), lucchetti (`completaPastoConBloccate` non modificata direttamente), snapshot delle realizzazioni, inventario e spesa, `db-ricette.json`, `ingredienti-new.json`, schema IndexedDB, profili vegetariano/vegano, restyling grafico. `ricettaAmmessa()` non toccata (il filtro hard verdure disattivate era già corretto nel commit `cd8599c`).
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---
