@@ -1888,3 +1888,47 @@ locale non è disponibile un binario Chromium.
 **SHA dell'intervento grafico:** `a47197d66ebf17fe464e47d230f37e2ad16cfa8d`.
 
 ---
+
+## 18. Restyling completo del Setting nutrizionista — 11 settembre 2026
+
+**Obiettivo richiesto da Cwe:** applicare al solo prototipo grafico la nuova
+veste dell'area nutrizionista dopo averne verificato integralmente struttura,
+renderer e comportamenti nella pagina funzionale, senza eliminare o accorpare
+alcuna funzione esistente.
+
+**Mappatura eseguita prima del disegno:** verificati `view-nutrizionista`,
+`renderConfigAvanzata`, `renderVincoliIngredientiNutrizionista`, salvataggio,
+reset canonico e ricostruzione successiva al cambio profilo. La nuova vista
+rappresenta tutti i 14 allergeni UE; i profili onnivoro, vegetariano e vegano;
+le cinque frequenze proteiche con min/max/quantità; i quattro tetti di
+sottotipo; frutta e porzione; colazioni e pasti speciali; olio; tutti i tetti
+spuntino; regole APP-CWE; cooldown e scadenze; le due classi dei carboidrati;
+gli stati disponibile/limitato/escluso per carboidrati, proteine e verdure;
+minimo, massimo, quantità e override contestuali per colazione, pasto
+principale e spuntino; contesti PDF aggiuntivi, salvataggio e ripristino.
+
+**Intervento effettuato:** aggiunta una pagina `Setting nutrizionista`
+separata dal Set utente, raggiungibile da un comando esplicito e dotata di
+ritorno al Set. Il catalogo ingredienti della preview viene caricato da
+`ingredienti-new.json`; i suoi caroselli conservano il ciclo grafico a tre
+stati e rendono visibili le righe di vincolo soltanto quando necessarie. I
+parametri PDF e APP-CWE hanno gerarchie distinte e la barra Salva/Ripristina
+resta accessibile durante lo scorrimento. Aggiunto il contratto metadata per
+guidare il merge futuro con IndexedDB e resolver canonico.
+
+**Separazione confermata:** `index.html`, motore, resolver, cataloghi e
+IndexedDB non sono stati modificati. Valori e interazioni nel prototipo sono
+dimostrativi e non introducono regole nutrizionali.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline e del
+contratto JSON riuscito; presenza dei cinque moduli principali, dei 14
+allergeni, delle 26 righe globali, delle due classi carboidrati, dei tre
+caroselli catalogo e dei tre contesti per ingrediente verificata;
+`index.html` invariato.
+
+**File modificati:** `restyling-preview.html`,
+`docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento grafico:** `802d3c3e0736c023d1765600566736071e2bdd72`.
+
+---
