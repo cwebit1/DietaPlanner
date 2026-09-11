@@ -1932,3 +1932,34 @@ caroselli catalogo e dei tre contesti per ingrediente verificata;
 **SHA dell'intervento grafico:** `802d3c3e0736c023d1765600566736071e2bdd72`.
 
 ---
+
+## 19. Clone autonomo per il restyling della sola pagina Pasto — 11 settembre 2026
+
+**Obiettivo richiesto da Cwe:** creare un nuovo file partendo dall'`index.html`
+completo, per non perdere alcun componente, e applicare il linguaggio grafico
+approvato esclusivamente alla pagina Pasto. Nessuna reinterpretazione delle
+altre pagine e nessuna modifica all'applicazione principale.
+
+**Intervento effettuato:** creato `index-pasto-restyling.html` come copia
+integrale dell'index corrente. Aggiunto uno strato CSS rigorosamente circoscritto
+a `#view-piano`: calendario compatto, card eleganti, intestazioni verde salvia,
+righe C/P/V più leggibili, comandi Alternativa e Salvafrigo, proposta non
+salvata, colazione, spuntini, nutrizione, frequenze e grafici. Tre hero
+dimostrative vengono aggiunte dopo i renderer originali da uno script isolato
+che non intercetta azioni e non legge o scrive dati.
+
+**Invarianti verificati:** `index.html` è invariato; ID, markup funzionale,
+renderer, listener, IndexedDB, motore, cataloghi e tutte le viste diverse da
+Pasto restano quelli del clone originale.
+
+**Verifiche:** confronto iniziale byte-per-byte del clone riuscito; parsing dei
+tre script inline riuscito; `git diff --check` pulito; selettori CSS del nuovo
+strato limitati a `#view-piano`; `index.html` senza differenze.
+
+**File aggiunto:** `index-pasto-restyling.html`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento grafico:** `b3d98a79d2511b3128797102126a9ccdce239e61`.
+
+---
