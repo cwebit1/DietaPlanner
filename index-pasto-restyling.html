@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 116673)
-Total output lines: 7790
+Warning: truncated output (original token count: 116702)
+Total output lines: 7792
 
 <!DOCTYPE html>
 <html lang="it">
@@ -651,6 +651,8 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
    Il clone conserva markup, ID, renderer e listener dell'index originale.
    Queste regole non raggiungono le altre viste.
    ========================================================= */
+/* Loader conservato integralmente ma disattivato soltanto in questo clone. */
+#loaderApp{display:none!important}
 #view-piano{--pasto-forest:#145039;--pasto-sage:#edf3e9;--pasto-paper:#fffefb;--pasto-ink:#132019;--pasto-line:#dce3da;margin:-14px;padding:0 0 24px;color:var(--pasto-ink);background:#fbfaf6;border-radius:0 0 18px 18px;overflow:hidden}
 #view-piano .giorni-riga{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:5px;align-items:center;padding:8px 8px 7px;background:var(--pasto-paper);border-bottom:1px solid var(--pasto-line);box-shadow:0 3px 10px rgba(28,61,43,.06)}
 #view-piano .giorni{display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:0}
@@ -2923,10 +2925,7 @@ async function mostraVista(nome){
   const vistaAttuale = document.querySelector('nav.tabbar button.active')?.dataset.view;
   if(vistaAttuale==='menu' && nome!=='menu' && menuDraft && menuDraft.modificata){
     const scelta = await mostraModaleAvviso(
-      'Hai generato o modificato il menù senza salvare. Le modifiche andranno perse se esci ora.',
-      [
-        {testo:'Salva ed esci', classe:'primary', valore:'salva'},
-        {testo:'Esci senza …16673 tokens truncated…<button data-premio-colazione="${r.id}" class="small" style="flex:0 0 auto;">🎁 ${r.nome}</button>`).join('')}
+      'Hai generato o modificato il menù senza salvare. Le modifiche andranno perse se …16702 tokens truncated…<button data-premio-colazione="${r.id}" class="small" style="flex:0 0 auto;">🎁 ${r.nome}</button>`).join('')}
       </div>
     </div>`;
     el.innerHTML = htmlPremio;
