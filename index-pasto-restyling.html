@@ -1,4 +1,4 @@
-Warning: truncated output (original token count: 116702)
+Warning: truncated output (original token count: 116722)
 Total output lines: 7792
 
 <!DOCTYPE html>
@@ -694,7 +694,7 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 </head>
 <body>
 
-<div id="loaderApp">
+<div id="loaderApp" style="display:none!important;" aria-hidden="true" data-loader-enabled="false">
   <div class="loader-logo">🍽️</div>
   <div class="loader-titolo">Dieta<span>·</span>Planner</div>
   <div class="loader-barra-esterna"><div class="loader-barra-interna" id="loaderBarra"></div></div>
@@ -2925,7 +2925,7 @@ async function mostraVista(nome){
   const vistaAttuale = document.querySelector('nav.tabbar button.active')?.dataset.view;
   if(vistaAttuale==='menu' && nome!=='menu' && menuDraft && menuDraft.modificata){
     const scelta = await mostraModaleAvviso(
-      'Hai generato o modificato il menù senza salvare. Le modifiche andranno perse se …16702 tokens truncated…<button data-premio-colazione="${r.id}" class="small" style="flex:0 0 auto;">🎁 ${r.nome}</button>`).join('')}
+      'Ha…16722 tokens truncated…<button data-premio-colazione="${r.id}" class="small" style="flex:0 0 auto;">🎁 ${r.nome}</button>`).join('')}
       </div>
     </div>`;
     el.innerHTML = htmlPremio;
