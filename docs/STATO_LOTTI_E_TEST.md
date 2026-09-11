@@ -24,6 +24,10 @@
 - Tutte le 218 referenze ingrediente, comprese le composizioni fisse, risolvono
   nel catalogo.
 - Nessuna sorgente runtime usa i cataloghi della versione 1.0.
+- `db-visuale.json` v1 copre 420 ricette concrete con ID deterministico e
+  stato `disponibile`; il record resta risolvibile quando disattivato ma viene
+  escluso dal filtro comune delle nuove proposte. `gestore-ricette.html`
+  modifica foto, testo e disponibilità senza duplicare dati nutrizionali.
 - Il confronto delle 20 voci del formato intermedio archiviato è registrato in
   `AUDIT_CONVERSIONE_RICETTARIO_SOSPESO.md`: tutte le destinazioni sono state
   decise e le conversioni approvate sono applicate; la correzione nominale

@@ -13,7 +13,9 @@ basata sul nuovo formato. In caso di conflitto nutrizionale prevale
 - La root è l'unica applicazione attiva.
 - Il motore attivo è `motor-v12.js`, API `DietaPlannerMotorV12`.
 - I soli cataloghi attivi sono `db-ricette.json` e
-  `ingredienti-new.json`.
+  `ingredienti-new.json` per i dati funzionali. `db-visuale.json` è il
+  catalogo parallelo dei contenuti e dello stato gestionale delle 420 ricette
+  concrete; non contiene regole nutrizionali.
 - `Vecchia versione 1.0/` è archivio non operativo.
 - Una copertura mancante nel nuovo ricettario non autorizza fallback al
   vecchio database.
@@ -372,6 +374,14 @@ flusso testuale continuo.
   riattivano ingredienti clinicamente esclusi.
 - Gli allergeni derivano dagli ingredienti strutturati; un campo ricetta può
   essere soltanto cache derivata.
+- Ogni ricetta concreta, identificata esclusivamente dal proprio ID stabile
+  `nr_<recipeModelId>_<comboIndex>`, possiede in `db-visuale.json` il booleano
+  `disponibile`. `false` la esclude da ogni nuova proposta automatica o
+  manuale, Roll e Salvafrigo senza cancellarla: dettagli, storico e pasti già
+  salvati continuano a risolvere lo stesso ID. Un record visuale mancante vale
+  `disponibile:true`, così foto o testo non ancora prodotti non bloccano il
+  motore. Nessun fallback può riattivare un record impostato esplicitamente a
+  `false`.
 
 ## 12. Colazione, spuntini e speciali
 

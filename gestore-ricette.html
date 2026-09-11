@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>DietaPlanner — Gestore ricette</title>
+  <style>
+    :root{color-scheme:dark;--bg:#111711;--card:#1b251c;--line:#526548;--green:#87a86c;--gold:#d7b35a;--red:#e57373;--text:#f4f5ef;--muted:#aeb9aa}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,sans-serif}
+    header{position:sticky;top:0;z-index:2;background:rgba(17,23,17,.96);border-bottom:1px solid var(--line);padding:14px 18px}
+    h1{font-size:1.15rem;margin:0 0 10px}.toolbar{display:flex;gap:8px;flex-wrap:wrap}.toolbar input[type=search]{flex:1;min-width:210px}
+    button,input,textarea,select{font:inherit;color:inherit;background:#121a13;border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+    button{cursor:pointer;font-weight:700}button.primary{background:var(--green);color:#101510;border-color:var(--green)}button:disabled{opacity:.45;cursor:default}
+    main{max-width:1100px;margin:auto;padding:16px}.status{color:var(--muted);margin:0 0 14px}.status strong{color:var(--text)}
+    .recipe{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}.recipe.off{border-color:var(--red);opacity:.82}.recipe.orphan{border-style:dashed}
+    .head{display:flex;align-items:flex-start;gap:12px}.title{flex:1;min-width:0}.name{font-weight:800}.id{font:12px ui-monospace,monospace;color:var(--muted);overflow-wrap:anywhere}
+    .availability{display:flex;align-items:center;gap:7px;color:var(--green);font-weight:800}.off .availability{color:var(--red)}
+    label.field{display:block;margin-top:12px;color:var(--muted);font-size:.8rem;font-weight:700}.field input,.field textarea{display:block;width:100%;margin-top:5px;color:var(--text)}.field textarea{min-height:105px;resize:vertical}
+    .badge{display:inline-block;margin-left:7px;padding:2px 7px;border:1px solid var(--gold);border-radius:999px;color:var(--gold);font-size:.7rem}
+    .empty{padding:30px;text-align:center;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Gestore ricette, foto e testi</h1>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Cerca nome o ID ricetta">
+      <select id="filter" aria-label="Filtro">
+        <option value="all">Tutte</option>
+        <option value="enabled">Disponibili</option>
+        <option value="disabled">Non disponibili</option>
+        <option value="incomplete">Senza foto o testo</option>
+        <option value="orphan">ID non più nel ricettario</option>
+      </select>
+      <button id="open">Apri JSON</button>
+      <button id="download">Scarica JSON</button>
+      <button id="save" class="primary" disabled>Salva sul file aperto</button>
+    </div>
+  </header>
+  <main>
+    <p id="status" class="status">Caricamento catalogo…</p>
+    <div id="list"></div>
+    <input id="fallbackOpen" type="file" accept="application/json" hidden>
+  </main>
+
+  <script src="nutrition-config.js"></script>
+  <script src="engine-core.js"></script>
+  <script>
+    const memoryStores={};
+    for(const nome of ['ingredienti','varianti','ricette','impostazioni','piano','consumoGiorno','inventario'])memoryStores[nome]=new Map();
+    window.getAll=async nome=>[...(memoryStores[nome]||new Map()).values()].map(v=>structuredClone(v));
+    window.getOne=async(nome,chiave)=>{const v=(memoryStores[nome]||new Map()).get(chiave);return v?structuredClone(v):null;};
+    window.put=async(nome,valore)=>{(memoryStores[nome]||new Map()).set(valore.id??valore.chiave,structuredClone(valore));return valore;};
+    window.delKey=async(nome,chiave)=>(memoryStores[nome]||new Map()).delete(chiave);
+  </script>
+  <script src="motor-v12.js"></script>
+  <script>
+    const state={catalog:{versione:1,ricette:[]},recipes:[],names:new Map(),currentIds:new Set(),fileHandle:null,dirty:false,versionRaised:false};
+    const esc=value=>{const d=document.createElement('div');d.textContent=String(value??'');return d.innerHTML;};
+
+    function normalizeRecord(row){
+      return {
+        idRicetta:String(row&&row.idRicetta||''),
+        percorsoImmagine:String(row&&row.percorsoImmagine||''),
+        ricettaTestuale:String(row&&row.ricettaTestuale||''),
+        disponibile:!(row&&row.disponibile===false)
+      };
+    }
+
+    function applyCatalog(input){
+      const rows=Array.isArray(input&&input.ricette)?input.ricette:[];
+      const map=new Map();
+      for(const raw of rows){
+        const row=normalizeRecord(raw);
+        if(!row.idRicetta)throw new Error('Trovato un record senza idRicetta.');
+        if(map.has(row.idRicetta))throw new Error('ID duplicato: '+row.idRicetta);
+        map.set(row.idRicetta,row);
+      }
+      for(const id of state.currentIds)if(!map.has(id))map.set(id,normalizeRecord({idRicetta:id}));
+      const current=state.recipes.map(r=>map.get(r.id));
+      const orphan=[...map.values()].filter(r=>!state.currentIds.has(r.idRicetta)).sort((a,b)=>a.idRicetta.localeCompare(b.idRicetta));
+      state.catalog={versione:Number(input&&input.versione)||1,ricette:current.concat(orphan)};
+      state.dirty=false;state.versionRaised=false;render();
+    }
+
+    function markDirty(){
+      state.dirty=true;
+      document.getElementById('save').disabled=!state.fileHandle;
+      renderStatus();
+    }
+
+    function renderStatus(){
+      const rows=state.catalog.ricette;
+      const disabled=rows.filter(r=>r.disponibile===false).length;
+      const incomplete=rows.filter(r=>!r.percorsoImmagine||!r.ricettaTestuale).length;
+      const orphan=rows.filter(r=>!state.currentIds.has(r.idRicetta)).length;
+      document.getElementById('status').innerHTML='<strong>'+rows.length+'</strong> record · <strong>'+disabled+'</strong> non disponibili · <strong>'+incomplete+'</strong> incompleti'+(orphan?' · <strong>'+orphan+'</strong> ID orfani':'')+(state.dirty?' · modifiche non salvate':'');
+    }
+
+    function visibleRows(){
+      const query=document.getElementById('search').value.trim().toLowerCase();
+      const filter=document.getElementById('filter').value;
+      return state.catalog.ricette.filter(row=>{
+        const current=state.currentIds.has(row.idRicetta);
+        const name=state.names.get(row.idRicetta)||'';
+        if(query&&!name.toLowerCase().includes(query)&&!row.idRicetta.toLowerCase().includes(query))return false;
+        if(filter==='enabled'&&row.disponibile===false)return false;
+        if(filter==='disabled'&&row.disponibile!==false)return false;
+        if(filter==='incomplete'&&row.percorsoImmagine&&row.ricettaTestuale)return false;
+        if(filter==='orphan'&&current)return false;
+        return true;
+      });
+    }
+
+    function render(){
+      renderStatus();
+      const rows=visibleRows();
+      const list=document.getElementById('list');
+      if(!rows.length){list.innerHTML='<div class="empty">Nessuna ricetta corrispondente.</div>';return;}
+      list.innerHTML=rows.map(row=>{
+        const current=state.currentIds.has(row.idRicetta);
+        const name=state.names.get(row.idRicetta)||'Ricetta non più presente nel catalogo funzionale';
+        return '<article class="recipe '+(row.disponibile===false?'off ':'')+(current?'':'orphan')+'" data-id="'+esc(row.idRicetta)+'">'+
+          '<div class="head"><div class="title"><div class="name">'+esc(name)+(current?'':'<span class="badge">ID ORFANO</span>')+'</div><div class="id">'+esc(row.idRicetta)+'</div></div>'+
+          '<label class="availability"><input type="checkbox" data-field="disponibile" '+(row.disponibile!==false?'checked':'')+'> <span>'+(row.disponibile!==false?'Disponibile':'Non disponibile')+'</span></label></div>'+
+          '<label class="field">Percorso immagine<input data-field="percorsoImmagine" value="'+esc(row.percorsoImmagine)+'" placeholder="assets/ricette/'+esc(row.idRicetta)+'.webp"></label>'+
+          '<label class="field">Ricetta testuale<textarea data-field="ricettaTestuale" placeholder="Ingredienti, dosi e procedimento…">'+esc(row.ricettaTestuale)+'</textarea></label></article>';
+      }).join('');
+    }
+
+    function catalogForSave(){
+      if(state.dirty&&!state.versionRaised){state.catalog.versione++;state.versionRaised=true;}
+      return JSON.stringify(state.catalog,null,2)+'\n';
+    }
+
+    async function openFile(){
+      if(window.showOpenFilePicker){
+        const [handle]=await showOpenFilePicker({types:[{description:'Catalogo JSON',accept:{'application/json':['.json']}}],multiple:false});
+        const file=await handle.getFile();
+        applyCatalog(JSON.parse(await file.text()));
+        state.fileHandle=handle;document.getElementById('save').disabled=!state.dirty;
+      }else document.getElementById('fallbackOpen').click();
+    }
+
+    async function saveFile(){
+      if(!state.fileHandle)return;
+      const writable=await state.fileHandle.createWritable();
+      await writable.write(catalogForSave());
+      await writable.close();state.dirty=false;renderStatus();document.getElementById('save').disabled=true;
+    }
+
+    function downloadFile(){
+      const blob=new Blob([catalogForSave()],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='db-visuale.json';a.click();URL.revokeObjectURL(url);
+      state.dirty=false;renderStatus();
+    }
+
+    document.getElementById('list').addEventListener('input',event=>{
+      const field=event.target.dataset.field;if(!field)return;
+      const card=event.target.closest('[data-id]');const row=state.catalog.ricette.find(r=>r.idRicetta===card.dataset.id);if(!row)return;
+      row[field]=field==='disponibile'?event.target.checked:event.target.value;
+      if(field==='disponibile'){
+        card.classList.toggle('off',!row.disponibile);
+        event.target.nextElementSibling.textContent=row.disponibile?'Disponibile':'Non disponibile';
+      }
+      markDirty();
+    });
+    document.getElementById('search').addEventListener('input',render);
+    document.getElementById('filter').addEventListener('change',render);
+    document.getElementById('open').addEventListener('click',()=>openFile().catch(e=>alert(e.message)));
+    document.getElementById('save').addEventListener('click',()=>saveFile().catch(e=>alert(e.message)));
+    document.getElementById('download').addEventListener('click',downloadFile);
+    document.getElementById('fallbackOpen').addEventListener('change',async event=>{
+      const file=event.target.files[0];if(!file)return;applyCatalog(JSON.parse(await file.text()));state.fileHandle=null;document.getElementById('save').disabled=true;
+    });
+
+    (async()=>{
+      const [init,response]=await Promise.all([
+        DietaPlannerMotorV12.inizializza({basePath:''}),
+        fetch('db-visuale.json?v='+Date.now(),{cache:'no-store'})
+      ]);
+      if(!response.ok)throw new Error('Impossibile caricare db-visuale.json');
+      state.recipes=DietaPlannerMotorV12.getRicette();
+      state.names=new Map(state.recipes.map(r=>[r.id,r.nome]));
+      state.currentIds=new Set(state.recipes.map(r=>r.id));
+      applyCatalog(await response.json());
+    })().catch(error=>{document.getElementById('status').textContent='Errore: '+error.message;});
+  </script>
+</body>
+</html>

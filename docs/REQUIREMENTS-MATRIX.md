@@ -44,6 +44,7 @@
 | DATA-02 | Categoria gruppo coerente con metadato ingrediente | HARD | catalog validator | Lotto F |
 | DATA-03 | Unità `pz` restano a pezzi | HARD | resolver/materializzazione | snapshot + Lotto G |
 | DATA-04 | Nessuna dose catalogo mutata dal Setting | HARD | UI/resolver | Lotto D |
+| DATA-05 | `disponibile:false` esclude la ricetta concreta da ogni nuova proposta senza cancellare ID, storico o snapshot | HARD | catalogo visuale/motor v12 | test disponibilità catalogo visuale |
 | MEAL-01 | Piano, bozza e storico sono distinti | HARD | UI/IndexedDB | Lotto G/H |
 | MEAL-02 | Un consumo reale non viene riscritto | HARD | storico | Lotto G/H |
 | MEAL-03 | Inventario viene scalato sul consumo reale | HARD | consumo | Lotto G/H |
