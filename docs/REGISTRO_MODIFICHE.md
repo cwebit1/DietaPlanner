@@ -1963,3 +1963,28 @@ strato limitati a `#view-piano`; `index.html` senza differenze.
 **SHA dell'intervento grafico:** `b3d98a79d2511b3128797102126a9ccdce239e61`.
 
 ---
+
+## 20. Loader disattivato nel clone Pasto — 11 settembre 2026
+
+**Richiesta di Cwe:** disattivare il loader senza cancellarlo.
+
+**Intervento effettuato:** nel solo `index-pasto-restyling.html` è stata
+aggiunta la regola `#loaderApp{display:none!important}`. Markup, barra,
+funzione `aggiornaLoader`, avanzamento dell'inizializzazione e rimozione finale
+restano integralmente presenti e potranno essere riattivati eliminando una
+sola regola CSS.
+
+**Invarianti:** `index.html` e tutte le logiche di inizializzazione sono
+invariati.
+
+**Verifiche:** loader presente nel DOM e contemporaneamente nascosto dal foglio
+del clone; parsing degli script inline riuscito; `git diff --check` pulito;
+`index.html` invariato.
+
+**File modificato:** `index-pasto-restyling.html`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento:** `a607bfee7fd6187119d4463df664915eccdb7cfc`.
+
+---
