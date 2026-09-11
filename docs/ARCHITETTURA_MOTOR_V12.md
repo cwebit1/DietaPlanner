@@ -12,9 +12,8 @@
 3. `motor-v12.js` — adattatore del formato a gruppi e IndexedDB;
 4. script applicativo inline — UI e bridge legacy necessari.
 
-I cataloghi funzionali remoti sono esclusivamente `ingredienti-new.json` e
-`db-ricette.json`. `db-visuale.json` è parallelo: contiene ID ricetta, percorso
-immagine, ricetta testuale e flag gestionale `disponibile`.
+I cataloghi remoti sono esclusivamente `ingredienti-new.json` e
+`db-ricette.json`.
 
 ## 2. Responsabilità
 
@@ -40,8 +39,6 @@ per i test; non costituiscono una seconda pipeline runtime.
 - genera l'intera settimana in memoria e la salva solo a esito completo;
 - mantiene tracking, cooldown e rotazione condimenti;
 - espone rigenerazione, Roll C/P/V, Salvafrigo e accesso alle ricette.
-- applica il solo flag `disponibile` del catalogo visuale al filtro comune;
-  fotografia e testo non entrano mai nella cache funzionale o nei calcoli.
 
 ## 3. Formato ricetta
 
@@ -105,11 +102,6 @@ Le vecchie chiavi IndexedDB restano leggibili tramite adattatori mirati. Per i
 carboidrati, conteggi legacy utente diventano FIXED e conteggi creati dal
 sistema diventano AUTO. Le nuove chiavi sono canoniche; la compatibilità non
 autorizza letture runtime del vecchio database ricette.
-
-Una ricetta con `disponibile:false` resta nella mappa per ID e nello store
-`ricette`, così gli snapshot esistenti restano leggibili, ma viene respinta da
-`ricettaAmmessa` e dai pool di nuove proposte. Un ID assente dal catalogo
-visuale resta disponibile per garantire un aggiornamento non distruttivo.
 
 ## 8. Confini ancora aperti
 

@@ -126,10 +126,7 @@ correzioni funzionali, dovrà progettare e implementare con Claude:
 5. la verifica della copertura degli ID;
 6. la risoluzione del percorso fotografico corretto per ogni ricetta;
 7. la restituzione del fallback quando fotografia o descrizione mancano;
-8. l'uso di fotografia e testo soltanto nelle viste Ricette, Pasto e Menu; il
-   motore legge all'avvio esclusivamente il flag gestionale `disponibile`.
-9. la gestione del booleano `disponibile` per ogni ID concreto, con esclusione
-   dalle nuove proposte senza cancellazione del record.
+8. il caricamento del catalogo soltanto nelle viste Ricette, Pasto e Menu.
 
 Quando il database visuale sarà pronto, sostituirà soltanto la sorgente delle
 immagini statiche prevista dal componente grafico. Struttura, swipe,
@@ -137,9 +134,8 @@ indicatori e comportamento responsivo dell'interfaccia resteranno invariati.
 
 Restano vincolanti tutti i confini architetturali elencati sopra: archivio
 visuale separato da quello funzionale; contenuto limitato a ID, percorso
-immagine, testo descrittivo e flag gestionale `disponibile`; collegamenti mai basati sui nomi; immagini
-esterne ottimizzate e mai Base64; il motore ignora foto e testi e usa soltanto
-il flag leggero di disponibilità;
+immagine e testo descrittivo; collegamenti mai basati sui nomi; immagini
+esterne ottimizzate e mai Base64; nessun rallentamento dell'avvio o del motore;
 nessun accesso al vecchio `ricette.json`; assenza di contenuti visuali sempre
 non bloccante.
 

@@ -1,8 +1,6 @@
 /* DietaPlanner - motor v12 basato su db-ricette.json + ingredienti-new.json
    Sorgente primaria: nuovo ricettario. IndexedDB dell'index viene usato solo
-   come persistenza per inventario, piano, impostazioni e cache compilata.
-   db-visuale.json conserva contenuti descrittivi separati e lo stato gestionale
-   disponibile/non disponibile delle singole ricette concrete. */
+   come persistenza per inventario, piano, impostazioni e cache compilata. */
 (function(global){
 'use strict';
 
@@ -31,7 +29,6 @@ const CARB_KEY_BY_NAME={
 const state = {
   pronto:false,
   dbRicette:null,
-  dbVisuale:null,
   ingredientiMap:{},
   ricetteConcrete:[],
   ricetteById:new Map(),
@@ -843,33 +840,6 @@ async function sincronizzaCacheRicette(){
   for(const r of state.ricetteConcrete) await put('ricette',clone(r));
 }
 
-/* Applica alla cache funzionale soltanto il flag gestionale del catalogo
-   visuale. Foto e ricetta testuale restano fuori dallo store "ricette" e dal
-   motore. Un ID visuale assente vale disponibile=true: un contenuto visuale
-   ancora incompleto non deve bloccare il funzionamento dell'app. */
-async function applicaDisponibilitaCatalogoVisuale(ricette,dbVisuale){
-  const record=Array.isArray(dbVisuale&&dbVisuale.ricette)?dbVisuale.ricette:[];
-  const perId=new Map();
-  for(const voce of record){
-    if(!voce||!voce.idRicetta)continue;
-    const id=String(voce.idRicetta);
-    if(perId.has(id))throw new Error('ID duplicato in db-visuale.json: '+id);
-    perId.set(id,voce.disponibile!==false);
-  }
-  const out=[];
-  for(const ricetta of ricette||[]){
-    const disponibile=perId.has(ricetta.id)?perId.get(ricetta.id):true;
-    if(ricetta.disponibile!==disponibile&&typeof put==='function'){
-      ricetta.disponibile=disponibile;
-      await put('ricette',clone(ricetta));
-    }else{
-      ricetta.disponibile=disponibile;
-    }
-    out.push(ricetta);
-  }
-  return out;
-}
-
 async function caricaTracking(){
   if(typeof getOne!=='function') return;
   try{
@@ -1233,7 +1203,6 @@ async function caricaConfigurazioneNutrizionaleRisolta(){
 
 async function ricettaAmmessa(r,data,opts){
   opts=opts||{};
-  if(!r||r.disponibile===false) return false;
   const cfg=opts.runtimeConfig||await configRuntime();
   if(!cfg.resolved.valid) return false;
   const verdureDisattivate=cfg.userPreferences&&cfg.userPreferences.verdureDisattivateVariantIds;
@@ -1330,7 +1299,7 @@ function tempoScongelamento(variantId){
 }
 async function ricetteConVariantIds(ids){
   const s=new Set(ids||[]);
-  return state.ricetteConcrete.filter(r=>r.disponibile!==false&&(r.ingredienti||[]).some(i=>i.variantId&&s.has(i.variantId)));
+  return state.ricetteConcrete.filter(r=>(r.ingredienti||[]).some(i=>i.variantId&&s.has(i.variantId)));
 }
 async function getFreezerDisponibili(){
   if(typeof getAll!=='function') return [];
@@ -3097,13 +3066,11 @@ async function salvaRoll(voce){
 async function inizializza(opts){
   opts=opts||{};
   const base=opts.basePath||'';
-  const [rdb,idb,vdb]=await Promise.all([
+  const [rdb,idb]=await Promise.all([
     loadJson(base+'db-ricette.json'),
-    loadJson(base+'ingredienti-new.json'),
-    loadJson(base+'db-visuale.json')
+    loadJson(base+'ingredienti-new.json')
   ]);
   state.dbRicette=rdb;
-  state.dbVisuale=vdb;
   state.ingredientiMap=idb.ingredienti||{};
   state.propostaCicli=new Map();
   await sincronizzaIngredientiIndexedDB();
@@ -3141,9 +3108,8 @@ async function inizializza(opts){
     await sincronizzaCacheRicette();
     if(typeof put==='function') await put('impostazioni',{chiave:'versioneRicetteCache',valore:versioneCache});
   }
-  let concrete=(await getAll('ricette')||[])
+  const concrete=(await getAll('ricette')||[])
     .filter(r=>r&&r.fonte==='nuovo-db-compilato'&&r.stackScope!=='contorni_catalogo'&&r.stackScope!=='proteine_catalogo');
-  concrete=await applicaDisponibilitaCatalogoVisuale(concrete,vdb);
   if(!concrete.length) throw new Error('Catalogo ricette IndexedDB vuoto dopo la sincronizzazione.');
   state.compatibilitaCP=creaMappaCompatibilitaCP(concrete);
   state.ricetteConcrete=concrete;
@@ -3154,12 +3120,11 @@ async function inizializza(opts){
 }
 
 function getRicette(){ return state.ricetteConcrete.slice(); }
-function getRicetteDisponibili(){ return state.ricetteConcrete.filter(r=>r.disponibile!==false); }
 function getRicetta(id){ return state.ricetteById.get(id)||null; }
 function stato(){ return {pronto:state.pronto,versioneRicette:state.dbRicette&&state.dbRicette.versione||0,ricetteConcrete:state.ricetteConcrete.length}; }
 
 global.DietaPlannerMotorV12={
-  inizializza,stato,getRicette,getRicetteDisponibili,getRicetta,
+  inizializza,stato,getRicette,getRicetta,
   generaCombinazioni,estraiPartiRicetta,compilaPartiRicetta,costruisciNomeRicetta,compilaRicetta,
   getScadenzeImminenti,getAvanziScomodi,getCongelatiDaTempo,getInventarioDisponibile,
   suggerisciCongelati,tempoScongelamento,salvafrigo,
@@ -3175,8 +3140,8 @@ global.DietaPlannerMotorV12={
   chiaviStack,
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
-  prioritaVerdureProgrammazionePasti,ricettaAmmessa,
+  prioritaVerdureProgrammazionePasti,
   registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,migraStatoCarboidratiCanonicoSeNecessario,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,stablePartition,ordinaPerVerdurePreferite,ordinaCarboidratiPerPocoTempo,livelliCarboidratiPocoTempo,caricaPreferenzeUtenteSet,
-  applicaDisponibilitaCatalogoVisuale,invalidaConfigRuntime
+  invalidaConfigRuntime
 };
 })(typeof window!=='undefined'?window:globalThis);
