@@ -2167,44 +2167,13 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
      carboidrato generico. */
   const fissiRimasti=carbCandidati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
   const autoCandidati=carbCandidati.filter(k=>!fissiRimasti.includes(k));
-  /* setPocoTempo, livelli separati (non solo l'array appiattito usato
-     sopra per cercaCarboSeparato): qui servono per esaurire ogni livello
-     su TUTTE le proteine prima di passare al successivo, non solo per
-     ordine di proteina - il difetto corretto in questo intervento: una
-     ricetta P+C con un carboidrato non rapido non deve mai precedere,
-     nello stesso livello FIXED o AUTO, una ricetta P+C rapida successiva
-     nell'ordine delle proteine. Quando pocoTempoAttivo e' falso, i
-     gruppi "rapidi" sono vuoti: un solo passaggio su fissiAltri/autoAltri,
-     comportamento identico a prima. */
-  const livelli=livelliCarboidratiPocoTempo(carbCandidati,ctx.residuiCarboidrati,pocoTempoAttivo);
 
-  for(const chiaviLivelloFixed of [livelli.fissiRapidi,livelli.fissiAltri]){
-    if(!chiaviLivelloFixed.length)continue;
-    const chiaviSet=new Set(chiaviLivelloFixed);
-    for(const proteina of proteine){
-      if(!copertura(proteina).C)continue;
-      const chiave=carbKeysRicetta(proteina).find(k=>chiaviSet.has(k));
-      if(!chiave)continue;
-      const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
-      if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
-    }
-  }
-
-  /* Nessun PX+C.user disponibile (o nessuno ha chiuso il pasto): si
-     posiziona un PX valido e SOLTANTO DOPO si cerca un C o C+V valido -
-     mai la regola generica "cerca C compatibile con PX". Una ricetta PX
-     gia' combinata con un carboidrato AUTO-ammesso resta un candidato
-     come un altro, valutato solo qui - non acquisisce priorita' per il
-     solo fatto di contenere gia' un carboidrato (problema 3).
-     Preferenze soft applicate solo qui (mai su P+C.user sopra), in
-     ordine di priorita' gerarchico e mai mescolate: prima la partizione
-     per cereali non graditi (dominante), poi - dentro ciascun gruppo
-     cosi' ottenuto - la partizione per verdure preferite (rifinisce).
-     Nessun punteggio, nessun confronto per nome, nessuna ricetta viene
-     mai eliminata: solo l'ordine di tentativo cambia. Le ricette senza
-     C restano nello stesso gruppo "cereali ok" (il predicato e' sempre
-     falso per loro) e mantengono comunque la stessa priorita' d'esame
-     relativa di prima. */
+  /* Preferenze soft applicate solo al percorso AUTO/combinato (mai su
+     P+C.user), in ordine di priorita' gerarchico e mai mescolate: prima
+     la partizione per cereali non graditi (dominante), poi - dentro
+     ciascun gruppo cosi' ottenuto - la partizione per verdure preferite
+     (rifinisce). Nessun punteggio, nessun confronto per nome, nessuna
+     ricetta viene mai eliminata: solo l'ordine di tentativo cambia. */
   const prefUtentePC=ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences;
   const cerealiNonGraditiPC=prefUtentePC&&prefUtentePC.cerealiNonGraditiIds;
   const verdurePreferitePC=prefUtentePC&&prefUtentePC.verdurePreferiteVariantIds;
@@ -2212,28 +2181,67 @@ async function costruisciPastoSequenziale(token,giorno,carbCandidati,pool,ctx){
   const bucketCerealiOk=proteine.filter(r=>!pcAutoContieneCerealeNonGradito(r));
   const bucketCerealiNoOk=proteine.filter(pcAutoContieneCerealeNonGradito);
   const proteineOrdinatePC=ordinaPerVerdurePreferite(bucketCerealiOk,verdurePreferitePC).concat(ordinaPerVerdurePreferite(bucketCerealiNoOk,verdurePreferitePC));
-  /* Stesso principio di esaurimento per livello applicato al percorso
-     AUTO/combinato: per ciascun livello (rapido, poi altri) si prova
-     prima ogni PX gia' combinata il cui carboidrato incorporato
-     appartiene a quel livello, poi - per le proteine libere - un
-     carboidrato separato ristretto alle sole chiavi di quel livello
-     (cercaCarboSeparato riceve un autoCandidati gia' ristretto: la sua
-     stessa logica interna, invariata, resta l'unica fonte di verita' per
-     l'ordinamento fra ricette a parita' di chiave). fissiRimasti resta
-     passato per intero, come sempre: un tentativo P+C.user che questa
-     specifica proteina non aveva gia' soddisfatto sopra. */
-  for(const chiaviLivelloAuto of [livelli.autoRapido,livelli.autoAltri]){
-    if(!chiaviLivelloAuto.length)continue;
-    const chiaviLivelloSet=new Set(chiaviLivelloAuto);
+
+  if(!pocoTempoAttivo){
+    /* Comportamento originale, invariato bit-per-bit quando la
+       preferenza non è attiva: un solo passaggio FIXED (solo P+C.user
+       già combinata), poi un solo passaggio AUTO/libero in cui
+       cercaCarboSeparato riceve fissiRimasti e autoCandidati per
+       intero, come sempre - mai una riscrittura generale del motore. */
+    for(const proteina of proteine){
+      if(!copertura(proteina).C)continue;
+      const chiave=carbKeysRicetta(proteina).find(k=>fissiRimasti.includes(k));
+      if(!chiave)continue;
+      const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
+      if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
+    }
     for(const proteina of proteineOrdinatePC){
       if(copertura(proteina).C){
-        const chiave=carbKeysRicetta(proteina).find(k=>chiaviLivelloSet.has(k)&&carboidratoCombinatoAmmesso(k,ctx));
+        const chiave=carbKeysRicetta(proteina).find(k=>autoCandidati.includes(k)&&carboidratoCombinatoAmmesso(k,ctx));
         if(!chiave)continue;
         const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
         if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
-        continue; // una PX gia' combinata non cerca anche un secondo C separato
+        continue;
       }
-      const esito=await cercaCarboSeparato(proteina,fissiRimasti,chiaviLivelloAuto,token,giorno,pool,ctx,extra);
+      const esito=await cercaCarboSeparato(proteina,fissiRimasti,autoCandidati,token,giorno,pool,ctx,extra);
+      if(esito)return esito;
+    }
+    return null;
+  }
+
+  /* setPocoTempo attivo: ciascuno dei quattro livelli è un'unità
+     completamente isolata. Per ogni livello, in ordine: (a) tutte le
+     ricette P+C già combinate la cui chiave appartiene ESCLUSIVAMENTE a
+     questo livello, su tutte le proteine; (b) soltanto dopo, tutte le
+     proteine libere con un carboidrato separato ristretto ESCLUSIVAMENTE
+     alle chiavi di questo livello - cercaCarboSeparato non vede mai
+     chiavi di un livello diverso nello stesso passaggio (livello FIXED:
+     fissiRimasti=chiavi del livello, autoCandidati=[]; livello AUTO:
+     fissiRimasti=[], autoCandidati=chiavi del livello). Si passa al
+     livello successivo solo se nessuna composizione del livello
+     corrente è valida. */
+  const livelli=livelliCarboidratiPocoTempo(carbCandidati,ctx.residuiCarboidrati,pocoTempoAttivo);
+  const fasi=[
+    {chiavi:livelli.fissiRapidi,fixed:true,proteine:proteine},
+    {chiavi:livelli.fissiAltri,fixed:true,proteine:proteine},
+    {chiavi:livelli.autoRapido,fixed:false,proteine:proteineOrdinatePC},
+    {chiavi:livelli.autoAltri,fixed:false,proteine:proteineOrdinatePC}
+  ];
+  for(const fase of fasi){
+    if(!fase.chiavi.length)continue;
+    const chiaviSet=new Set(fase.chiavi);
+    for(const proteina of fase.proteine){
+      if(!copertura(proteina).C)continue;
+      const chiave=carbKeysRicetta(proteina).find(k=>chiaviSet.has(k)&&(fase.fixed||carboidratoCombinatoAmmesso(k,ctx)));
+      if(!chiave)continue;
+      const esito=await chiudiPastoConVerdura([proteina,...extra],token,giorno,pool,ctx);
+      if(esito)return Object.assign(esito,{carbKeyUsato:chiave,avviso:null});
+    }
+    for(const proteina of fase.proteine){
+      if(copertura(proteina).C)continue; // gia' valutata sopra: una PX gia' combinata non cerca anche un secondo C separato
+      const esito=fase.fixed
+        ? await cercaCarboSeparato(proteina,fase.chiavi,[],token,giorno,pool,ctx,extra)
+        : await cercaCarboSeparato(proteina,[],fase.chiavi,token,giorno,pool,ctx,extra);
       if(esito)return esito;
     }
   }
@@ -2288,20 +2296,35 @@ async function completaPastoConBloccate(token,giorno,carbCandidati,pool,ctx,bloc
     /* Proteina bloccata, carboidrato libero: stessa priorita' di
        costruisciPastoSequenziale (C.user prima di C.auto, mai
        mescolati), ma la proteina resta quella gia' bloccata - mai
-       ripescata dal pool. setPocoTempo si applica anche qui (era il
-       difetto 3 segnalato: fissiRimasti/autoCandidati venivano ricavati
-       senza applicare la priorita' Poco tempo): carbCandidati viene
-       riordinato con lo stesso helper e lo stesso ctx.pasto usati da
-       costruisciPastoSequenziale, cosi' cercaCarboSeparato (che itera
-       gia' le chiavi come ciclo esterno, invariato) esamina prima i
-       livelli rapidi. */
+       ripescata dal pool. setPocoTempo si applica anche qui, con la
+       stessa isolazione per livello di costruisciPastoSequenziale
+       (mai una chiave di un livello diverso nella stessa chiamata a
+       cercaCarboSeparato): quando la preferenza non e' attiva, un solo
+       passaggio con fissiRimasti/autoCandidati per intero, comportamento
+       identico a prima. */
     const prefPocoTempoBloccata=ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.pocoTempo;
     const pocoTempoAttivoBloccata=!!(prefPocoTempoBloccata&&ctx.pasto&&prefPocoTempoBloccata[ctx.pasto]);
-    const carbCandidatiOrdinati=ordinaCarboidratiPerPocoTempo(carbCandidati,ctx.residuiCarboidrati,pocoTempoAttivoBloccata);
-    const fissiRimasti=carbCandidatiOrdinati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
-    const autoCandidati=carbCandidatiOrdinati.filter(k=>!fissiRimasti.includes(k));
-    const esitoSeparato=await cercaCarboSeparato(proteinaBloccata,fissiRimasti,autoCandidati,token,giorno,pool,ctxConBlocco,bloccate.filter(r=>r!==proteinaBloccata));
-    if(esitoSeparato)return marcaRealizzazioniBloccate(esitoSeparato,bloccateIds);
+    const fissiRimasti=carbCandidati.filter(k=>Object.prototype.hasOwnProperty.call(ctx.residuiCarboidrati||{},k)&&(ctx.residuiCarboidrati||{})[k]>0);
+    const autoCandidati=carbCandidati.filter(k=>!fissiRimasti.includes(k));
+    const bloccateResidue=bloccate.filter(r=>r!==proteinaBloccata);
+    if(!pocoTempoAttivoBloccata){
+      const esitoSeparato=await cercaCarboSeparato(proteinaBloccata,fissiRimasti,autoCandidati,token,giorno,pool,ctxConBlocco,bloccateResidue);
+      if(esitoSeparato)return marcaRealizzazioniBloccate(esitoSeparato,bloccateIds);
+      return null;
+    }
+    const livelliBloccata=livelliCarboidratiPocoTempo(carbCandidati,ctx.residuiCarboidrati,pocoTempoAttivoBloccata);
+    for(const fase of [
+      {chiavi:livelliBloccata.fissiRapidi,fixed:true},
+      {chiavi:livelliBloccata.fissiAltri,fixed:true},
+      {chiavi:livelliBloccata.autoRapido,fixed:false},
+      {chiavi:livelliBloccata.autoAltri,fixed:false}
+    ]){
+      if(!fase.chiavi.length)continue;
+      const esitoSeparato=fase.fixed
+        ? await cercaCarboSeparato(proteinaBloccata,fase.chiavi,[],token,giorno,pool,ctxConBlocco,bloccateResidue)
+        : await cercaCarboSeparato(proteinaBloccata,[],fase.chiavi,token,giorno,pool,ctxConBlocco,bloccateResidue);
+      if(esitoSeparato)return marcaRealizzazioniBloccate(esitoSeparato,bloccateIds);
+    }
     /* Nessun carboidrato (ne' C.user ne' C.auto) chiude il pasto con
        questa proteina bloccata: lo slot fallisce - un pasto ordinario
        non puo' restare senza C nemmeno quando la proteina e' bloccata. */
@@ -3118,7 +3141,7 @@ global.DietaPlannerMotorV12={
   scegliCandidatoConMargine,
   ingredienteVerduraQuantificabile,coperturaVerduraRicette,ridimensionaVerdureRicetta,completaResiduoVerduraRicette,punteggioVerduraProgrammazione,ordinaVerdureProgrammazione,
   prioritaVerdureProgrammazionePasti,
-  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,migraStatoCarboidratiCanonicoSeNecessario,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,stablePartition,ordinaPerVerdurePreferite,ordinaCarboidratiPerPocoTempo,caricaPreferenzeUtenteSet,
+  registraUtilizzo,categoriaPrincipale,copertura,scoreCopertura,pastoCompletoPerToken,ruoliVerduraDaClasse,calcolaBilancioVSG,caricaConfigurazioneNutrizionaleRisolta,migraStatoCarboidratiCanonicoSeNecessario,carbKeyNome,carbKeysRicetta,preparaBudgetCarboidrati,creaSequenzaCarboidrati,creaSequenzaProteine,carbRicettaAmmesso,consumaBudgetCarboidrati,accumulaConteggiPasto,pastoRispettaConteggi,stablePartition,ordinaPerVerdurePreferite,ordinaCarboidratiPerPocoTempo,livelliCarboidratiPocoTempo,caricaPreferenzeUtenteSet,
   invalidaConfigRuntime
 };
 })(typeof window!=='undefined'?window:globalThis);

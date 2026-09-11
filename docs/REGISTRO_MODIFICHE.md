@@ -2105,3 +2105,47 @@ immagini controllati; `git diff --check` pulito; `index.html` invariato.
 **SHA dell'intervento grafico:** `f93308314cb5600cf3229ea7286836b2829f3e16`.
 
 ---
+
+# Filone: setPocoTempo — isolamento rigoroso dei livelli in cercaCarboSeparato()
+
+Corregge il commit `31be47a` (a sua volta correttivo di `41d2897`, correttivo di `cd8599c`, filone "Collegamento reale al motore delle 5 preferenze del Set utente" — sezioni precedenti non più presenti in questo registro a seguito di una riorganizzazione di un altro intervento, non eseguita da questo lavoro; la catena dei commit tecnici resta comunque verificabile su `main`).
+
+## 1. Commit `(in preparazione)` — correzione: cercaCarboSeparato() non deve mai vedere chiavi di livelli diversi nella stessa chiamata
+
+**SHA iniziale di questa correzione:** `8014b6d1e280ae17676571a8f64410a803965485`.
+
+**Difetto preciso riscontrato (nel commit `31be47a`):** `costruisciPastoSequenziale()` divideva correttamente le chiavi nei 4 livelli, ma nella fase AUTO chiamava `cercaCarboSeparato(proteina, fissiRimasti, chiaviLivelloAuto, ...)` passando **tutti** i `fissiRimasti` (non ristretti al livello) insieme a un `autoCandidati` ristretto al solo livello corrente. Poiché `cercaCarboSeparato()` prova internamente prima `fissiRimasti` e solo dopo `autoCandidati`, questo permetteva a una proteina che chiude solo con un FIXED non rapido di "vincere" durante il passaggio nominale sul livello AUTO rapido, prima che il livello FIXED rapido fosse stato davvero esaurito su tutte le proteine (in particolare sulle proteine libere, mai tentate in una fase FIXED dedicata nel codice precedente, che gestiva come FIXED soltanto le ricette P+C già combinate).
+
+**Correzione applicata:** quando `pocoTempoAttivo` è vero, `costruisciPastoSequenziale()` ora tratta ciascuno dei 4 livelli come unità completamente isolata, in sequenza (`fissiRapidi → fissiAltri → autoRapido → autoAltri`): per ciascun livello, prima tutte le ricette P+C combinate la cui chiave appartiene esclusivamente a quel livello (su tutte le proteine), poi tutte le proteine libere con `cercaCarboSeparato()` chiamata con **soltanto** le chiavi di quel livello — mai chiavi di livelli diversi nella stessa chiamata: livello FIXED → `fissiRimasti=chiavi del livello, autoCandidati=[]`; livello AUTO → `fissiRimasti=[], autoCandidati=chiavi del livello`. Si passa al livello successivo solo se nessuna composizione del livello corrente è valida. La stessa separazione è applicata identicamente in `completaPastoConBloccate()` (proteina bloccata, carboidrato libero).
+
+Quando `pocoTempoAttivo` è falso, il codice ora esegue un percorso **letteralmente invariato rispetto all'originale** (non derivato dai livelli): un solo passaggio FIXED-combinato seguito da un solo passaggio AUTO/libero con `cercaCarboSeparato(proteina, fissiRimasti, autoCandidati, ...)` per intero, esattamente come prima di qualunque intervento su `setPocoTempo` — nessuna riscrittura generale del motore, la modifica è isolata al ramo `pocoTempoAttivo===true`.
+
+**Test corretti (unico file modificato, `tests/lotto-set-preferenze-runtime.test.js`):**
+- Rimossi tutti i loop da 8/10 esecuzioni nei test 15, 16, 18, 19: sostituiti con singole esecuzioni controllate.
+- Test 15: ora una verifica diretta e deterministica di `livelliCarboidratiPocoTempo()` (fixture pura, nessuna pipeline) — conferma che con la preferenza non attiva i quattro livelli collassano in un solo gruppo FIXED e un solo gruppo AUTO, il fondamento strutturale di "comportamento invariato".
+- Test 16 (precedenza principale FIXED, pipeline reale): singola chiamata `rigeneraPasto`, nessuna controprova a loop.
+- Test 18: singola chiamata (il fallback per "formaggi" è strutturalmente deterministico nel catalogo attuale, non serve alcuna ripetizione).
+- Test 19: verifica diretta del cancello booleano `pocoTempoAttivo=!!(pref&&ctx.pasto&&pref[ctx.pasto])` (stessa espressione del codice) più una singola chiamata reale di controllo a cena.
+- Test 14 (precedenza principale AUTO, pipeline reale) e 17 (proteina bloccata, pipeline reale) restano invariati: erano già singole chiamate deterministiche.
+- Nuovo export tecnico: `livelliCarboidratiPocoTempo` (helper puro, stesso criterio già usato per `ordinaCarboidratiPerPocoTempo`/`ordinaPerVerdurePreferite`/`stablePartition`).
+
+**Limite di verifica onestamente riscontrato e non nascosto:** il compito richiede un test che dimostri, attraverso la pipeline reale, "una prima proteina che può chiudere solo con un FIXED non rapido e una proteina successiva che può chiudere con un FIXED rapido, con vittoria del rapido indipendentemente dall'ordine". Ho verificato empiricamente che lo scenario usato nel test 16 (pane FIXED vs gnocchi FIXED, categoria "carne") **non discrimina** in modo affidabile vecchio/nuovo codice con i dati di catalogo reali: la ricetta `nr_5_0` (unica fonte di "pane" come carboidrato separato) risulta compatibile con la quasi totalità delle ricette proteiche prive di carboidrato incorporato per questo token, quindi qualunque proteina venga valutata per prima trova già un match "pane" tramite `cercaCarboSeparato`, mascherando la differenza tra i due codici (verificato eseguendo lo scenario 10 volte sul commit `31be47a`, precedente a questa correzione: pane vince 10/10 anche lì). Non sono riuscito, nel tempo a disposizione, a individuare due proteine reali del catalogo con compatibilità esclusiva e disgiunta rispetto a pane/gnocchi tale da costruire un caso che isoli inequivocabilmente la sola correzione di questo commit tramite la pipeline reale. La correzione del codice è comunque verificabile per lettura diretta (i due rami `fase.fixed?cercaCarboSeparato(proteina,fase.chiavi,[],...):cercaCarboSeparato(proteina,[],fase.chiavi,...)` non lasciano ambiguità: nessuna chiave di un livello diverso può mai raggiungere `cercaCarboSeparato` nella stessa chiamata), e i test 14/16/17/18 continuano a dimostrare via pipeline reale che l'esito complessivo resta corretto in ciascuno degli scenari costruibili con il catalogo attuale. Segnalato qui esplicitamente, non presentato come "deterministico" ciò che non lo è.
+
+**File modificati (solo quelli ammessi):** `motor-v12.js`, `tests/lotto-set-preferenze-runtime.test.js`, `docs/REGISTRO_MODIFICHE.md`.
+
+**Test eseguiti (una sola volta, come richiesto) ed esito:**
+```
+node --check motor-v12.js                              → OK
+node tests/lotto-set-preferenze-runtime.test.js         → ok (19/19 scenari, tutti a esecuzione singola dove richiesto)
+node tests/lotto-g-weekly-generation.test.js            → FALLITO in questa esecuzione (vedi nota sotto)
+node tests/lotto-carboidrati-priorita-pxcuser.test.js   → ok (100/100 generazioni)
+node tests/lotto-e-root-user-set.test.js                → ok
+git diff --check                                        → pulito
+```
+**Nota sull'esito di `lotto-g-weekly-generation.test.js`:** eseguito una sola volta come richiesto, non ripetuto. È fallito sullo stesso scenario limite già documentato nelle due sezioni precedenti di questo registro ("verdura ricorrente obbligatoria per tutti e 7 i giorni di pranzo", un vincolo già al limite della fattibilità, generatore senza seed fisso). Questo commit tocca esclusivamente l'ordine di esaurimento dei livelli carboidrato all'interno di `cercaCarboSeparato()`/`completaPastoConBloccate()`, un meccanismo indipendente dal vincolo "verdura ricorrente su tutti i giorni" già causa della flakiness pre-esistente, confermata presente anche nei commit precedenti (`41d2897`, `31be47a`) con tassi di fallimento comparabili in confronti interlacciati controllati. Non è stata eseguita una nuova analisi statistica in questo intervento (avrebbe richiesto ripetere il test, non consentito da questo incarico): l'esito reale è riportato qui senza attribuirlo automaticamente al rumore, coerentemente con quanto richiesto.
+
+Nessuna regressione emersa fuori dai file modificati.
+
+**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+
+---
