@@ -1850,3 +1850,41 @@ IndexedDB.
 **SHA dell'intervento grafico:** `5e5e0e4566f4626674f2d51f6ce1fd54313f2549`.
 
 ---
+
+## 17. Restyling completo della pagina Set utente — 11 settembre 2026
+
+**Obiettivo richiesto da Cwe:** applicare al prototipo la nuova veste grafica
+della pagina Set senza reinterpretarne, accorparne o rimuoverne funzioni e
+strutture, conservando in particolare tutti i caroselli e la gestione dei
+limiti personali per singolo ingrediente.
+
+**Intervento effettuato:** aggiunta a `restyling-preview.html` una pagina Set
+verticale dedicata, raggiungibile dalla relativa voce della bottom bar. Sono
+stati rappresentati separatamente i due gruppi dei carboidrati con stati
+AUTO/FISSO/ESCLUSO e celle di conteggio; la matrice proteica Lun–Dom con celle
+confermate e suggerite; i caroselli per categoria meno gradita, disponibilità
+di tempo e cereali non graditi; le tre sezioni Verdure con quattro caroselli di
+disponibilità e matrice Pranzo/Cena; i cinque caroselli di composizione della
+colazione, la matrice dei giorni e il carosello delle esclusioni. La sezione
+Limiti personali conserva gli otto gruppi reali e carica dal catalogo
+`ingredienti-new.json` una riga autonoma per ogni ingrediente, predisposta per
+il futuro binding dei minimi/massimi del resolver e del campo numerico utente.
+Aggiornato il contratto metadata per guidare il successivo merge funzionale.
+
+**Separazione confermata:** nessun intervento su `index.html`, motore,
+resolver, database o IndexedDB. I valori mostrati nel prototipo sono soltanto
+stati dimostrativi e non costituiscono regole nutrizionali.
+
+**Verifiche:** `git diff --check` pulito; parsing dello script inline e del
+contratto JSON riuscito; presenti 10 caroselli statici più 5 caroselli dinamici
+di colazione, 8 gruppi Limiti personali e 3 tabelle settimanali; tutti gli otto
+gruppi trovano ingredienti nel catalogo corrente; `index.html` invariato. La
+verifica tramite screenshot browser non è stata eseguita perché nel runtime
+locale non è disponibile un binario Chromium.
+
+**File modificati:** `restyling-preview.html`,
+`docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento grafico:** `a47197d66ebf17fe464e47d230f37e2ad16cfa8d`.
+
+---
