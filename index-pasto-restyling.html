@@ -1,5 +1,5 @@
-Warning: truncated output (original token count: 116722)
-Total output lines: 7792
+Warning: truncated output (original token count: 116894)
+Total output lines: 7802
 
 <!DOCTYPE html>
 <html lang="it">
@@ -646,50 +646,25 @@ pre{white-space:pre-wrap;word-break:break-word;font-size:0.7rem;color:var(--text
 }
 .loader-testo{ font-size:0.78rem; color:var(--text-dim); }
 .consumato-spunta{color:#fff;font-weight:700;}
-/* =========================================================
-   PROTOTIPO RESTYLING — SOLO VIEW PASTO
-   Il clone conserva markup, ID, renderer e listener dell'index originale.
-   Queste regole non raggiungono le altre viste.
-   ========================================================= */
 /* Loader conservato integralmente ma disattivato soltanto in questo clone. */
 #loaderApp{display:none!important}
-#view-piano{--pasto-forest:#145039;--pasto-sage:#edf3e9;--pasto-paper:#fffefb;--pasto-ink:#132019;--pasto-line:#dce3da;margin:-14px;padding:0 0 24px;color:var(--pasto-ink);background:#fbfaf6;border-radius:0 0 18px 18px;overflow:hidden}
-#view-piano .giorni-riga{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:5px;align-items:center;padding:8px 8px 7px;background:var(--pasto-paper);border-bottom:1px solid var(--pasto-line);box-shadow:0 3px 10px rgba(28,61,43,.06)}
-#view-piano .giorni{display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;padding:0}
-#view-piano .giorni::-webkit-scrollbar{display:none}
-#view-piano .giorni button{flex:0 0 52px;min-width:52px;height:37px;padding:0 4px;border:1px solid transparent;border-radius:12px;background:transparent;color:#33433a;font-size:.72rem;scroll-snap-align:center}
-#view-piano .giorni button.active{background:var(--pasto-forest);color:#fff;font-weight:800}
-#view-piano .giorni button.oggi:not(.active){border-color:var(--pasto-forest)}
-#view-piano .btn-calendario{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--pasto-sage);color:var(--pasto-forest);font-size:1rem}
-#view-piano>#benvenutoPrimoUtilizzo,#view-piano>#nessunPastoOggi,#view-piano>.pasto-block,#view-piano>.card,#view-piano>.pasto-sub-panel{margin-left:10px;margin-right:10px}
-#view-piano .pasto-block{padding:0 10px 10px;margin-bottom:9px;border:1px solid #d7e0d5;border-radius:13px;background:var(--pasto-paper);box-shadow:0 3px 11px rgba(30,50,39,.08);overflow:hidden;color:var(--pasto-ink)}
-#view-piano .pasto-header,#view-piano .pasto-titolo-compatto{height:34px;margin:0 -10px 7px;padding:0 10px;display:flex;align-items:center;border:0;background:linear-gradient(90deg,#edf3e9,#fafbf7);color:var(--pasto-forest);font:800 .86rem/1 Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
-#view-piano .pasto-visual-photo{position:relative;height:105px;margin:0 -10px 6px;overflow:hidden;background:#e7ece2}
-#view-piano .pasto-visual-photo img{display:block;width:100%;height:100%;object-fit:cover}
-#view-piano .pasto-visual-photo:after{content:"";position:absolute;inset:auto 0 0;height:28%;background:linear-gradient(to bottom,transparent,rgba(20,80,57,.36));pointer-events:none}
-#view-piano .pasto-griglia-compatta{gap:0}
-#view-piano .pasto-riga-griglia{grid-template-columns:42px minmax(0,1fr) 0;gap:5px;min-height:31px;padding:4px 0;border-color:#e5e8e2}
-#view-piano .pasto-riga-icone{font-size:.92rem;text-align:center}
-#view-piano .pasto-riga-piatto{font:700 .84rem/1.2 Georgia,serif;color:var(--pasto-ink)}
-#view-piano .colazione-riepilogo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:0}
-#view-piano .colazione-voce{min-width:0;padding:5px;border:0;border-radius:8px;background:#f3f6f0}
-#view-piano .colazione-categoria{font-size:.52rem;color:#627168}
-#view-piano .colazione-nome{font-size:.7rem;color:var(--pasto-ink)}
-#view-piano .meta{color:#657168;font-size:.66rem}
-#view-piano .row{align-items:center}
-#view-piano button.primary,#view-piano button.secondary,#view-piano button.small{min-height:31px;border-radius:9px;font-size:.7rem}
-#view-piano button.primary{background:var(--pasto-forest);border-color:var(--pasto-forest);color:#fff}
-#view-piano button.secondary,#view-piano button.small{background:#eff3ed;border-color:#d6dfd5;color:var(--pasto-forest)}
-#view-piano [data-nm-alternativa],#view-piano [data-nm-salvafrigo]{flex:1}
-#view-piano [id^="propostaPasto_"]{margin-top:8px;padding:8px;border-radius:9px;background:#f0f5ed;border:1px solid #c9d9cb}
-#view-piano .pasto-sub-panel{border-color:#d8e0d7;background:#f7f8f4;color:var(--pasto-ink)}
-#view-piano .pasto-expander{background:var(--pasto-paper);border-color:#bdcdbf;color:var(--pasto-forest)}
-#view-piano>.card{padding:11px;border-color:#dbe2d8;background:var(--pasto-paper);color:var(--pasto-ink);border-radius:12px;box-shadow:0 2px 8px rgba(30,50,39,.06)}
-#view-piano>.card h3{font:700 .9rem Georgia,serif;color:var(--pasto-forest)}
-#view-piano .nutri-grid{gap:5px}
-#view-piano .nutri-grid div{background:var(--pasto-sage);color:var(--pasto-ink)}
-#view-piano>#pannelloGraficiConsumo{border-color:#dbe2d8;background:var(--pasto-paper);color:var(--pasto-ink);border-radius:12px}
-@media(max-width:430px){#view-piano .pasto-visual-photo{height:92px}#view-piano .pasto-block{margin-left:7px;margin-right:7px}#view-piano .colazione-riepilogo{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Componenti Pasto importati dal prototipo, colorati esclusivamente con il
+   tema originale dell'index. Nessun restyling della pagina o delle card base. */
+#view-piano .pasto-media{position:relative;margin:0 0 10px;overflow:hidden;border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
+#view-piano .pasto-media-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+#view-piano .pasto-media-track::-webkit-scrollbar{display:none}
+#view-piano .pasto-media-slide{flex:0 0 100%;scroll-snap-align:start}
+#view-piano .pasto-media-slide img{display:block;width:100%;height:130px;object-fit:cover}
+#view-piano .pasto-media-caption{min-height:37px;padding:7px 44px 7px 9px;color:var(--text);font-size:.78rem;font-weight:700;line-height:1.25}
+#view-piano .pasto-media-arrow{position:absolute;z-index:2;top:48px;width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:50%;background:rgba(24,28,20,.88);color:var(--text);font-size:1.3rem}
+#view-piano .pasto-media-arrow.prev{left:7px}#view-piano .pasto-media-arrow.next{right:7px}
+#view-piano .pasto-media-star{position:absolute;z-index:2;right:7px;bottom:7px;width:28px;height:28px;padding:0;border:1px solid var(--border);border-radius:50%;background:var(--panel);color:#f1c40f;font-size:1rem}
+#view-piano .pasto-media-star.active{animation:pasto-star-spin 2.8s linear infinite}
+@keyframes pasto-star-spin{to{transform:rotate(360deg)}}
+#view-piano .pasto-roll-down{animation:pasto-roll-down .34s linear both}#view-piano .pasto-roll-up{animation:pasto-roll-up .34s linear both}
+@keyframes pasto-roll-down{from{transform:translateY(-100%)}to{transform:translateY(0)}}@keyframes pasto-roll-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+#view-piano .pasto-special-frame{box-shadow:0 0 0 2px #d97757,0 0 10px rgba(217,119,87,.7)}
+@media(max-width:430px){#view-piano .pasto-media-slide img{height:105px}#view-piano .pasto-media-arrow{top:36px;width:30px;height:30px}}
 </style>
 </head>
 <body>
@@ -2925,73 +2900,63 @@ async function mostraVista(nome){
   const vistaAttuale = document.querySelector('nav.tabbar button.active')?.dataset.view;
   if(vistaAttuale==='menu' && nome!=='menu' && menuDraft && menuDraft.modificata){
     const scelta = await mostraModaleAvviso(
-      'Ha…16722 tokens truncated…<button data-premio-colazione="${r.id}" class="small" style="flex:0 0 auto;">🎁 ${r.nome}</button>`).join('')}
-      </div>
-    </div>`;
-    el.innerHTML = htmlPremio;
-    el.querySelectorAll('[data-premio-colazione]').forEach(b=>{
-      b.addEventListener('click', async ()=>{
-        const scelta = b.dataset.premioColazione;
-        if(scelta !== 'standard'){
-          await put('piano', {id:pianoId, colazioneSpecialeId:scelta, componenti:null, premioCostanza:true});
-        }
-        await put('impostazioni', {chiave:'contatoreColazioniMorigerate', valore: 0});
-        delete draftColazione[pianoId];
-        renderColazione(giorno, elementId);
-        if(giorno===giornoSelezionato) renderNutrizioneGiorno();
-      });
-    });
-    return;
+      'Hai generato o modificato il menù senza salvare. Le modifiche andranno perse se esci ora.',
+      [
+        {testo:'Salva ed esci', classe:'primary', valore:'salva'},
+        {testo:'Esci senza salvare', classe:'secondary', valore:'scarta'},
+        {testo:'Annulla', classe:'secondary', valore:'annulla'}
+      ]
+    );
+    if(scelta==='annulla')return;
+    if(scelta==='salva'){await commitMenuDraftAtomico();aggiornaListaSpesaAutomatica(menuSettimanaScarto);}
+    menuDraft=null;
   }
-
-  if(!voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta){
-    const componenti = {};
-    for(const g of COLAZIONE_GRUPPI){
-      const opzioni = opzioniColazioneGruppo(g, varianti);
-      componenti[g.chiave] = g.obbligatorio && opzioni.length ? opzioni[0].id : null;
-    }
-    voce.componenti = componenti;
-    voce.programmatoIl = voce.programmatoIl || new Date().toISOString();
-    await put('piano', voce);
+  if(vistaAttuale==='set' && nome!=='set' && setDraft && setDraft.modificata){
+    const scelta = await mostraModaleAvviso(
+      'Hai modificato il Set senza salvare. Le modifiche andranno perse se esci ora.',
+      [
+        {testo:'Salva ed esci', classe:'primary', valore:'salva'},
+        {testo:'Esci senza salvare', classe:'secondary', valore:'scarta'},
+        {testo:'Annulla', classe:'secondary', valore:'annulla'}
+      ]
+    );
+    if(scelta==='annulla')return;
+    if(scelta==='salva'){await commitSetDraftAtomico();}
+    setDraft=null;
+    tabellaProteineDraft=null;
+    tabellaProteineAnteprima=null;
   }
+  document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.toggle('active', b.dataset.view===nome));
+  document.querySelectorAll('section.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+nome).classList.add('active');
+  if(nome==='piano') renderPiano();
+  if(nome==='menu') renderMenuSettimanale();
+  if(nome==='ricette') renderRicette();
+  if(nome==='inventario') renderInventario();
+  if(nome==='set'){ setDraft={voci:new Map(),modificata:false}; tabellaProteineDraft=null; tabellaProteineAnteprima=null; renderSet(); renderCaselleCarboidrati(); aggiornaStatoConfigCarb(); renderSetTabellaGiorno(); renderSetPreferenzeMenu(); }
+  if(nome==='impostazioni')renderInfoVersioniRemote();
+  if(nome==='nutrizionista')renderConfigAvanzata();
+}
+document.querySelectorAll('nav.tabbar button').forEach(btn=>{
+  btn.addEventListener('click', ()=> mostraVista(btn.dataset.view));
+});
 
-  const nutri = await nutrizioneColazione(voce.componenti, varianti, voce.colazioneSpecialeId);
-  const descrizioneAttuale = await descrizioneColazione(voce.componenti, voce.colazioneSpecialeId, varianti);
-  let html = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
-
-  if(voce.consumato){
-    const riepilogoScaduto = (voce.componenti || voce.colazioneSpecialeId)
-      ? await htmlRiepilogoColazione(voce.componenti,voce.colazioneSpecialeId,varianti,'data-info-colazione="1"')
-      : '<div class="meta">Nessuna colazione</div>';
-    el.innerHTML = html + `<div style="opacity:0.7;"><span class="consumato-spunta">✓</span> ${riepilogoScaduto}</div>`;
-    el.querySelector('[data-editor-colazione]')?.addEventListener('click', async ()=>{ await apriModalEditorColazione(giorno); });
-    el.querySelector('[data-info-colazione]')?.addEventListener('click', ()=>apriModalInfoColazione(voce.componenti,voce.colazioneSpecialeId));
-    return;
-  }
-
-  if(!draftColazione[pianoId]){
-    draftColazione[pianoId]={
-      componenti: voce.componenti ? {...voce.componenti} : null,
-      colazioneSpecialeId: voce.colazioneSpecialeId || null,
-      aperta: false
-    };
-  }
-  const draft=draftColazione[pianoId];
-  const draftNutri=await nutrizioneColazione(draft.componenti,varianti,draft.colazioneSpecialeId);
-  const draftDescrizione=await descrizioneColazione(draft.componenti,draft.colazioneSpecialeId,varianti);
-  const modificata=(draft.colazioneSpecialeId||null)!==(voce.colazioneSpecialeId||null) || !componentiColazioneUguali(draft.componenti,voce.componenti);
-
-  html += await htmlRiepilogoColazione(voce.componenti,voce.colazioneSpecialeId,varianti,'data-info-colazione-attuale="1"');
-
-  const tutteRicetteCS = await getAll('ricette');
-  const colazioniSpeciali = tutteRicetteCS.filter(r=>r.colazioneSpeciale && !r.esclusa).sort((a,b)=>a.nome.localeCompare(b.nome));
-  const csDraft = draft.colazioneSpecialeId ? tutteRicetteCS.find(r=>r.id===draft.colazioneSpecialeId) : null;
-  const conteggioCS = await contaColazioniSpecialiSettimana();
-  const tettoCS = conteggioCS >= CAP_COLAZIONE_SPECIALE && !voce.colazioneSpecialeId;
-
-  const colazionePrefSalvata = await getOne('impostazioni', 'colazionePreferita');
-
-  html += `<div class="pasto-contenuto-espandibile" data-config-colazione>
+/* =========================================================
+   VIEW: SET — configurazione piano dieta settimanale
+   -------------------------------------------------------
+   Questa view conterrà tutti i moduli di configurazione:
+   carboidrati, proteine, verdure, verdure ricorrenti, colazione.
+   Ogni modulo viene popolato nei batch successivi.
+   Per ora renderSet è un placeholder che verrà espanso.
+   ========================================================= */
+async function renderSet(){
+  await renderSetTabellaGiorno();
+  await renderSetPreferenzeMenu();
+  await renderSetLimitiPersonaliIngredienti();
+  await renderSetVerdure();
+  await renderSetVerduraRicorrente();
+  await renderSetColazione();
+  await renderSetC…16894 tokens truncated… `<div class="pasto-contenuto-espandibile" data-config-colazione>
     <div style="padding-top:10px;">
       <div class="meta" style="margin-bottom:8px;">Anteprima: <strong style="color:var(--text);">${draftDescrizione}</strong> · ${Math.round(draftNutri.kcal)} kcal</div>
 
@@ -6460,27 +6425,62 @@ if('serviceWorker' in navigator){
 </script>
 
 <script>
-/* Strato esclusivamente visuale del clone Pasto. Non intercetta azioni e non
-   modifica dati: aggiunge soltanto l'hero dimostrativa ai tre pasti principali
-   dopo ogni render già eseguito dall'app originale. */
+/* Comportamenti visuali Pasto importati dalla preview. Il motore e i suoi
+   pulsanti restano quelli del clone: questo strato collega soltanto carosello,
+   loop, stella e direzione delle transizioni al DOM già renderizzato. */
 (()=>{
-  const immagini={
-    blocColazione:['assets/visual-demo/colazione-overnight-oats.webp','Colazione programmata'],
-    blocPranzo:['assets/visual-demo/pranzo-spaghetti-vongole.webp','Pranzo programmato'],
-    blocCena:['assets/visual-demo/cena-ceci-radicchio.webp','Cena programmata']
+  const normali={
+    blocColazione:[
+      ['assets/visual-demo/colazione-overnight-oats.webp','Overnight oats con frutti di bosco'],
+      ['assets/visual-demo/pranzo-spaghetti-vongole.webp','Alternativa colazione'],
+      ['assets/visual-demo/cena-ceci-radicchio.webp','Proposta successiva']
+    ],
+    blocPranzo:[
+      ['assets/visual-demo/pranzo-spaghetti-vongole.webp','Spaghetti integrali alle vongole'],
+      ['assets/visual-demo/alternativa-farro-pomodorini-zucchine.webp','Farro con pomodorini e zucchine'],
+      ['assets/visual-demo/alternativa-branzino-ferri.webp','Branzino ai ferri']
+    ],
+    blocCena:[
+      ['assets/visual-demo/cena-ceci-radicchio.webp','Ceci al rosmarino con radicchio'],
+      ['assets/visual-demo/alternativa-branzino-ferri.webp','Branzino ai ferri'],
+      ['assets/visual-demo/alternativa-insalata-carote-barbabietole.webp','Insalata di carote e barbabietole']
+    ]
+  };
+  const speciali=[
+    ['assets/visual-demo/speciale-pizza-verdure.webp','Pizza alle verdure grigliate'],
+    ['assets/visual-demo/speciale-torta-salata-verdure.webp','Torta salata con verdure'],
+    ['assets/visual-demo/speciale-sushi-misto.webp','Sushi misto']
+  ];
+  const statoSpeciale=new Set();
+  const slide=([src,nome],clone='')=>`<div class="pasto-media-slide" ${clone?'data-clone="'+clone+'"':''}><img src="${src}" alt="${nome}"><div class="pasto-media-caption">${nome}</div></div>`;
+  const costruisciMedia=(blocco,id)=>{
+    const items=statoSpeciale.has(id)?speciali:normali[id];
+    const media=document.createElement('div');media.className='pasto-media'+(statoSpeciale.has(id)?' pasto-special-frame':'');
+    media.innerHTML=`<div class="pasto-media-track">${slide(items.at(-1),'last')}${items.map(x=>slide(x)).join('')}${slide(items[0],'first')}</div><button class="pasto-media-arrow prev" type="button" aria-label="Piatto precedente">‹</button><button class="pasto-media-arrow next" type="button" aria-label="Piatto successivo">›</button><button class="pasto-media-star ${statoSpeciale.has(id)?'active':''}" type="button" aria-label="Piatti speciali">★</button>`;
+    const track=media.querySelector('.pasto-media-track');
+    const posiziona=index=>track.scrollTo({left:track.clientWidth*index,behavior:'smooth'});
+    requestAnimationFrame(()=>track.scrollLeft=track.clientWidth);
+    media.querySelector('.next').addEventListener('click',()=>posiziona(Math.round(track.scrollLeft/track.clientWidth)+1));
+    media.querySelector('.prev').addEventListener('click',()=>posiziona(Math.round(track.scrollLeft/track.clientWidth)-1));
+    let timer;
+    track.addEventListener('scroll',()=>{clearTimeout(timer);timer=setTimeout(()=>{const index=Math.round(track.scrollLeft/track.clientWidth);if(index===0){track.style.scrollBehavior='auto';track.scrollLeft=track.clientWidth*items.length;track.style.scrollBehavior='';}else if(index===items.length+1){track.style.scrollBehavior='auto';track.scrollLeft=track.clientWidth;track.style.scrollBehavior='';}},80);},{passive:true});
+    media.querySelector('.pasto-media-star').addEventListener('click',()=>{statoSpeciale.has(id)?statoSpeciale.delete(id):statoSpeciale.add(id);media.replaceWith(costruisciMedia(blocco,id));});
+    return media;
   };
   const decora=()=>{
-    for(const [id,[src,alt]] of Object.entries(immagini)){
-      const blocco=document.getElementById(id);
-      if(!blocco||blocco.querySelector('.pasto-visual-photo')||!blocco.children.length)continue;
-      const hero=document.createElement('div');hero.className='pasto-visual-photo';hero.setAttribute('aria-hidden','true');
-      const img=document.createElement('img');img.src=src;img.alt=alt;hero.appendChild(img);
-      const intestazione=blocco.querySelector('.pasto-header,.pasto-titolo-compatto');
-      if(intestazione)intestazione.insertAdjacentElement('afterend',hero);else blocco.prepend(hero);
+    for(const id of Object.keys(normali)){
+      const blocco=document.getElementById(id);if(!blocco||!blocco.children.length||blocco.querySelector('.pasto-media'))continue;
+      const intestazione=blocco.querySelector('.pasto-header,.pasto-titolo-compatto'),media=costruisciMedia(blocco,id);
+      if(intestazione)intestazione.insertAdjacentElement('afterend',media);else blocco.prepend(media);
+      const direzione=blocco.dataset.rollDirection;if(direzione){blocco.classList.add(direzione==='up'?'pasto-roll-up':'pasto-roll-down');delete blocco.dataset.rollDirection;setTimeout(()=>blocco.classList.remove('pasto-roll-up','pasto-roll-down'),380);}
+      const ripristina=blocco.querySelector('[data-nm-annulla-proposta]');if(ripristina)ripristina.textContent='Ripristina';
     }
   };
   const vista=document.getElementById('view-piano');
-  if(vista){new MutationObserver(decora).observe(vista,{childList:true,subtree:true});decora();}
+  if(vista){
+    vista.addEventListener('click',event=>{const down=event.target.closest('[data-nm-alternativa],[data-nm-salvafrigo],[data-nm-rigenera-proposta]'),up=event.target.closest('[data-nm-annulla-proposta]'),blocco=event.target.closest('.pasto-block');if(blocco&&(down||up))blocco.dataset.rollDirection=up?'up':'down';},true);
+    new MutationObserver(decora).observe(vista,{childList:true,subtree:true});decora();
+  }
 })();
 </script>
 </body>
