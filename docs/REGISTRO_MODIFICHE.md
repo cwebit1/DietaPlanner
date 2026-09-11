@@ -2069,3 +2069,39 @@ del file locale controllati prima della pubblicazione; `index.html` invariato.
 **File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
 
 ---
+
+## 24. Prototipo Pasto autonomo con stile nativo index — 11 settembre 2026
+
+**Difetto corretto:** `index-pasto-restyling.html` era ancora una copia
+dell'applicazione completa e dipendeva da login, IndexedDB e renderer reali.
+Non costituiva quindi una prova grafica autonoma: poteva mostrare il loader,
+la schermata di accesso o card vuote invece della composizione richiesta.
+
+**Correzione applicata:** ricostruito il solo file di prova come prototipo
+staticamente popolato e immediatamente visibile. La struttura riproduce quella
+approvata per Pasto: header e calendario, titolo del giorno, card Colazione,
+Pranzo e Cena, intestazione con fascia oraria, immagine con anteprima laterale,
+testo associato allo slide, ingredienti e dosi, stella, lucchetto e comandi.
+Colori, pannelli, bordi, tipografia di sistema e gerarchia dei pulsanti usano
+le variabili e il linguaggio visivo dell'attuale `index.html`; gli adattamenti
+dimensionali sono confinati al prototipo.
+
+**Interazioni dimostrative conservate:** avanzamento orizzontale del carosello,
+cambio piatto con movimento verticale e catalogo speciale attivato dalla
+stella. Il comando «Seleziona pasto» non usa più bagliore, pseudo-elementi o
+variazioni di scala: pulsa soltanto il colore di sfondo rosso, mantenendo
+invariato l'ingombro.
+
+**Invarianti:** `index.html`, motore, database, IndexedDB e dati funzionali non
+sono stati modificati. Nessuna funzione della prova scrive dati persistenti.
+
+**Verifiche:** compilazione dello script inline riuscita; tutti i percorsi delle
+immagini controllati; `git diff --check` pulito; `index.html` invariato.
+
+**File modificato:** `index-pasto-restyling.html`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento grafico:** `f93308314cb5600cf3229ea7286836b2829f3e16`.
+
+---
