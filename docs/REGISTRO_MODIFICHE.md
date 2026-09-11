@@ -2047,3 +2047,25 @@ asset verificati; assenza di una sovrascrittura generale `#view-piano`;
 **SHA dell'intervento:** `fac3077444bfb4f3d5151c47f28dba22f372c9c4`.
 
 ---
+
+## 23. Ripubblicazione integra del prototipo Pasto — 11 settembre 2026
+
+**Problema riscontrato:** il file di prova pubblicato risultava incompleto
+rispetto alla copia locale (400.111 byte online contro 467.575 byte locali).
+Il taglio cadeva nel codice JavaScript dell'app e provocava un errore di
+sintassi durante l'avvio, lasciando la pagina bloccata e impedendo la verifica
+dell'integrazione grafica.
+
+**Correzione applicata:** validato integralmente il clone locale e ripubblicato
+il file completo attraverso Git, senza modificare `index.html`. Il loader resta
+presente ma disattivato; vengono conservati gli stili originali dell'index e le
+sole integrazioni Pasto previste nel prototipo.
+
+**Verifiche:** nove script inline compilati senza errori; dimensione e contenuto
+del file locale controllati prima della pubblicazione; `index.html` invariato.
+
+**File ripubblicato:** `index-pasto-restyling.html`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+---

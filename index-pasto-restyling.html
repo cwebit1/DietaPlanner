@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 116894)
-Total output lines: 7802
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -2956,7 +2953,1325 @@ async function renderSet(){
   await renderSetVerdure();
   await renderSetVerduraRicorrente();
   await renderSetColazione();
-  await renderSetC…16894 tokens truncated… `<div class="pasto-contenuto-espandibile" data-config-colazione>
+  await renderSetCerealiGradimento();
+}
+
+let limitiPersonaliIngredientiDraft=null;
+async function risolviSetUtenteCorrente(userOverride){
+  const [cfgRec,vincoliRec,allRec,blockedRec,capsRec]=await Promise.all([getOne('impostazioni','configAvanzata'),getOne('impostazioni','vincoliIngredientiNutrizionista'),getOne('impostazioni','allergeniAttivi'),getOne('impostazioni','ingredientiBloccati'),getOne('impostazioni','tettiIngredienteSettimanali')]);
+  const user=Object.assign({ingredientWeeklyCaps:capsRec&&capsRec.valore||{}},userOverride||{});
+  return globalThis.DietaPlannerNutritionConfig.resolveNutritionConfig({nutritionist:{config:cfgRec&&cfgRec.valore||{},ingredientConstraints:vincoliRec&&vincoliRec.valore||{},allergens:allRec&&allRec.valore||[],blockedIngredientIds:blockedRec&&blockedRec.valore||[]},user});
+}
+function ingredienteEsclusoClinicamenteNelSet(base,resolved){
+  if(!base||!resolved)return false;
+  const rule=resolved.ingredientConstraints&&resolved.ingredientConstraints[base.id];
+  if(rule&&(rule.state==='excluded'||rule.max===0))return true;
+  if(resolved.safety&&resolved.safety.blockedIngredientIds&&resolved.safety.blockedIngredientIds.includes(base.id))return true;
+  if((base.allergeni||[]).some(a=>resolved.safety&&resolved.safety.allergens&&resolved.safety.allergens.includes(a)))return true;
+  return esclusionePianoIngrediente(base,resolved.profile&&resolved.profile.name||'onnivoro');
+}
+async function renderSetLimitiPersonaliIngredienti(){
+  const box=document.getElementById('setLimitiPersonaliIngredienti'),stato=document.getElementById('setLimitiPersonaliStato');if(!box)return;
+  const [basi,capsRec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','tettiIngredienteSettimanali'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
+  limitiPersonaliIngredientiDraft=cloneConfigurazione(capsRec&&capsRec.valore||{});
+  const gruppi=[['carboidrati','Carboidrati'],['proteine','Proteine'],['verdura','Verdure'],['frutta','Frutta'],['colazione','Colazione e spuntini'],['grassi','Grassi'],['condimento','Condimenti'],['speciale','Speciali']],html=[];
+  for(const [key,label] of gruppi){
+    const items=basi.filter(b=>b.gruppo===key).sort((a,b)=>a.nome.localeCompare(b.nome,'it'));if(!items.length)continue;
+    html.push('<details class="set-cap-group"><summary>'+label+'</summary><div>');
+    for(const b of items){
+      const rule=resolved.ingredientConstraints&&resolved.ingredientConstraints[b.id]||{},excluded=ingredienteEsclusoClinicamenteNelSet(b,resolved),clinicalMin=rule.min,clinicalMax=excluded?0:rule.max,hasUser=Object.prototype.hasOwnProperty.call(limitiPersonaliIngredientiDraft,b.id),userVal=hasUser?limitiPersonaliIngredientiDraft[b.id]:'',invalid=hasUser&&clinicalMin!==null&&clinicalMin!==undefined&&Number(userVal)<Number(clinicalMin);
+      let hint=excluded?'Escluso dal piano':((clinicalMin!==null&&clinicalMin!==undefined?'min '+clinicalMin+' · ':'')+(clinicalMax!==null&&clinicalMax!==undefined?'max '+clinicalMax:'nessun max clinico'));
+      html.push('<div class="set-cap-row '+(excluded?'clinical-excluded ':'')+(invalid?'invalid':'')+'"><div class="set-cap-name">'+b.nome+'<small>'+hint+'</small></div><input type="number" min="'+(clinicalMin!==null&&clinicalMin!==undefined?clinicalMin:0)+'" '+(clinicalMax!==null&&clinicalMax!==undefined?'max="'+clinicalMax+'" ':'')+'step="1" data-set-user-cap="'+b.id+'" value="'+(userVal??'')+'" placeholder="—" '+(excluded?'disabled':'')+' aria-label="'+b.nome+' massimo personale settimanale"></div>');
+    }
+    html.push('</div></details>');
+  }
+  box.innerHTML=html.join('');
+  box.querySelectorAll('[data-set-user-cap]').forEach(input=>input.addEventListener('input',()=>{const id=input.dataset.setUserCap;if(input.value==='')delete limitiPersonaliIngredientiDraft[id];else limitiPersonaliIngredientiDraft[id]=Number(input.value);const n=Object.keys(limitiPersonaliIngredientiDraft).length;if(stato)stato.textContent=n?'Limiti personali impostati: '+n+'. Salva la configurazione per applicarli.':'Nessun limite personale aggiuntivo.';}));
+  if(stato){const n=Object.keys(limitiPersonaliIngredientiDraft).length;stato.textContent=n?'Limiti personali attivi: '+n+'.':'Nessun limite personale aggiuntivo.';}
+}
+async function salvaLimitiPersonaliSet(mostraMessaggio){
+  const caps=cloneConfigurazione(limitiPersonaliIngredientiDraft||{}),[basi,resolvedClinical]=await Promise.all([getAll('ingredienti'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]);
+  for(const b of basi){
+    if(!Object.prototype.hasOwnProperty.call(caps,b.id))continue;
+    const n=Number(caps[b.id]);if(!Number.isFinite(n)||n<0||Math.trunc(n)!==n){const msg='Il limite personale di '+b.nome+' deve essere un numero intero non negativo.';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
+    const rule=resolvedClinical.ingredientConstraints&&resolvedClinical.ingredientConstraints[b.id]||{},clinicalExcluded=ingredienteEsclusoClinicamenteNelSet(b,resolvedClinical),clinicalMax=clinicalExcluded?0:rule.max;
+    if(clinicalExcluded){delete caps[b.id];continue;}
+    if(clinicalMax!==null&&clinicalMax!==undefined&&n>Number(clinicalMax)){const msg='Il limite personale di '+b.nome+' non può superare il massimo del nutrizionista ('+clinicalMax+').';if(mostraMessaggio!==false)await avviso(msg);return {ok:false,errori:[msg]};}
+  }
+  const resolved=await risolviSetUtenteCorrente({ingredientWeeklyCaps:caps});if(!resolved.valid){if(mostraMessaggio!==false)await avviso('Limiti personali non compatibili con il piano: '+resolved.errors.join(' '));return {ok:false,errori:resolved.errors};}
+  await put('impostazioni',{chiave:'tettiIngredienteSettimanali',valore:caps});limitiPersonaliIngredientiDraft=caps;
+  if(mostraMessaggio!==false)await avviso('Limiti personali salvati.');return {ok:true,resolved};
+}
+async function renderSetCerealiGradimento(){
+  const [basi,rec,resolved]=await Promise.all([getAll('ingredienti'),getOne('impostazioni','cerealiNonGraditi'),risolviSetUtenteCorrente({ingredientWeeklyCaps:{}})]),box=document.getElementById('setCerealiGradimento');if(!box)return;
+  const cereals=basi.filter(b=>b.gruppo==='carboidrati').sort((a,b)=>a.nome.localeCompare(b.nome,'it')),off=new Set(rec&&rec.valore||[]),allowed=cereals.filter(b=>!ingredienteEsclusoClinicamenteNelSet(b,resolved)),allowedIds=new Set(allowed.map(b=>b.id));
+  box.innerHTML=cereals.map(b=>{const clinical=ingredienteEsclusoClinicamenteNelSet(b,resolved);return `<button type="button" data-cereale-gradimento="${b.id}" class="${clinical?'inactive-red piano':(off.has(b.id)?'active':'')}" ${clinical?'disabled title="Escluso dal piano nutrizionista"':''}>${b.nome}${clinical?' · piano':''}</button>`;}).join('');
+  box.querySelectorAll('[data-cereale-gradimento]:not([disabled])').forEach(btn=>btn.addEventListener('click',async()=>{const id=btn.dataset.cerealeGradimento;if(off.has(id))off.delete(id);else{const offAllowed=[...off].filter(x=>allowedIds.has(x));if(offAllowed.length>=Math.max(0,allowed.length-1)){await avviso('Deve restare almeno un cereale consentito dal piano disponibile.');return;}off.add(id);}await put('impostazioni',{chiave:'cerealiNonGraditi',valore:[...off]});renderSetCerealiGradimento();}));
+}
+
+document.querySelectorAll('[data-close]').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    document.getElementById(btn.dataset.close).classList.add('hidden');
+    if(btn.dataset.close==='modalGiovedi'){
+      await put('impostazioni', {chiave:'ultimoPromptGiovedi', valore: todayISO()});
+    }
+  });
+});
+
+/* =========================================================
+   VIEW: PIANO
+   ========================================================= */
+
+/* =========================================================
+   NUOVA ARCHITETTURA: "programmato" vs "proposta"
+   -------------------------------------------------------
+   - voce (in DB, store 'piano') = pasto PROGRAMMATO: stabile, è quello che
+     conta per il computo calorico del giorno e per la lista della spesa.
+     Non viene mai scritto da un'esplorazione: solo dal primo riempimento
+     automatico di uno slot vuoto, o da una conferma esplicita dell'utente.
+   - bozzePropostaPasto[giorno_pasto] = proposta Alternativa/Salvafrigo in
+     corso di esplorazione (pagina Pasto, vedi renderBloccoNuovoMotore),
+     tenuta solo in memoria finché non viene confermata. Aprire il
+     pannello, premere Rigenera: tutto questo NON tocca il database. Solo
+     "Imposta come pasto" scrive.
+   - segnaRicettaUsata (che conta ai fini di varietà/rotazione) viene
+     chiamata SOLO alla conferma, mai mentre si sta solo guardando.
+   ========================================================= */
+let draftColazione = {};
+/* I1: stato centralizzato dei pannelli. Un unico oggetto traccia lo stato
+   aperto/chiuso di tutti i tipi di pannello, invece di tre oggetti separati
+   sparsi nel codice. Gli alias sotto mantengono la compatibilità con tutto
+   il codice esistente senza richiedere modifiche alle referenze. */
+const statoPannelli = {
+  alternativo: {},
+  speciale: {},
+  scadenze: {}
+};
+let pannelloApertoAlt = statoPannelli.alternativo;
+let pannelloSpecialeAperto = statoPannelli.speciale;
+let pannelloScadenzeAperto = statoPannelli.scadenze;
+/* I1: reset centralizzato di tutti i pannelli. Chiamato da renderPiano()
+   ad ogni cambio giorno, sostituisce i reset individuali sparsi. */
+function resetStatoPannelli(){
+  statoPannelli.alternativo = {};
+  statoPannelli.speciale = {};
+  statoPannelli.scadenze = {};
+  pannelloApertoAlt = statoPannelli.alternativo;
+  pannelloSpecialeAperto = statoPannelli.speciale;
+  pannelloScadenzeAperto = statoPannelli.scadenze;
+}
+
+/* Nutrizione riferita SEMPRE a 1 persona, indipendentemente da quante
+   porzioni la ricetta prepari o da quante persone hai selezionato per la spesa. */
+async function nutrizionePerPersona(ricetta){
+  const n = await calcolaNutrizioneRicetta(ricetta);
+  const div = ricetta.porzioni || 2;
+  return {kcal:n.kcal/div, prot:n.prot/div, carb:n.carb/div, grassi:n.grassi/div};
+}
+
+/* Mostra una quantità come grammi, oppure come numero di pezzi per gli ingredienti
+   "a pezzo" (es. le uova): la variante porta il flag unitaPezzo e il peso di un
+   singolo pezzo nel campo formato. */
+function formattaQuantita(variante, grammi){
+  const pesoPezzo=variante&&Number(variante.pesoPezzo||variante.formato)||0;
+  if(variante && variante.unitaPezzo && pesoPezzo){
+    const n = Math.round(grammi / pesoPezzo);
+    return `${n} pz`;
+  }
+  return `${Math.round(grammi)}g`;
+}
+
+/* Ritorna il badge HTML della fascia di difficoltà con colore:
+   verde=facile, giallo=medio, rosso=difficile */
+function fasciaBadgeColorata(fascia){
+  const classi = {facile:'fascia-facile', medio:'fascia-medio', difficile:'fascia-difficile'};
+  const emoji = {facile:'🟢', medio:'🟡', difficile:'🔴'};
+  const cls = classi[fascia] || 'fascia-facile';
+  const emo = emoji[fascia] || '';
+  return `<span class="fascia-badge ${cls}">${emo} ${fascia}</span>`;
+}
+
+/* Ritorna l'emoji del gruppo proteico di una ricetta */
+function iconaGruppoProteico(gruppoProteico){
+  const icone = {
+    carne_bianca:'🍗', carne_rossa:'🥩', affettati:'🥓',
+    pesce_bianco:'🐟', pesce_azzurro:'🐠', pesce_grande:'🐡',
+    pesce_conservato:'🥫', molluschi:'🦑', crostacei:'🦐',
+    formaggio_fresco:'🧀', formaggio_stagionato:'🧀',
+    uova:'🥚', legumi:'🫘'
+  };
+  return icone[gruppoProteico] || '';
+}
+
+/* Glifo del lucchetto: chiuso = emoji colorata (🔒, resta com'era, ben
+   riconoscibile), aperto = icona lineare monocromatica in stile app (colore
+   --text-dim), non un'emoji — a piccole dimensioni le due emoji 🔒/🔓 sono
+   quasi indistinguibili, mentre un tratto pieno vs un tratto interrotto
+   si nota subito anche minuscolo. */
+function iconaBloccoGlifo(bloccata){
+  if(bloccata) return '🔒';
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;color:var(--text-dim);"><rect x="4" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/></svg>`;
+}
+
+/* Stella preferiti: piccolo pulsante riusabile ovunque compare il nome di una
+   ricetta salvata. Bordata=non preferita, piena=preferita. */
+function stellaBtn(ricetta){
+  const attiva = !!ricetta.preferita;
+  return `<button class="star-btn" data-star="${ricetta.id}" title="${attiva?'Togli dai preferiti':'Aggiungi ai preferiti'}"
+    style="background:none;border:none;cursor:pointer;font-size:1.1rem;line-height:1;padding:0 2px;color:${attiva?'var(--accent)':'var(--text-dim)'};">${attiva?'★':'☆'}</button>`;
+}
+async function toggleFavorito(ricettaId){
+  const r = await getOne('ricette', ricettaId);
+  if(!r) return;
+  r.preferita = !r.preferita;
+  await put('ricette', r);
+  return r;
+}
+
+async function togglePiattoSpeciale(ricettaId){
+  const r = await getOne('ricette', ricettaId);
+  if(!r) return;
+  r.piattoSpeciale = !r.piattoSpeciale;
+  await put('ricette', r);
+  return r;
+}
+
+/* "Escludi": la ricetta non viene mai più proposta dal motore automatico (rotazione,
+   generazione settimana, rigenerazione), finché non la riattivi. Effetto opposto alla stella. */
+async function toggleEsclusa(ricettaId){
+  const r = await getOne('ricette', ricettaId);
+  if(!r) return;
+  r.esclusa = !r.esclusa;
+  await put('ricette', r);
+  return r;
+}
+
+/* =========================================================
+   CONSERVAZIONE E SCADENZA STIMATA (B2)
+   -------------------------------------------------------
+   Nessuna data da inserire a mano. Ogni ingrediente ha una durata di
+   conservazione standard DOPO L'APERTURA, stimata da zona+gruppo.
+   Il prodotto si considera "aperto" (parte il conto alla rovescia) solo
+   quando una ricetta che lo usa viene CONFERMATA come pasto programmato
+   — mai alla semplice proposta/esplorazione — e vale dal pasto successivo.
+   ========================================================= */
+function stimaDurataConservazioneGiorni(gruppo, zona){
+  if(zona==='freezer') return 90;   // congelato: non urgente
+  if(zona==='dispensa') return 20;  // secco/conserva: meno critico ma tracciato
+  // zona frigo, per gruppo (approssimazione dichiarata, non certificata)
+  if(gruppo==='proteine') return 3; // carne/pesce/formaggi/uova freschi aperti
+  if(gruppo==='verdura') return 6;
+  if(gruppo==='frutta') return 5;
+  if(gruppo==='grassi') return 10;  // es. latte, panna
+  return 7;
+}
+
+async function calcolaScadenzaStimata(voceInventario){
+  if(!voceInventario.dataApertura) return null; // non ancora "aperto"
+  const varianti = await getAll('varianti');
+  const ingredienti = await getAll('ingredienti');
+  const variante = varianti.find(v=>v.id===voceInventario.variantId);
+  const base = variante ? ingredienti.find(i=>i.id===variante.ingredienteId) : null;
+  const durata = stimaDurataConservazioneGiorni(base?base.gruppo:null, voceInventario.zona);
+  const dataAp = new Date(voceInventario.dataApertura+'T00:00:00');
+  dataAp.setDate(dataAp.getDate()+durata);
+  return isoLocale(dataAp);
+}
+
+/* Scala l'inventario per gli ingredienti di una ricetta CONFERMATA come programmata
+   (B3), e marca come "aperte" (B2) le confezioni toccate che non lo erano già. */
+async function scalaInventarioPerRicetta(ricetta, porzioniSel){
+  if(!ricetta || ricetta.piattoSpeciale) return;
+  const scala = (porzioniSel||1) / (ricetta.porzioni || 2);
+  const inventario = await getAll('inventario');
+  for(const ing of ricetta.ingredienti){
+    if(!ing.variantId||ing.nonRichiedeInventario) continue;
+    // Stesso contratto già usato dalla lista della spesa (aggiornaListaSpesaAutomatica):
+    // l'inventario conserva sempre il peso equivalente, mai il conteggio pezzi.
+    const quantitaInventario=ing.unita==='pz'?(Number(ing.grammi)||Number(ing.quantita)||0):(Number(ing.quantita)||0);
+    let restante = quantitaInventario * scala;
+    if(restante<=0) continue;
+    const voci = inventario.filter(x=>x.variantId===ing.variantId && x.stato==='disponibile').sort((a,b)=>a.quantita-b.quantita);
+    for(const voce of voci){
+      if(restante<=0) break;
+      const scalato = Math.min(voce.quantita, restante);
+      voce.quantita -= scalato;
+      restante -= scalato;
+      if(!voce.dataApertura) voce.dataApertura = todayISO();
+      await put('inventario', voce);
+    }
+  }
+}
+
+/* Storna una scalatura precedente (usata quando si rigenera un pasto già confermato,
+   così non si scala l'inventario più volte per lo stesso pasto rigenerato). */
+async function annullaScalaInventarioPerRicetta(ricetta, porzioniSel){
+  if(!ricetta) return;
+  const scala = (porzioniSel||1) / (ricetta.porzioni || 2);
+  const inventario = await getAll('inventario');
+  for(const ing of ricetta.ingredienti){
+    if(!ing.variantId) continue;
+    // Stesso contratto di scalaInventarioPerRicetta: sempre il peso equivalente.
+    const quantitaInventario=ing.unita==='pz'?(Number(ing.grammi)||Number(ing.quantita)||0):(Number(ing.quantita)||0);
+    const daRestituire = quantitaInventario * scala;
+    if(daRestituire<=0) continue;
+    let voce = inventario.find(x=>x.variantId===ing.variantId && x.stato==='disponibile');
+    if(voce){
+      voce.quantita += daRestituire;
+      await put('inventario', voce);
+    }
+  }
+}
+
+/* Elenco ingredienti la cui scadenza stimata è entro 2 giorni (B4) */
+async function getScadenzeImminenti(){
+  return window.DietaPlannerMotorV12 ? await DietaPlannerMotorV12.getScadenzeImminenti() : [];
+}
+
+function domaniISO(){
+  const d = new Date(todayISO()+'T00:00:00');
+  d.setDate(d.getDate()+1);
+  return isoLocale(d);
+}
+
+/* B5 — suggerimento di congelamento SOLO su conflitto reale: l'ingrediente
+   avanzato non potrebbe essere ricollocato in nessun pasto (oggi/domani,
+   pranzo o cena) prima della sua scadenza stimata, perché le regole della
+   dieta (tetto settimanale o varietà) lo escluderebbero ovunque. Non è un
+   suggerimento generico "hai un avanzo": scatta solo quando non c'è più
+   davvero un percorso valido per riutilizzarlo in tempo. */
+async function getSuggerimentiCongelamento(){
+  const inventario = await getAll('inventario');
+  const varianti = await getAll('varianti');
+  const risultati = [];
+
+  for(const voce of inventario){
+    if(voce.stato!=='disponibile' || voce.quantita<=0) continue;
+    if(voce.zona==='freezer') continue;
+    const variante = varianti.find(v=>v.id===voce.variantId);
+    if(!variante || variante.congelabile!=='si') continue;
+    const scadenza = await calcolaScadenzaStimata(voce);
+    if(!scadenza) continue; // non ancora "aperto": nessuna urgenza da valutare
+
+    const giorniRimanenti = Math.ceil((new Date(scadenza+'T00:00:00') - new Date(todayISO()+'T00:00:00')) / 86400000);
+    if(giorniRimanenti > 1) continue; // non ancora abbastanza urgente
+
+    const ricetteConIngrediente = await cercaRicetteConIngrediente(voce.variantId);
+    let ancoraUsabile = false;
+
+    for(const g of [todayISO(), domaniISO()]){
+      for(const pasto of ['pranzo','cena']){
+        // già programmato con questo ingrediente in uno di quei pasti? allora è già "salvo"
+        const vocePiano = await getOne('piano', g+'_'+pasto);
+        const idGiaProgrammati = vocePiano ? [vocePiano.ricettaId, vocePiano.primoId, vocePiano.secondoId, vocePiano.contornoId].filter(Boolean) : [];
+        for(const rid of idGiaProgrammati){
+          const r = await getOne('ricette', rid);
+          if(r && r.ingredienti.some(i=>i.variantId===voce.variantId)) ancoraUsabile = true;
+        }
+        if(ancoraUsabile) break;
+
+        // altrimenti: esisterebbe ancora una proposta che rispetti tetti/varietà per quello slot?
+        for(const r of ricetteConIngrediente){
+          const scostamenti = await analizzaScostamenti(pasto, g, [r]);
+          const bloccanti = scostamenti.filter(m=> m.includes('Tetto settimanale') || m.includes('ripete un ingrediente'));
+          if(bloccanti.length===0){ ancoraUsabile = true; break; }
+        }
+        if(ancoraUsabile) break;
+      }
+      if(ancoraUsabile) break;
+    }
+
+    if(!ancoraUsabile){
+      risultati.push({variantId:voce.variantId, nome:variante.nome, quantita:voce.quantita});
+    }
+  }
+  return risultati;
+}
+
+/* B7 (versione essenziale): copertura ingredienti di una ricetta già scelta,
+   per segnalare quando mancherebbe qualcosa da comprare per completarla davvero. */
+async function calcolaCoperturaRicetta(ricetta){
+  const inventario = await getAll('inventario');
+  const disponibilePerVariante = {};
+  for(const item of inventario){
+    if(item.stato==='esaurito') continue;
+    disponibilePerVariante[item.variantId] = (disponibilePerVariante[item.variantId]||0) + item.quantita;
+  }
+  const conVariante = ricetta.ingredienti.filter(i=>i.variantId);
+  if(!conVariante.length) return 1;
+  const rapporti = conVariante.map(i=>{
+    const disp = disponibilePerVariante[i.variantId]||0;
+    return Math.min(1, disp/(i.quantita||1));
+  });
+  return rapporti.reduce((a,b)=>a+b,0)/rapporti.length;
+}
+
+async function mappaStatiDisponibilita(){
+const [inv,ricette]=await Promise.all([getAll('inventario'),getAll('ricette')]);
+const porzMin={};
+for(const r of ricette)for(const i of (r.ingredienti||[])){
+if(!i.variantId||!(i.quantita>0))continue;
+if(porzMin[i.variantId]===undefined||i.quantita<porzMin[i.variantId])porzMin[i.variantId]=i.quantita;
+}
+const tot={};
+for(const i of inv){if(i.stato!=='disponibile')continue;tot[i.variantId]=(tot[i.variantId]||0)+i.quantita;}
+const out={};
+for(const id of Object.keys(tot)){
+const t=tot[id]||0;
+if(t<=0)out[id]='esaurito';
+else if((porzMin[id]||0)>0&&t<porzMin[id])out[id]='quasi_esaurito';
+else out[id]='disponibile';
+}
+return out;
+}
+function ricettaHaQuasiEsaurito(r,mappaStati){
+for(const i of (r.ingredienti||[])){
+if(!i.variantId)continue;
+const st=mappaStati[i.variantId];
+if(st==='quasi_esaurito'||st==='esaurito')return true;
+}
+return false;
+}
+const WARN_QUASI='<span title="Ingrediente quasi esaurito in inventario" style="color:var(--warn);margin-left:6px;">⚠️</span>';
+
+async function registraConsumoStorico(voce,origine){
+if(!voce||!voce.id)return;
+const sep=voce.id.lastIndexOf('_');
+const giorno=voce.id.slice(0,sep),pasto=voce.id.slice(sep+1);
+const nutrizioneTotale=await calcolaNutrizioneVoceConsumata(voce);
+await put('consumoGiorno',{
+id:voce.id+'_'+(voce.dataConsumato||todayISO()),
+giorno,pasto,
+dataConsumato:voce.dataConsumato||todayISO(),
+origine:origine||voce.origine||'auto',
+ricettaIds:voce.modo==='multi'?[...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId,voce.secondoId,voce.contornoId]).filter(Boolean))]:(voce.ricettaId?[voce.ricettaId]:[]),
+primoCereale:voce.primoCereale||null,
+primoSugoId:voce.primoSugoId||null,
+componenti:voce.componenti||null,
+colazioneSpecialeId:voce.colazioneSpecialeId||null,
+porzioni:voce.porzioni||1,
+realizzazioni:voce.realizzazioni?structuredClone(voce.realizzazioni):[],
+bilancioVerdura:voce.bilancioVerdura?structuredClone(voce.bilancioVerdura):null,
+nutrizioneTotale,
+registratoIl:new Date().toISOString()
+});
+if(voce.motoreNuovo&&window.DietaPlannerMotorV12){
+  for(const real of (voce.realizzazioni||[])){
+    const rr=await ricettaNuovoDaRealizzazione(real);
+    if(rr)await DietaPlannerMotorV12.registraUtilizzo(rr,voce.dataConsumato||giorno);
+  }
+}
+}
+
+function aggiungiNutrizione(tot,n){
+  if(!n)return tot;
+  for(const k of ['kcal','prot','carb','grassi'])tot[k]+=Number(n[k])||0;
+  return tot;
+}
+
+async function nutrizioneCarboidratoModulare(chiave){
+  const cfg=CARBOIDRATI_PASTO[chiave];
+  if(!cfg)return null;
+  const varianti=await getAll('varianti');
+  const variante=varianti.find(v=>String(v.nome||'').toLowerCase()===String(cfg.ingrediente||'').toLowerCase());
+  if(!variante)return null;
+  const fattore=(Number(cfg.porzione)||0)/100;
+  return {kcal:(Number(variante.kcal100)||0)*fattore,prot:(Number(variante.prot100)||0)*fattore,carb:(Number(variante.carb100)||0)*fattore,grassi:(Number(variante.grassi100)||0)*fattore};
+}
+
+async function calcolaNutrizioneVoceConsumata(voce){
+  const tot={kcal:0,prot:0,carb:0,grassi:0};
+  if(voce.componenti||voce.colazioneSpecialeId){
+    return aggiungiNutrizione(tot,await nutrizioneColazione(voce.componenti,null,voce.colazioneSpecialeId));
+  }
+  if(voce.modo!=='multi'){
+    const r=voce.ricettaId?await getOne('ricette',voce.ricettaId):null;
+    return aggiungiNutrizione(tot,r?await nutrizionePerPersona(r):null);
+  }
+  if(voce.realizzazioni&&voce.realizzazioni.length){
+    if(voce.motoreNuovo&&window.DietaPlannerMotorV12){
+      for(const real of voce.realizzazioni){
+        const r=await ricettaNuovoDaRealizzazione(real);
+        if(r)aggiungiNutrizione(tot,await nutrizionePerPersona(r));
+      }
+    }else{
+      for(const id of [...new Set(voce.realizzazioni.map(x=>x.ricettaId).filter(Boolean))]){const r=await getOne('ricette',id);if(r)aggiungiNutrizione(tot,await nutrizionePerPersona(r));}
+    }
+    return tot;
+  }
+  const primo=voce.primoId?await getOne('ricette',voce.primoId):null;
+  const secondo=voce.secondoId?await getOne('ricette',voce.secondoId):null;
+  const contorno=voce.contornoId?await getOne('ricette',voce.contornoId):null;
+  if(primo)aggiungiNutrizione(tot,await nutrizionePerPersona(primo));
+  else{
+    const carbGiaIncluso=secondo&&await ricettaContieneCarboidrati(secondo);
+    if(voce.primoCereale&&!carbGiaIncluso)aggiungiNutrizione(tot,await nutrizioneCarboidratoModulare(voce.primoCereale));
+    const sugo=voce.primoSugoId?await getOne('ricette',voce.primoSugoId):null;
+    if(sugo)aggiungiNutrizione(tot,await nutrizionePerPersona(sugo));
+  }
+  if(secondo)aggiungiNutrizione(tot,await nutrizionePerPersona(secondo));
+  if(contorno)aggiungiNutrizione(tot,await nutrizionePerPersona(contorno));
+  return tot;
+}
+
+/* Vero se la ricetta include già una fonte di carboidrati (stessa soglia di B10:
+   almeno 50g di un ingrediente del gruppo "carboidrati"). Usata dal riquadro
+   "🍞 Carboidrati" nel modal Ricetta, per piatto unico/secondo. */
+async function ricettaContieneCarboidrati(ricetta){
+  const varianti = await getAll('varianti');
+  const ingredientiBase = await getAll('ingredienti');
+  for(const ing of ricetta.ingredienti){
+    if(!ing.variantId) continue;
+    const v = varianti.find(x=>x.id===ing.variantId);
+    const base = v ? ingredientiBase.find(i=>i.id===v.ingredienteId) : null;
+    if(base && base.gruppo==='carboidrati' && (ing.quantita||0) >= 50) return true;
+  }
+  return false;
+}
+
+/* Vero quando il computo nutrizionale di questa ricetta risulterebbe a zero (o quasi):
+   nessun valore compilato manualmente/AI, e nessun ingrediente collegato a una variante
+   reale del database da cui prendere i valori per 100g. Capita soprattutto sui piatti
+   speciali (ingredienti "liberi", es. asporto) se non si compila la nutrizione — non deve
+   mai passare inosservato, altrimenti quel pasto conterebbe zero nel computo del giorno. */
+function nutrizioneInaffidabile(ricetta){
+  if(ricetta.nutrizioneManualeTotale){
+    const m = ricetta.nutrizioneManualeTotale;
+    if((m.kcal||0) > 0) return false; // compilata e con un valore reale
+  }
+  return !ricetta.ingredienti.some(i=>i.variantId);
+}
+
+/* B9: la guida chiede un alimento integrale in almeno uno dei tre pasti principali
+   (colazione, pranzo, cena) — non serve bloccare o allarmare per-pasto (lo spuntino
+   non conta, e non si può saperlo finché non sono decisi tutti e tre), basta uno
+   stato chiaro della giornata. */
+async function getIntegraleOggi(giorno){
+  const varianti = await getAll('varianti');
+  let trovato = false;
+
+  const voceColazione = await getOne('piano', giorno+'_colazione');
+  if(voceColazione && voceColazione.componenti){
+    for(const chiave of Object.keys(voceColazione.componenti)){
+      const id = voceColazione.componenti[chiave];
+      if(!id) continue;
+      const v = varianti.find(x=>x.id===id);
+      if(v && v.integrale) trovato = true;
+    }
+  }
+
+  for(const pasto of ['pranzo','cena']){
+    if(trovato) break;
+    const voce = await getOne('piano', giorno+'_'+pasto);
+    if(!voce) continue;
+    const idRicette = voce.modo==='multi'
+      ? [...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId, voce.secondoId, voce.contornoId]).filter(Boolean))]
+      : [voce.ricettaId].filter(Boolean);
+    for(const rid of idRicette){
+      const ricetta = await getOne('ricette', rid);
+      if(!ricetta) continue;
+      for(const ing of ricetta.ingredienti){
+        if(!ing.variantId) continue;
+        const v = varianti.find(x=>x.id===ing.variantId);
+        if(v && v.integrale) trovato = true;
+      }
+    }
+  }
+  return trovato;
+}
+
+/* =========================================================
+   GRAFICI DI CONSUMO — barre giornaliero/settimanale/mensile
+   -------------------------------------------------------
+   Target calcolato dalle porzioni indicative e dalle frequenze
+   settimanali scritte nel PDF (colazione+pranzo+cena+frutta+1 spuntino
+   medio, comprese le "piccole aggiunte" facoltative pag.10/18),
+   confermato da Enrico — non un numero a caso. */
+const TARGET_GIORNALIERO = {kcal:1818, prot:81, carb:250, grassi:59};
+
+function targetPeriodo(periodo){
+  const moltiplicatore = periodo==='settimana' ? 7 : periodo==='mese' ? 30 : 1;
+  return {
+    kcal: TARGET_GIORNALIERO.kcal*moltiplicatore, prot: TARGET_GIORNALIERO.prot*moltiplicatore,
+    carb: TARGET_GIORNALIERO.carb*moltiplicatore, grassi: TARGET_GIORNALIERO.grassi*moltiplicatore
+  };
+}
+
+/* Somma kcal/prot/carb/grassi dei pasti CONSUMATI (mai solo programmati) su un
+   elenco di giorni — colazione (a gruppi) + i 3 spuntini + pranzo + cena. */
+async function calcolaConsumoGiorni(listaGiorniIso){
+const tot={kcal:0,prot:0,carb:0,grassi:0};
+const set=new Set(listaGiorniIso);
+const log=await getAll('consumoGiorno');
+for(const rec of log){
+if(!set.has(rec.giorno))continue;
+if(rec.nutrizioneTotale){aggiungiNutrizione(tot,rec.nutrizioneTotale);continue;}
+if(rec.componenti||rec.colazioneSpecialeId){
+const n=await nutrizioneColazione(rec.componenti,null,rec.colazioneSpecialeId);
+tot.kcal+=n.kcal;tot.prot+=n.prot;tot.carb+=n.carb;tot.grassi+=n.grassi;
+}
+for(const rid of (rec.ricettaIds||[])){
+const r=await getOne('ricette',rid);if(!r)continue;
+const n=await nutrizionePerPersona(r);
+tot.kcal+=n.kcal;tot.prot+=n.prot;tot.carb+=n.carb;tot.grassi+=n.grassi;
+}
+}
+return tot;
+}
+
+/* Somma kcal/prot/carb/grassi di tutti i pasti PROGRAMMATI (con ricetta
+   assegnata, indipendentemente dal consumato) per un singolo giorno.
+   Usata per il confronto programmato vs consumato nei giorni passati. */
+async function calcolaProgrammatoGiorno(giornoIso){
+  const tot = {kcal:0, prot:0, carb:0, grassi:0};
+  const voceColazione = await getOne('piano', giornoIso+'_colazione');
+  if(voceColazione && (voceColazione.componenti || voceColazione.colazioneSpecialeId)){
+    const n = await nutrizioneColazione(voceColazione.componenti, null, voceColazione.colazioneSpecialeId);
+    tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+  }
+  for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
+    const voce = await getOne('piano', giornoIso+'_'+pasto);
+    if(!voce) continue;
+    if(voce.motoreNuovo && Array.isArray(voce.realizzazioni)){
+      for(const real of voce.realizzazioni){
+        const n = real && real.nutrientiEffettivi;
+        if(!n) continue;
+        tot.kcal+=Number(n.kcal)||0; tot.prot+=Number(n.proteine)||0;
+        tot.carb+=Number(n.carboidrati)||0; tot.grassi+=Number(n.grassi)||0;
+      }
+      continue;
+    }
+    if(voce.modo==='multi'){
+      if(voce.primoId){
+        const rPrimo = await getOne('ricette', voce.primoId);
+        if(rPrimo){
+          const n = await nutrizionePerPersona(rPrimo);
+          tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+        }
+      }
+      const rSecondoProg = voce.secondoId ? await getOne('ricette', voce.secondoId) : null;
+      if(rSecondoProg && rSecondoProg.componente === COMPONENTE_PROTEINA){
+        const pastoCompostoProg = await componiSecondoContorno(voce.secondoId, voce.contornoId, voce.cottura || null);
+        if(pastoCompostoProg){
+          tot.kcal+=pastoCompostoProg.nutrizione.kcal; tot.prot+=pastoCompostoProg.nutrizione.prot;
+          tot.carb+=pastoCompostoProg.nutrizione.carb; tot.grassi+=pastoCompostoProg.nutrizione.grassi;
+        }
+      } else {
+        if(rSecondoProg){
+          const n = await nutrizionePerPersona(rSecondoProg);
+          tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+        }
+        if(voce.contornoId){
+          const rContornoProg = await getOne('ricette', voce.contornoId);
+          if(rContornoProg){
+            const n = await nutrizionePerPersona(rContornoProg);
+            tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+          }
+        }
+      }
+    } else {
+      const r = voce.ricettaId ? await getOne('ricette', voce.ricettaId) : null;
+      if(r){
+        const n = await nutrizionePerPersona(r);
+        tot.kcal+=n.kcal; tot.prot+=n.prot; tot.carb+=n.carb; tot.grassi+=n.grassi;
+      }
+    }
+  }
+  return tot;
+}
+
+function giorniDelMeseCorrente(){
+  const oggi = new Date();
+  const anno = oggi.getFullYear(), mese = oggi.getMonth();
+  const ultimoGiorno = new Date(anno, mese+1, 0).getDate();
+  const out = [];
+  for(let d=1; d<=ultimoGiorno; d++){
+    out.push(`${anno}-${String(mese+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+  }
+  return out;
+}
+
+/* Una singola barra: sfondo bianco bordo nero, lunga il 120% del target.
+   Verde fino al 100%, giallo->rosso sfumato dal 100 al 120%, nero lampeggiante oltre.
+   nRigheRosse = quante righe verticali di riferimento disegnare (1 sul giornaliero,
+   7 sul settimanale = confini dei giorni, 4-5 sul mensile = confini delle settimane). */
+function renderUnaBarra(nomeVoce, valore, target, nRigheRosse){
+  const percento = target>0 ? (valore/target*100) : 0;
+  let html = `<div class="grafico-barra-riga">`;
+  if(percento > 120){
+    html += `<div class="grafico-barra-fill-sforo"></div>`;
+  } else {
+    const larghezzaVerde = Math.min(percento,100)/120*100;
+    html += `<div class="grafico-barra-fill" style="width:${larghezzaVerde}%;"></div>`;
+    if(percento > 100){
+      const inizioSfumato = 100/120*100;
+      const larghezzaSfumato = (percento-100)/120*100;
+      const intensita = Math.min(1, (percento-100)/20); // 0 al 100%, 1 al 120% (giallo->rosso)
+      const rosso = 231, verdeCol = Math.round(180 - intensita*180), blu = Math.round(50 - intensita*50);
+      html += `<div class="grafico-barra-fill-sfumato" style="left:${inizioSfumato}%;width:${larghezzaSfumato}%;background:rgb(${rosso},${verdeCol<0?0:verdeCol},${blu<0?0:blu});"></div>`;
+    }
+  }
+  for(let i=1;i<=nRigheRosse;i++){
+    const posizione = (i/nRigheRosse*100)/120*100;
+    html += `<div class="grafico-barra-riga-rossa" style="left:${posizione}%;"></div>`;
+  }
+  html += `<div class="grafico-barra-nome">${nomeVoce}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+function renderQuattroBarre(consumo, target, nRigheRosse){
+  return renderUnaBarra('kcal', consumo.kcal, target.kcal, nRigheRosse)
+    + renderUnaBarra('Proteine', consumo.prot, target.prot, nRigheRosse)
+    + renderUnaBarra('Carboidrati', consumo.carb, target.carb, nRigheRosse)
+    + renderUnaBarra('Grassi', consumo.grassi, target.grassi, nRigheRosse);
+}
+
+let forzaturaTestMensile = null; // {kcal,prot,carb,grassi} in % — SOLO per il pannello mensile, mai reale
+let intervalloCaroselloGrafici = null;
+
+async function renderGraficiConsumo(){
+  const el = document.getElementById('graficiConsumoCarosello');
+  if(!el) return;
+
+  const oggi = todayISO();
+  // Giorni passati: mostra il confronto programmato vs consumato del giorno
+  if(giornoSelezionato < oggi){
+    const programmato = await calcolaProgrammatoGiorno(giornoSelezionato);
+    const consumato = await calcolaConsumoGiorni([giornoSelezionato]);
+    const targetGiornoPassato = targetPeriodo('giorno');
+    const labelGiornoTesto = labelGiorno(giornoSelezionato);
+    el.innerHTML = `
+      <div style="padding:4px 0;">
+        <div class="meta" style="margin-bottom:10px;font-weight:700;">📊 ${labelGiornoTesto} — confronto programmato vs consumato</div>
+        <div class="meta" style="margin-bottom:6px;color:var(--accent);">Programmato</div>
+        ${renderQuattroBarre(programmato, targetGiornoPassato, 1)}
+        <div class="meta" style="margin-bottom:6px;margin-top:12px;color:var(--text-dim);">Realmente consumato</div>
+        ${renderQuattroBarre(consumato, targetGiornoPassato, 1)}
+      </div>`;
+    return;
+  }
+
+  const consumoGiorno = await calcolaConsumoGiorni([oggi]);
+  const consumoSettimana = await calcolaConsumoGiorni(giorniSettimana(0));
+  const consumoMeseReale = await calcolaConsumoGiorni(giorniDelMeseCorrente());
+
+  const targetGiorno = targetPeriodo('giorno');
+  const targetSettimana = targetPeriodo('settimana');
+  const targetMese = targetPeriodo('mese');
+
+  // il mese può essere forzato a valori di test (solo per verificare i colori delle
+  // barre) — non tocca mai giornaliero/settimanale, resta isolato
+  let consumoMese = consumoMeseReale;
+  if(forzaturaTestMensile){
+    consumoMese = {
+      kcal: targetMese.kcal * forzaturaTestMensile.kcal/100,
+      prot: targetMese.prot * forzaturaTestMensile.prot/100,
+      carb: targetMese.carb * forzaturaTestMensile.carb/100,
+      grassi: targetMese.grassi * forzaturaTestMensile.grassi/100
+    };
+  }
+
+  el.innerHTML = `
+    <div class="grafico-carosello" id="graficoCaroselloInterno">
+      <div class="grafico-pagina">
+        <div class="meta" style="margin-bottom:6px;">Giornaliero</div>
+        ${renderQuattroBarre(consumoGiorno, targetGiorno, 1)}
+      </div>
+      <div class="grafico-pagina">
+        <div class="meta" style="margin-bottom:6px;">Settimanale</div>
+        ${renderQuattroBarre(consumoSettimana, targetSettimana, 7)}
+      </div>
+      <div class="grafico-pagina">
+        <div class="meta" style="margin-bottom:6px;">Mensile${forzaturaTestMensile?' (valori di TEST)':''}</div>
+        ${renderQuattroBarre(consumoMese, targetMese, 4)}
+        <details style="margin-top:6px;">
+          <summary class="meta">Forza valori di test (solo qui)</summary>
+          <div class="row" style="gap:4px;margin-top:6px;flex-wrap:wrap;">
+            <button class="small" data-test-mese="50">50%</button>
+            <button class="small" data-test-mese="90">90%</button>
+            <button class="small" data-test-mese="110">110%</button>
+            <button class="small" data-test-mese="119">119%</button>
+            <button class="small" data-test-mese="130">130%</button>
+            <button class="small" data-test-mese="reale">Reale</button>
+          </div>
+        </details>
+      </div>
+    </div>
+  `;
+
+  el.querySelectorAll('[data-test-mese]').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const v = b.dataset.testMese;
+      if(v==='reale'){ forzaturaTestMensile = null; }
+      else { const p = parseFloat(v); forzaturaTestMensile = {kcal:p, prot:p, carb:p, grassi:p}; }
+      renderGraficiConsumo();
+    });
+  });
+
+  // avanzamento automatico del carosello, solo mentre il pannello è aperto
+  const carosello = document.getElementById('graficoCaroselloInterno');
+  if(intervalloCaroselloGrafici) clearInterval(intervalloCaroselloGrafici);
+  const pannello = document.getElementById('pannelloGraficiConsumo');
+  if(pannello && pannello.open && carosello){
+    let pagina = 0;
+    intervalloCaroselloGrafici = setInterval(()=>{
+      pagina = (pagina+1) % 3;
+      carosello.scrollTo({left: carosello.clientWidth*pagina, behavior:'smooth'});
+    }, 4000);
+  }
+}
+
+async function renderPiano(){
+  /* Cambio di giorno o rientro nella pagina Pasto: qualunque proposta
+     Alternativa/Salvafrigo non confermata va scartata senza salvarla. */
+  for(const chiave in bozzePropostaPasto)delete bozzePropostaPasto[chiave];
+  resetStatoPannelli();
+
+  // controllo reattivo: fa passare a "consumato" (scalando l'inventario allora, non
+  // prima) tutti i pasti programmati il cui orario è già superato
+  await elaboraConsumoAutomatico();
+
+  // guida al primo utilizzo: se non esiste NESSUN pranzo/cena programmato per l'intera
+  // settimana corrente, mostra un invito diretto a "Genera menù" invece della griglia vuota
+  const benvenutoEl = document.getElementById('benvenutoPrimoUtilizzo');
+  const tutteRicette = await getAll('ricette');
+  if(!tutteRicette.length){
+    benvenutoEl.innerHTML = `<div class="card" style="margin-bottom:12px;border-color:var(--accent);">
+      <h3 style="margin-bottom:8px;">Prima di iniziare 👋</h3>
+      <div class="meta" style="margin-bottom:10px;">Non è stato possibile caricare il ricettario dell'app. Controlla la connessione e riprova: il catalogo viene caricato automaticamente.</div>
+      <button class="secondary" id="btnBenvenutoRiprovaRicettario" style="width:100%;">Riprova</button>
+    </div>`;
+    document.getElementById('btnBenvenutoRiprovaRicettario').addEventListener('click', e=>riprovaInizializzazioneRicettario(e.currentTarget));
+    document.getElementById('selettoreGiorni').innerHTML = '';
+    return;
+  }
+  const giorniSett = giorniSettimana(0);
+  let esisteAlmenoUnPasto = false;
+  for(const g of giorniSett){
+    const p = await getOne('piano', g+'_pranzo');
+    const c = await getOne('piano', g+'_cena');
+    if((p && (p.ricettaId || p.primoId || (p.realizzazioni&&p.realizzazioni.length))) || (c && (c.ricettaId || c.primoId || (c.realizzazioni&&c.realizzazioni.length)))){
+      esisteAlmenoUnPasto = true;
+      break;
+    }
+  }
+  if(!esisteAlmenoUnPasto){
+    benvenutoEl.innerHTML = `<div class="card" style="margin-bottom:12px;">
+      <h3 style="margin-bottom:8px;">Benvenuto! 👋</h3>
+      <div class="meta" style="margin-bottom:10px;">Non hai ancora nessun pasto programmato questa settimana. Genera il menù per iniziare — funziona anche se la dispensa è vuota, la lista della spesa si costruisce da sola.</div>
+      <button class="primary" id="btnBenvenutoGeneraMenu" style="width:100%;">Genera menù</button>
+    </div>`;
+    document.getElementById('btnBenvenutoGeneraMenu').addEventListener('click', async (e)=>{
+      const btn=e.currentTarget,etichetta=btn.textContent;
+      btn.disabled=true;btn.textContent='Generazione in corso…';
+      try{await generaMenuDaConfigSet(0);}
+      catch(err){console.error('[genera menu]',err);await avviso('Generazione non riuscita: '+(err.message||err));}
+      finally{if(btn&&btn.isConnected){btn.disabled=false;btn.textContent=etichetta;}}
+    });
+  } else {
+    benvenutoEl.innerHTML = '';
+  }
+
+  const giorniFinestra = giorniFinestraScorrevole();
+  const selEl = document.getElementById('selettoreGiorni');
+  selEl.innerHTML = giorniFinestra.map(g=>renderPulsanteGiorno(g)).join('');
+  selEl.querySelectorAll('button').forEach(b=>{
+    b.addEventListener('click', ()=>{ giornoSelezionato=b.dataset.g; renderPiano(); });
+  });
+  const bottoneGiornoAttivo = selEl.querySelector('.active');
+  if(bottoneGiornoAttivo){
+    const destinazione=bottoneGiornoAttivo.offsetLeft-(selEl.clientWidth-bottoneGiornoAttivo.offsetWidth)/2;
+    selEl.scrollLeft=Math.max(0,destinazione);
+  }
+
+  // Container "Nessun pasto programmato": solo se il giorno selezionato è
+  // vuoto E la settimana non è del tutto vuota (in quel caso c'è già il
+  // banner benvenutoPrimoUtilizzo più in alto, non serve doppio messaggio).
+  const pColazioneCheck = await getOne('piano', giornoSelezionato+'_colazione');
+  const pPranzoCheck = await getOne('piano', giornoSelezionato+'_pranzo');
+  const pCenaCheck = await getOne('piano', giornoSelezionato+'_cena');
+  const giornoVuoto = !(
+    (pColazioneCheck && (pColazioneCheck.componenti || pColazioneCheck.colazioneSpecialeId)) ||
+    (pPranzoCheck && (pPranzoCheck.ricettaId || pPranzoCheck.primoId || pPranzoCheck.secondoId)) ||
+    (pCenaCheck && (pCenaCheck.ricettaId || pCenaCheck.primoId || pCenaCheck.secondoId))
+  );
+  const nessunPastoEl = document.getElementById('nessunPastoOggi');
+  if(esisteAlmenoUnPasto && giornoVuoto){
+    nessunPastoEl.innerHTML = `<div class="card" style="margin-bottom:12px;text-align:center;">
+      <div class="meta" style="margin-bottom:14px;">Nessun pasto programmato.</div>
+      <button class="primary" id="btnNessunPastoGeneraMenu" style="width:100%;">Genera menù settimanale</button>
+    </div>`;
+    document.getElementById('btnNessunPastoGeneraMenu').addEventListener('click', ()=>{
+      mostraVista('set');
+    });
+  } else {
+    nessunPastoEl.innerHTML = '';
+  }
+
+  await renderIndicatoreFrutta();
+  // i grafici di consumo si calcolano solo quando il pannello è aperto (lazy, vedi
+  // il listener 'toggle' più sotto) — evita di rifare query pesanti ad ogni render
+  // di Piano se il pannello resta chiuso, come lezione già imparata in questa sessione
+  await renderColazione();
+  await renderBloccoSemplice('spuntino1');
+  await renderBloccoCompleto('pranzo');
+  await renderBloccoSemplice('spuntino2');
+  await renderBloccoCompleto('cena');
+  await renderBloccoSemplice('spuntino3');
+  await renderNutrizioneGiorno();
+  await renderIndicatoreIntegrale();
+  await renderFrequenzeSettimana();
+  // Giorni passati: apri automaticamente il pannello grafici per mostrare il confronto
+  const pannelloGrafici = document.getElementById('pannelloGraficiConsumo');
+  if(giornoSelezionato < todayISO() && pannelloGrafici){
+    pannelloGrafici.open = true;
+    await renderGraficiConsumo();
+  }
+}
+
+/* B9 */
+async function renderIndicatoreIntegrale(){
+  const el = document.getElementById('indicatoreIntegrale');
+  const ok = await getIntegraleOggi(giornoSelezionato);
+  el.innerHTML = ok
+    ? '🌾 Cereali integrali oggi: <span style="color:var(--accent)">sì</span>'
+    : '🌾 Cereali integrali oggi: <span style="color:var(--text-dim)">non ancora — prova pasta, riso, pane o farro/orzo integrali in uno dei pasti principali</span>';
+}
+
+/* B4: alert proattivo su ingredienti la cui scadenza stimata è entro 2 giorni */
+/* Naviga alla scheda Ricette con il filtro Salvafrigo già impostato su un ingrediente
+   specifico — usata dall'alert di scadenza per portare dritti alle ricette giuste. */
+function vaiARicetteConSalvafrigo(variantId){
+  filtroSalvafrigoVariante = variantId;
+  document.querySelectorAll('nav.tabbar button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('nav.tabbar button[data-view="ricette"]').classList.add('active');
+  document.querySelectorAll('section.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-ricette').classList.add('active');
+  renderRicette();
+}
+
+/* B5: suggerimento di congelamento solo su conflitto reale con le regole della dieta */
+async function renderAlertCongelamento(){
+  const el = document.getElementById('alertCongelamento');
+  const suggeriti = await getSuggerimentiCongelamento();
+  if(!suggeriti.length){ el.innerHTML=''; return; }
+  const varianti = await getAll('varianti');
+  el.innerHTML = `<div class="card" style="border-color:var(--accent);">
+    <div class="row"><h3 style="font-size:0.85rem;">❄ Meglio congelare</h3></div>
+    <div class="meta" style="margin-bottom:8px;">Non ci sarebbe più modo di riutilizzarli in tempo rispettando i criteri della dieta (tetti settimanali o varietà).</div>
+    ${suggeriti.map(s=> {
+      const v = varianti.find(x=>x.id===s.variantId);
+      return `
+      <div class="row" style="margin-bottom:6px;">
+        <span style="font-size:0.85rem;">${s.nome} (${formattaQuantita(v, s.quantita)})</span>
+        <button class="small accent" data-congela="${s.variantId}">Segna come congelato</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+  el.querySelectorAll('[data-congela]').forEach(b=>{
+    b.addEventListener('click', async ()=>{
+      const inventario = await getAll('inventario');
+      const voci = inventario.filter(i=>i.variantId===b.dataset.congela && i.stato==='disponibile');
+      for(const voce of voci){
+        voce.zona = 'freezer';
+        voce.dataCongelamento = todayISO();
+        voce.dataApertura = null; // il congelamento "mette in pausa" il conto alla rovescia
+        await put('inventario', voce);
+      }
+      renderAlertCongelamento();
+    });
+  });
+}
+
+/* ---- Frutta ----
+   La guida dice che la frutta "può essere consumata ai pasti principali e/o agli
+   spuntini": non è un conteggio a sé, va derivato da cosa è davvero pianificato
+   nel giorno (colazione a gruppi, i tre spuntini, pranzo, cena) — niente più
+   bottoni manuali scollegati, il valore si calcola da solo ogni volta. */
+async function calcolaFruttaOggi(giorno){
+  giorno = giorno || giornoSelezionato;
+  const varianti = await getAll('varianti');
+  const ingredientiBase = await getAll('ingredienti');
+  let grammiFrutta = 0;
+
+  function grammiFruttaIn(ricetta){
+    if(!ricetta || !ricetta.ingredienti) return 0;
+    let g = 0;
+    for(const ing of ricetta.ingredienti){
+      if(!ing.variantId) continue;
+      const v = varianti.find(x=>x.id===ing.variantId);
+      if(!v) continue;
+      const base = ingredientiBase.find(x=>x.id===v.ingredienteId);
+      if(base && base.gruppo==='frutta') g += (ing.quantita||0);
+    }
+    return g;
+  }
+
+  // colazione: gruppo "carboidrati_semplici" può includere frutta? No — la frutta in
+  // colazione non è tra i 4 gruppi componibili di G, quindi qui non c'è nulla da
+  // sommare per la colazione (limite noto, coerente con la struttura attuale)
+
+  for(const pasto of ['spuntino1','spuntino2','spuntino3','pranzo','cena']){
+    const voce = await getOne('piano', giorno+'_'+pasto);
+    if(!voce) continue;
+    const idRicette = voce.modo==='multi'
+      ? [voce.primoId, voce.secondoId, voce.contornoId].filter(Boolean)
+      : [voce.ricettaId].filter(Boolean);
+    for(const rid of idRicette){
+      const ricetta = await getOne('ricette', rid);
+      grammiFrutta += grammiFruttaIn(ricetta);
+    }
+  }
+  return Math.round(grammiFrutta/175); // ~175g = 1 porzione media (150-200g)
+}
+
+async function renderIndicatoreFrutta(){
+  const n = await calcolaFruttaOggi(giornoSelezionato);
+  const el = document.getElementById('indicatoreFrutta');
+  const ok = n>=FRUTTA_GIORNALIERA.min && n<=FRUTTA_GIORNALIERA.max;
+  el.innerHTML = `🍎 Frutta oggi: <span style="color:${ok?'var(--accent)':'var(--text-dim)'}">${n} / ${FRUTTA_GIORNALIERA.min}-${FRUTTA_GIORNALIERA.max} porzioni</span> — dedotta da spuntini e pasti, non un conteggio a parte`;
+}
+
+const LABEL_PASTO = {colazione:'Colazione', pranzo:'Pranzo', cena:'Cena', spuntino1:'Spuntino mattina', spuntino2:'Spuntino pomeriggio', spuntino3:'Spuntino sera'};
+const ICONA_PASTO = {colazione:'☀️', pranzo:'🍝', cena:'🌙', spuntino1:'🍎', spuntino2:'🍏', spuntino3:'🍇'};
+
+/* Scalo inventario differito al consumo reale: un pasto "programmato" non tocca la
+   dispensa finché non è passato l'orario in cui si mangia davvero — altrimenti,
+   pianificando l'intera settimana lunedì, gli ingredienti di venerdì sparivano già
+   lunedì. Fasce orarie definite da Enrico, coprono l'intera giornata senza buchi. */
+const FASCE_ORARIE_PASTO = {
+  colazione: [6,9], spuntino1: [9,12], pranzo: [12,14],
+  spuntino2: [14,18], cena: [18,20], spuntino3: [20,24]
+};
+
+/* Vero quando l'orario di fine-fascia di quel pasto, in quel giorno, è già passato
+   rispetto ad ora — quindi il pasto va considerato "consumato", non più solo
+   "programmato". Giorni nel passato sono sempre considerati passati per intero. */
+/* Usata dalla generazione settimanale in blocco (motor-v12.js non conosce
+   le fasce orarie, resta un concetto di sola UI): quali pasti di OGGI hanno
+   già la fascia chiusa, anche se non esiste ancora un record 'piano' per
+   loro (caso raro: mai generato e già fuori fascia) - la generazione non
+   deve crearli comunque, sarebbe un pasto che l'utente non può più agire. */
+function pastiOggiFuoriFascia(){
+  const oggi=todayISO(),out=new Set();
+  for(const pasto of ['pranzo','cena']) if(fasciaPastoSuperata(oggi,pasto)) out.add(pasto);
+  return out;
+}
+function fasciaPastoSuperata(giorno, pasto, ora){
+  ora = ora || new Date();
+  const oggiIso = todayISO();
+  if(giorno < oggiIso) return true;
+  if(giorno > oggiIso) return false;
+  const fine = FASCE_ORARIE_PASTO[pasto]?.[1];
+  if(fine===undefined) return false;
+  return ora.getHours() >= fine;
+}
+
+/* Controllo REATTIVO (nessun timer in background, è una PWA senza server): ad ogni
+   apertura/render di Piano, scansiona tutti i pasti "programmato" (consumato non
+   ancora vero) il cui orario è superato e li fa passare a "consumato" in quel
+   momento — SOLO ALLORA scala davvero l'inventario e parte la scadenza stimata (B2,
+   dataApertura si imposta dentro scalaInventarioPerRicetta). Funziona anche
+   retroattivamente su più giorni se l'app non viene aperta per un po'. Un pasto
+   "Ordino fuori" (piatto speciale in modalità asporto) passa comunque a consumato,
+   ma non scala mai nulla, coerente con quanto già succede oggi alla conferma. */
+async function elaboraConsumoAutomatico(){
+  const tuttoIlPiano = await getAll('piano');
+  const tutteLeRicette = await getAll('ricette');
+  const ricettePerId = {}; for(const r of tutteLeRicette) ricettePerId[r.id] = r;
+  const ora = new Date();
+  const oggi = todayISO();
+
+  for(const voce of tuttoIlPiano){
+    const sep = voce.id.indexOf('_');
+    if(sep<0) continue;
+    const giorno = voce.id.slice(0, sep);
+    const pasto = voce.id.slice(sep+1);
+    const passato = giorno < oggi;
+    const haContenutoVoce = !!((voce.realizzazioni&&voce.realizzazioni.length) || voce.primoId || voce.secondoId || voce.contornoId || voce.ricettaId || voce.primoCereale || voce.componenti || voce.colazioneSpecialeId);
+
+    if(!haContenutoVoce){
+      if(passato && !voce.consumato) await delKey('piano',voce.id);
+      continue;
+    }
+    if(voce.consumato) continue;
+
+    const fineOra=FASCE_ORARIE_PASTO[pasto]?.[1];
+    const deadline=fineOra===undefined?null:new Date(giorno+'T00:00:00');
+    if(deadline) deadline.setHours(fineOra,0,0,0);
+    const programmatoMs=voce.programmatoIl?Date.parse(voce.programmatoIl):NaN;
+
+    // Record automatici retroattivi privi di una programmazione valida: non sono pasti.
+    if(passato && voce.origine!=='utente' && (!Number.isFinite(programmatoMs) || (deadline && programmatoMs>deadline.getTime()))){
+      await delKey('piano',voce.id);
+      continue;
+    }
+    if(!passato && !Number.isFinite(programmatoMs)) continue;
+    if(deadline && Number.isFinite(programmatoMs) && programmatoMs>deadline.getTime()) continue;
+    if(!fasciaPastoSuperata(giorno,pasto,ora)) continue;
+
+    if(pasto==='colazione'){
+      voce.consumato=true;
+      voce.dataConsumato=giorno;
+      await put('piano',voce);
+      await registraConsumoStorico(voce,'auto');
+      const recContatorePremio=await getOne('impostazioni','contatoreColazioniMorigerate');
+      let contatorePremio=recContatorePremio?recContatorePremio.valore:0;
+      if(voce.componenti&&!voce.colazioneSpecialeId)contatorePremio++;
+      else if(voce.colazioneSpecialeId)contatorePremio=0;
+      await put('impostazioni',{chiave:'contatoreColazioniMorigerate',valore:contatorePremio});
+      continue;
+    }
+
+    const idRicette=voce.modo==='multi'
+      ? [...new Set((voce.realizzazioni&&voce.realizzazioni.length?voce.realizzazioni.map(x=>x.ricettaId):[voce.primoId,voce.secondoId,voce.contornoId]).filter(Boolean))]
+      : [voce.ricettaId].filter(Boolean);
+    if(!idRicette.length){
+      if(passato) await delKey('piano',voce.id);
+      continue;
+    }
+    const speciale=idRicette.length===1?ricettePerId[idRicette[0]]:null;
+    if(!(speciale&&speciale.piattoSpeciale)){
+      if(voce.motoreNuovo&&voce.realizzazioni&&voce.realizzazioni.length&&window.DietaPlannerMotorV12){
+        for(const real of voce.realizzazioni){
+          const ricetta=await ricettaNuovoDaRealizzazione(real);
+          if(ricetta)await scalaInventarioPerRicetta(ricetta,voce.porzioni);
+        }
+      }else{
+        for(const rid of idRicette){const ricetta=ricettePerId[rid];if(ricetta)await scalaInventarioPerRicetta(ricetta,voce.porzioni);}
+      }
+    }
+    voce.consumato=true;
+    voce.dataConsumato=giorno;
+    await put('piano',voce);
+    await registraConsumoStorico(voce,'auto');
+  }
+}
+/* =========================================================
+   G — COLAZIONE A GRUPPI COMPONIBILI
+   -------------------------------------------------------
+   Non una ricetta fissa: un alimento per gruppo (carboidrati e proteine
+   obbligatori, grassi e carboidrati semplici facoltativi), come nella guida.
+   Ogni gruppo si cambia con un semplice menu a tendina — scelta diretta,
+   senza il doppio passaggio proposta→conferma usato per pranzo/cena (qui
+   non ci sono tetti settimanali da sforare, solo alimenti equivalenti).
+   ========================================================= */
+async function contaColazioniSpecialiSettimana(){
+  const giorni = giorniSettimana();
+  let conteggio = 0;
+  for(const g of giorni){
+    const voce = await getOne('piano', g+'_colazione');
+    if(voce && voce.colazioneSpecialeId) conteggio++;
+  }
+  return conteggio;
+}
+
+async function nutrizioneColazione(componenti, variantiPrecaricate, colazioneSpecialeId){
+  if(colazioneSpecialeId){
+    const cs = await getOne('ricette', colazioneSpecialeId);
+    if(cs && cs.nutrizioneManualeTotale){
+      const m = cs.nutrizioneManualeTotale;
+      return {kcal:m.kcal||0, prot:m.prot||0, carb:m.carb||0, grassi:m.grassi||0};
+    }
+  }
+  const varianti = variantiPrecaricate || await getAll('varianti');
+  let kcal=0, prot=0, carb=0, grassi=0;
+  for(const chiave of Object.keys(componenti||{})){
+    if(chiave==='bibita') continue; // scelta descrittiva: nessun apporto nutrizionale
+    const id = componenti[chiave];
+    if(!id) continue;
+    const v = varianti.find(x=>x.id===id);
+    if(!v) continue;
+    const fattore = (v.porzioneColazione||0)/100;
+    kcal += (v.kcal100||0)*fattore;
+    prot += (v.prot100||0)*fattore;
+    carb += (v.carb100||0)*fattore;
+    grassi += (v.grassi100||0)*fattore;
+  }
+  return {kcal, prot, carb, grassi};
+}
+
+function componentiColazioneUguali(a,b){
+  const aa=a||{}, bb=b||{};
+  return COLAZIONE_GRUPPI.every(g=>(aa[g.chiave]||null)===(bb[g.chiave]||null));
+}
+
+function fraseColazioneDaNomi(nomi){
+  const n=(nomi||[]).filter(Boolean);
+  if(!n.length) return 'Colazione da configurare';
+  if(n.length===1) return n[0];
+  if(n.length===2) return `${n[0]} e ${n[1]}`;
+  if(n.length===3) return `${n[0]} e ${n[1]} con ${n[2]}`;
+  return `${n[0]} e ${n[1]} con ${n[2]} e ${n.slice(3).join(' e ')}`;
+}
+
+async function descrizioneColazione(componenti, colazioneSpecialeId, variantiPrecaricate){
+  if(colazioneSpecialeId){
+    const cs=await getOne('ricette',colazioneSpecialeId);
+    return cs ? cs.nome : 'Colazione speciale';
+  }
+  const varianti=variantiPrecaricate||await getAll('varianti');
+  const nomi=COLAZIONE_GRUPPI
+    .map(g=>componenti ? nomeOpzioneColazione(g, componenti[g.chiave], varianti) : null)
+    .filter(Boolean);
+  return fraseColazioneDaNomi(nomi);
+}
+
+function nutrizioneSingoloComponenteColazione(g, id, varianti){
+  if(!id || g.chiave==='bibita') return null;
+  const v=(varianti||[]).find(x=>x.id===id);
+  if(!v) return null;
+  const fattore=(v.porzioneColazione||0)/100;
+  return {
+    kcal:(v.kcal100||0)*fattore,
+    prot:(v.prot100||0)*fattore,
+    carb:(v.carb100||0)*fattore,
+    grassi:(v.grassi100||0)*fattore
+  };
+}
+
+async function htmlRiepilogoColazione(componenti, colazioneSpecialeId, varianti, infoAttr){
+  const attrInfo=infoAttr||'data-info-colazione-attuale="1"';
+  if(colazioneSpecialeId){
+    const cs=await getOne('ricette',colazioneSpecialeId);
+    const n=cs&&cs.nutrizioneManualeTotale?cs.nutrizioneManualeTotale:null;
+    return `<div class="colazione-riepilogo">
+      <div class="colazione-voce">
+        <div class="colazione-categoria"><span class="colazione-punto"></span>Speciale</div>
+        <div class="row" style="align-items:baseline;gap:8px;">
+          <span class="colazione-nome">${cs?cs.nome:'Colazione speciale'}</span>
+          <button class="icon-info-btn" ${attrInfo} title="Valori nutrizionali">ⓘ</button>
+        </div>
+        ${n?`<div class="meta">${Math.round(n.kcal||0)} kcal</div>`:''}
+      </div>
+    </div>`;
+  }
+  const attivi=COLAZIONE_GRUPPI.filter(g=>componenti&&componenti[g.chiave]);
+  if(!attivi.length) return `<div class="meta">Colazione da configurare</div>`;
+  return `<div class="colazione-riepilogo">${attivi.map((g,i)=>{
+    const id=componenti[g.chiave];
+    const nome=nomeOpzioneColazione(g,id,varianti);
+    if(!nome) return '';
+    const n=nutrizioneSingoloComponenteColazione(g,id,varianti);
+    return `<div class="colazione-voce">
+      <div class="colazione-categoria">${i===0?'<span class="colazione-punto"></span>':''}${g.label}</div>
+      <div class="row" style="align-items:baseline;gap:8px;">
+        <span class="colazione-nome">${nome}</span>
+        ${i===0?`<button class="icon-info-btn" ${attrInfo} title="Valori nutrizionali">ⓘ</button>`:''}
+      </div>
+      ${n?`<div class="meta">${Math.round(n.kcal)} kcal</div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function renderColazione(giorno, elementId){
+  giorno = giorno || giornoSelezionato;
+  const el = document.getElementById(elementId || 'blocColazione');
+  const pianoId = giorno+'_colazione';
+  let voce = await getOne('piano', pianoId);
+  const varianti = await getAll('varianti');
+  if(!voce) voce = {id:pianoId};
+  const haContenutoColazione = !!(voce.componenti || voce.colazioneSpecialeId);
+  const colazioneScaduta = haContenutoColazione && fasciaPastoSuperata(giorno, 'colazione');
+
+  // Nel Menù uno slot vuoto resta realmente vuoto: aprire il pannello non crea
+  // una proposta implicita. La colazione viene composta solo dalla generazione
+  // settimanale o da un'azione esplicita dell'utente nella vista Piano.
+  // "Concluso" segue la fascia oraria (colazione: fino alle 9), non la sola
+  // data - stessa correzione gia' applicata a renderBloccoNuovoMotore per
+  // pranzo/cena, stessa regressione (commit ca226c1).
+  if(elementId && !haContenutoColazione){
+    if(fasciaPastoSuperata(giorno,'colazione')){el.innerHTML='<div class="pasto-concluso">— pasto concluso —</div>';return;}
+    el.innerHTML='<div class="meta">Nessuna colazione programmata.</div>';
+    return;
+  }
+  if(fasciaPastoSuperata(giorno,'colazione') && !haContenutoColazione){
+    el.innerHTML='<div class="pasto-header">'+ICONA_PASTO.colazione+' Colazione</div><div class="pasto-concluso">— pasto concluso —</div>';
+    return;
+  }
+
+  const recContatorePremioRender = await getOne('impostazioni', 'contatoreColazioniMorigerate');
+  const contatorePremioRender = recContatorePremioRender ? recContatorePremioRender.valore : 0;
+  const mostraPremioCostanza = contatorePremioRender >= 5 && !voce.colazioneSpecialeId && !voce.consumato && !colazioneScaduta && giorno === todayISO();
+  if(mostraPremioCostanza){
+    const tutteRicettePremio = await getAll('ricette');
+    const colazioniSpecialiPremio = tutteRicettePremio
+      .filter(r=>r.colazioneSpeciale && !r.esclusa)
+      .sort((a,b)=>a.nome.localeCompare(b.nome));
+    let htmlPremio = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
+    htmlPremio += `<div class="card" style="border-color:var(--accent);margin-bottom:10px;">
+      <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px;">🎉 Complimenti! ${contatorePremioRender} colazioni regolari consecutive!</div>
+      <div class="meta" style="margin-bottom:10px;">Ti meriti una colazione speciale. Scorri e scegli cosa fare oggi:</div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;">
+        <button data-premio-colazione="standard" class="small active" style="flex:0 0 auto;">☀️ Colazione standard</button>
+        ${colazioniSpecialiPremio.map(r=>`<button data-premio-colazione="${r.id}" class="small" style="flex:0 0 auto;">🎁 ${r.nome}</button>`).join('')}
+      </div>
+    </div>`;
+    el.innerHTML = htmlPremio;
+    el.querySelectorAll('[data-premio-colazione]').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        const scelta = b.dataset.premioColazione;
+        if(scelta !== 'standard'){
+          await put('piano', {id:pianoId, colazioneSpecialeId:scelta, componenti:null, premioCostanza:true});
+        }
+        await put('impostazioni', {chiave:'contatoreColazioniMorigerate', valore: 0});
+        delete draftColazione[pianoId];
+        renderColazione(giorno, elementId);
+        if(giorno===giornoSelezionato) renderNutrizioneGiorno();
+      });
+    });
+    return;
+  }
+
+  if(!voce.componenti && !voce.colazioneSpecialeId && !colazioneScaduta){
+    const componenti = {};
+    for(const g of COLAZIONE_GRUPPI){
+      const opzioni = opzioniColazioneGruppo(g, varianti);
+      componenti[g.chiave] = g.obbligatorio && opzioni.length ? opzioni[0].id : null;
+    }
+    voce.componenti = componenti;
+    voce.programmatoIl = voce.programmatoIl || new Date().toISOString();
+    await put('piano', voce);
+  }
+
+  const nutri = await nutrizioneColazione(voce.componenti, varianti, voce.colazioneSpecialeId);
+  const descrizioneAttuale = await descrizioneColazione(voce.componenti, voce.colazioneSpecialeId, varianti);
+  let html = elementId ? '' : `<div class="pasto-header">${ICONA_PASTO.colazione} Colazione</div>`;
+
+  if(voce.consumato){
+    const riepilogoScaduto = (voce.componenti || voce.colazioneSpecialeId)
+      ? await htmlRiepilogoColazione(voce.componenti,voce.colazioneSpecialeId,varianti,'data-info-colazione="1"')
+      : '<div class="meta">Nessuna colazione</div>';
+    el.innerHTML = html + `<div style="opacity:0.7;"><span class="consumato-spunta">✓</span> ${riepilogoScaduto}</div>`;
+    el.querySelector('[data-editor-colazione]')?.addEventListener('click', async ()=>{ await apriModalEditorColazione(giorno); });
+    el.querySelector('[data-info-colazione]')?.addEventListener('click', ()=>apriModalInfoColazione(voce.componenti,voce.colazioneSpecialeId));
+    return;
+  }
+
+  if(!draftColazione[pianoId]){
+    draftColazione[pianoId]={
+      componenti: voce.componenti ? {...voce.componenti} : null,
+      colazioneSpecialeId: voce.colazioneSpecialeId || null,
+      aperta: false
+    };
+  }
+  const draft=draftColazione[pianoId];
+  const draftNutri=await nutrizioneColazione(draft.componenti,varianti,draft.colazioneSpecialeId);
+  const draftDescrizione=await descrizioneColazione(draft.componenti,draft.colazioneSpecialeId,varianti);
+  const modificata=(draft.colazioneSpecialeId||null)!==(voce.colazioneSpecialeId||null) || !componentiColazioneUguali(draft.componenti,voce.componenti);
+
+  html += await htmlRiepilogoColazione(voce.componenti,voce.colazioneSpecialeId,varianti,'data-info-colazione-attuale="1"');
+
+  const tutteRicetteCS = await getAll('ricette');
+  const colazioniSpeciali = tutteRicetteCS.filter(r=>r.colazioneSpeciale && !r.esclusa).sort((a,b)=>a.nome.localeCompare(b.nome));
+  const csDraft = draft.colazioneSpecialeId ? tutteRicetteCS.find(r=>r.id===draft.colazioneSpecialeId) : null;
+  const conteggioCS = await contaColazioniSpecialiSettimana();
+  const tettoCS = conteggioCS >= CAP_COLAZIONE_SPECIALE && !voce.colazioneSpecialeId;
+
+  const colazionePrefSalvata = await getOne('impostazioni', 'colazionePreferita');
+
+  html += `<div class="pasto-contenuto-espandibile" data-config-colazione>
     <div style="padding-top:10px;">
       <div class="meta" style="margin-bottom:8px;">Anteprima: <strong style="color:var(--text);">${draftDescrizione}</strong> · ${Math.round(draftNutri.kcal)} kcal</div>
 
