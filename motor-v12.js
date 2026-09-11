@@ -1683,7 +1683,21 @@ function prioritaVerdureProgrammazionePasti(candidati,data,variantiPrioritarie){
   const max=candidati.map(score).reduce((a,b)=>Math.max(a,b),-Infinity);
   return candidati.filter(c=>score(c)===max);
 }
-function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie,bloccateIds,verdurePreferiteVariantIds){
+/* Sceglie la verdura dedicata che chiude il residuo. La verdura ricorrente
+   (Set utente) e' sempre il primo controllo: se il pool contiene una
+   ricetta compatibile con il ruolo mancante, e' quella la scelta, senza
+   passare dall'ordinamento per deperibilita'/preferite. Se non e'
+   compatibile con nessun candidato disponibile, si ricade invariato
+   sull'ordinamento esistente (deperibilita' e programmazione settimanale,
+   poi preferite) - nessuna modifica a quella logica. */
+function scegliDedicataConRicorrente(candidatiPool,data,variantiPrioritarie,verdurePreferiteVariantIds,requiredVegetableVariantId){
+  if(requiredVegetableVariantId){
+    const conRicorrente=candidatiPool.filter(r=>(r.ingredienti||[]).some(i=>i.variantId===requiredVegetableVariantId));
+    if(conRicorrente.length)return ordinaVerdureProgrammazione(conRicorrente,data,variantiPrioritarie,verdurePreferiteVariantIds)[0]||null;
+  }
+  return ordinaVerdureProgrammazione(candidatiPool,data,variantiPrioritarie,verdurePreferiteVariantIds)[0]||null;
+}
+function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiPrioritarie,bloccateIds,verdurePreferiteVariantIds,requiredVegetableVariantId){
   bloccateIds=bloccateIds||new Set();
   let out=(ricette||[]).slice();
   const totale=coperturaVerduraRicette(out,portionConfig);
@@ -1740,12 +1754,12 @@ function completaResiduoVerduraRicette(ricette,pool,data,portionConfig,variantiP
     const copertoDaAltre=N.vegetableCoverage(righeCoperturaVerdura(out,dedicata.id),portionConfig);
     const frazioneMancante=Math.max(0,1-copertoDaAltre.coveredFraction);
     if(frazioneMancante<=0)return out;
-    const supplementare=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie,verdurePreferiteVariantIds)[0]||null;
+    const supplementare=scegliDedicataConRicorrente((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie,verdurePreferiteVariantIds,requiredVegetableVariantId);
     if(!supplementare)return out;
     return out.concat(ridimensionaVerdureRicetta(supplementare,frazioneMancante,portionConfig));
   }
   if(!dedicata){
-    dedicata=ordinaVerdureProgrammazione((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie,verdurePreferiteVariantIds)[0]||null;
+    dedicata=scegliDedicataConRicorrente((pool||[]).filter(r=>{const c=copertura(r);return c.V&&!c.C&&!c.P&&righeCoperturaVerdura([r]).length&&!out.some(x=>x.id===r.id);}),data,variantiPrioritarie,verdurePreferiteVariantIds,requiredVegetableVariantId);
     if(dedicata)out.push(dedicata);
   }
   if(!dedicata)return out;
@@ -1874,7 +1888,7 @@ async function generaCandidatiPasto(target,data,opts){
         let ricette=base.concat(veg?[veg]:[]);
         const bilancioPrimaDelResiduo=coperturaVerduraRicette(ricette,opts.vegetablePortions);
         if(bilancioPrimaDelResiduo.residuoGrammi>0&&bilancioPrimaDelResiduo.residuoGrammi<50&&!(bilancioPrimaDelResiduo.grammiS>0&&bilancioPrimaDelResiduo.grammiG>0))continue;
-        ricette=completaResiduoVerduraRicette(ricette,pool,data,opts.vegetablePortions,variantiPrioritarie);
+        ricette=completaResiduoVerduraRicette(ricette,pool,data,opts.vegetablePortions,variantiPrioritarie,undefined,undefined,opts.requiredVegetableVariantId);
         if(!pastoCompletoPerToken(ricette,token,opts.vegetablePortions)) continue;
         if(coperturaVerduraRicette(ricette,opts.vegetablePortions).remainingFraction>0.000001)continue;
         if(opts.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===opts.requiredVegetableVariantId)))continue;
@@ -2007,7 +2021,7 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
      altrimenti modificate. Vuoto/assente per ogni chiamante che non
      conosce blocchi: comportamento identico a prima. */
   const bloccateIds=ctx.realizzazioniBloccateIds||new Set();
-  const ricette=completaResiduoVerduraRicette(base,pool,giorno,ctx.vegetablePortions,ctx.variantiPrioritarie,bloccateIds,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.verdurePreferiteVariantIds);
+  const ricette=completaResiduoVerduraRicette(base,pool,giorno,ctx.vegetablePortions,ctx.variantiPrioritarie,bloccateIds,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.verdurePreferiteVariantIds,ctx.requiredVegetableVariantId);
   if(!pastoCompletoPerToken(ricette,token,ctx.vegetablePortions))return null;
   if(ctx.requiredVegetableVariantId&&!ricette.some(r=>(r.ingredienti||[]).some(i=>i.variantId===ctx.requiredVegetableVariantId)))return null;
   if(ctx.forbiddenProteinMacros&&[...macroProteicheRicette(ricette)].some(k=>ctx.forbiddenProteinMacros.has(k)))return null;
@@ -2023,7 +2037,7 @@ async function chiudiPastoConVerdura(base,token,giorno,pool,ctx){
      proteina/carboidrato candidato nello stesso ciclo, senza alcun
      nuovo meccanismo di ripetizione. */
   let risultato=await assegnaCondimentiRotazioneGlobale(risultatoPasto(token,ricette,0,null,ctx.vegetablePortions),giorno,bloccateIds);
-  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions,bloccateIds,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.verdurePreferiteVariantIds);
+  risultato.realizzazioni=await normalizzaRealizzazioniVerdura(risultato.realizzazioni,giorno,ctx.vegetablePortions,bloccateIds,ctx.runtimeConfig&&ctx.runtimeConfig.userPreferences&&ctx.runtimeConfig.userPreferences.verdurePreferiteVariantIds,ctx.requiredVegetableVariantId);
   risultato.realizzazioni=normalizzaRealizzazioniOlio(risultato.realizzazioni,ctx.resolved&&ctx.resolved.oilGramsPerMainMeal);
   risultato.bilancioVerdura=await bilancioVerduraDaRealizzazioni(risultato.realizzazioni,ctx.vegetablePortions);
   if(!risultato.bilancioVerdura.coperturaCompleta)return null;
@@ -2812,10 +2826,10 @@ async function materializzaRealizzazione(realizzazione){
   return ricetta;
 }
 
-async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig,bloccateIds,verdurePreferiteVariantIds){
+async function normalizzaRealizzazioniVerdura(realizzazioni,giorno,portionConfig,bloccateIds,verdurePreferiteVariantIds,requiredVegetableVariantId){
   const materializzate=[];
   for(const real of realizzazioni||[]){const r=await materializzaRealizzazione(real);if(r)materializzate.push(r);}
-  const pool=await poolAmmesso(giorno,{}),complete=completaResiduoVerduraRicette(materializzate,pool,giorno,portionConfig,undefined,bloccateIds,verdurePreferiteVariantIds);
+  const pool=await poolAmmesso(giorno,{}),complete=completaResiduoVerduraRicette(materializzate,pool,giorno,portionConfig,undefined,bloccateIds,verdurePreferiteVariantIds,requiredVegetableVariantId);
   const usati=new Set();
   return complete.map(r=>{
     const indice=(realizzazioni||[]).findIndex((real,i)=>!usati.has(i)&&real.ricettaId===r.id);

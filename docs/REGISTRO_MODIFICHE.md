@@ -2149,3 +2149,79 @@ Nessuna regressione emersa fuori dai file modificati.
 **SHA finale:** `d2a25d79e28fee521a66af2dca614a9c116f49db`.
 
 ---
+
+## Verdura ricorrente: da filtro a posteriori a vincolo attivo — 11 settembre 2026
+
+**Difetto accertato:** `requiredVegetableVariantId` (verdura ricorrente del
+Set) veniva verificato soltanto dopo che il pasto era già composto: il
+motore sceglieva la verdura dedicata secondo deperibilità/preferite e
+scartava l'intera combinazione proteina+carboidrato se non conteneva la
+ricorrente, invece di imporla. In `generaPianoSettimana` con ricorrente
+attiva su tutti gli slot, questo produceva fallimenti intermittenti
+riproducibili (13/20 esecuzioni fallite su un campione di verifica, sempre
+`Nessuna composizione valida per 2026-09-03 pranzo...`), perché con
+l'avanzare della settimana i vincoli di varietà riducevano le combinazioni
+ancora tentabili e quindi le occasioni di indovinare per caso la ricorrente.
+
+Stesso difetto strutturale già corretto in DietaPlanner2 (commit
+`9f09b06`); qui applicato separatamente perché il resto di `motor-v12.js`
+è divergente tra i due repository (gestione "poco tempo" più evoluta in
+questo repo) — la funzione coinvolta era però identica byte per byte.
+
+**Correzione applicata:** in `completaResiduoVerduraRicette` (unico punto
+che sceglie la verdura dedicata per chiudere il residuo, condiviso da
+generazione settimanale, "Pasto odierno"/Cambia piatto e rigenerazione), la
+verdura ricorrente è ora il primo controllo: se compatibile con il ruolo
+mancante, è quella la scelta, prima e indipendentemente dall'ordinamento
+per deperibilità/programmazione settimanale e dalle preferite, che restano
+invariati come criterio di riserva quando la ricorrente non è attiva o non
+è compatibile. Corretto anche un secondo punto in cui la ricorrente veniva
+persa: la rinormalizzazione post rotazione condimenti
+(`normalizzaRealizzazioniVerdura`, richiamata da `chiudiPastoConVerdura`
+dopo la validazione) non riceveva il vincolo e poteva silenziosamente
+sostituire la ricorrente appena imposta.
+
+**Non modificato:** selezione proteine, priorità PX+C.user, stati
+AUTO/FIXED/EXCLUDED dei carboidrati, gestione "poco tempo" (invariata,
+non toccata), formule V/S/G, soglia dei 50 g, struttura delle
+realizzazioni, comportamento dei lucchetti, catalogo, interfaccia. Il
+controllo a posteriori esistente resta come rete di sicurezza per i
+conflitti HARD reali (verdura disattivata, esclusione clinica, blocco
+incompatibile).
+
+**Test aggiunto:** `tests/lotto-k-verdura-ricorrente-priorita.test.js` —
+dimostra a livello di `completaResiduoVerduraRicette` che la ricorrente
+vince sempre anche contro una verdura contemporaneamente preferita e
+urgente (il caso peggiore), che senza il controllo esplicito la stessa
+situazione sceglierebbe quella verdura invece della ricorrente, e che
+l'esito non dipende dall'ordine di iterazione del pool. Fallisce sul
+commit precedente (`31a4ba9`), passa dopo la correzione. Verificato con
+fixture indipendenti su questo catalogo (stessi id di DietaPlanner2:
+`nr_19_12` Pomodoro fresco, `nr_19_0` Carote, `nr_37_0` base P+C).
+
+**Test eseguiti:**
+```
+tests/lotto-k-verdura-ricorrente-priorita.test.js         → OK (3/3 casi)
+tests/lotto-set-preferenze-runtime.test.js                 → OK (19/19 casi)
+tests/lotto-g-weekly-generation.test.js × 50 esecuzioni     → 50/50 (era 13/20 prima)
+node --check motor-v12.js e sul nuovo file test            → OK
+git diff --check                                           → pulito
+```
+
+**Nota su un test pre-esistente:** `tests/lotto-set-proteine-menu-reale.test.js`
+è flaky sia sul commit precedente (12/20 su un campione di verifica) sia
+dopo la correzione (15/20) — il test non configura alcuna verdura
+ricorrente e il fallimento riguarda ripetizione di macro proteica, non
+verdura. Qui il campione dopo la correzione è risultato addirittura
+migliore di quello precedente: la differenza tra i due campioni è
+compatibile con rumore statistico su un test già instabile di suo, non
+con un effetto della correzione. Segnalato come pre-esistente, non
+mascherato né dichiarato risolto.
+
+**File modificati:** `motor-v12.js`.
+
+**File aggiunto:** `tests/lotto-k-verdura-ricorrente-priorita.test.js`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+---
