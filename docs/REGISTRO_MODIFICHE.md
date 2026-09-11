@@ -2014,3 +2014,36 @@ inline verificato; `git diff --check` pulito; `index.html` invariato.
 **SHA dell'intervento:** `41e379d090603111e59c7ac3fa51494453c9fd3c`.
 
 ---
+
+## 22. Correzione del clone Pasto: stile index, sole interazioni importate — 11 settembre 2026
+
+**Errore riconosciuto:** il primo clone aveva trasferito sulla pagina Pasto
+anche il linguaggio estetico generale della preview, mentre Cwe aveva chiesto
+di conservare integralmente la grafica dell'index e importare soltanto le
+funzioni visuali sviluppate nel restyling.
+
+**Correzione applicata:** rimosse tutte le sovrascritture di pagina, calendario,
+card, tipografia, colori, pulsanti, nutrizione e grafici. Il clone torna quindi
+agli stili nativi dell'index. Restano soltanto componenti circoscritti a
+`#view-piano` e costruiti con le variabili originali `--panel`, `--panel-2`,
+`--border`, `--text`, `--accent` e `--warn`: carosello orizzontale con immagine
+e testo nello stesso slide, frecce ferme, raccordo infinito, stella rotante e
+catalogo speciale, movimento verticale dall'alto per Alternativa/Salvafrigo e
+dal basso per Ripristina. Il comando originale `Annulla` della proposta viene
+presentato come `Ripristina` senza sostituirne il listener o la semantica sicura
+di bozza non salvata. La finestra Dettagli resta quella funzionale dell'index.
+
+**Invarianti:** loader ancora presente ma disattivato; `index.html`, renderer,
+motore, IndexedDB, cataloghi e tutte le altre viste invariati.
+
+**Verifiche:** parsing completo degli script inline riuscito; tutti i path degli
+asset verificati; assenza di una sovrascrittura generale `#view-piano`;
+`git diff --check` pulito; `index.html` invariato.
+
+**File modificato:** `index-pasto-restyling.html`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento:** `fac3077444bfb4f3d5151c47f28dba22f372c9c4`.
+
+---
