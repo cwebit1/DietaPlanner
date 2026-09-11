@@ -2110,7 +2110,7 @@ immagini controllati; `git diff --check` pulito; `index.html` invariato.
 
 Corregge il commit `31be47a` (a sua volta correttivo di `41d2897`, correttivo di `cd8599c`, filone "Collegamento reale al motore delle 5 preferenze del Set utente" — sezioni precedenti non più presenti in questo registro a seguito di una riorganizzazione di un altro intervento, non eseguita da questo lavoro; la catena dei commit tecnici resta comunque verificabile su `main`).
 
-## 1. Commit `(in preparazione)` — correzione: cercaCarboSeparato() non deve mai vedere chiavi di livelli diversi nella stessa chiamata
+## 1. Commit `d2a25d7` — correzione: cercaCarboSeparato() non deve mai vedere chiavi di livelli diversi nella stessa chiamata
 
 **SHA iniziale di questa correzione:** `8014b6d1e280ae17676571a8f64410a803965485`.
 
@@ -2146,6 +2146,6 @@ git diff --check                                        → pulito
 
 Nessuna regressione emersa fuori dai file modificati.
 
-**SHA finale:** riportato nella risposta a Cwe che accompagna questo commit.
+**SHA finale:** `d2a25d79e28fee521a66af2dca614a9c116f49db`.
 
 ---
