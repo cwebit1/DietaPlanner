@@ -1988,3 +1988,29 @@ del clone; parsing degli script inline riuscito; `git diff --check` pulito;
 **SHA dell'intervento:** `a607bfee7fd6187119d4463df664915eccdb7cfc`.
 
 ---
+
+## 21. Neutralizzazione immediata del loader nel clone Pasto — 11 settembre 2026
+
+**Difetto segnalato da Cwe:** nonostante la disattivazione CSS, sul dispositivo
+la pagina restava visivamente bloccata sul loader.
+
+**Riscontro:** la copia servita online esponeva già `display: none`, indicando
+una discrepanza temporanea/cache sul client. Per rendere la disattivazione
+indipendente dal caricamento e dalla cache del foglio CSS, il nodo è stato
+neutralizzato direttamente nel markup.
+
+**Correzione:** `#loaderApp` conserva interamente struttura, figli, ID e codice
+di aggiornamento, ma porta ora `style="display:none!important"`,
+`aria-hidden="true"` e `data-loader-enabled="false"`. Può essere riattivato
+senza ricostruirlo; non può più occupare lo schermo durante il bootstrap.
+
+**Verifiche:** parsing degli script riuscito; nodo loader presente; attributo
+inline verificato; `git diff --check` pulito; `index.html` invariato.
+
+**File modificato:** `index-pasto-restyling.html`.
+
+**File aggiornato:** `docs/REGISTRO_MODIFICHE.md`.
+
+**SHA dell'intervento:** `41e379d090603111e59c7ac3fa51494453c9fd3c`.
+
+---
